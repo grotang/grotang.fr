@@ -24,20 +24,37 @@ C'est un choix, pas une facilité :
 
 ## Le cycle quotidien
 
+Personne ne le déclenche : il tourne dans GitHub Actions, sans PC allumé et sans
+intervention.
+
 ```
-source publique  →  reconstruction  →  tools/uefa/page.html
-                                            ↓  node tools/build.mjs
-                                       public/**  →  commit  →  push
-                                            ↓
-                                    Netlify publie (~30 s)
+5-jahres-wertung.de  →  GitHub Actions, 10 h  →  tools/uefa/page.html
+                                                       ↓  node tools/build.mjs
+                                                  public/**  →  commit  →  push
+                                                       ↓
+                                               Netlify publie (~30 s)
 ```
 
-La reconstruction du matin ne réécrit qu'un bloc de `tools/uefa/page.html`, délimité
-par les sentinelles `/*DATA_START*/` … `/*DATA_END*/`. Le reste de la page — la
-mise en page, les graphiques, l'historique des saisons closes dans
-`/*HIST_START*/` … `/*HIST_END*/` — ne bouge pas. Des contrôles d'intégrité bloquants
-tournent avant le commit : si un seul échoue, rien n'est poussé et la version de la
-veille reste en ligne. Une page fausse est pire qu'une page datée.
+Le rafraîchissement ne réécrit qu'un bloc de `tools/uefa/page.html`, délimité par
+les sentinelles `/*DATA_START*/` … `/*DATA_END*/`. Le reste — mise en page,
+graphiques, historique des saisons closes dans `/*HIST_START*/` … `/*HIST_END*/` —
+ne bouge pas.
+
+Trois issues possibles, et une seule écrit quelque chose :
+
+| | |
+|---|---|
+| la source n'a pas bougé | rien n'est écrit, aucun commit |
+| nouvelles données, contrôles passés | commit, Netlify publie |
+| un contrôle échoue | **rien n'est écrit**, l'échec est visible dans l'onglet Actions, la page de la veille reste en ligne |
+
+Les contrôles sont détaillés dans `tools/uefa/SOURCES.md`. Le plus parlant vérifie
+le barème club par club sur les 463 engagés : `points = V_quali + 0,5 × N_quali +
+2 × V_phase + 1 × N_phase + bonus`. Une page fausse est pire qu'une page datée.
+
+L'horaire est doublé (08:00 et 09:00 UTC) parce que cron travaille en UTC et que
+Paris change d'heure ; le passage inutile de l'autre saison sort immédiatement en
+« inchangé ».
 
 ## Arborescence
 
@@ -46,22 +63,34 @@ public/            ce qui est publié — ne pas éditer à la main
   index.html         accueil (générée)
   uefa/index.html    page UEFA (générée)
   tennis/index.html  page tennis (générée)
-  404.html  favicon.svg  robots.txt  sitemap.xml
+  404.html  robots.txt  sitemap.xml   (l'icône est incrustée dans les pages)
 tools/
   build.mjs          génère tout public/
   index.mjs          gabarit de l'accueil
   chrome.mjs         barre de navigation et jeu de couleurs partagés
-  uefa/page.html     source de la page UEFA (réécrite chaque matin)
-  uefa/nations.json  chiffres des vignettes de l'accueil
   tennis.src.html    source de la page tennis, figée
+  uefa/
+    page.html        source de la page UEFA ; seul son bloc de données est réécrit
+    refresh.mjs      va lire la source, contrôle, réécrit, relance le build
+    extract.mjs      lecture pure des quatre pages → objet ; aucun accès réseau
+    test-extract.mjs test de non-régression hors ligne
+    names.json       code pays → nom de la nation
+    club-aliases.json  quelques noms de clubs francisés
+    nations.json     chiffres des vignettes de l'accueil
+    fixtures/        capture réelle des pages sources + sortie attendue
+    SOURCES.md       d'où vient chaque champ, et les pièges
+.github/workflows/uefa.yml   la tâche de 10 h
 netlify.toml       publication, redirections, en-têtes
 ```
 
-## Régénérer à la main
+## À la main
 
 ```sh
-node tools/build.mjs
-git add -A && git commit -m "màj" && git push
+npm ci
+npm run test:extract     # contrôle hors ligne, une seconde
+npm run refresh:dry      # va lire la source, contrôle, n'écrit rien
+npm run refresh          # écrit et régénère public/
+npm run build            # régénère public/ sans toucher aux données
 ```
 
-Aucune dépendance : Node seul suffit (aucun `node_modules`).
+Une seule dépendance, `linkedom`, pour lire du HTML côté Node.

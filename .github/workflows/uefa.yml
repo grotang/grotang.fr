@@ -1,0 +1,64 @@
+name: Rafraîchissement UEFA
+
+# Deux passages, parce que cron travaille en UTC et que Paris change d'heure :
+# 08:00 UTC vaut 10 h l'été, 09:00 UTC vaut 10 h l'hiver. Le passage « inutile »
+# de l'autre saison ne coûte rien — le script compare les données à celles déjà
+# publiées et sort sans rien faire si elles n'ont pas bougé. Ça donne au passage
+# un deuxième filet si la source publie tard.
+on:
+  schedule:
+    - cron: '0 8 * * *'
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Republier même si les données sont inchangées'
+        type: boolean
+        default: false
+
+# Le seul droit nécessaire : écrire dans ce dépôt. Netlify prend le relais tout
+# seul en voyant le commit.
+permissions:
+  contents: write
+
+concurrency:
+  group: uefa-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Garde-fou : la lecture des pages sources doit encore donner les mêmes
+      # chiffres qu'un jeu validé à la main. Si la source change de forme, on
+      # l'apprend ici et le rafraîchissement ne tourne même pas.
+      - name: Contrôles sur capture de référence
+        run: npm run test:extract
+
+      - name: Relire la source et reconstruire
+        id: refresh
+        run: node tools/uefa/refresh.mjs ${{ inputs.force && '--force' || '' }}
+
+      - name: Déposer si quelque chose a changé
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "Rien à déposer."
+            exit 0
+          fi
+          STAND=$(node -p "JSON.parse(require('fs').readFileSync('tools/uefa/page.html','utf8').split('/*DATA_START*/')[1].split('/*DATA_END*/')[0].replace(/^const D\s*=\s*/,'').replace(/;\s*$/,'')).meta.lastUpdated")
+          git config user.name  "grotang.fr (robot)"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Coefficient UEFA : source arrêtée au $STAND"
+          git push
+          echo "Déposé. Netlify publie dans la minute."

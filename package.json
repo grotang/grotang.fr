@@ -1,0 +1,16 @@
+{
+  "name": "grotang-fr",
+  "private": true,
+  "type": "module",
+  "description": "Site grotang.fr : generation des pages et rafraichissement quotidien du bloc UEFA.",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "refresh": "node tools/uefa/refresh.mjs",
+    "refresh:dry": "node tools/uefa/refresh.mjs --dry-run",
+    "test:extract": "node tools/uefa/test-extract.mjs"
+  },
+  "dependencies": {
+    "linkedom": "^0.18.13"
+  },
+  "engines": { "node": ">=20" }
+}
