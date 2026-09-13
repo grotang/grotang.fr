@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Nombre de joueurs français au tableau principal de chaque Grand Chelem, simple messieurs, ère Open 1968-2026.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"%3E%3Crect width="32" height="32" rx="7" fill="%230F141D"/%3E%3Cpath d="M6 22V10h4.4c2.9 0 4.6 1.5 4.6 4 0 1.8-.9 3-2.5 3.6L15.4 22h-3l-2.3-4h-1.2v4H6zm2.9-6.3h1.3c1.2 0 1.9-.6 1.9-1.6s-.7-1.6-1.9-1.6H8.9v3.2z" fill="%23FBFCFE"/%3E%3Ccircle cx="22.5" cy="19" r="4.2" fill="none" stroke="%235D9BF0" stroke-width="2"/%3E%3C/svg%3E">
+<title>Français aux Grands Chelems — Ère Open</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  background: #141420;
+  padding: 20px;
+  color: #e0e0e0;
+  min-height: 100vh;
+}
+h1 { text-align:center; font-size:1rem; font-weight:700; color:#e0e0e0; margin-bottom:4px; letter-spacing:.03em; }
+.subtitle { text-align:center; font-size:.68rem; color:#666; margin-bottom:14px; }
+
+.legend {
+  display:flex; align-items:center; justify-content:center;
+  gap:3px; margin-bottom:14px; font-size:.63rem; color:#666;
+  flex-wrap:wrap;
+}
+.legend-label { margin:0 4px; }
+.sw { width:20px; height:11px; border-radius:2px; display:inline-block; }
+
+.wrap { overflow-x:auto; }
+table { border-collapse:collapse; margin:0 auto; }
+
+thead th {
+  font-size:.7rem; font-weight:700; padding:6px 0; text-align:center;
+  letter-spacing:.05em; text-transform:uppercase;
+  background:#141420; position:sticky; top:0; z-index:3;
+}
+.th-y { width:42px; text-align:left; color:#555; }
+.th-ao { color:#4fc3f7; width:50px; }
+.th-rg { color:#ff8a65; width:50px; }
+.th-wim { color:#69f0ae; width:50px; }
+.th-uso { color:#ce93d8; width:50px; }
+.th-t { color:#888; width:42px; font-size:.6rem; }
+
+tbody tr:hover td { filter:brightness(1.35); }
+tr.dec td { border-top:2px solid #2a2a3a; }
+
+td { padding:0; text-align:center; height:22px; border:1px solid rgba(255,255,255,.04); }
+td.y {
+  text-align:right; padding-right:7px; font-size:.71rem; font-weight:600; color:#666;
+  background:#141420 !important; border:none;
+  position:sticky; left:0; z-index:2; white-space:nowrap;
+}
+td.y.dec { color:#bbb; font-weight:700; }
+.v { display:block; width:100%; height:100%; line-height:22px; font-size:.73rem; font-weight:700; }
+.na { display:block; width:100%; height:100%; line-height:22px; font-size:.62rem; color:#2d2d3d; background:#1a1a28; }
+.sp { display:block; width:100%; height:100%; line-height:22px; font-size:.58rem; color:#444; background:#1a1a28; }
+td.tc { font-size:.7rem; font-weight:700; background:#1a1a28 !important; border-left:1px solid #2a2a3a; }
+
+.note { text-align:center; font-size:.6rem; color:#444; margin-top:10px; line-height:1.7; }
+
+.gnav{--gn-bg:#FBFCFE;--gn-ink:#0F141D;--gn-ink2:#78828F;--gn-rule:#D4DAE3;--gn-hi:#2a78d6;
+  position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
+  padding:0 clamp(14px,3vw,28px);height:46px;background:var(--gn-bg);
+  border-bottom:1px solid var(--gn-rule);
+  font-family:Archivo,system-ui,-apple-system,'Segoe UI',sans-serif;
+  -webkit-font-smoothing:antialiased}
+@media (prefers-color-scheme:dark){.gnav:not(.gnav--light){--gn-bg:#141A24;--gn-ink:#E8ECF3;--gn-ink2:#727D8C;--gn-rule:#28313F;--gn-hi:#5D9BF0}}
+.gnav.gnav--dark{--gn-bg:#181826;--gn-ink:#e0e0e0;--gn-ink2:#6b6b80;--gn-rule:#2a2a3a;--gn-hi:#69f0ae}
+.gnav a{color:inherit;text-decoration:none}
+.gnav .gn-mark{font-size:13px;font-weight:800;letter-spacing:.06em;color:var(--gn-ink);
+  font-family:'IBM Plex Mono',ui-monospace,monospace;white-space:nowrap}
+.gnav .gn-mark span{color:var(--gn-ink2);font-weight:500}
+.gnav nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+.gnav nav a{font-size:12.5px;font-weight:600;color:var(--gn-ink2);
+  padding:5px 10px;border-radius:6px;line-height:1.2;white-space:nowrap}
+.gnav nav a:hover{color:var(--gn-ink);background:color-mix(in srgb,var(--gn-ink) 7%,transparent)}
+.gnav nav a[aria-current="page"]{color:var(--gn-hi);
+  background:color-mix(in srgb,var(--gn-hi) 12%,transparent)}
+@media (max-width:520px){.gnav{height:auto;padding-block:8px;flex-wrap:wrap;gap:8px}
+  .gnav nav{margin-left:0;width:100%;justify-content:flex-start}}
+
+body{padding-top:0}
+.gnav{margin:-20px -20px 18px}
+</style>
+</head>
+<body>
+<div class="gnav gnav--dark"><a class="gn-mark" href="/">GROTANG<span>.FR</span></a><nav><a href="/uefa/">Coefficient UEFA</a><a href="/tennis/" aria-current="page">Français en Grand Chelem</a></nav></div>
+
+<h1>🇫🇷 Français au tableau principal — Simple Messieurs · Ère Open (1968–2026)</h1>
+<p class="subtitle">Nombre de joueurs français au 1er tour (tableau principal) par Grand Chelem · Sources : fr.wikipedia.org + en.wikipedia.org</p>
+
+<div class="legend">
+  <span class="legend-label">0</span>
+  <span class="sw" style="background:#1a1a28"></span>
+  <span class="sw" style="background:#1c2e22"></span>
+  <span class="sw" style="background:#1d5035"></span>
+  <span class="sw" style="background:#237042"></span>
+  <span class="sw" style="background:#2b9050"></span>
+  <span class="sw" style="background:#36b05e"></span>
+  <span class="sw" style="background:#52cc72"></span>
+  <span class="sw" style="background:#76e88e"></span>
+  <span class="legend-label">21+</span>
+  <span style="margin-left:10px;color:#444">— = pas de page Wikipedia structurée</span>
+  <span style="margin-left:10px;color:#444">✕ = annulé · ··· = à venir</span>
+</div>
+
+<div class="wrap">
+<table>
+<thead>
+  <tr>
+    <th class="th-y"></th>
+    <th class="th-ao">AO</th>
+    <th class="th-rg">RG</th>
+    <th class="th-wim">WIM</th>
+    <th class="th-uso">USO</th>
+    <th class="th-t">Σ</th>
+  </tr>
+</thead>
+<tbody id="tb"></tbody>
+</table>
+</div>
+
+<p class="note">
+  Méthode : drapeaux <code>{{FRA-d}}</code> / <code>{{flagicon|FRA}}</code> dans les lignes du 1er tour · FR wiki prioritaire, EN wiki en fallback.<br>
+  AO : 32 joueurs (1968–1987) → 64 (1988) → 128 (à vérifier par édition). WIM 2020 : annulé (Covid). WIM/USO 2026 : à venir.<br>
+  AO non disputé en 1986 (transition janv. 1985 → janv. 1987).
+</p>
+
+<script>
+const D = {
+  1968:{AO:null, RG:20, WIM:8,  USO:1},
+  1969:{AO:2,    RG:15, WIM:8,  USO:6},
+  1970:{AO:1,    RG:19, WIM:9,  USO:3},
+  1971:{AO:0,    RG:17, WIM:10, USO:4},
+  1972:{AO:1,    RG:10, WIM:10, USO:4},
+  1973:{AO:7,    RG:14, WIM:5,  USO:6},
+  1974:{AO:8,    RG:8,  WIM:9,  USO:3},
+  1975:{AO:2,    RG:13, WIM:4,  USO:3},
+  1976:{AO:1,    RG:17, WIM:5,  USO:4},
+  1977:{AO:0,    RG:14, WIM:1,  USO:4},
+  1978:{AO:4,    RG:17, WIM:4,  USO:6},
+  1979:{AO:0,    RG:16, WIM:5,  USO:5},
+  1980:{AO:3,    RG:19, WIM:5,  USO:6},
+  1981:{AO:2,    RG:19, WIM:7,  USO:7},
+  1982:{AO:1,    RG:19, WIM:7,  USO:7},
+  1983:{AO:2,    RG:17, WIM:5,  USO:7},
+  1984:{AO:1,    RG:12, WIM:2,  USO:3},
+  1985:{AO:3,    RG:11, WIM:5,  USO:5},
+  1986:{AO:'ND', RG:10, WIM:3,  USO:5},
+  1987:{AO:1,    RG:13, WIM:4,  USO:6},
+  1988:{AO:6,    RG:12, WIM:5,  USO:6},
+  1989:{AO:9,    RG:12, WIM:2,  USO:5},
+  1990:{AO:10,   RG:14, WIM:8,  USO:8},
+  1991:{AO:7,    RG:13, WIM:8,  USO:9},
+  1992:{AO:10,   RG:13, WIM:10, USO:9},
+  1993:{AO:9,    RG:13, WIM:7,  USO:9},
+  1994:{AO:9,    RG:12, WIM:10, USO:7},
+  1995:{AO:11,   RG:12, WIM:10, USO:9},
+  1996:{AO:9,    RG:14, WIM:9,  USO:7},
+  1997:{AO:7,    RG:15, WIM:8,  USO:7},
+  1998:{AO:8,    RG:16, WIM:6,  USO:10},
+  1999:{AO:8,    RG:13, WIM:6,  USO:9},
+  2000:{AO:11,   RG:15, WIM:10, USO:10},
+  2001:{AO:9,    RG:15, WIM:8,  USO:10},
+  2002:{AO:13,   RG:14, WIM:13, USO:10},
+  2003:{AO:11,   RG:17, WIM:11, USO:12},
+  2004:{AO:14,   RG:21, WIM:12, USO:15},
+  2005:{AO:15,   RG:17, WIM:12, USO:9},
+  2006:{AO:13,   RG:15, WIM:11, USO:12},
+  2007:{AO:15,   RG:19, WIM:15, USO:15},
+  2008:{AO:16,   RG:16, WIM:14, USO:15},
+  2009:{AO:14,   RG:17, WIM:14, USO:12},
+  2010:{AO:13,   RG:16, WIM:12, USO:14},
+  2011:{AO:13,   RG:17, WIM:15, USO:10},
+  2012:{AO:14,   RG:15, WIM:13, USO:12},
+  2013:{AO:13,   RG:18, WIM:15, USO:15},
+  2014:{AO:14,   RG:17, WIM:14, USO:13},
+  2015:{AO:11,   RG:13, WIM:11, USO:11},
+  2016:{AO:13,   RG:16, WIM:14, USO:13},
+  2017:{AO:13,   RG:17, WIM:11, USO:12},
+  2018:{AO:12,   RG:12, WIM:12, USO:12},
+  2019:{AO:9,    RG:16, WIM:12, USO:13},
+  2020:{AO:12,   RG:16, WIM:'C', USO:7},
+  2021:{AO:10,   RG:17, WIM:14, USO:12},
+  2022:{AO:10,   RG:15, WIM:8,  USO:9},
+  2023:{AO:10,   RG:17, WIM:14, USO:15},
+  2024:{AO:14,   RG:16, WIM:13, USO:12},
+  2025:{AO:13,   RG:15, WIM:12, USO:12},
+  2026:{AO:14,   RG:21, WIM:'?', USO:'?'},
+};
+
+// Color stops: [minVal, bg, fg]
+const SC = [
+  [0, '#1a1a28','#2d2d40'],
+  [1, '#1b2820','#4a7055'],
+  [3, '#1c3225','#5a8860'],
+  [5, '#1e4230','#6fa070'],
+  [7, '#205535','#82b882'],
+  [9, '#236840','#98cc98'],
+  [11,'#277a48','#b0e0b0'],
+  [13,'#2c9050','#d0f0d0'],
+  [15,'#36aa5c','#ffffff'],
+  [17,'#44c068','#ffffff'],
+  [19,'#55d476','#0a200a'],
+  [21,'#72eb90','#082008'],
+];
+function cs(v) {
+  if (v === null) return {bg:'#1a1a28', fg:'#2d2d40', t:'—', cls:'na'};
+  if (v === 'C')  return {bg:'#1a1a28', fg:'#444', t:'✕', cls:'sp'};
+  if (v === '?')  return {bg:'#1a1a28', fg:'#444', t:'···', cls:'sp'};
+  if (v === 'ND') return {bg:'#1a1a28', fg:'#333', t:'–', cls:'na'};
+  let s = SC[0];
+  for (const st of SC) { if (v >= st[0]) s = st; }
+  return {bg:s[1], fg:s[2], t:String(v), cls:'v'};
+}
+
+const SLAMS = ['AO','RG','WIM','USO'];
+const tb = document.getElementById('tb');
+const years = Object.keys(D).map(Number).sort((a,b)=>b-a);
+
+for (const y of years) {
+  const d = D[y];
+  const tr = document.createElement('tr');
+  if (y % 10 === 0) tr.classList.add('dec');
+
+  const ty = document.createElement('td');
+  ty.className = 'y' + (y % 10 === 0 ? ' dec' : '');
+  ty.textContent = y;
+  tr.appendChild(ty);
+
+  let tot = 0, cnt = 0;
+  for (const s of SLAMS) {
+    const v = d[s];
+    const c = cs(v);
+    const td = document.createElement('td');
+    td.style.background = c.bg;
+    const sp = document.createElement('span');
+    sp.className = c.cls;
+    sp.style.color = c.fg;
+    sp.textContent = c.t;
+    td.appendChild(sp);
+    tr.appendChild(td);
+    if (typeof v === 'number') { tot += v; cnt++; }
+  }
+
+  const tt = document.createElement('td');
+  tt.className = 'tc';
+  if (cnt > 0) {
+    tt.textContent = tot;
+    const p = Math.min(tot / 65, 1);
+    const g = Math.round(50 + p * 150);
+    tt.style.color = `rgb(${g},${g},${g})`;
+    if (cnt < 4) tt.style.opacity = '.45';
+  }
+  tr.appendChild(tt);
+  tb.appendChild(tr);
+}
+</script>
+</body>
+</html>
