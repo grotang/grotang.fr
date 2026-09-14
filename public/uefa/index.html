@@ -608,16 +608,26 @@ document.getElementById('asof').textContent = 'source au ' + dmy(D.meta.lastUpda
    et il devient visible d'un coup d'œil. */
 (function(){
   const all = [0,1,2].flatMap(k => CAL[k].map(([iso]) => iso)).sort();
-  /* La phase finale se joue aux mêmes semaines pour les trois compétitions — seules
-     les finales diffèrent, en mai pour C3 et C4, le 5 juin pour la C1. On ne la
-     dessine donc pas en trois pistes, ce qui affirmerait des dates par compétition
-     qu'on n'a pas : une seule bande commune, aux dates du calendrier C1 déjà
-     utilisées par le reste de la page. */
-  const KO = [['PO','2027-02-16'],['8es','2027-03-09'],['1/4','2027-04-06'],
-              ['1/2','2027-04-27'],['F','2027-06-05']];
-  const t0 = dOf(all[0]).getTime(), t1 = dOf(KO[KO.length-1][1]).getTime();
+  /* Phase finale, aller et retour, compétition par compétition. Les dates viennent
+     des pages officielles UEFA de chaque compétition ; la C1 joue deux jours avant
+     les deux autres, et les trois finales sont à trois dates distinctes — regrouper
+     tout ça en une bande unique effaçait justement ce qui fait la finesse du
+     calendrier. Chaque tour est un aller et un retour reliés par un trait. */
+  const KO = {
+    0:[['PO','2027-02-16','2027-02-23'],['8es','2027-03-09','2027-03-16'],
+       ['1/4','2027-04-06','2027-04-13'],['1/2','2027-04-27','2027-05-04'],
+       ['F','2027-06-05']],
+    1:[['PO','2027-02-18','2027-02-25'],['8es','2027-03-11','2027-03-18'],
+       ['1/4','2027-04-08','2027-04-15'],['1/2','2027-04-29','2027-05-06'],
+       ['F','2027-05-26']],
+    2:[['PO','2027-02-18','2027-02-25'],['8es','2027-03-11','2027-03-18'],
+       ['1/4','2027-04-08','2027-04-15'],['1/2','2027-04-29','2027-05-06'],
+       ['F','2027-06-02']]
+  };
+  const KOLAB = {PO:'Barrages',  '8es':'8es de finale', '1/4':'Quarts', '1/2':'Demies', F:'Finale'};
+  const t0 = dOf(all[0]).getTime(), t1 = dOf('2027-06-05').getTime();
   const tLeague = dOf(all[all.length-1]).getTime();
-  const W = 1000, mL = 46, mR = 34, mT = 30, LANE = 34, H = mT + 3*LANE + 46;
+  const W = 1000, mL = 46, mR = 30, mT = 44, LANE = 36, H = mT + 3*LANE + 44;
   const span = (t1 - t0) || 1;
   const X = iso => mL + (W - mL - mR) * (dOf(iso).getTime() - t0) / span;
 
@@ -634,10 +644,10 @@ document.getElementById('asof').textContent = 'source au ' + dmy(D.meta.lastUpda
   const MN = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
 
   let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">`;
-  s += `<text x="${mL}" y="${mT-16}" font-size="11" fill="var(--ink-3)">${MN[firstMonth.getMonth()]}</text>`;
+  s += `<text x="${mL}" y="${mT-30}" font-size="11" fill="var(--ink-3)">${MN[firstMonth.getMonth()]}</text>`;
   months.forEach(d => { const x = mL + (W-mL-mR)*(d.getTime()-t0)/span;
     s += `<line x1="${x.toFixed(1)}" y1="${mT-12}" x2="${x.toFixed(1)}" y2="${mT+3*LANE-6}" stroke="var(--rule-soft)"/>`
-      +  `<text x="${(x+5).toFixed(1)}" y="${mT-16}" font-size="11" fill="var(--ink-3)">${MN[d.getMonth()]}</text>`; });
+      +  `<text x="${(x+5).toFixed(1)}" y="${mT-30}" font-size="11" fill="var(--ink-3)">${MN[d.getMonth()]}</text>`; });
 
   /* la ligne d'aujourd'hui : la seule information vraiment datée du bloc */
   const now = TODAY.getTime();
@@ -645,20 +655,19 @@ document.getElementById('asof').textContent = 'source au ' + dmy(D.meta.lastUpda
     s += `<line x1="${x.toFixed(1)}" y1="${mT-12}" x2="${x.toFixed(1)}" y2="${mT+3*LANE-2}" stroke="var(--fr)" stroke-width="1.5" stroke-dasharray="4 3"/>`
       +  `<text x="${(x).toFixed(1)}" y="${mT+3*LANE+16}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--fr)">aujourd'hui</text>`; }
 
-  /* la zone de phase finale, commune aux trois pistes */
-  { const xa = mL + (W-mL-mR)*(tLeague - t0)/span + 16;
-    s += `<rect x="${xa.toFixed(1)}" y="${mT-6}" width="${(W-mR-xa).toFixed(1)}" height="${3*LANE+4}" fill="var(--surface-2)" opacity=".75" rx="3"/>`
-      +  `<text x="${(xa+9).toFixed(1)}" y="${mT+8}" font-size="10.5" font-weight="700" fill="var(--ink-3)">phase finale · les trois compétitions jouent les mêmes semaines</text>`;
-    const yk = mT + 3*LANE/2 + 4;
-    KO.forEach(([lab, iso]) => { const x = X(iso), done = dOf(iso) < TODAY;
-      s += `<g><title>${lab} — ${frDate(iso)}</title>`
-        +  `<line x1="${x.toFixed(1)}" y1="${(yk-16).toFixed(1)}" x2="${x.toFixed(1)}" y2="${(yk+6).toFixed(1)}" stroke="var(--ink-3)" stroke-width="${done?2:1}" opacity="${done?1:.5}"/>`
-        +  `<text x="${Math.min(x, W-mR-2).toFixed(1)}" y="${(yk+20).toFixed(1)}" text-anchor="${x > W-mR-14 ? 'end' : 'middle'}" font-size="10" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)" opacity="${done?1:.75}">${lab}</text></g>`; });
-    s += `<text x="${(W-mR-2).toFixed(1)}" y="${(mT+3*LANE+22).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--ink-3)">finale C1 le 5 juin 2027 · C3 et C4 en mai</text>`; }
+  /* séparation ligue / élimination directe, et les noms de tour une seule fois en
+     en-tête : les répéter sur trois pistes serait illisible pour rien, les trois
+     compétitions jouant chaque tour à deux jours près. */
+  { const xa = (X(CAL[0][7][0]) + X('2027-02-16')) / 2;
+    s += `<line x1="${xa.toFixed(1)}" y1="${mT-26}" x2="${xa.toFixed(1)}" y2="${mT+3*LANE-6}" stroke="var(--rule)" stroke-dasharray="3 3"/>`
+      +  `<text x="${(xa-6).toFixed(1)}" y="${mT-14}" text-anchor="end" font-size="10" font-weight="700" letter-spacing=".04em" fill="var(--ink-3)">PHASE DE LIGUE</text>`
+      +  `<text x="${(xa+6).toFixed(1)}" y="${mT-14}" font-size="10" font-weight="700" letter-spacing=".04em" fill="var(--ink-3)">ÉLIMINATION DIRECTE</text>`;
+    KO[0].forEach(([lab, a]) => { const x = X(a);
+      s += `<text x="${Math.min(x, W-mR).toFixed(1)}" y="${mT-1}" text-anchor="${x > W-mR-12 ? 'end':'middle'}" font-size="9.5" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${lab}</text>`; }); }
 
   [0,1,2].forEach(k => {
     const y = mT + k*LANE + LANE/2;
-    const xEnd = mL + (W-mL-mR)*(tLeague - t0)/span + 14;
+    const xEnd = X(KO[k][KO[k].length-1][1]);
     s += `<line x1="${mL}" y1="${y}" x2="${xEnd.toFixed(1)}" y2="${y}" stroke="var(--rule-soft)" stroke-width="1"/>`
       +  `<rect x="0" y="${y-8}" width="11" height="11" rx="2" fill="var(${KVAR[k]})"/>`
       +  `<text x="16" y="${y+4}" font-size="12.5" font-weight="700" fill="var(--ink-2)">${KSHORT[k]}</text>`;
@@ -674,6 +683,25 @@ document.getElementById('asof').textContent = 'source au ' + dmy(D.meta.lastUpda
         +  ` font-family="IBM Plex Mono, monospace" fill="${done ? 'var(--surface)' : `var(${KVAR[k]})`}"`
         +  ` opacity="${done||isNext?1:.7}">${idx+1}</text></g>`;
     });
+
+    /* élimination directe : un aller, un retour, reliés. La finale est un match sec,
+       donc un losange plutôt qu'une paire — la forme dit la différence. */
+    KO[k].forEach(([lab, a, r]) => {
+      const xa = X(a), done = dOf(a) < TODAY;
+      const op = done ? 1 : .55;
+      if (r) { const xr = X(r), dr = dOf(r) < TODAY;
+        s += `<line x1="${xa.toFixed(1)}" y1="${y}" x2="${xr.toFixed(1)}" y2="${y}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${op*.8}"/>`
+          +  `<g><title>${KOLAB[lab]} ${KSHORT[k]}, aller — ${frDate(a)}</title>`
+          +  `<circle cx="${xa.toFixed(1)}" cy="${y}" r="4.2" fill="${done?`var(${KVAR[k]})`:'var(--surface)'}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${op}"/></g>`
+          +  `<g><title>${KOLAB[lab]} ${KSHORT[k]}, retour — ${frDate(r)}</title>`
+          +  `<circle cx="${xr.toFixed(1)}" cy="${y}" r="4.2" fill="${dr?`var(${KVAR[k]})`:'var(--surface)'}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${dr?1:.55}"/></g>`;
+      } else {
+        s += `<g><title>Finale ${KSHORT[k]} — ${frDate(a)}</title>`
+          +  `<path d="M ${xa.toFixed(1)} ${y-6.4} L ${(xa+6.4).toFixed(1)} ${y} L ${xa.toFixed(1)} ${y+6.4} L ${(xa-6.4).toFixed(1)} ${y} Z"`
+          +  ` fill="${done?`var(${KVAR[k]})`:'var(--surface)'}" stroke="var(${KVAR[k]})" stroke-width="1.6" opacity="${op}"/></g>`
+          +  `<text x="${(xa).toFixed(1)}" y="${y+19}" text-anchor="middle" font-size="8.5" font-weight="600" fill="var(--ink-3)">${dOf(a).getDate()}/${String(dOf(a).getMonth()+1).padStart(2,'0')}</text>`;
+      }
+    });
   });
   s += `</svg>`;
   document.getElementById('cal').innerHTML = s;
@@ -684,7 +712,7 @@ document.getElementById('asof').textContent = 'source au ' + dmy(D.meta.lastUpda
          : `<b>${KSHORT[k]}</b> en est à ${done}/${CAL[k].length}, prochaine le ${frDate(CAL[k][done][0])}`; };
   const notyet = [0,1,2].filter(k => dOf(CAL[k][0][0]) >= TODAY);
   document.getElementById('calmeta').innerHTML =
-    `Les huit (ou six) journées de phase de ligue de chaque compétition, à leur date réelle. `
+    `Toute la saison à l'échelle du temps : les journées de phase de ligue en pastilles, puis chaque tour à élimination directe en aller-retour reliés, et la finale en losange — ${[0,1,2].map(k=>`${KSHORT[k]} le ${frDate(KO[k][KO[k].length-1][1])}`).join(', ')}. `
     + st(0) + ' · ' + st(1) + ' · ' + st(2) + '. '
     + (notyet.length
        ? `Tant qu'une compétition n'a pas démarré, ses clubs pèsent zéro — et le bloc suivant paraît dominé par la C1 pour cette seule raison. Tout devient comparable le ${frDate(CAL[notyet[notyet.length-1]][0][0])}.`
