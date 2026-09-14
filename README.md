@@ -75,6 +75,26 @@ retardées et que « some queued jobs may be dropped ». C'est arrivé dès le p
 passage automatique. Pour la même raison la minute n'est jamais `00` : « High load
 times include the start of every hour. »
 
+### Le budget de déploiements
+
+Netlify facture au crédit : **un déploiement de production coûte 15 crédits**, et le
+plan gratuit en donne 300 par mois. Soit **20 déploiements mensuels**, sans dépassement
+possible — au-delà, les sites de l'équipe sont mis en pause et les visiteurs voient
+« Site not available » jusqu'au cycle suivant. Ni le trafic ni la bande passante ne
+pèsent quoi que ce soit à cette échelle : le compteur, ici, compte les commits publiés.
+
+Deux garde-fous :
+
+- `netlify.toml` porte une commande `ignore` qui compare le commit publié au commit
+  courant. Si rien n'a changé sous `public/`, la construction est sautée — le signe de
+  vie mensuel, une correction dans `tools/`, une note dans ce fichier ne coûtent donc
+  rien. (La documentation Netlify ne dit pas explicitement qu'une construction sautée
+  n'est pas facturée ; à vérifier sur le compteur au prochain signe de vie.)
+- Le travail de mise en forme se pousse **groupé**, un commit par session, pas un par
+  modification. Le robot, lui, ne dépose que lorsque les chiffres bougent : en pleine
+  phase de ligue cela fait quatre à sept déploiements par mois, ce qui laisse de la
+  marge à condition de ne pas la gaspiller à côté.
+
 ### Le signe de vie
 
 GitHub désactive les tâches planifiées d'un dépôt public resté 60 jours sans

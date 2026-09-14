@@ -111,6 +111,22 @@ section{margin-top:clamp(30px,4.5vw,52px)}
 .seg button:last-child{border-right:0}
 .seg button[aria-pressed="true"]{background:var(--ink); color:var(--surface)}
 .seg button:focus-visible{outline:2px solid var(--fr); outline-offset:-2px}
+/* Deux commandes de nature différente ne doivent pas se ressembler : la bascule de
+   lecture est un interrupteur à deux états, le choix de saison est une liste qui
+   s'allongera d'une entrée par an. On les sépare par un filet et par la forme. */
+.ctl{display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap}
+.ctl + .ctl{margin-left:12px; padding-left:12px; border-left:1px solid var(--rule)}
+.ctl > .lb{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700; color:var(--ink-3)}
+.ctl > .hint{font-size:12.5px; color:var(--ink-3)}
+.sel{position:relative; display:inline-flex; align-items:center}
+.sel select{appearance:none; font:inherit; font-size:12.5px; font-weight:600; color:var(--ink);
+  background:var(--surface); border:1px solid var(--rule); border-radius:2px;
+  padding:4px 26px 4px 10px; line-height:1.5; cursor:pointer}
+.sel select:hover{border-color:var(--ink-3)}
+.sel select:focus-visible{outline:2px solid var(--fr); outline-offset:-2px}
+.sel::after{content:""; position:absolute; right:9px; width:7px; height:7px; pointer-events:none;
+  border-right:1.6px solid var(--ink-3); border-bottom:1.6px solid var(--ink-3);
+  transform:translateY(-2px) rotate(45deg)}
 figure{margin:0}
 figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-height:1.55; max-width:124ch}
 .chartbox{width:100%; overflow:hidden; position:relative}
@@ -317,21 +333,21 @@ body{margin:0}</style>
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">3</span><h3>Journée par journée</h3><span class="sub"><span class="seg" role="group" aria-label="Lecture"><button type="button" id="l-cum" aria-pressed="true">Cumul</button><button type="button" id="l-gap" aria-pressed="false">Écart au leader</button></span><span class="seg" role="group" aria-label="Saison" id="seasonSeg"></span></span></div>
+    <div class="ptitle"><span class="no">3</span><h3>Journée par journée</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="seg" role="group" aria-label="Lecture"><button type="button" id="l-cum" aria-pressed="true">Cumul</button><button type="button" id="l-gap" aria-pressed="false">Écart au leader</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSel" aria-label="Saison"></select></span></span></span></div>
     <div class="chips" id="lchips"></div>
     <figure><div class="chartbox big" id="boxL"><svg id="chartL" role="img" aria-label="Coefficient de saison cumulé, étape par étape"></svg><div class="tip" id="tipL" hidden></div></div>
       <figcaption id="capL"></figcaption></figure>
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">4</span><h3>Gain et cumul, même échelle</h3><span class="sub">barres : gain de l'étape · lignes : cumul</span></div>
+    <div class="ptitle"><span class="no">4</span><h3>Gain et cumul, même échelle</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">barres : gain de l'étape · lignes : cumul</span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelZ" aria-label="Saison"></select></span></span></span></div>
     <div class="chips" id="zchips"></div>
     <figure><div class="chartbox"><svg id="chartZ" role="img" aria-label="Gain par étape et cumul sur une échelle unique"></svg></div>
       <figcaption id="capZ"></figcaption></figure>
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">5</span><h3>La matrice</h3><span class="sub">le temps va de gauche à droite · aire du disque = coefficient gagné</span></div>
+    <div class="ptitle"><span class="no">5</span><h3>La matrice</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">aire du disque = coefficient gagné</span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelM" aria-label="Saison"></select></span></span></span></div>
     <div class="chartbox"><svg id="mtx" role="img" aria-label="Matrice nations × étapes, aire proportionnelle au coefficient gagné"></svg></div>
     <p class="figc" id="mtxNote"></p>
   </div>
@@ -592,8 +608,16 @@ document.getElementById('asof').textContent = 'source au ' + dmy(D.meta.lastUpda
    et il devient visible d'un coup d'œil. */
 (function(){
   const all = [0,1,2].flatMap(k => CAL[k].map(([iso]) => iso)).sort();
-  const t0 = dOf(all[0]).getTime(), t1 = dOf(all[all.length-1]).getTime();
-  const W = 1000, mL = 46, mR = 22, mT = 30, LANE = 34, H = mT + 3*LANE + 26;
+  /* La phase finale se joue aux mêmes semaines pour les trois compétitions — seules
+     les finales diffèrent, en mai pour C3 et C4, le 5 juin pour la C1. On ne la
+     dessine donc pas en trois pistes, ce qui affirmerait des dates par compétition
+     qu'on n'a pas : une seule bande commune, aux dates du calendrier C1 déjà
+     utilisées par le reste de la page. */
+  const KO = [['PO','2027-02-16'],['8es','2027-03-09'],['1/4','2027-04-06'],
+              ['1/2','2027-04-27'],['F','2027-06-05']];
+  const t0 = dOf(all[0]).getTime(), t1 = dOf(KO[KO.length-1][1]).getTime();
+  const tLeague = dOf(all[all.length-1]).getTime();
+  const W = 1000, mL = 46, mR = 34, mT = 30, LANE = 34, H = mT + 3*LANE + 46;
   const span = (t1 - t0) || 1;
   const X = iso => mL + (W - mL - mR) * (dOf(iso).getTime() - t0) / span;
 
@@ -619,11 +643,23 @@ document.getElementById('asof').textContent = 'source au ' + dmy(D.meta.lastUpda
   const now = TODAY.getTime();
   if (now >= t0 && now <= t1) { const x = mL + (W-mL-mR)*(now-t0)/span;
     s += `<line x1="${x.toFixed(1)}" y1="${mT-12}" x2="${x.toFixed(1)}" y2="${mT+3*LANE-2}" stroke="var(--fr)" stroke-width="1.5" stroke-dasharray="4 3"/>`
-      +  `<text x="${(x).toFixed(1)}" y="${mT+3*LANE+14}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--fr)">aujourd'hui</text>`; }
+      +  `<text x="${(x).toFixed(1)}" y="${mT+3*LANE+16}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--fr)">aujourd'hui</text>`; }
+
+  /* la zone de phase finale, commune aux trois pistes */
+  { const xa = mL + (W-mL-mR)*(tLeague - t0)/span + 16;
+    s += `<rect x="${xa.toFixed(1)}" y="${mT-6}" width="${(W-mR-xa).toFixed(1)}" height="${3*LANE+4}" fill="var(--surface-2)" opacity=".75" rx="3"/>`
+      +  `<text x="${(xa+9).toFixed(1)}" y="${mT+8}" font-size="10.5" font-weight="700" fill="var(--ink-3)">phase finale · les trois compétitions jouent les mêmes semaines</text>`;
+    const yk = mT + 3*LANE/2 + 4;
+    KO.forEach(([lab, iso]) => { const x = X(iso), done = dOf(iso) < TODAY;
+      s += `<g><title>${lab} — ${frDate(iso)}</title>`
+        +  `<line x1="${x.toFixed(1)}" y1="${(yk-16).toFixed(1)}" x2="${x.toFixed(1)}" y2="${(yk+6).toFixed(1)}" stroke="var(--ink-3)" stroke-width="${done?2:1}" opacity="${done?1:.5}"/>`
+        +  `<text x="${Math.min(x, W-mR-2).toFixed(1)}" y="${(yk+20).toFixed(1)}" text-anchor="${x > W-mR-14 ? 'end' : 'middle'}" font-size="10" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)" opacity="${done?1:.75}">${lab}</text></g>`; });
+    s += `<text x="${(W-mR-2).toFixed(1)}" y="${(mT+3*LANE+22).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--ink-3)">finale C1 le 5 juin 2027 · C3 et C4 en mai</text>`; }
 
   [0,1,2].forEach(k => {
     const y = mT + k*LANE + LANE/2;
-    s += `<line x1="${mL}" y1="${y}" x2="${W-mR}" y2="${y}" stroke="var(--rule-soft)" stroke-width="1"/>`
+    const xEnd = mL + (W-mL-mR)*(tLeague - t0)/span + 14;
+    s += `<line x1="${mL}" y1="${y}" x2="${xEnd.toFixed(1)}" y2="${y}" stroke="var(--rule-soft)" stroke-width="1"/>`
       +  `<rect x="0" y="${y-8}" width="11" height="11" rx="2" fill="var(${KVAR[k]})"/>`
       +  `<text x="16" y="${y+4}" font-size="12.5" font-weight="700" fill="var(--ink-2)">${KSHORT[k]}</text>`;
     CAL[k].forEach(([iso], idx) => {
@@ -891,14 +927,41 @@ const computeLead = ()=>{ LEAD = [...Array(nG).keys()].map(gi=>{
 const series = c => { const v = curve(c);
   if (lMode === 'cum') return v;
   return v.map((x, gi) => (x == null || LEAD[gi] == null) ? null : +(x - LEAD[gi]).toFixed(6)); };
-document.getElementById('seasonSeg').innerHTML = SEAS.map(([k,l])=>
-  `<button type="button" data-y="${k}" aria-pressed="${k===selY}">${l}</button>`).join('');
-document.getElementById('seasonSeg').onclick=e=>{const b=e.target.closest('button'); if(!b)return;
-  selY=b.dataset.y; [...e.currentTarget.children].forEach(x=>x.setAttribute('aria-pressed',x.dataset.y===selY)); drawL();};
+/* les trois listes sont construites plus bas, une fois drawZ et drawM définis */
 const syncL = ()=>{ document.getElementById('l-cum').setAttribute('aria-pressed', lMode==='cum');
   document.getElementById('l-gap').setAttribute('aria-pressed', lMode==='gap'); drawL(); };
 document.getElementById('l-cum').onclick = ()=>{ lMode='cum'; syncL(); };
 document.getElementById('l-gap').onclick = ()=>{ lMode='gap'; syncL(); };
+
+/* Les blocs 3, 4 et 5 lisent désormais la même saison. Trois accesseurs suffisent :
+   le reste du code ne sait plus si la saison est en cours ou archivée.
+   - sCum  : coefficient de saison cumulé à l'étape
+   - sGain : ce que l'étape a rapporté (pour une saison close, la différence des
+             cumuls — l'archive ne stocke que le cumul)
+   - sGroups : les colonnes à tracer, toutes pour une saison finie. */
+const sCum   = (c,gi) => curve(c)[gi];
+const sGain  = (c,gi) => { if(isCur()) return gGain(c,gi);
+  const v = curve(c); if(v[gi]==null) return 0;
+  return Math.max(0, v[gi] - (gi>0 ? (v[gi-1]||0) : 0)); };
+const sGroups = () => isCur()
+  ? [...Array(nG).keys()].filter(gi => gHas(gi) && !gFuture(gi))
+  : [...Array(nG).keys()];
+const sTotal = c => { const v = curve(c); return v[lastIdx()] ?? 0; };
+const sIsBonusCol = gi => GROUPS[gi].bonus;
+
+/* Un seul état de saison, trois endroits pour le changer. Le lecteur qui passe en
+   2024/25 dans le bloc 3 et descend au bloc 5 ne retombe pas sur la saison en cours. */
+function mkSeasonCtl(id){
+  const el = document.getElementById(id); if(!el) return;
+  el.innerHTML = [...SEAS].reverse().map(([k,l]) =>
+    `<option value="${k}">${l}${k==='cur'?' · en cours':''}</option>`).join('');
+  el.value = selY;
+  el.onchange = e => { selY = e.target.value; syncSeason(); };
+}
+function syncSeason(){
+  ['seasonSel','seasonSelZ','seasonSelM'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=selY; });
+  drawL(); drawZ(); drawM();
+}
 
 const selL=new Set(TOP8);
 function drawL(){
@@ -1022,66 +1085,79 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
 const selZ=new Set(['FRA','POR']);
 function drawZ(){
   const W=1000,H=470,mL=54,mR=76,mT=20,mB=70,PAD=40;
-  const gs=[...Array(nG).keys()].filter(gi=>gHas(gi) && !gFuture(gi));
-  const sel=[...TOP8].filter(c=>selZ.has(c));
-  let hi=0.5; sel.forEach(c=>gs.forEach(gi=>{const v=gCum(c,gi); if(v>hi)hi=v;}));
+  const gs=sGroups();
+  const sel=[...TOP8].filter(c=>selZ.has(c)&&hasSeason(c));
+  if(!sel.length){ document.getElementById('capZ').innerHTML='Aucune nation sélectionnée.'; return; }
+  let hi=0.5; sel.forEach(c=>gs.forEach(gi=>{const v=sCum(c,gi); if(v!=null&&v>hi)hi=v;}));
   const sc=niceScale(0,hi*1.06,5), X=k=>mL+PAD+(W-mL-mR-2*PAD)*(gs.length<2?.5:k/(gs.length-1)), Y=v=>mT+(H-mT-mB)*(1-(v-sc.lo)/(sc.hi-sc.lo));
   const slotW=(W-mL-mR-2*PAD)/Math.max(1,gs.length-1)*0.7, bw=Math.max(4,Math.min(26,slotW/sel.length));
   let g=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
   sc.ticks.forEach(t=>{ g+=`<line x1="${mL}" y1="${Y(t).toFixed(1)}" x2="${W-mR}" y2="${Y(t).toFixed(1)}" stroke="var(--rule-soft)"/>`
     +`<text x="${mL-9}" y="${(Y(t)+4).toFixed(1)}" text-anchor="end" font-size="11.5" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${t.toLocaleString('fr-FR',{minimumFractionDigits:sc.dec,maximumFractionDigits:sc.dec})}</text>`; });
-  gs.forEach((gi,k)=>{ const d=gDate(gi);
+  gs.forEach((gi,k)=>{ const d=isCur()?gDate(gi):null;
     g+=axLab(gi,X(k),H-mB+18,'var(--ink-2)',10.5);
     if(d) g+=`<text x="${X(k).toFixed(1)}" y="${H-mB+32}" text-anchor="middle" font-size="9" fill="var(--ink-3)">${d[1]}</text>`; });
   sel.forEach((c,si)=>{ const col=`var(${SLOT[c]})`;
-    gs.forEach((gi,k)=>{ const v=gGain(c,gi); if(v<=0) return;
-      const x=X(k)-(sel.length*bw)/2+si*bw, h=Y(sc.lo)-Y(v), first=GROUPS[gi].bonus;
+    gs.forEach((gi,k)=>{ const v=sGain(c,gi); if(v<=0.0005) return;
+      const x=X(k)-(sel.length*bw)/2+si*bw, h=Y(sc.lo)-Y(v), first=sIsBonusCol(gi);
       g+=`<rect x="${x.toFixed(1)}" y="${Y(v).toFixed(1)}" width="${(bw-2).toFixed(1)}" height="${Math.max(1.5,h).toFixed(1)}" fill="${col}" fill-opacity="${first?0.28:0.55}" ${first?`stroke="${col}" stroke-dasharray="3 2"`:''} rx="1.5"/>`
        + `<text x="${(x+(bw-2)/2).toFixed(1)}" y="${(Y(v)-4-(si%2)*11).toFixed(1)}" text-anchor="middle" font-size="9.5" font-family="IBM Plex Mono, monospace" fill="${col}">${nf(v,2)}</text>`; }); });
   sel.forEach(c=>{ const col=`var(${SLOT[c]})`, fr=c==='FRA';
-    g+=`<polyline points="${gs.map((gi,k)=>`${X(k).toFixed(1)},${Y(gCum(c,gi)).toFixed(1)}`).join(' ')}" fill="none" stroke="${col}" stroke-width="${fr?3.2:2.2}" stroke-linejoin="round"/>`;
-    g+=`<circle cx="${X(gs.length-1).toFixed(1)}" cy="${Y(gCum(c,gs[gs.length-1])).toFixed(1)}" r="4" fill="${col}" stroke="var(--surface)" stroke-width="2"/>`;
-    g+=`<text x="${W-mR+8}" y="${(Y(gCum(c,gs[gs.length-1]))+4).toFixed(1)}" font-size="12" font-weight="${fr?'700':'600'}" font-family="IBM Plex Mono, monospace" fill="${col}">${c}</text>`; });
+    const yEnd=Y(sCum(c,gs[gs.length-1])??0);
+    g+=`<polyline points="${gs.map((gi,k)=>`${X(k).toFixed(1)},${Y(sCum(c,gi)??0).toFixed(1)}`).join(' ')}" fill="none" stroke="${col}" stroke-width="${fr?3.2:2.2}" stroke-linejoin="round"/>`;
+    g+=`<circle cx="${X(gs.length-1).toFixed(1)}" cy="${yEnd.toFixed(1)}" r="4" fill="${col}" stroke="var(--surface)" stroke-width="2"/>`;
+    g+=`<text x="${W-mR+8}" y="${(yEnd+4).toFixed(1)}" font-size="12" font-weight="${fr?'700':'600'}" font-family="IBM Plex Mono, monospace" fill="${col}">${c}</text>`; });
   g+=`<line x1="${mL}" y1="${(H-mB).toFixed(1)}" x2="${W-mR}" y2="${(H-mB).toFixed(1)}" stroke="var(--ink-3)" stroke-width="1.5"/>`;
   g+=`<line x1="${mL}" y1="${mT}" x2="${mL}" y2="${(H-mB).toFixed(1)}" stroke="var(--ink-3)" stroke-width="1.5"/>`;
   g+=`</svg>`;
   document.getElementById('chartZ').outerHTML = g.replace('<svg','<svg id="chartZ" role="img" aria-label="Gain par étape et cumul sur une échelle unique"');
-  document.getElementById('capZ').innerHTML = `Les deux mesures partagent la même unité — le coefficient — donc le même axe : barres translucides pour le gain du tour, ligne pleine pour le cumul. La première barre, hachurée, est l'entrée en lice — le bonus de participation, pas un résultat. ${sel.map(c=>`${name(c)} <b>${nf(gCum(c,gs[gs.length-1]),2)}</b>`).join(' · ')}. Seuls les tours déjà disputés sont tracés.`;
+  const labZ = SEAS.find(x=>x[0]===selY)[1];
+  document.getElementById('capZ').innerHTML = `Saison <b>${labZ}</b>${isCur()?', en cours':''}. Les deux mesures partagent la même unité — le coefficient — donc le même axe : barres translucides pour le gain du tour, ligne pleine pour le cumul. La première barre, hachurée, est l'entrée en lice — le bonus de participation, pas un résultat. ${sel.map(c=>`${name(c)} <b>${nf(sTotal(c),2)}</b>`).join(' · ')}. ${isCur()?'Seuls les tours déjà disputés sont tracés.':"Sur une saison close, le gain d'un tour est reconstitué par différence des cumuls de l'archive."}`;
 }
 mkChips(document.getElementById('zchips'), TOP8, selZ, true, ()=>drawZ());
 
 /* ---------- 5 · la matrice ---------- */
-(function(){
-  const rows=TOP8S, W=1000, mL=104, mR=126, mT=56, rowH=34, H=mT+rows.length*rowH+30;
+function drawM(){
+  /* l'ordre des lignes suit la saison affichée, pas la saison en cours :
+     en 2024/25 l'Angleterre finit à 29,46, elle ne peut pas être en milieu de tableau. */
+  const rows=TOP8S.filter(hasSeason).sort((a,b)=>sTotal(b)-sTotal(a)), W=1000, mL=104, mR=126, mT=56, rowH=34, H=mT+rows.length*rowH+30;
+  if(!rows.length) return;
   const gs=[...Array(nG).keys()];
   const X=gi=>mL+(W-mL-mR)*(gi+0.5)/nG, cw=(W-mL-mR)/nG;
-  const mx=Math.max(...gs.map(gi=>Math.max(...rows.map(c=>gGain(c,gi)))));
+  const mx=Math.max(0.001, ...gs.map(gi=>Math.max(...rows.map(c=>sGain(c,gi)))));
   const R=v=> v<=0?0:Math.max(2.4, Math.sqrt(v/mx)*(Math.min(cw,rowH)/2-2));
-  const totMax=Math.max(...rows.map(seasonNow));
+  const totMax=Math.max(...rows.map(sTotal));
   let g=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
-  const fg=gs.find(gFuture);
+  const fg=isCur()?gs.find(gFuture):undefined;
   if(fg!==undefined) g+=`<rect x="${(X(fg)-cw/2).toFixed(1)}" y="${mT-18}" width="${(W-mR-X(fg)+cw/2).toFixed(1)}" height="${rows.length*rowH+18}" fill="var(--surface-2)" opacity=".8"/>`;
-  gs.forEach(gi=>{ const d=gDate(gi);
-    g+=axLab(gi,X(gi),mT-30,gAnom(gi)?'var(--c3)':'var(--ink-2)',9.5);
+  gs.forEach(gi=>{ const d=isCur()?gDate(gi):null;
+    g+=axLab(gi,X(gi),mT-30,isCur()&&gAnom(gi)?'var(--c3)':'var(--ink-2)',9.5);
     if(d) g+=`<text x="${X(gi).toFixed(1)}" y="${mT-12}" text-anchor="middle" font-size="8" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${gShortDate(gi)}</text>`; });
   g+=`<line x1="${mL-8}" y1="${mT-6}" x2="${W-mR}" y2="${mT-6}" stroke="var(--ink-3)" stroke-width="1.5"/>`;
   g+=`<line x1="${mL-8}" y1="${mT-6}" x2="${mL-8}" y2="${(mT+rows.length*rowH-10).toFixed(1)}" stroke="var(--ink-3)" stroke-width="1.5"/>`;
   rows.forEach((c,ri)=>{ const y=mT+ri*rowH+rowH/2-6, fr=c==='FRA', col=fr?'var(--fr)':'var(--ink-2)';
     if(fr) g+=`<rect x="${mL-8}" y="${(y-rowH/2+2).toFixed(1)}" width="${(W-mR-mL+8).toFixed(1)}" height="${rowH-4}" fill="var(--fr-soft)"/>`;
     g+=`<text x="${mL-14}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="12" font-weight="${fr?'700':'600'}" fill="${col}">${name(c)}</text>`;
-    gs.forEach(gi=>{ const v=gGain(c,gi);
-      if(v<=0){ g+=`<circle cx="${X(gi).toFixed(1)}" cy="${y.toFixed(1)}" r="1.4" fill="var(--rule)"/>`; return; }
+    gs.forEach(gi=>{ const v=sGain(c,gi);
+      if(v<=0.0005){ g+=`<circle cx="${X(gi).toFixed(1)}" cy="${y.toFixed(1)}" r="1.4" fill="var(--rule)"/>`; return; }
       g+=`<circle cx="${X(gi).toFixed(1)}" cy="${y.toFixed(1)}" r="${R(v).toFixed(1)}" fill="${fr?'var(--fr)':'var(--ink-2)'}" fill-opacity="${fr?0.85:0.6}"><title>${name(c)} — ${GROUPS[gi].lab} : ${nf(v,3)}</title></circle>`; });
-    g+=`<rect x="${W-mR+8}" y="${(y-6).toFixed(1)}" width="${(58*seasonNow(c)/totMax).toFixed(1)}" height="12" fill="${fr?'var(--fr)':'var(--ink-3)'}" rx="1.5"/>`;
-    g+=`<text x="${W-4}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="11" font-family="IBM Plex Mono, monospace" font-weight="${fr?'700':'500'}" fill="${col}">${nf(seasonNow(c),2)}</text>`; });
+    g+=`<rect x="${W-mR+8}" y="${(y-6).toFixed(1)}" width="${(58*sTotal(c)/totMax).toFixed(1)}" height="12" fill="${fr?'var(--fr)':'var(--ink-3)'}" rx="1.5"/>`;
+    g+=`<text x="${W-4}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="11" font-family="IBM Plex Mono, monospace" font-weight="${fr?'700':'500'}" fill="${col}">${nf(sTotal(c),2)}</text>`; });
   g+=`<text x="${W-mR+8}" y="${mT-28}" font-size="9.5" font-weight="600" fill="var(--ink-2)">TOTAL</text>`;
   g+=`</svg>`;
   document.getElementById('mtx').outerHTML = g.replace('<svg','<svg id="mtx" role="img" aria-label="Matrice nations par tours, de l\'entrée en lice à la finale"');
+  const labM = SEAS.find(x=>x[0]===selY)[1];
+  const doneCols = isCur() ? gs.filter(gi=>gHas(gi)&&!gFuture(gi)).length : nG;
   document.getElementById('mtxNote').innerHTML =
-    `Une ligne par nation, le temps de gauche à droite jusqu'à la finale, aller et retour regroupés. L'<b>aire</b> du disque porte le coefficient gagné : un disque deux fois plus large vaut quatre fois plus de points. Le premier disque est l'entrée en lice : le bonus de participation, pas un résultat. La zone grisée reste à jouer — six colonnes sur dix-neuf sont derrière nous. Barres de droite : total de la saison.`;
-})();
+    `Saison <b>${labM}</b>${isCur()?', en cours':''}. Une ligne par nation, le temps de gauche à droite jusqu'à la finale, aller et retour regroupés. L'<b>aire</b> du disque porte le coefficient gagné : un disque deux fois plus large vaut quatre fois plus de points. Le premier disque est l'entrée en lice : le bonus de participation, pas un résultat. `
+    + (isCur() ? `La zone grisée reste à jouer — ${doneCols} colonne${doneCols>1?'s':''} sur ${nG} ${doneCols>1?'sont':'est'} derrière nous. ` : `Saison complète : les dix-neuf colonnes sont renseignées. `)
+    + `Barres de droite : total de la saison.`;
+}
 
-syncP(); syncK(); drawL(); drawZ();
+/* Les trois listes de saison, une fois tous les dessins définis. */
+['seasonSel','seasonSelZ','seasonSelM'].forEach(mkSeasonCtl);
+syncP(); syncK(); drawL(); drawZ(); drawM();
+function drawAll(){ drawBars(); drawK(); drawL(); drawZ(); drawM(); }
 
 /* ---------- chart B : la course à la 5e place ---------- */
 /* Un bump chart sur le rang à 5 ans donne des lignes plates : le rang ne bouge

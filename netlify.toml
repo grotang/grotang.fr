@@ -5,6 +5,15 @@
 [build]
   publish = "public"
   command = ""
+  # Depuis la tarification au crédit, un déploiement de production coûte 15 crédits
+  # sur les 300 mensuels du plan gratuit — soit 20 déploiements par mois, et le site
+  # est mis en pause au-delà. Or tous les commits ne changent pas le site publié :
+  # le signe de vie mensuel, une correction d'outillage, une note dans le README.
+  # Cette commande compare le commit publié au commit courant et, si rien n'a bougé
+  # sous `public/` (ni la configuration elle-même), sort en 0 : Netlify saute la
+  # construction. Sortie 1 = quelque chose a changé, on publie.
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- public netlify.toml"
+
 
 # L'apex est canonique ; www renvoie dessus.
 [[redirects]]
