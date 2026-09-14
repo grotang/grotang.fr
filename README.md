@@ -52,9 +52,38 @@ Les contrôles sont détaillés dans `tools/uefa/SOURCES.md`. Le plus parlant v�
 le barème club par club sur les 463 engagés : `points = V_quali + 0,5 × N_quali +
 2 × V_phase + 1 × N_phase + bonus`. Une page fausse est pire qu'une page datée.
 
-L'horaire est doublé (08:00 et 09:00 UTC) parce que cron travaille en UTC et que
-Paris change d'heure ; le passage inutile de l'autre saison sort immédiatement en
-« inchangé ».
+### Les horaires
+
+Deux rendez-vous, en heure de Paris : **23 h 38**, quand les matchs européens sont
+finis et que la source a recalculé, et **07 h 12**, pour que la page soit fraîche
+au réveil.
+
+Cron ne parle qu'UTC et ignore le changement d'heure, donc chaque rendez-vous
+demande deux lignes — une par saison. En pratique :
+
+| UTC | été | hiver |
+|---|---|---|
+| `38 21` | **23 h 38** | 22 h 38 |
+| `38 22` | 00 h 38 | **23 h 38** |
+| `12 5` | **07 h 12** | 06 h 12 |
+| `12 6` | 08 h 12 | **07 h 12** |
+
+La ligne qui tombe à côté ne coûte rien : elle relit la source, voit que rien n'a
+bougé et sort sans écrire. Ça donne deux tentatives le soir et deux le matin, ce
+qui n'est pas du luxe — GitHub documente que les tâches planifiées peuvent être
+retardées et que « some queued jobs may be dropped ». C'est arrivé dès le premier
+passage automatique. Pour la même raison la minute n'est jamais `00` : « High load
+times include the start of every hour. »
+
+### Le signe de vie
+
+GitHub désactive les tâches planifiées d'un dépôt public resté 60 jours sans
+activité. Comme le robot ne dépose un commit que quand les chiffres bougent, la
+trêve estivale suffirait à faire couper la tâche — juste avant la reprise. Au bout
+de 30 jours de silence, il écrit donc la date du jour dans
+`tools/uefa/last-checked.txt` et la dépose. Le compteur repart avec un mois de
+marge et `public/` n'est pas touché : le site publié reste identique à l'octet
+près. En pleine saison ce commit n'apparaît jamais.
 
 ## Arborescence
 

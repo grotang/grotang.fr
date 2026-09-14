@@ -1,14 +1,19 @@
 name: Rafraîchissement UEFA
 
 # Deux passages, parce que cron travaille en UTC et que Paris change d'heure :
-# 08:00 UTC vaut 10 h l'été, 09:00 UTC vaut 10 h l'hiver. Le passage « inutile »
+# 08:12 UTC vaut 10 h l'été, 09:12 UTC vaut 10 h l'hiver. Le passage « inutile »
 # de l'autre saison ne coûte rien — le script compare les données à celles déjà
 # publiées et sort sans rien faire si elles n'ont pas bougé. Ça donne au passage
 # un deuxième filet si la source publie tard.
+#
+# La minute 12 n'est pas décorative. GitHub prévient : « The schedule event can be
+# delayed during periods of high loads […] High load times include the start of
+# every hour […] some queued jobs may be dropped. » À l'heure pile, un passage peut
+# donc être simplement escamoté — c'est ce qui est arrivé au premier essai.
 on:
   schedule:
-    - cron: '0 8 * * *'
-    - cron: '0 9 * * *'
+    - cron: '12 8 * * *'
+    - cron: '12 9 * * *'
   workflow_dispatch:
     inputs:
       force:
@@ -51,14 +56,30 @@ jobs:
 
       - name: Déposer si quelque chose a changé
         run: |
-          if [ -z "$(git status --porcelain)" ]; then
-            echo "Rien à déposer."
-            exit 0
-          fi
-          STAND=$(node -p "JSON.parse(require('fs').readFileSync('tools/uefa/page.html','utf8').split('/*DATA_START*/')[1].split('/*DATA_END*/')[0].replace(/^const D\s*=\s*/,'').replace(/;\s*$/,'')).meta.lastUpdated")
+          set -euo pipefail
           git config user.name  "grotang.fr (robot)"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Coefficient UEFA : source arrêtée au $STAND"
-          git push
-          echo "Déposé. Netlify publie dans la minute."
+
+          if [ -n "$(git status --porcelain)" ]; then
+            STAND=$(node -p "JSON.parse(require('fs').readFileSync('tools/uefa/page.html','utf8').split('/*DATA_START*/')[1].split('/*DATA_END*/')[0].replace(/^const D\s*=\s*/,'').replace(/;\s*$/,'')).meta.lastUpdated")
+            git add -A
+            git commit -m "Coefficient UEFA : source arrêtée au $STAND"
+            git push
+            echo "Déposé. Netlify publie dans la minute."
+            exit 0
+          fi
+
+          # Rien de neuf côté source. Mais GitHub désactive les tâches planifiées
+          # d'un dépôt public resté 60 jours sans activité — ce qui arriverait
+          # pendant la trêve estivale, juste avant la reprise. On dépose donc une
+          # trace au bout de 30 jours de silence : le compteur repart avec un mois
+          # de marge, et le site publié ne change pas d'un octet.
+          AGE=$(( ( $(date +%s) - $(git log -1 --format=%ct) ) / 86400 ))
+          echo "Rien à déposer. Dernier commit il y a $AGE jour(s)."
+          if [ "$AGE" -ge 30 ]; then
+            date -u +"Derniere verification de la source : %Y-%m-%d %H:%M UTC" > tools/uefa/last-checked.txt
+            git add tools/uefa/last-checked.txt
+            git commit -m "Signe de vie : source inchangée depuis $AGE jours"
+            git push
+            echo "Signe de vie déposé, la tâche planifiée reste active."
+          fi
