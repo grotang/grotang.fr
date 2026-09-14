@@ -169,7 +169,10 @@ section > .panel + .panel{margin-top:14px}
 .barrow .seg:last-child{box-shadow:none}
 /* découpe club par club à l'intérieur d'une compétition : un filet clair, jamais
    une bordure — la largeur doit rester exactement proportionnelle aux points. */
-.barrow .cseg{height:100%; box-shadow:inset -1px 0 0 rgba(255,255,255,.6); transition:filter .08s}
+.barrow .cseg{height:100%; box-shadow:inset -1px 0 0 rgba(255,255,255,.6); transition:filter .08s;
+  display:flex; align-items:center; justify-content:center; overflow:hidden}
+.barrow .cseg span{font:600 9.5px/1 "IBM Plex Mono",monospace; letter-spacing:.02em; color:#fff;
+  opacity:.92; white-space:nowrap; pointer-events:none}
 .barrow .cseg.kend{box-shadow:inset -3px 0 0 var(--surface)}
 .barrow .cseg:last-child{box-shadow:none}
 .barrow .track{cursor:crosshair}
@@ -419,6 +422,42 @@ function dmy(v){
 }
 const nf = (v,d=3)=> v==null||Number.isNaN(v) ? "—" : v.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d});
 const nf1 = v => v.toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1});
+
+/* Sigles de clubs. Une barre ou un disque qui porte « PSG » ou « RMA » se lit sans
+   survol ; le nom complet reste dans l'infobulle. La table est écrite à la main —
+   un sigle est un usage, pas une troncature — et ne bouge que d'une saison à
+   l'autre ; le rafraîchissement quotidien ne la touche jamais, il ne réécrit que
+   le bloc de données. Un club absent de la table (promu, nouvelle nation dans le
+   top 8) retombe sur une abréviation dérivée du nom : jamais de trou. */
+const CSHORT = {
+  "Arsenal FC":"ARS","Manchester City":"MCI","Manchester United":"MUN","Aston Villa":"AVL",
+  "FC Liverpool":"LIV","AFC Bournemouth":"BOU","Crystal Palace":"CRY","Sunderland AFC":"SUN",
+  "Brighton & Hove Albion":"BHA","Newcastle United":"NEW","Tottenham Hotspur":"TOT","FC Chelsea":"CHE",
+  "FC Inter Mailand":"INT","Napoli":"NAP","AS Roma":"ROM","Como 1907":"COM","AC Milan":"MIL",
+  "Juventus Turin":"JUV","Atalanta Bergamo":"ATA","Lazio Rom":"LAZ","AC Florenz":"FIO","FC Bologna":"BOL",
+  "FC Barcelona":"FCB","Real Madrid":"RMA","FC Villarreal":"VIL","Atletico Madrid":"ATM",
+  "Real Betis":"BET","Real Sociedad":"RSO","RC Celta":"CEL","Getafe CF":"GET","FC Sevilla":"SEV",
+  "Athletic Bilbao":"ATH","FC Bayern München":"BAY","Borussia Dortmund":"BVB","RB Leipzig":"RBL",
+  "VfB Stuttgart":"VFB","TSG 1899 Hoffenheim":"HOF","Bayer Leverkusen":"B04","SC Freiburg":"SCF",
+  "Eintracht Frankfurt":"SGE","Borussia Mönchengladbach":"BMG","VfL Wolfsburg":"WOB","1. FC Union Berlin":"FCU",
+  "Paris Saint-Germain":"PSG","RC Lens":"RCL","Lille OSC":"LOSC","Olympique Lyonnais":"OL",
+  "Olympique de Marseille":"OM","Stade Rennais":"SRFC","AS Monaco":"ASM","OGC Nizza":"OGCN",
+  "Stade Brest":"SB29","RC Straßburg":"RCSA","FC Nantes":"FCN","FC Toulouse":"TFC","AJ Auxerre":"AJA",
+  "FC Porto":"FCP","Sporting CP":"SCP","SC Uniao Torreense":"TOR","SL Benfica":"SLB",
+  "Sporting Braga":"SCB","Vitoria Guimaraes":"VSC","FC Brügge":"CLB","Union Saint-Gilloise":"USG",
+  "VV St. Truiden":"STV","RSC Anderlecht":"RSCA","AA Gent":"GNT","KRC Genk":"GNK","Royal Antwerpen":"ANT",
+  "PSV Eindhoven":"PSV","Feyenoord":"FEY","NEC Nijmegen":"NEC","AZ Alkmaar":"AZ",
+  "FC Twente Enschede":"TWE","Ajax Amsterdam":"AJAX","FC Utrecht":"UTR","Go Ahead Eagles":"GAE"
+};
+/* Repli : on retire les formes juridiques et sponsors, puis on garde le mot qui
+   identifie le club — le plus souvent la ville — sur trois lettres. */
+const NOISE = /^(fc|ac|as|sc|sv|rc|cf|afc|ssc|ogc|aa|vv|sl|rb|tsg|vfb|vfl|kaa|krc|rsc|club|olympique|stade|real|athletic|atletico|borussia|bayer|eintracht|sporting|union|royal|de|du|d|the|1|1899|1907|de)$/i;
+function shortClub(n){
+  if(CSHORT[n]) return CSHORT[n];
+  const w = String(n).replace(/[.,&]/g,' ').split(/\s+/).filter(x=>x && !NOISE.test(x));
+  const base = w[0] || String(n);
+  return base.slice(0,3).toUpperCase();
+}
 const sg = (v,d=3)=> (v>0?"+":v<0?"−":"") + Math.abs(v).toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d});
 const el = (t,a={},...k)=>{const n=document.createElement(t);for(const[p,v]of Object.entries(a)){if(p==="class")n.className=v;else if(p==="html")n.innerHTML=v;else n.setAttribute(p,v);}k.flat().forEach(c=>n.appendChild(typeof c==="string"?document.createTextNode(c):c));return n;};
 const SEASONS = ["2022/23","2023/24","2024/25","2025/26","2026/27"];
@@ -662,8 +701,12 @@ function drawK(){
       const lastOfK = i===k.findLastIndex(z=>z>0);
       inK.forEach((x,j)=>{
         const wc = (kMode==='abs' ? (x.p/div)/max : x.p/(tot*div)) * 100;
+        /* la piste fait environ 620 px : en dessous de ~4,5 % un sigle de trois
+           lettres ne tient pas, on le laisse à l'infobulle plutôt que de le rogner. */
+        const sg = shortClub(x.n);
+        const lab = wc >= (sg.length > 3 ? 5.6 : 4.2) ? `<span>${sg}</span>` : '';
         segs += `<div class="cseg${!lastOfK && j===inK.length-1?' kend':''}" data-c="${c}" data-i="${ci++}"`
-             +  ` style="width:${wc.toFixed(3)}%;background:var(${KVAR[i]})"></div>`;
+             +  ` style="width:${wc.toFixed(3)}%;background:var(${KVAR[i]})">${lab}</div>`;
       });
     });
     const split=k.map((v,i)=>`<u>${v>0?(kMode==='abs'?nf(v,2):Math.round(v/tot*100)+' %'):'·'}</u>`).join('');
@@ -734,7 +777,7 @@ function syncK(){ document.getElementById('k-abs').setAttribute('aria-pressed',k
   const W = 1000, mL = 128, mR = 74, LANE = 2*R + 20, mT = 26;
   const H = mT + ALL.length * LANE + 12;
   let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">`;
-  s += `<text x="${mL}" y="16" font-size="11" fill="var(--ink-3)">aire du disque = points d'équipe rapportés · anneau vide = engagé, rien rapporté</text>`;
+  s += `<text x="${mL}" y="16" font-size="11" fill="var(--ink-3)">aire du disque = points d'équipe rapportés · sigle du club au centre · anneau vide = engagé, rien rapporté</text>`;
 
   ALL.forEach((row, i) => {
     const y = mT + i*LANE + LANE/2, isFR = row.c === 'FRA';
@@ -746,7 +789,12 @@ function syncK(){ document.getElementById('k-abs').setAttribute('aria-pressed',k
       s += `<g><title>${cb.n} — ${KNAME[cb.k]} · ${nf1(cb.p)} point${cb.p>1?'s':''} d'équipe</title>`;
       s += cb.p > 0
         ? `<circle cx="${x.toFixed(1)}" cy="${y}" r="${r.toFixed(1)}" fill="${col}" opacity=".82"/>`
-          + (r >= 13 ? `<text x="${x.toFixed(1)}" y="${y+4}" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, monospace" fill="#fff">${nf1(cb.p)}</text>` : '')
+          + (r >= 19
+              ? `<text x="${x.toFixed(1)}" y="${y-1}" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, monospace" fill="#fff">${shortClub(cb.n)}</text>`
+                + `<text x="${x.toFixed(1)}" y="${y+11}" text-anchor="middle" font-size="9.5" font-weight="600" font-family="IBM Plex Mono, monospace" fill="#fff" opacity=".8">${nf1(cb.p)}</text>`
+              : r >= 12
+                ? `<text x="${x.toFixed(1)}" y="${y+3.5}" text-anchor="middle" font-size="9.5" font-weight="700" font-family="IBM Plex Mono, monospace" fill="#fff">${shortClub(cb.n)}</text>`
+                : '')
         : `<circle cx="${x.toFixed(1)}" cy="${y}" r="${r}" fill="none" stroke="${col}" stroke-width="1.4" stroke-dasharray="2.5 2.5" opacity=".8"/>`;
       s += `</g>`;
       x += r + GAP;
