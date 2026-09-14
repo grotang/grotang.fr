@@ -279,7 +279,7 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">3</span><h3>Journée par journée</h3><span class="sub"><span class="seg" role="group" aria-label="Saison" id="seasonSeg"></span></span></div>
+    <div class="ptitle"><span class="no">3</span><h3>Journée par journée</h3><span class="sub"><span class="seg" role="group" aria-label="Lecture"><button type="button" id="l-cum" aria-pressed="true">Cumul</button><button type="button" id="l-gap" aria-pressed="false">Écart au leader</button></span><span class="seg" role="group" aria-label="Saison" id="seasonSeg"></span></span></div>
     <div class="chips" id="lchips"></div>
     <figure><div class="chartbox big" id="boxL"><svg id="chartL" role="img" aria-label="Coefficient de saison cumulé, étape par étape"></svg><div class="tip" id="tipL" hidden></div></div>
       <figcaption id="capL"></figcaption></figure>
@@ -792,25 +792,52 @@ const pad18 = a => { const o=a.slice(); while(o.length<nG) o.push(o[o.length-1])
 const hasSeason = c => isCur() ? true : !!(HIST[selY]&&HIST[selY][c]);
 const curve = c => isCur() ? [...Array(nG).keys()].map(gi=>gi<=lastRealG?gCum(c,gi):null) : pad18(HIST[selY][c]);
 const lastIdx = ()=> isCur() ? lastRealG : nG-1;
+
+/* Deux lectures des mêmes chiffres. En cumul, les huit courbes montent ensemble
+   et finissent tassées : à la fin d'une saison un demi-point d'écart occupe deux
+   pixels. « Écart au leader » ramène le meilleur de chaque étape à zéro et étale
+   tout le reste en dessous — même données, origine mobile. Le leader est cherché
+   sur les huit nations, pas sur la sélection : sinon désélectionner l'Angleterre
+   déplacerait le zéro et changerait une réalité. */
+let lMode = 'cum';
+let LEAD = [];
+const computeLead = ()=>{ LEAD = [...Array(nG).keys()].map(gi=>{
+    let m = null;
+    TOP8.filter(hasSeason).forEach(c=>{ const v = curve(c)[gi]; if(v != null && (m === null || v > m)) m = v; });
+    return m; }); };
+const series = c => { const v = curve(c);
+  if (lMode === 'cum') return v;
+  return v.map((x, gi) => (x == null || LEAD[gi] == null) ? null : +(x - LEAD[gi]).toFixed(6)); };
 document.getElementById('seasonSeg').innerHTML = SEAS.map(([k,l])=>
   `<button type="button" data-y="${k}" aria-pressed="${k===selY}">${l}</button>`).join('');
 document.getElementById('seasonSeg').onclick=e=>{const b=e.target.closest('button'); if(!b)return;
   selY=b.dataset.y; [...e.currentTarget.children].forEach(x=>x.setAttribute('aria-pressed',x.dataset.y===selY)); drawL();};
+const syncL = ()=>{ document.getElementById('l-cum').setAttribute('aria-pressed', lMode==='cum');
+  document.getElementById('l-gap').setAttribute('aria-pressed', lMode==='gap'); drawL(); };
+document.getElementById('l-cum').onclick = ()=>{ lMode='cum'; syncL(); };
+document.getElementById('l-gap').onclick = ()=>{ lMode='gap'; syncL(); };
 
 const selL=new Set(TOP8);
 function drawL(){
   const W=1000,H=562,mL=58,mR=80,mT=22,mB=76,PAD=20;   // 16:9
   const sel=[...TOP8].filter(c=>selL.has(c)&&hasSeason(c));
   const LI=lastIdx();
-  let hi=0.5; sel.forEach(c=>{const v=curve(c); for(let i=0;i<=LI;i++) if(v[i]!=null&&v[i]>hi) hi=v[i];});
-  const sc=niceScale(0,hi*1.05,7), X=gi=>mL+PAD+(W-mL-mR-2*PAD)*gi/(nG-1), Y=v=>mT+(H-mT-mB)*(1-(v-sc.lo)/(sc.hi-sc.lo));
+  computeLead();
+  const gap = lMode === 'gap';
+  let sc;
+  if(gap){ let lo=-0.5; sel.forEach(c=>{const v=series(c); for(let i=0;i<=LI;i++) if(v[i]!=null&&v[i]<lo) lo=v[i];});
+    sc = niceScale(lo*1.06, 0, 7); }
+  else { let hi=0.5; sel.forEach(c=>{const v=series(c); for(let i=0;i<=LI;i++) if(v[i]!=null&&v[i]>hi) hi=v[i];});
+    sc = niceScale(0, hi*1.05, 7); }
+  const X=gi=>mL+PAD+(W-mL-mR-2*PAD)*gi/(nG-1), Y=v=>mT+(H-mT-mB)*(1-(v-sc.lo)/(sc.hi-sc.lo));
   const cw=(W-mL-mR-2*PAD)/(nG-1);
   let g=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
   if(isCur()){ const fg=[...Array(nG).keys()].find(gFuture);
     if(fg!==undefined) g+=`<rect x="${(X(fg)-cw/2).toFixed(1)}" y="${mT}" width="${(W-mR-X(fg)+cw/2).toFixed(1)}" height="${H-mT-mB}" fill="var(--surface-2)" opacity=".8"/>`
       +`<text x="${((X(fg)+W-mR)/2).toFixed(1)}" y="${mT+16}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink-3)">reste à jouer</text>`; }
   sc.ticks.forEach(t=>{ g+=`<line x1="${mL}" y1="${Y(t).toFixed(1)}" x2="${W-mR}" y2="${Y(t).toFixed(1)}" stroke="var(--rule-soft)"/>`
-    +`<text x="${mL-9}" y="${(Y(t)+4).toFixed(1)}" text-anchor="end" font-size="11.5" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${t.toLocaleString('fr-FR',{minimumFractionDigits:sc.dec,maximumFractionDigits:sc.dec})}</text>`; });
+    +`<text x="${mL-9}" y="${(Y(t)+4).toFixed(1)}" text-anchor="end" font-size="11.5" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${(gap&&t<0?'\u2212':'')+Math.abs(t).toLocaleString('fr-FR',{minimumFractionDigits:sc.dec,maximumFractionDigits:sc.dec})}</text>`; });
+  if(gap) g+=`<line x1="${mL}" y1="${Y(0).toFixed(1)}" x2="${W-mR}" y2="${Y(0).toFixed(1)}" stroke="var(--ink-2)" stroke-width="1.5"/>`;
   for(let gi=0;gi<nG;gi++){ const d=isCur()?gDate(gi):null;
     g+=axLab(gi,X(gi),H-mB+18,isCur()&&gAnom(gi)?'var(--c3)':'var(--ink-2)',10);
     if(d) g+=`<text x="${X(gi).toFixed(1)}" y="${H-mB+32}" text-anchor="middle" font-size="9" fill="var(--ink-3)">${d[1]}</text>`; }
@@ -819,23 +846,35 @@ function drawL(){
   [[G_J1,'phase de ligue'],[G_KO,'phase finale']].forEach(([gi,lab])=>{ const x=X(gi)-cw/2;
     g+=`<line x1="${x.toFixed(1)}" y1="${mT}" x2="${x.toFixed(1)}" y2="${H-mB}" stroke="var(--ink-3)" stroke-dasharray="3 3"/>`
      + `<text x="${(x+5).toFixed(1)}" y="${H-mB-6}" font-size="10" fill="var(--ink-3)">${lab}</text>`; });
-  sel.forEach(c=>{ const col=`var(${SLOT[c]})`, fr=c==='FRA', v=curve(c), pts=[];
+  sel.forEach(c=>{ const col=`var(${SLOT[c]})`, fr=c==='FRA', v=series(c), raw=curve(c), pts=[];
     for(let gi=0;gi<=LI;gi++) if(v[gi]!=null) pts.push(`${X(gi).toFixed(1)},${Y(v[gi]).toFixed(1)}`);
     g+=`<polyline points="${pts.join(' ')}" fill="none" stroke="${col}" stroke-width="${fr?3.4:2}" stroke-linejoin="round" stroke-linecap="round"/>`;
-    for(let gi=1;gi<=LI;gi++) if(v[gi]!=null&&v[gi-1]!=null&&v[gi]>v[gi-1]+1e-9)
+    /* un point = une étape où la nation a marqué. En écart au leader la courbe
+       peut descendre sur une étape gagnante : c'est le brut qui fait foi. */
+    for(let gi=1;gi<=LI;gi++) if(v[gi]!=null&&raw[gi]!=null&&raw[gi-1]!=null&&raw[gi]>raw[gi-1]+1e-9)
       g+=`<circle cx="${X(gi).toFixed(1)}" cy="${Y(v[gi]).toFixed(1)}" r="${fr?4:3.2}" fill="${col}" stroke="var(--surface)" stroke-width="2"/>`; });
-  const GAP=13, L=sel.map(c=>({c,y0:Y(curve(c)[LI]),y:Y(curve(c)[LI]),fr:c==='FRA'})).sort((x,y)=>x.y0-y.y0);
+  const GAP=13, L=sel.map(c=>({c,y0:Y(series(c)[LI]),y:Y(series(c)[LI]),fr:c==='FRA'})).sort((x,y)=>x.y0-y.y0);
   for(let i=1;i<L.length;i++) if(L[i].y-L[i-1].y<GAP) L[i].y=L[i-1].y+GAP;
   for(let i=L.length-2;i>=0;i--) if(L[i+1].y-L[i].y<GAP) L[i].y=L[i+1].y-GAP;
   const lx=X(LI)+11;
   L.forEach(l=>{ const col=`var(${SLOT[l.c]})`;
     if(Math.abs(l.y-l.y0)>1.5) g+=`<path d="M ${(X(LI)+3).toFixed(1)} ${l.y0.toFixed(1)} L ${(lx-6).toFixed(1)} ${l.y.toFixed(1)}" stroke="${col}" stroke-width="1" fill="none" opacity=".45"/>`;
-    g+=`<text x="${lx.toFixed(1)}" y="${(l.y+4).toFixed(1)}" font-size="11.5" font-weight="${l.fr?'700':'600'}" font-family="IBM Plex Mono, monospace" fill="${col}" paint-order="stroke" stroke="var(--surface)" stroke-width="3.5">${l.c} ${nf(curve(l.c)[LI],1)}</text>`; });
+    g+=`<text x="${lx.toFixed(1)}" y="${(l.y+4).toFixed(1)}" font-size="11.5" font-weight="${l.fr?'700':'600'}" font-family="IBM Plex Mono, monospace" fill="${col}" paint-order="stroke" stroke="var(--surface)" stroke-width="3.5">${l.c} ${(v=>gap?(v<-0.05?'\u2212'+nf(Math.abs(v),1):'0,0'):nf(v,1))(series(l.c)[LI])}</text>`; });
   g+=`<line id="guideL" x1="0" y1="${mT}" x2="0" y2="${H-mB}" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="2 3" opacity="0"/>`;
   g+=`</svg>`;
   document.getElementById('chartL').outerHTML = g.replace('<svg','<svg id="chartL" role="img" aria-label="Coefficient de saison cumulé, étape par étape"');
   hoverL(sel, LI, X, Y, W, H, mL, mR, PAD);
   const lab=SEAS.find(x=>x[0]===selY)[1];
+  if(gap){
+    const best = TOP8.filter(hasSeason).reduce((a,c)=> curve(c)[LI] > curve(a)[LI] ? c : a);
+    const fv = series('FRA')[LI];
+    document.getElementById('capL').innerHTML =
+      `Saison <b>${lab}</b>, lecture en <b>écart au leader</b>. À chaque étape, la meilleure nation des huit est ramenée à zéro — la ligne épaisse du haut — et les autres se lisent en dessous, en points de coefficient de saison. `
+      + `C'est la même donnée qu'en cumul, mais l'origine suit le leader : les huit courbes cessent de monter ensemble et l'écart, lui, reste à l'échelle du graphique jusqu'au dernier tour. `
+      + `Un segment qui remonte, c'est du terrain repris sur le leader ; un segment qui plonge alors que la nation a marqué — le point est là pour le dire — signifie simplement que le leader a marqué davantage. `
+      + (fv != null ? `Au dernier point, la France est à <b>${fv < -0.05 ? '\u2212'+nf(Math.abs(fv),2) : '0,00'}</b> de ${name(best)}.` : '');
+    return;
+  }
   document.getElementById('capL').innerHTML = isCur()
     ? `Saison <b>${lab}</b>, en cours. L'axe couvre l'année entière, de l'entrée en lice à la finale du 5 juin 2027 ; la zone grisée reste à jouer. <b>Entrée en lice</b> = bonus de participation, 6 points par club qualifié pour la phase de ligue de C1. <b>Rank bonus</b> = bonus lié au classement final de la phase de ligue, attribué fin janvier — la colonne se remplira alors. Les bonus de qualification aux 8<sup>es</sup>, quarts, demies et finale restent intégrés au tour qui les déclenche.`
     : `Saison <b>${lab}</b>, terminée. Courbes reconstruites tour par tour depuis l'archive de 5-jahres-wertung.de : le point final de chaque courbe reproduit exactement le coefficient officiel de la saison. ${+selY<2024
@@ -861,7 +900,7 @@ function hoverL(sel, LI, X, Y, W, H, mL, mR, PAD){
     if(raw>LI+0.5){ hide(); return; }   /* zone à jouer : rien à lire */
     let gi=Math.max(0,Math.min(LI,Math.round(raw)));
     if(guide){ guide.setAttribute('x1',X(gi).toFixed(1)); guide.setAttribute('x2',X(gi).toFixed(1)); guide.setAttribute('opacity','1'); }
-    const rows=sel.map(c=>({c, v:curve(c)[gi], d:gi>0?curve(c)[gi]-curve(c)[gi-1]:curve(c)[gi]}))
+    const rows=sel.map(c=>({c, v:series(c)[gi], d:gi>0?curve(c)[gi]-curve(c)[gi-1]:curve(c)[gi]}))
                   .filter(x=>x.v!=null).sort((a,b)=>b.v-a.v);
     tip.innerHTML = `<div class="th">${GROUPS[gi].lab}${gDate(gi)&&isCur()?' · '+gDate(gi)[1]:''}</div>` + rows.map(x=>
       `<div class="tr"><i style="background:var(${SLOT[x.c]})"></i><span class="nm">${name(x.c)}</span>`
