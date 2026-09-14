@@ -1,19 +1,30 @@
 name: Rafraîchissement UEFA
 
-# Deux passages, parce que cron travaille en UTC et que Paris change d'heure :
-# 08:12 UTC vaut 10 h l'été, 09:12 UTC vaut 10 h l'hiver. Le passage « inutile »
-# de l'autre saison ne coûte rien — le script compare les données à celles déjà
-# publiées et sort sans rien faire si elles n'ont pas bougé. Ça donne au passage
-# un deuxième filet si la source publie tard.
+# Deux rendez-vous par jour, en heure de Paris :
+#   23 h 38 — les matchs de C1, C3 et C4 sont finis, jahres a recalculé ;
+#   07 h 12 — la page est fraîche avant le réveil.
 #
-# La minute 12 n'est pas décorative. GitHub prévient : « The schedule event can be
-# delayed during periods of high loads […] High load times include the start of
-# every hour […] some queued jobs may be dropped. » À l'heure pile, un passage peut
-# donc être simplement escamoté — c'est ce qui est arrivé au premier essai.
+# Mais cron ne parle qu'UTC et ignore le changement d'heure. Chaque rendez-vous
+# demande donc deux lignes, une pour l'été et une pour l'hiver. Celle qui tombe à
+# côté ne coûte rien : le script compare les chiffres à ceux déjà publiés et sort
+# sans rien écrire s'ils n'ont pas bougé.
+#
+#   38 21 UTC → 23 h 38 été   ·   22 h 38 hiver
+#   38 22 UTC → 00 h 38 été   ·   23 h 38 hiver
+#   12 05 UTC → 07 h 12 été   ·   06 h 12 hiver
+#   12 06 UTC → 08 h 12 été   ·   07 h 12 hiver
+#
+# En pratique ça donne deux tentatives le soir et deux le matin, quelle que soit
+# la saison — un vrai filet, puisque GitHub prévient que « some queued jobs may be
+# dropped » et qu'un passage a déjà été escamoté.
+#
+# La minute n'est jamais 00 : « High load times include the start of every hour. »
 on:
   schedule:
-    - cron: '12 8 * * *'
-    - cron: '12 9 * * *'
+    - cron: '38 21 * * *'
+    - cron: '38 22 * * *'
+    - cron: '12 5 * * *'
+    - cron: '12 6 * * *'
   workflow_dispatch:
     inputs:
       force:
