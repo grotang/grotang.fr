@@ -66,6 +66,11 @@ h1{font-size:clamp(30px,4.8vw,48px); font-weight:600; line-height:1.04; letter-s
 .tsw[aria-pressed="true"] .tsw-i{background:var(--fr); box-shadow:none}
 .stamp{display:grid; gap:3px; text-align:right; font-size:12px; color:var(--ink-2)}
 .stamp b{color:var(--ink); font-weight:600}
+/* la ligne tournée vers l'avenir se distingue des deux constats */
+.stamp .next{margin-top:3px; padding-top:5px; border-top:1px solid var(--rule-soft);
+  display:flex; align-items:center; justify-content:flex-end; gap:6px}
+.stamp .comp{font-size:10.5px; font-weight:700; letter-spacing:.04em; color:#fff;
+  padding:1px 6px; border-radius:999px; line-height:1.5}
 .eyebrow{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); font-weight:600;
          font-variation-settings:"wdth" 100}
 
@@ -108,8 +113,8 @@ section{margin-top:clamp(30px,4.5vw,52px)}
 .seg button:focus-visible{outline:2px solid var(--fr); outline-offset:-2px}
 figure{margin:0}
 figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-height:1.55; max-width:124ch}
-.chartbox{width:100%; overflow:hidden}
-.chartbox.big{position:relative; max-height:84vh}
+.chartbox{width:100%; overflow:hidden; position:relative}
+.chartbox.big{max-height:84vh}
 .chartbox.big svg{max-height:84vh}
 .tip{position:absolute; pointer-events:none; z-index:3; background:var(--surface); border:1px solid var(--rule);
      border-radius:3px; padding:8px 10px; box-shadow:0 6px 20px rgba(0,0,0,.16); font-size:12px; min-width:132px}
@@ -332,12 +337,12 @@ body{margin:0}</style>
 
 <section>
   <div class="shead">
-    <h2>Le rang à 5 ans, étape par étape</h2>
-    <p>Position des douze premières associations. Un croisement de courbes est un dépassement.</p>
+    <h2>La course à la 5<sup>e</sup> place</h2>
+    <p>Le rang bouge une fois par an ; l'écart, lui, bouge à chaque journée. Ici la France est la ligne zéro : au-dessus, ce qu'il faut rattraper ; en dessous, l'avance sur les poursuivants.</p>
   </div>
   <div class="panel">
     <figure>
-      <div class="chartbox"><svg id="chartB" role="img" aria-label="Évolution du rang étape par étape"></svg></div>
+      <div class="chartbox" id="boxB"><svg id="chartB" role="img" aria-label="Mouvement de l'écart de coefficient à la France depuis le 1er juillet"></svg><div class="tip" id="tipB" hidden></div></div>
       <figcaption id="capB"></figcaption>
     </figure>
   </div>
@@ -441,10 +446,6 @@ const seasonRank = (()=>{ const s=[...N].sort((a,b)=>b.y[4]-a.y[4]); return Obje
 
 /* ---------- masthead ---------- */
 document.getElementById('eyebrow').textContent = "Saison " + D.meta.season + " · liste d'accès " + D.meta.allocationSeason;
-document.getElementById('stamp').innerHTML =
-  "<div>Source mise à jour <b>"+dmy(D.meta.lastUpdated)+"</b></div>" +
-  "<div>Prochaine journée <b>"+dmy(D.meta.nextMatchday)+"</b></div>" +
-  "<div>Page recalculée <b>"+dmy(D.meta.built)+"</b></div>";
 document.getElementById('foot').textContent =
   "Données relevées directement sur 5-jahres-wertung.de, site privé de Ralf Biniasz sans lien avec l'UEFA · instantané du "
   + dmy(D.meta.lastUpdated) + " · page reconstruite automatiquement à 23 h 38 et 7 h 12.";
@@ -493,6 +494,27 @@ const CAL = {
 const TODAY = new Date();
 const dOf = iso => new Date(iso+'T00:00:00');
 const frDate = iso => dOf(iso).toLocaleDateString('fr-FR',{day:'numeric',month:'long'});
+/* Le tampon d'en-tête. « Prochain match » vient en dernier : c'est la seule des
+   trois dates qui regarde vers l'avant. La source ne donne que le jour ; la
+   compétition se déduit du calendrier ci-dessus, et l'heure est celle du premier
+   coup d'envoi européen, invariable à 18 h 45 (Paris) sur la phase de ligue. Une
+   entrée de CAL peut porter un troisième champ pour un horaire dérogatoire. */
+const KICKOFF = '18h45';
+const nextMatch = (()=>{
+  let best = null;
+  [0,1,2].forEach(k => CAL[k].forEach(([iso,,h]) => {
+    if (dOf(iso) >= TODAY && (!best || iso < best.iso)) best = { iso, k, h: h || KICKOFF };
+  }));
+  if (!best) return null;
+  const p = best.iso.split('-');
+  return { txt: `${p[2]}/${p[1]}/${p[0]} ${best.h}`, comp: KSHORT[best.k], full: KNAME[best.k], k: best.k };
+})();
+document.getElementById('stamp').innerHTML =
+  "<div>Source mise à jour <b>" + dmy(D.meta.lastUpdated) + "</b></div>" +
+  "<div>Page recalculée <b>" + dmy(D.meta.built) + "</b></div>" +
+  (nextMatch
+    ? `<div class="next">Prochain match <b title="Premier coup d'envoi, heure de Paris">${nextMatch.txt}</b><b class="comp" style="background:var(${KVAR[nextMatch.k]})" title="${nextMatch.full}">${nextMatch.comp}</b></div>`
+    : "<div>Prochain match <b>" + dmy(D.meta.nextMatchday) + "</b></div>");
 document.getElementById('asof').textContent = 'source au ' + dmy(D.meta.lastUpdated);
 
 /* ---------- 0 · où en est la saison ---------- */
@@ -810,34 +832,118 @@ mkChips(document.getElementById('zchips'), TOP8, selZ, true, ()=>drawZ());
 
 syncP(); syncK(); drawL(); drawZ();
 
-/* ---------- chart B : bump ---------- */
+/* ---------- chart B : la course à la 5e place ---------- */
+/* Un bump chart sur le rang à 5 ans donne des lignes plates : le rang ne bouge
+   qu'une fois par an. Tracer l'écart brut à la France ne vaut guère mieux —
+   l'Italie à +20 écrase l'échelle et on ne voit plus les dixièmes qui décident
+   réellement de la 5e place.
+   On trace donc le MOUVEMENT de cet écart depuis le 1er juillet : chaque nation
+   part de zéro à l'entrée en lice, monte si elle gagne du terrain sur la France,
+   descend si elle en perd. L'écart absolu, lui, reste lisible dans l'étiquette
+   de droite et dans l'infobulle. */
 (function(){
-  const top = N.slice(0,12).map(n=>n.c);
-  const W=1000, H=430, mL=104, mR=104, mT=22, mB=48;
-  const xs=played;
-  const X = k => mL + (W-mL-mR)*(xs.length<2?0.5:k/(xs.length-1));
-  const Y = r => mT + (H-mT-mB)*((r-1)/11);
-  let s=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
-  for(let r=1;r<=12;r++){
-    s+=`<line x1="${mL}" y1="${Y(r).toFixed(1)}" x2="${W-mR}" y2="${Y(r).toFixed(1)}" stroke="var(--rule-soft)" stroke-width="1"/>`;
-    s+=`<text x="${mL-12}" y="${(Y(r)+4).toFixed(1)}" text-anchor="end" font-size="11.5" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${r}</text>`;
-  }
-  xs.forEach((i,k)=> s+=`<text x="${X(k).toFixed(1)}" y="${H-mB+20}" text-anchor="middle" font-size="11.5" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${SHORT[i]}</text>`);
-  top.forEach(c=>{
-    const isFR=c==="FRA", col=isFR?"var(--fr)":"var(--ink-3)";
-    const pts=xs.map((i,k)=>`${X(k).toFixed(1)},${Y(Math.min(step(c,i)[2],12)).toFixed(1)}`).join(" ");
-    s+=`<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="${isFR?3.4:1.6}" stroke-linejoin="round" stroke-linecap="round" opacity="${isFR?1:.55}"/>`;
-    const r0=Math.min(step(c,xs[0])[2],12), r1=Math.min(step(c,xs[xs.length-1])[2],12);
-    s+=`<text x="${mL-30}" y="${(Y(r0)+4).toFixed(1)}" text-anchor="end" font-size="12" font-weight="${isFR?'700':'500'}" font-family="IBM Plex Mono, monospace" fill="${col}">${c}</text>`;
-    s+=`<text x="${W-mR+12}" y="${(Y(r1)+4).toFixed(1)}" font-size="12" font-weight="${isFR?'700':'500'}" font-family="IBM Plex Mono, monospace" fill="${col}">${c}</text>`;
+  const iFR = N.findIndex(n => n.c === 'FRA');
+  if (iFR < 0) return;
+  const around = N.slice(Math.max(0, iFR - 3), iFR + 4).map(n => n.c).filter(c => c !== 'FRA');
+  const above = N[iFR - 1] && N[iFR - 1].c, below = N[iFR + 1] && N[iFR + 1].c;
+  const xs = played;
+  if (!around.length || xs.length < 2) return;
+
+  const W = 1000, H = 470, mL = 62, mR = 112, mT = 26, mB = 52, PAD = 18;
+  const X = k => mL + PAD + (W - mL - mR - 2 * PAD) * (xs.length < 2 ? 0.5 : k / (xs.length - 1));
+  const gap = (c, i) => step(c, i)[0] - step('FRA', i)[0];
+  const base = {}; around.forEach(c => base[c] = gap(c, xs[0]));
+  const mov = (c, i) => gap(c, i) - base[c];
+
+  let lo = 0, hi = 0;
+  around.forEach(c => xs.forEach(i => { const v = mov(c, i); if (v < lo) lo = v; if (v > hi) hi = v; }));
+  const pad = Math.max(0.15, (hi - lo) * 0.18); lo -= pad; hi += pad;
+  const sc = niceScale(lo, hi, 6);
+  const Y = v => mT + (H - mT - mB) * (1 - (v - sc.lo) / (sc.hi - sc.lo));
+
+  let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
+  sc.ticks.forEach(t => {
+    s += `<line x1="${mL}" y1="${Y(t).toFixed(1)}" x2="${W - mR}" y2="${Y(t).toFixed(1)}" stroke="var(--rule-soft)"/>`
+      + `<text x="${mL - 9}" y="${(Y(t) + 4).toFixed(1)}" text-anchor="end" font-size="11.5" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${t > 0 ? '+' : ''}${nf(t, sc.dec)}</text>`;
   });
-  s+=`</svg>`;
-  document.getElementById('chartB').outerHTML = s.replace('<svg','<svg id="chartB" role="img" aria-label="Évolution du rang étape par étape"');
-  const moves = N.slice(0,12).filter(n=>step(n.c,played[0])[2]!==step(n.c,lastPlayed)[2])
-     .map(n=>`${name(n.c)} ${step(n.c,played[0])[2]}<sup>e</sup> → ${step(n.c,lastPlayed)[2]}<sup>e</sup>`);
-  document.getElementById('capB').innerHTML = moves.length
-    ? `Mouvements depuis la première étape : ${moves.join(' · ')}.`
-    : `Aucun changement de rang dans les douze premières associations depuis la première étape de la saison.`;
+  s += `<line id="guideB" x1="0" y1="${mT}" x2="0" y2="${H - mB}" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>`;
+  /* la ligne de France : c'est le rythme de référence, pas une courbe parmi d'autres */
+  s += `<line x1="${mL}" y1="${Y(0).toFixed(1)}" x2="${W - mR}" y2="${Y(0).toFixed(1)}" stroke="var(--fr)" stroke-width="3"/>`
+     + `<text x="${mL + PAD}" y="${(Y(0) - 9).toFixed(1)}" font-size="10.5" font-weight="600" fill="var(--fr)">rythme de la France</text>`;
+
+  xs.forEach((i, k) => s += `<text x="${X(k).toFixed(1)}" y="${H - mB + 20}" text-anchor="middle" font-size="11" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${SHORT[i]}</text>`);
+
+  const L = [];
+  around.forEach(c => {
+    const key = (c === above || c === below);
+    const col = `var(${SLOT[c] || '--ink-3'})`;
+    const pts = xs.map((i, k) => `${X(k).toFixed(1)},${Y(mov(c, i)).toFixed(1)}`).join(' ');
+    s += `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="${key ? 2.8 : 1.6}" stroke-linejoin="round" stroke-linecap="round" opacity="${key ? 1 : .5}"/>`;
+    const yEnd = Y(mov(c, xs[xs.length - 1]));
+    L.push({ c, key, col, y0: yEnd, y: yEnd });
+  });
+  L.push({ c: 'FRA', key: true, col: 'var(--fr)', y0: Y(0), y: Y(0), self: true });
+  /* décollement vertical des étiquettes de droite */
+  L.sort((a, b) => a.y0 - b.y0);
+  const G = 15;
+  for (let i = 1; i < L.length; i++) if (L[i].y - L[i - 1].y < G) L[i].y = L[i - 1].y + G;
+  for (let i = L.length - 2; i >= 0; i--) if (L[i + 1].y - L[i].y < G) L[i].y = L[i + 1].y - G;
+  const last = xs[xs.length - 1];
+  L.forEach(l => {
+    if (Math.abs(l.y - l.y0) > 1.5)
+      s += `<path d="M ${(W - mR - 2).toFixed(1)} ${l.y0.toFixed(1)} L ${(W - mR + 5).toFixed(1)} ${l.y.toFixed(1)}" stroke="${l.col}" stroke-width="1" fill="none" opacity=".45"/>`;
+    s += `<text x="${W - mR + 8}" y="${(l.y + 4).toFixed(1)}" font-size="12" font-weight="${l.key ? '700' : '500'}" font-family="IBM Plex Mono, monospace" fill="${l.col}" opacity="${l.key ? 1 : .7}">${l.c}`
+       + (l.self ? '' : (g => `<tspan fill="var(--ink-3)" font-weight="500" font-size="11"> ${g > 0 ? '+' : '−'}${nf(Math.abs(g), 1)}</tspan>`)(gap(l.c, last)))
+       + `</text>`;
+  });
+  s += `</svg>`;
+  document.getElementById('chartB').outerHTML = s.replace('<svg', '<svg id="chartB" role="img" aria-label="Mouvement de l\'écart de coefficient à la France depuis le 1er juillet"');
+
+  /* infobulle : écart absolu, mouvement depuis l'entrée, gain de l'étape */
+  (function(){
+    const svg = document.getElementById('chartB'), box = document.getElementById('boxB'), tip = document.getElementById('tipB');
+    const guide = document.getElementById('guideB');
+    if (!svg || !box || !tip) return;
+    const hide = () => { tip.hidden = true; if (guide) guide.setAttribute('opacity', '0'); };
+    const geo = () => { const r = svg.getBoundingClientRect();
+      if (!r.width || !r.height) return null;
+      const sq = Math.min(r.width / W, r.height / H);
+      return { r, s: sq, ox: r.left + (r.width - W * sq) / 2, oy: r.top + (r.height - H * sq) / 2 }; };
+    svg.addEventListener('mouseleave', hide);
+    svg.addEventListener('mousemove', ev => {
+      const Gm = geo(); if (!Gm) return;
+      const vx = (ev.clientX - Gm.ox) / Gm.s;
+      const stepW = (W - mL - mR - 2 * PAD) / (xs.length - 1);
+      const k = Math.max(0, Math.min(xs.length - 1, Math.round((vx - mL - PAD) / stepW)));
+      const i = xs[k], iPrev = k > 0 ? xs[k - 1] : null;
+      guide.setAttribute('x1', X(k).toFixed(1)); guide.setAttribute('x2', X(k).toFixed(1)); guide.setAttribute('opacity', '1');
+      const rows = around.map(c => ({ c, g: gap(c, i), m: mov(c, i), d: iPrev == null ? 0 : gap(c, i) - gap(c, iPrev) }))
+                         .sort((a, b) => b.g - a.g);
+      tip.innerHTML = `<div class="th">${SHORT[i]} · écart à la France</div>` + rows.map(x =>
+        `<div class="tr"><i style="background:var(${SLOT[x.c] || '--ink-3'})"></i><span class="nm">${name(x.c)}</span>`
+        + `<b>${x.g > 0 ? '+' : '−'}${nf(Math.abs(x.g), 2)}</b>`
+        + (Math.abs(x.m) > 0.0005 ? `<s style="color:${x.m > 0 ? 'var(--bad)' : 'var(--good)'}">${x.m > 0 ? '+' : '−'}${nf(Math.abs(x.m), 2)}</s>` : '<s style="opacity:.35">0</s>')
+        + `</div>`).join('');
+      tip.hidden = false;
+      const br = box.getBoundingClientRect();
+      const px = Gm.ox + X(k) * Gm.s - br.left, py = ev.clientY - br.top;
+      const tw = tip.offsetWidth || 190, th = tip.offsetHeight || 130;
+      const left = px + 14 + tw > br.width - 4 ? px - 14 - tw : px + 14;
+      tip.style.left = Math.max(4, Math.min(br.width - tw - 4, left)) + 'px';
+      tip.style.top = Math.max(4, Math.min(br.height - th - 4, py - th / 2)) + 'px';
+    });
+  })();
+
+  const say = c => c ? `${name(c)} <b>${gap(c, last) > 0 ? '+' : '−'}${nf(Math.abs(gap(c, last)), 2)}</b>` : null;
+  const bits = [above && `devant elle, ${say(above)}`, below && `derrière elle, ${say(below)}`].filter(Boolean);
+  const movers = around.map(c => ({ c, m: mov(c, last) })).sort((a, b) => b.m - a.m);
+  const best = movers[0], worst = movers[movers.length - 1];
+  document.getElementById('capB').innerHTML =
+    `Chaque nation part de son écart du 1<sup>er</sup> juillet : la courbe montre ce qu'elle a <b>gagné ou perdu sur la France</b> depuis, en points de coefficient. `
+    + `L'étiquette de droite rappelle l'écart réel du jour. Les deux courbes épaisses sont les voisines immédiates au classement — ${bits.join(' ; ')} — `
+    + `celles qui décident de la 5<sup>e</sup> place, et donc d'un club de plus en Ligue des champions. `
+    + (best && best.m > 0.005 ? `Cette saison, ${name(best.c)} est la nation du groupe qui grignote le plus (${'+' + nf(best.m, 2)}) ` : `Cette saison, aucune nation du groupe ne grignote encore de terrain `)
+    + (worst && worst.m < -0.005 ? `et ${name(worst.c)} celle qui décroche le plus (${'−' + nf(Math.abs(worst.m), 2)}).` : `sur la France.`);
 })();
 
 /* ---------- projection ---------- */
