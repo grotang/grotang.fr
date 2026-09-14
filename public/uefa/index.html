@@ -142,7 +142,7 @@ svg{display:block; width:100%; height:auto}
 section > .panel + .panel{margin-top:14px}
 
 /* ---------- bandeau calendrier ---------- */
-.cal{display:grid; gap:1px; background:var(--rule); border:1px solid var(--rule); border-radius:3px; overflow:hidden; margin-bottom:16px}
+.cal{margin-bottom:4px}
 .calrow{display:grid; grid-template-columns:104px 1fr; gap:0; background:var(--surface); align-items:center}
 .calrow .cname{font-size:12px; font-weight:700; padding:8px 12px; display:flex; align-items:center; gap:7px}
 .calrow .cname i{width:10px; height:10px; border-radius:2px; flex:none}
@@ -189,7 +189,7 @@ section > .panel + .panel{margin-top:14px}
 .klegend i{width:12px; height:12px; border-radius:2px; display:inline-block; flex:none}
 
 /* ---------- clubs ---------- */
-.cl8{display:grid; gap:1px; background:var(--rule); border:1px solid var(--rule); border-radius:3px; overflow:hidden; margin-top:16px}
+.cl8{margin-top:18px; padding-top:14px; border-top:1px solid var(--rule-soft)}
 .clrow{background:var(--surface); padding:10px 14px; display:grid; grid-template-columns:minmax(96px,142px) 1fr; gap:12px; align-items:center}
 .clrow.me{background:var(--fr-soft)}
 .clrow .who{font-size:13px; font-weight:600}
@@ -546,21 +546,74 @@ document.getElementById('stamp').innerHTML =
 document.getElementById('asof').textContent = 'source au ' + dmy(D.meta.lastUpdated);
 
 /* ---------- 0 · où en est la saison ---------- */
+/* Trois pistes alignées sur les mêmes journées donnaient une fausse simultanéité :
+   la J1 de C1 (8 septembre), celle de C3 (16 septembre) et celle de C4 (15 octobre)
+   occupaient la même colonne. On passe donc à un axe de temps réel, commun aux trois
+   compétitions : c'est le décalage entre elles qui explique l'essentiel du bloc 2,
+   et il devient visible d'un coup d'œil. */
 (function(){
-  document.getElementById('cal').innerHTML = [0,1,2].map(k=>{
-    const days = CAL[k].map(([iso,lab],idx)=>{
-      const done = dOf(iso) < TODAY;
-      const next = !done && CAL[k].findIndex(([i2])=>dOf(i2)>=TODAY)===idx;
-      return `<div class="calday${done?' done':''}${next?' next':''}" style="${done?`background:var(${KVAR[k]})`:''}" title="J${idx+1} — ${lab}">J${idx+1}</div>`;
-    }).join('');
-    return `<div class="calrow"><div class="cname"><i style="background:var(${KVAR[k]})"></i>${KSHORT[k]}</div><div class="caltrack">${days}</div></div>`;
-  }).join('');
-  const st = k => { const done=CAL[k].filter(([iso])=>dOf(iso)<TODAY).length;
-    return done===0 ? `<b>${KSHORT[k]}</b> n'a pas commencé — première journée le ${frDate(CAL[k][0][0])}`
-         : done===CAL[k].length ? `<b>${KSHORT[k]}</b> : phase de ligue terminée`
-         : `<b>${KSHORT[k]}</b> : ${done} journée${done>1?'s':''} sur ${CAL[k].length}, prochaine le ${frDate(CAL[k][done][0])}`; };
+  const all = [0,1,2].flatMap(k => CAL[k].map(([iso]) => iso)).sort();
+  const t0 = dOf(all[0]).getTime(), t1 = dOf(all[all.length-1]).getTime();
+  const W = 1000, mL = 46, mR = 22, mT = 30, LANE = 34, H = mT + 3*LANE + 26;
+  const span = (t1 - t0) || 1;
+  const X = iso => mL + (W - mL - mR) * (dOf(iso).getTime() - t0) / span;
+
+  /* repères de mois : le lecteur situe une journée sans lire une date */
+  const months = [];
+  { const d = new Date(t0); d.setDate(1);
+    while (d.getTime() <= t1) {
+      if (d.getTime() >= t0) months.push(new Date(d));
+      d.setMonth(d.getMonth() + 1);
+    } }
+  /* le premier mois commence avant la première journée : son repère tomberait
+     hors cadre, on l'ancre au bord gauche pour ne pas laisser la zone anonyme. */
+  const firstMonth = new Date(t0);
+  const MN = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+
+  let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">`;
+  s += `<text x="${mL}" y="${mT-16}" font-size="11" fill="var(--ink-3)">${MN[firstMonth.getMonth()]}</text>`;
+  months.forEach(d => { const x = mL + (W-mL-mR)*(d.getTime()-t0)/span;
+    s += `<line x1="${x.toFixed(1)}" y1="${mT-12}" x2="${x.toFixed(1)}" y2="${mT+3*LANE-6}" stroke="var(--rule-soft)"/>`
+      +  `<text x="${(x+5).toFixed(1)}" y="${mT-16}" font-size="11" fill="var(--ink-3)">${MN[d.getMonth()]}</text>`; });
+
+  /* la ligne d'aujourd'hui : la seule information vraiment datée du bloc */
+  const now = TODAY.getTime();
+  if (now >= t0 && now <= t1) { const x = mL + (W-mL-mR)*(now-t0)/span;
+    s += `<line x1="${x.toFixed(1)}" y1="${mT-12}" x2="${x.toFixed(1)}" y2="${mT+3*LANE-2}" stroke="var(--fr)" stroke-width="1.5" stroke-dasharray="4 3"/>`
+      +  `<text x="${(x).toFixed(1)}" y="${mT+3*LANE+14}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--fr)">aujourd'hui</text>`; }
+
+  [0,1,2].forEach(k => {
+    const y = mT + k*LANE + LANE/2;
+    s += `<line x1="${mL}" y1="${y}" x2="${W-mR}" y2="${y}" stroke="var(--rule-soft)" stroke-width="1"/>`
+      +  `<rect x="0" y="${y-8}" width="11" height="11" rx="2" fill="var(${KVAR[k]})"/>`
+      +  `<text x="16" y="${y+4}" font-size="12.5" font-weight="700" fill="var(--ink-2)">${KSHORT[k]}</text>`;
+    CAL[k].forEach(([iso], idx) => {
+      const x = X(iso), done = dOf(iso) < TODAY;
+      const isNext = !done && CAL[k].findIndex(([i2]) => dOf(i2) >= TODAY) === idx;
+      const w = 24, h = 19;
+      s += `<g><title>J${idx+1} ${KSHORT[k]} — ${frDate(iso)}</title>`
+        +  `<rect x="${(x-w/2).toFixed(1)}" y="${y-h/2}" width="${w}" height="${h}" rx="3"`
+        +  ` fill="${done ? `var(${KVAR[k]})` : 'var(--surface)'}" stroke="var(${KVAR[k]})" stroke-width="${isNext?2:1}"`
+        +  ` opacity="${done||isNext?1:.45}"/>`
+        +  `<text x="${x.toFixed(1)}" y="${y+4}" text-anchor="middle" font-size="10.5" font-weight="${isNext?'700':'600'}"`
+        +  ` font-family="IBM Plex Mono, monospace" fill="${done ? 'var(--surface)' : `var(${KVAR[k]})`}"`
+        +  ` opacity="${done||isNext?1:.7}">${idx+1}</text></g>`;
+    });
+  });
+  s += `</svg>`;
+  document.getElementById('cal').innerHTML = s;
+
+  const st = k => { const done = CAL[k].filter(([iso]) => dOf(iso) < TODAY).length;
+    return done === 0 ? `<b>${KSHORT[k]}</b> commence le ${frDate(CAL[k][0][0])}`
+         : done === CAL[k].length ? `<b>${KSHORT[k]}</b> a fini sa phase de ligue`
+         : `<b>${KSHORT[k]}</b> en est à ${done}/${CAL[k].length}, prochaine le ${frDate(CAL[k][done][0])}`; };
+  const notyet = [0,1,2].filter(k => dOf(CAL[k][0][0]) >= TODAY);
   document.getElementById('calmeta').innerHTML =
-    st(0)+' · '+st(1)+' · '+st(2)+'. Tant qu'+"'"+`une compétition n'a pas démarré, ses clubs pèsent zéro : c'est une question de calendrier, pas de niveau.`;
+    `Les huit (ou six) journées de phase de ligue de chaque compétition, à leur date réelle. `
+    + st(0) + ' · ' + st(1) + ' · ' + st(2) + '. '
+    + (notyet.length
+       ? `Tant qu'une compétition n'a pas démarré, ses clubs pèsent zéro — et le bloc suivant paraît dominé par la C1 pour cette seule raison. Tout devient comparable le ${frDate(CAL[notyet[notyet.length-1]][0][0])}.`
+       : `Les trois compétitions tournent : les comparaisons entre nations redeviennent honnêtes.`);
 })();
 
 /* ---------- 1 · le classement ---------- */
@@ -664,18 +717,55 @@ document.getElementById('k-pct').onclick=()=>{kMode='pct';syncK();};
 function syncK(){ document.getElementById('k-abs').setAttribute('aria-pressed',kMode==='abs');
   document.getElementById('k-pct').setAttribute('aria-pressed',kMode==='pct'); drawK(); }
 
-/* clubs nommés, par compétition */
+/* clubs : un disque par club, aire proportionnelle aux points rapportés */
+/* La liste nommée disait tout mais ne montrait rien : huit lignes de pastilles
+   de même taille, où un club à 8 points ressemblait à un club à 0,5. Ici l'aire
+   du disque est proportionnelle aux points d'équipe rapportés — on voit d'un
+   coup si une nation est portée par un club ou par cinq. Les clubs engagés mais
+   encore à zéro gardent un anneau vide : ils existent, ils comptent au diviseur,
+   ils n'ont rien rapporté. */
 (function(){
-  document.getElementById('cl8').innerHTML = TOP8.map(c=>{
-    const n=BY[c], mine=(D.clubs||[]).filter(x=>x.cc===c).sort((x,y)=> x.k-y.k || y.p-x.p);
-    const pods = mine.map(x=>`<span class="pod" style="border-color:var(${KVAR[x.k]});color:var(--ink)">
-        <i style="width:7px;height:7px;border-radius:50%;background:var(${KVAR[x.k]});display:inline-block"></i>${x.n} <b>${nf1(x.p)}</b></span>`).join('');
-    return `<div class="clrow${c==='FRA'?' me':''}">
-      <div class="who">${name(c)}<span>${n.a[0]} en C1 · ${n.a[1]} en C3 · ${n.a[2]} en C4</span></div>
-      <div class="pods">${pods}</div></div>`;}).join('');
-  const f=BY.FRA;
+  const rows = [...TOP8].sort((x,y)=>seasonNow(y)-seasonNow(x));
+  const ALL = rows.map(c => ({ c, cl: (D.clubs||[]).filter(x=>x.cc===c).sort((x,y)=> y.p-x.p || x.k-y.k) }));
+  const pMax = Math.max(1, ...ALL.flatMap(r => r.cl.map(x=>x.p)));
+  const R = 27, GAP = 7, EMPTY = 5;
+  const rad = p => p > 0 ? Math.max(4, R * Math.sqrt(p / pMax)) : EMPTY;
+
+  const W = 1000, mL = 128, mR = 74, LANE = 2*R + 20, mT = 26;
+  const H = mT + ALL.length * LANE + 12;
+  let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">`;
+  s += `<text x="${mL}" y="16" font-size="11" fill="var(--ink-3)">aire du disque = points d'équipe rapportés · anneau vide = engagé, rien rapporté</text>`;
+
+  ALL.forEach((row, i) => {
+    const y = mT + i*LANE + LANE/2, isFR = row.c === 'FRA';
+    s += `<text x="${mL-14}" y="${y+4}" text-anchor="end" font-size="13" font-weight="${isFR?'700':'600'}" fill="${isFR?'var(--fr)':'var(--ink)'}">${name(row.c)}</text>`;
+    let x = mL;
+    row.cl.forEach(cb => {
+      const r = rad(cb.p); x += r;
+      const col = `var(${KVAR[cb.k]})`;
+      s += `<g><title>${cb.n} — ${KNAME[cb.k]} · ${nf1(cb.p)} point${cb.p>1?'s':''} d'équipe</title>`;
+      s += cb.p > 0
+        ? `<circle cx="${x.toFixed(1)}" cy="${y}" r="${r.toFixed(1)}" fill="${col}" opacity=".82"/>`
+          + (r >= 13 ? `<text x="${x.toFixed(1)}" y="${y+4}" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, monospace" fill="#fff">${nf1(cb.p)}</text>` : '')
+        : `<circle cx="${x.toFixed(1)}" cy="${y}" r="${r}" fill="none" stroke="${col}" stroke-width="1.4" stroke-dasharray="2.5 2.5" opacity=".8"/>`;
+      s += `</g>`;
+      x += r + GAP;
+    });
+    const n = BY[row.c], tot = kCoef(row.c).reduce((a,b)=>a+b,0);
+    s += `<text x="${W-mR+52}" y="${y+4}" text-anchor="end" font-size="13" font-weight="700" font-family="IBM Plex Mono, monospace" fill="${isFR?'var(--fr)':'var(--ink)'}">${nf(tot)}</text>`
+      +  `<text x="${W-mR+52}" y="${y+17}" text-anchor="end" font-size="10.5" fill="var(--ink-3)">${row.cl.length} engagés</text>`;
+  });
+  s += `</svg>`;
+  document.getElementById('cl8').innerHTML = s;
+
+  const f = BY.FRA, fcl = (D.clubs||[]).filter(x=>x.cc==='FRA');
+  const top = [...fcl].sort((a,b)=>b.p-a.p)[0];
+  const share = top ? top.p / (fcl.reduce((a,b)=>a+b.p,0)||1) : 0;
   document.getElementById('clNote').innerHTML =
-    `Chaque club avec les points d'équipe qu'il a rapportés, rangés par compétition. La France aligne <b>${f.a[0]} clubs en C1, ${f.a[1]} en C3 et ${f.a[2]} en C4</b> sur ${divisor(f)} engagés — proportionnellement moins de C1 que l'Angleterre (${BY.ENG.a[0]}/${divisor(BY.ENG)}) ou l'Espagne (${BY.ESP.a[0]}/${divisor(BY.ESP)}). Les clubs à 0,0 n'ont pas encore joué de match de phase de ligue.`;
+    `Un disque par club, aire proportionnelle aux points d'équipe rapportés ; la couleur est la compétition où le club joue <i>aujourd'hui</i> — un club reversé de C1 en C3 compte en C3. `
+    + `La France aligne <b>${f.a[0]} clubs en C1, ${f.a[1]} en C3 et ${f.a[2]} en C4</b> sur ${divisor(f)} engagés, et son meilleur contributeur (${top ? top.n : '—'}) pèse ${Math.round(share*100)} % du total national — `
+    + `là où l'Angleterre étale ${(D.clubs||[]).filter(x=>x.cc==='ENG'&&x.p>0).length} clubs déjà payants sur ${divisor(BY.ENG)} engagés. `
+    + `C'est la vraie mécanique du coefficient : le total est divisé par le nombre d'engagés, donc un club à zéro coûte autant qu'un club à huit rapporte.`;
 })();
 
 /* ---------- échelles ---------- */
