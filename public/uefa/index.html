@@ -310,7 +310,7 @@ body{margin:0}</style>
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">0</span><h3>Où en est la saison</h3><span class="sub" id="asof"></span></div>
+    <div class="ptitle"><span class="no">0</span><h3>Où en est la saison</h3></div>
     <p class="calmeta" id="calmeta"></p>
     <div class="cal" id="cal"></div>
   </div>
@@ -598,7 +598,6 @@ document.getElementById('stamp').innerHTML =
   (nextMatch
     ? `<div class="next">Prochain match <b title="Premier coup d'envoi, heure de Paris">${nextMatch.txt}</b><b class="comp" style="background:var(${KVAR[nextMatch.k]})" title="${nextMatch.full}">${nextMatch.comp}</b></div>`
     : "<div>Prochain match <b>" + dmy(D.meta.nextMatchday) + "</b></div>");
-document.getElementById('asof').textContent = 'source au ' + dmy(D.meta.lastUpdated);
 
 /* ---------- 0 · où en est la saison ---------- */
 /* Trois pistes alignées sur les mêmes journées donnaient une fausse simultanéité :
@@ -627,7 +626,7 @@ document.getElementById('asof').textContent = 'source au ' + dmy(D.meta.lastUpda
   const KOLAB = {PO:'Barrages',  '8es':'8es de finale', '1/4':'Quarts', '1/2':'Demies', F:'Finale'};
   const t0 = dOf(all[0]).getTime(), t1 = dOf('2027-06-05').getTime();
   const tLeague = dOf(all[all.length-1]).getTime();
-  const W = 1000, mL = 46, mR = 30, mT = 44, LANE = 36, H = mT + 3*LANE + 44;
+  const W = 1000, mL = 46, mR = 30, mT = 62, LANE = 36, H = mT + 3*LANE + 44;
   const span = (t1 - t0) || 1;
   const X = iso => mL + (W - mL - mR) * (dOf(iso).getTime() - t0) / span;
 
@@ -644,26 +643,39 @@ document.getElementById('asof').textContent = 'source au ' + dmy(D.meta.lastUpda
   const MN = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
 
   let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">`;
-  s += `<text x="${mL}" y="${mT-30}" font-size="11" fill="var(--ink-3)">${MN[firstMonth.getMonth()]}</text>`;
+  s += `<text x="${mL}" y="${mT-28}" font-size="11" fill="var(--ink-3)">${MN[firstMonth.getMonth()]}</text>`;
   months.forEach(d => { const x = mL + (W-mL-mR)*(d.getTime()-t0)/span;
-    s += `<line x1="${x.toFixed(1)}" y1="${mT-12}" x2="${x.toFixed(1)}" y2="${mT+3*LANE-6}" stroke="var(--rule-soft)"/>`
-      +  `<text x="${(x+5).toFixed(1)}" y="${mT-30}" font-size="11" fill="var(--ink-3)">${MN[d.getMonth()]}</text>`; });
+    s += `<line x1="${x.toFixed(1)}" y1="${mT-22}" x2="${x.toFixed(1)}" y2="${mT+3*LANE-6}" stroke="var(--rule-soft)"/>`
+      +  `<text x="${(x+5).toFixed(1)}" y="${mT-28}" font-size="11" fill="var(--ink-3)">${MN[d.getMonth()]}</text>`; });
 
   /* la ligne d'aujourd'hui : la seule information vraiment datée du bloc */
   const now = TODAY.getTime();
   if (now >= t0 && now <= t1) { const x = mL + (W-mL-mR)*(now-t0)/span;
-    s += `<line x1="${x.toFixed(1)}" y1="${mT-12}" x2="${x.toFixed(1)}" y2="${mT+3*LANE-2}" stroke="var(--fr)" stroke-width="1.5" stroke-dasharray="4 3"/>`
+    s += `<line x1="${x.toFixed(1)}" y1="${mT-22}" x2="${x.toFixed(1)}" y2="${mT+3*LANE-2}" stroke="var(--fr)" stroke-width="1.5" stroke-dasharray="4 3"/>`
       +  `<text x="${(x).toFixed(1)}" y="${mT+3*LANE+16}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--fr)">aujourd'hui</text>`; }
 
   /* séparation ligue / élimination directe, et les noms de tour une seule fois en
      en-tête : les répéter sur trois pistes serait illisible pour rien, les trois
      compétitions jouant chaque tour à deux jours près. */
+  /* Deux mots posés de part et d'autre d'un trait, c'était un panneau de chantier.
+     Chaque phase est maintenant une zone nommée et bornée : un libellé, un filet
+     qui en montre l'étendue exacte. Le vocabulaire est celui du bloc 3 —
+     « phase de ligue » et « phase finale » — pour qu'on parle de la même chose
+     d'un bloc à l'autre. */
   { const xa = (X(CAL[0][7][0]) + X('2027-02-16')) / 2;
-    s += `<line x1="${xa.toFixed(1)}" y1="${mT-26}" x2="${xa.toFixed(1)}" y2="${mT+3*LANE-6}" stroke="var(--rule)" stroke-dasharray="3 3"/>`
-      +  `<text x="${(xa-6).toFixed(1)}" y="${mT-14}" text-anchor="end" font-size="10" font-weight="700" letter-spacing=".04em" fill="var(--ink-3)">PHASE DE LIGUE</text>`
-      +  `<text x="${(xa+6).toFixed(1)}" y="${mT-14}" font-size="10" font-weight="700" letter-spacing=".04em" fill="var(--ink-3)">ÉLIMINATION DIRECTE</text>`;
+    const zone = (x1, x2, lab) => {
+      const w = x2 - x1;
+      return `<line x1="${x1.toFixed(1)}" y1="14" x2="${x2.toFixed(1)}" y2="14" stroke="var(--rule)" stroke-width="1"/>`
+        + `<line x1="${x1.toFixed(1)}" y1="10" x2="${x1.toFixed(1)}" y2="14" stroke="var(--rule)" stroke-width="1"/>`
+        + `<line x1="${x2.toFixed(1)}" y1="10" x2="${x2.toFixed(1)}" y2="14" stroke="var(--rule)" stroke-width="1"/>`
+        + `<rect x="${(x1 + w/2 - lab.length*3.3 - 7).toFixed(1)}" y="6" width="${(lab.length*6.6 + 14).toFixed(1)}" height="16" fill="var(--surface)"/>`
+        + `<text x="${(x1 + w/2).toFixed(1)}" y="19" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink-2)">${lab}</text>`;
+    };
+    s += zone(mL, xa - 3, 'Phase de ligue') + zone(xa + 3, W - mR, 'Phase finale');
+    /* les tours, au-dessus de leur zone : à deux jours près les trois compétitions
+       jouent ensemble, donc une seule série d'étiquettes suffit. */
     KO[0].forEach(([lab, a]) => { const x = X(a);
-      s += `<text x="${Math.min(x, W-mR).toFixed(1)}" y="${mT-1}" text-anchor="${x > W-mR-12 ? 'end':'middle'}" font-size="9.5" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${lab}</text>`; }); }
+      s += `<text x="${Math.min(x, W-mR).toFixed(1)}" y="${mT-8}" text-anchor="${x > W-mR-12 ? 'end':'middle'}" font-size="10" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${lab}</text>`; }); }
 
   [0,1,2].forEach(k => {
     const y = mT + k*LANE + LANE/2;
