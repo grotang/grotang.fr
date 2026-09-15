@@ -25,7 +25,7 @@ export const FONTS = `<link rel="preconnect" href="https://fonts.googleapis.com"
  *
  * `defer` plutôt que `async` : le script ne bloque pas le rendu et part après le
  * document. Une page de données n'a aucune raison d'attendre son compteur. */
-const UMAMI_ID = '';   // ← identifiant du site Umami (Settings → Websites)
+const UMAMI_ID = 'b0764e0c-1476-483f-8a03-c180ba11e2d7';   // site grotang.fr dans Umami Cloud
 export const ANALYTICS = UMAMI_ID
   ? `<script defer src="https://cloud.umami.is/script.js" data-website-id="${UMAMI_ID}"></script>`
   : '<!-- mesure d\'audience : en attente de l\'identifiant Umami -->';
