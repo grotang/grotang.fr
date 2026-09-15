@@ -798,16 +798,18 @@ function drawK(){
   const labK = SEAS.find(x=>x[0]===selY)[1];
   if(!isCur()){
     document.getElementById('kNote').innerHTML =
-      `Saison <b>${labK}</b>, terminée. Répartition définitive : les trois compétitions ont été jouées jusqu'au bout, la comparaison entre nations est donc franche. `
+      `<b>Le coefficient d'une nation est la moyenne de ses clubs engagés</b> : on additionne les points de tous ses clubs et on divise par le nombre d'engagés — un club qui ne joue pas tire la moyenne vers le bas. Les barres sont donc à l'échelle du coefficient, mais le survol donne les points réels de chaque club, ceux qu'on retrouve dans la source. `
+      + `Saison <b>${labK}</b>, terminée. Répartition définitive : les trois compétitions ont été jouées jusqu'au bout, la comparaison entre nations est donc franche. `
       + `Un club reversé de C1 en C3 compte deux fois, une ligne par compétition, avec les points gagnés dans chacune — ce sont deux campagnes distinctes, pas une seule. `
       + `<b>Chaque barre est redécoupée club par club</b> : survolez une portion pour savoir qui a rapporté quoi.`;
     return;
   }
   const started = [0,1,2].filter(k=>dOf(CAL[k][0][0])<TODAY).map(k=>KSHORT[k]);
   const notyet  = [0,1,2].filter(k=>dOf(CAL[k][0][0])>=TODAY);
-  document.getElementById('kNote').innerHTML = notyet.length
+  const MEAN = `<b>Le coefficient d'une nation est la moyenne de ses clubs engagés</b> : on additionne les points de tous ses clubs et on divise par le nombre d'engagés — un club qui ne joue pas tire la moyenne vers le bas. Les barres sont à l'échelle du coefficient ; le survol donne les points réels de chaque club, ceux qu'on retrouve dans la source. `;
+  document.getElementById('kNote').innerHTML = MEAN + (notyet.length
     ? `<b>À lire avec le calendrier.</b> Seule ${started.join(' et ')} a commencé sa phase de ligue ; ${notyet.map(k=>KSHORT[k]+' démarre le '+frDate(CAL[k][0][0])).join(' et ')}. La domination du bleu ne dit donc rien d'une dépendance à la C1 : elle dit que les clubs de C3 et de C4 n'ont pas encore joué et n'ont pas encore touché leur bonus de participation. Le peu qui figure en orange et en vert vient des qualifications de juillet-août. Cette lecture ne deviendra comparable qu'à partir du ${frDate(CAL[notyet[notyet.length-1]][0][0])}.`
-    : `Les trois compétitions ont commencé : la répartition est désormais comparable d'une nation à l'autre. Points d'un club rattachés à la compétition où il se trouve aujourd'hui — un club reversé de C1 en C3 compte en C3.`;
+    : `Les trois compétitions ont commencé : la répartition est désormais comparable d'une nation à l'autre. Points d'un club rattachés à la compétition où il se trouve aujourd'hui — un club reversé de C1 en C3 compte en C3.`);
   document.getElementById('kNote').innerHTML +=
     ` <b>Chaque barre est redécoupée club par club</b>, du plus gros contributeur au plus petit à l'intérieur de sa compétition : survolez une portion pour savoir qui a rapporté quoi. Un club engagé mais encore à zéro n'occupe aucune largeur ; il reste listé dans l'infobulle.`;
 }
@@ -826,12 +828,18 @@ function drawK(){
     const c=seg.closest('.track').dataset.nat, div=kDiv(c);
     const mine=kClubs(c).sort((x,y)=> x.k-y.k || y.p-x.p);
     const hot=mine.filter(x=>x.p>0)[+seg.dataset.i];
+    const totPts=mine.reduce((a,x)=>a+x.p,0);
     const tot=kCoefS(c).reduce((a,b)=>a+b,0)||1;
-    tip.innerHTML = `<div class="th">${name(c)} · ${nf(tot)} sur la saison</div>` + mine.map(x=>{
-      const co=x.p/div, on = hot && x===hot;
+    /* Le coefficient d'une nation EST la moyenne de ses clubs engagés. Afficher la
+       part divisée d'un club (Nantes, 9 points, devenait « 1,50 ») cachait le seul
+       chiffre que le lecteur peut retrouver dans la source. On montre donc les
+       points réels, et l'en-tête pose la division une fois pour toutes. */
+    tip.innerHTML = `<div class="th">${name(c)} · ${nf(totPts,1)} pts \u00f7 ${div} engagés = ${nf(tot)}</div>`
+      + mine.map(x=>{
+      const on = hot && x===hot;
       return `<div class="tr" style="${on?'':'opacity:.55'}"><i style="background:var(${KVAR[x.k]})"></i>`
         + `<span class="nm"${on?' style="color:var(--ink);font-weight:600"':''}>${x.n}</span>`
-        + `<b>${nf(co,3)}</b><s style="color:var(--ink-3)">${x.p>0?Math.round(co/tot*100)+'\u202f%':'—'}</s></div>`;
+        + `<b>${nf(x.p,1)}</b><s style="color:var(--ink-3)">${totPts>0&&x.p>0?Math.round(x.p/totPts*100)+'\u202f%':'—'}</s></div>`;
     }).join('');
     tip.hidden=false;
     const br=wrap.getBoundingClientRect();
