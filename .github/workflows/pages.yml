@@ -1,0 +1,57 @@
+name: Publication GitHub Pages
+
+# Netlify facturait 15 crédits par déploiement, soit 20 par mois sur son offre
+# gratuite — et coupait la publication au-delà. Un site dont la raison d'être est
+# de se republier deux fois par jour ne tient pas dans ce budget. GitHub Pages ne
+# compte pas les déploiements pour un dépôt public.
+#
+# Rien à construire ici : `public/` est déjà le site fini, commité par le job de
+# rafraîchissement. Ce workflow ne fait que le téléverser et le publier.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      # Un commit qui ne touche pas le site publié ne déclenche pas de publication :
+      # le signe de vie mensuel, une correction d'outillage, une note dans le README.
+      # C'est la règle qu'on avait déjà chez Netlify, conservée ici par hygiène —
+      # elle ne coûte plus rien mais évite un déploiement qui ne change rien.
+      - 'public/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+# Droits minimaux exigés par le déploiement Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Une publication à la fois ; si deux commits arrivent coup sur coup, seule la
+# dernière version part — inutile de publier un état déjà périmé.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/configure-pages@v5
+
+      # Le domaine personnalisé est déclaré par un fichier CNAME servi à la racine.
+      # Il est écrit ici plutôt que commité dans public/ : ce dossier est régénéré
+      # par tools/build.mjs, qui l'efface à chaque passage.
+      - name: Déclarer le domaine
+        run: echo 'grotang.fr' > public/CNAME
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
