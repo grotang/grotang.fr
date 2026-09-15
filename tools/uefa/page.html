@@ -280,7 +280,7 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
 
   <div class="panel">
     <div class="ptitle"><span class="no">2</span><h3>D'où viennent les points</h3>
-      <span class="sub"><span class="seg" role="group" aria-label="Échelle"><button type="button" id="k-abs" aria-pressed="true">Points</button><button type="button" id="k-pct" aria-pressed="false">Part</button></span></span></div>
+      <span class="sub"><span class="ctl"><span class="lb">Échelle</span><span class="seg" role="group" aria-label="Échelle"><button type="button" id="k-abs" aria-pressed="true">Points</button><button type="button" id="k-pct" aria-pressed="false">Part</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelK" aria-label="Saison"></select></span></span></span></div>
     <div class="klegend" id="kleg"></div>
     <div class="barswrap"><div class="bars" id="kbars"></div><div class="tip" id="tipK" hidden></div></div>
     <p class="figc" id="kNote"></p>
@@ -422,7 +422,15 @@ const CSHORT = {
   "Athletic Bilbao":"ATH","FC Bayern München":"BAY","Borussia Dortmund":"BVB","RB Leipzig":"RBL",
   "VfB Stuttgart":"VFB","TSG 1899 Hoffenheim":"HOF","Bayer Leverkusen":"B04","SC Freiburg":"SCF",
   "Eintracht Frankfurt":"SGE","Borussia Mönchengladbach":"BMG","VfL Wolfsburg":"WOB","1. FC Union Berlin":"FCU",
-  "Paris Saint-Germain":"PSG","RC Lens":"RCL","Lille OSC":"LOSC","Olympique Lyonnais":"OL",
+  "Paris Saint-Germain":"PSG","Paris Saint-Germain FC":"PSG","RC Lens":"RCL","Lille OSC":"LOSC",
+  "Olympique Lyonnais":"OL","Olympique Lyon":"OL","Olympique Marseille":"OM","Stade Brest 29":"SB29",
+  "S.S. Lazio Rom":"LAZ","Lazio Rom":"LAZ","Sevilla FC":"SEV","FC Girona":"GIR","Bologna":"BOL",
+  "Athletic Club Bilbao":"ATH","Cercle Brugge":"CER","1. FC Heidenheim":"HDH","1.FC Köln":"KOE",
+  "Racing Genk":"GNK","Vitesse Arnhem":"VIT","Union Berlin":"FCU","Leicester City":"LEI",
+  "West Ham United":"WHU","Nottingham Forest":"NFO","Crystal Palace":"CRY","Rayo Vallecano":"RAY",
+  "RC Strasbourg":"RCSA","FSV Mainz 05":"M05","CD Santa Clara":"SCL","Charleroi":"CHA",
+  "Pacos de Ferreira":"PAC","Gil Vicente":"GIL","FC Arouca":"ARO","CA Osasuna":"OSA",
+  "Toulouse FC":"TFC","FC Nantes":"FCN","VfL Wolfsburg":"WOB","FC Utrecht":"UTR",
   "Olympique de Marseille":"OM","Stade Rennais":"SRFC","AS Monaco":"ASM","OGC Nizza":"OGCN",
   "Stade Brest":"SB29","RC Straßburg":"RCSA","FC Nantes":"FCN","FC Toulouse":"TFC","AJ Auxerre":"AJA",
   "FC Porto":"FCP","Sporting CP":"SCP","SC Uniao Torreense":"TOR","SL Benfica":"SLB",
@@ -437,7 +445,8 @@ const NOISE = /^(fc|ac|as|sc|sv|rc|cf|afc|ssc|ogc|aa|vv|sl|rb|tsg|vfb|vfl|kaa|kr
 function shortClub(n){
   if(CSHORT[n]) return CSHORT[n];
   const w = String(n).replace(/[.,&]/g,' ').split(/\s+/).filter(x=>x && !NOISE.test(x));
-  const base = w[0] || String(n);
+  let base = w[0] || '';
+  if (base.length < 3) base = String(n).replace(/[^A-Za-zÀ-ÿ]/g, '');
   return base.slice(0,3).toUpperCase();
 }
 const sg = (v,d=3)=> (v>0?"+":v<0?"−":"") + Math.abs(v).toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -724,18 +733,45 @@ function syncP(){ document.getElementById('p-season').setAttribute('aria-pressed
   document.getElementById('p-five').setAttribute('aria-pressed',period==='five'); drawBars(); }
 
 /* ---------- 2 · d'où viennent les points ---------- */
+/* Le bloc lit maintenant la saison choisie. Pour la saison en cours, les clubs
+   viennent du bloc de données rafraîchi chaque jour ; pour une saison close, du
+   bloc figé HCLUB relevé sur l'archive. Quatre accesseurs suffisent à masquer la
+   différence au reste du code.
+   Deux pièges de saison close, tous deux réels :
+   - le nombre d'engagés change d'une année à l'autre, donc le diviseur aussi. On
+     le retrouve en divisant les points d'équipe par le coefficient de saison de
+     HIST — c'est le contrôle qui a validé le relevé, on le réutilise ici ;
+   - un club reversé de C1 en C3 a deux lignes, une par compétition. C'est voulu :
+     ses points de C1 ne sont pas des points de C3. */
+const kClubs = c => isCur()
+  ? (D.clubs||[]).filter(x => x.cc === c)
+  : ((HCLUB.s[selY]||[]).filter(r => r[1] === c)
+      .map(r => ({ n: HCLUB.n[r[0]], cc: c, k: r[3], p: r[2] })));
+const kSeasonCoef = c => isCur() ? seasonNow(c)
+  : ((HIST[selY] && HIST[selY][c]) ? HIST[selY][c][HIST[selY][c].length-1] : 0);
+const kPts = c => { if(isCur()) return BY[c].k;
+  const t=[0,0,0]; kClubs(c).forEach(x => t[x.k] += x.p); return t; };
+const kDiv = c => { if(isCur()) return divisor(BY[c]) || 1;
+  const tp = kPts(c).reduce((a,b)=>a+b,0), co = kSeasonCoef(c);
+  return co > 0 ? Math.max(1, Math.round(tp/co)) : 1; };
+const kCoefS = c => { const d = kDiv(c); return kPts(c).map(v => v/d); };
+/* clubs engagés par compétition : la colonne « 3·3·1 » de la barre */
+const kCount = c => { if(isCur()) return [BY[c].a[0], BY[c].a[1], BY[c].a[2]];
+  const t=[0,0,0]; kClubs(c).forEach(x => t[x.k]++); return t; };
+
 let kMode='abs';
 document.getElementById('kleg').innerHTML = KNAME.map((n,i)=>`<span><i style="background:var(${KVAR[i]})"></i>${n}</span>`).join('');
 function drawK(){
-  const rows=[...TOP8].sort((x,y)=>seasonNow(y)-seasonNow(x));
-  const max=Math.max(...rows.map(seasonNow));
+  const rows=[...TOP8].filter(hasSeason).sort((x,y)=>kSeasonCoef(y)-kSeasonCoef(x));
+  if(!rows.length) return;
+  const max=Math.max(...rows.map(kSeasonCoef));
   document.getElementById('kbars').innerHTML = rows.map(c=>{
-    const n=BY[c], k=kCoef(c), tot=k.reduce((x,y)=>x+y,0)||1;
+    const n=BY[c], k=kCoefS(c), tot=k.reduce((x,y)=>x+y,0)||1, cnt=kCount(c);
     const w=i=> kMode==='abs' ? k[i]/max*100 : k[i]/tot*100;
     /* chaque compétition est redécoupée club par club, dans l'ordre des points.
        Un club sans point n'occupe rien : il reste lisible dans l'infobulle. */
-    const div=divisor(n)||1;
-    const mine=(D.clubs||[]).filter(x=>x.cc===c).sort((x,y)=> x.k-y.k || y.p-x.p);
+    const div=kDiv(c);
+    const mine=kClubs(c).sort((x,y)=> x.k-y.k || y.p-x.p);
     let segs='', ci=0;
     k.forEach((v,i)=>{
       if(v<=0) return;
@@ -754,11 +790,19 @@ function drawK(){
     const split=k.map((v,i)=>`<u>${v>0?(kMode==='abs'?nf(v,2):Math.round(v/tot*100)+' %'):'·'}</u>`).join('');
     return `<div class="barrow${c==='FRA'?' me':''}">
       <div class="nm"><b>${name(c)}</b></div>
-      <div class="cnt num">${n.a[0]}·${n.a[1]}·${n.a[2]}</div>
+      <div class="cnt num">${cnt[0]}·${cnt[1]}·${cnt[2]}</div>
       <div class="track" data-nat="${c}">${segs}</div>
       <div class="val num">${kMode==='abs'?nf(tot):'100 %'}</div>
       <div class="split num">${split}</div>
     </div>`;}).join('');
+  const labK = SEAS.find(x=>x[0]===selY)[1];
+  if(!isCur()){
+    document.getElementById('kNote').innerHTML =
+      `Saison <b>${labK}</b>, terminée. Répartition définitive : les trois compétitions ont été jouées jusqu'au bout, la comparaison entre nations est donc franche. `
+      + `Un club reversé de C1 en C3 compte deux fois, une ligne par compétition, avec les points gagnés dans chacune — ce sont deux campagnes distinctes, pas une seule. `
+      + `<b>Chaque barre est redécoupée club par club</b> : survolez une portion pour savoir qui a rapporté quoi.`;
+    return;
+  }
   const started = [0,1,2].filter(k=>dOf(CAL[k][0][0])<TODAY).map(k=>KSHORT[k]);
   const notyet  = [0,1,2].filter(k=>dOf(CAL[k][0][0])>=TODAY);
   document.getElementById('kNote').innerHTML = notyet.length
@@ -779,10 +823,10 @@ function drawK(){
     const seg=ev.target.closest('.cseg');
     if(!seg){ hide(); return; }
     if(seg!==last){ if(last) last.classList.remove('on'); seg.classList.add('on'); last=seg; }
-    const c=seg.closest('.track').dataset.nat, n=BY[c], div=divisor(n)||1;
-    const mine=(D.clubs||[]).filter(x=>x.cc===c).sort((x,y)=> x.k-y.k || y.p-x.p);
+    const c=seg.closest('.track').dataset.nat, div=kDiv(c);
+    const mine=kClubs(c).sort((x,y)=> x.k-y.k || y.p-x.p);
     const hot=mine.filter(x=>x.p>0)[+seg.dataset.i];
-    const tot=kCoef(c).reduce((a,b)=>a+b,0)||1;
+    const tot=kCoefS(c).reduce((a,b)=>a+b,0)||1;
     tip.innerHTML = `<div class="th">${name(c)} · ${nf(tot)} sur la saison</div>` + mine.map(x=>{
       const co=x.p/div, on = hot && x===hot;
       return `<div class="tr" style="${on?'':'opacity:.55'}"><i style="background:var(${KVAR[x.k]})"></i>`
@@ -809,9 +853,10 @@ function syncK(){ document.getElementById('k-abs').setAttribute('aria-pressed',k
    coup si une nation est portée par un club ou par cinq. Les clubs engagés mais
    encore à zéro gardent un anneau vide : ils existent, ils comptent au diviseur,
    ils n'ont rien rapporté. */
-(function(){
-  const rows = [...TOP8].sort((x,y)=>seasonNow(y)-seasonNow(x));
-  const ALL = rows.map(c => ({ c, cl: (D.clubs||[]).filter(x=>x.cc===c).sort((x,y)=> y.p-x.p || x.k-y.k) }));
+function drawClubs(){
+  const rows = [...TOP8].filter(hasSeason).sort((x,y)=>kSeasonCoef(y)-kSeasonCoef(x));
+  if(!rows.length) return;
+  const ALL = rows.map(c => ({ c, cl: kClubs(c).slice().sort((x,y)=> y.p-x.p || x.k-y.k) }));
   const pMax = Math.max(1, ...ALL.flatMap(r => r.cl.map(x=>x.p)));
   const R = 27, GAP = 7, EMPTY = 5;
   const rad = p => p > 0 ? Math.max(4, R * Math.sqrt(p / pMax)) : EMPTY;
@@ -841,22 +886,23 @@ function syncK(){ document.getElementById('k-abs').setAttribute('aria-pressed',k
       s += `</g>`;
       x += r + GAP;
     });
-    const n = BY[row.c], tot = kCoef(row.c).reduce((a,b)=>a+b,0);
+    const tot = kCoefS(row.c).reduce((a,b)=>a+b,0);
     s += `<text x="${W-mR+52}" y="${y+4}" text-anchor="end" font-size="13" font-weight="700" font-family="IBM Plex Mono, monospace" fill="${isFR?'var(--fr)':'var(--ink)'}">${nf(tot)}</text>`
-      +  `<text x="${W-mR+52}" y="${y+17}" text-anchor="end" font-size="10.5" fill="var(--ink-3)">${row.cl.length} engagés</text>`;
+      +  `<text x="${W-mR+52}" y="${y+17}" text-anchor="end" font-size="10.5" fill="var(--ink-3)">${kDiv(row.c)} engagés</text>`;
   });
   s += `</svg>`;
   document.getElementById('cl8').innerHTML = s;
 
-  const f = BY.FRA, fcl = (D.clubs||[]).filter(x=>x.cc==='FRA');
+  const fcl = kClubs('FRA'), fc = kCount('FRA');
   const top = [...fcl].sort((a,b)=>b.p-a.p)[0];
   const share = top ? top.p / (fcl.reduce((a,b)=>a+b.p,0)||1) : 0;
+  const labC = SEAS.find(x=>x[0]===selY)[1];
   document.getElementById('clNote').innerHTML =
-    `Un disque par club, aire proportionnelle aux points d'équipe rapportés ; la couleur est la compétition où le club joue <i>aujourd'hui</i> — un club reversé de C1 en C3 compte en C3. `
-    + `La France aligne <b>${f.a[0]} clubs en C1, ${f.a[1]} en C3 et ${f.a[2]} en C4</b> sur ${divisor(f)} engagés, et son meilleur contributeur (${top ? top.n : '—'}) pèse ${Math.round(share*100)} % du total national — `
-    + `là où l'Angleterre étale ${(D.clubs||[]).filter(x=>x.cc==='ENG'&&x.p>0).length} clubs déjà payants sur ${divisor(BY.ENG)} engagés. `
+    `Saison <b>${labC}</b>${isCur()?', en cours':''}. Un disque par club, aire proportionnelle aux points d'équipe rapportés ; la couleur est la compétition dans laquelle ces points ont été gagnés. `
+    + `La France aligne <b>${fc[0]} en C1, ${fc[1]} en C3 et ${fc[2]} en C4</b> sur ${kDiv('FRA')} engagés, et son meilleur contributeur (${top ? top.n : '—'}) pèse ${Math.round(share*100)} % du total national — `
+    + `là où l'Angleterre étale ${kClubs('ENG').filter(x=>x.p>0).length} clubs payants sur ${kDiv('ENG')} engagés. `
     + `C'est la vraie mécanique du coefficient : le total est divisé par le nombre d'engagés, donc un club à zéro coûte autant qu'un club à huit rapporte.`;
-})();
+}
 
 /* ---------- échelles ---------- */
 function niceScale(lo,hi,n){
@@ -965,8 +1011,8 @@ function mkSeasonCtl(id){
   el.onchange = e => { selY = e.target.value; syncSeason(); };
 }
 function syncSeason(){
-  ['seasonSel','seasonSelZ','seasonSelM'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=selY; });
-  drawL(); drawZ(); drawM();
+  ['seasonSel','seasonSelZ','seasonSelM','seasonSelK'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=selY; });
+  drawK(); drawClubs(); drawL(); drawZ(); drawM();
 }
 
 const selL=new Set(TOP8);
@@ -1148,9 +1194,9 @@ function drawM(){
 }
 
 /* Les trois listes de saison, une fois tous les dessins définis. */
-['seasonSel','seasonSelZ','seasonSelM'].forEach(mkSeasonCtl);
-syncP(); syncK(); drawL(); drawZ(); drawM();
-function drawAll(){ drawBars(); drawK(); drawL(); drawZ(); drawM(); }
+['seasonSel','seasonSelZ','seasonSelM','seasonSelK'].forEach(mkSeasonCtl);
+syncP(); syncK(); drawClubs(); drawL(); drawZ(); drawM();
+function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM(); }
 
 /* ---------- chart B : la course à la 5e place ---------- */
 /* Un bump chart sur le rang à 5 ans donne des lignes plates : le rang ne bouge
