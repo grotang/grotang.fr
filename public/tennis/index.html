@@ -5,22 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Nombre de joueurs français au tableau principal de chaque Grand Chelem, simple messieurs, ère Open 1968-2026.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"%3E%3Crect width="32" height="32" rx="7" fill="%230F141D"/%3E%3Cpath d="M6 22V10h4.4c2.9 0 4.6 1.5 4.6 4 0 1.8-.9 3-2.5 3.6L15.4 22h-3l-2.3-4h-1.2v4H6zm2.9-6.3h1.3c1.2 0 1.9-.6 1.9-1.6s-.7-1.6-1.9-1.6H8.9v3.2z" fill="%23FBFCFE"/%3E%3Ccircle cx="22.5" cy="19" r="4.2" fill="none" stroke="%235D9BF0" stroke-width="2"/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&family=Newsreader:opsz,wght@6..72,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<script>(function(){try{if(localStorage.getItem('grotang-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <title>Français aux Grands Chelems — Ère Open</title>
 <style>
+/* Jetons propres à la grille, déclinés dans les deux thèmes. Les couleurs des
+   quatre levées sont vives sur fond sombre et doivent être assombries sur fond
+   clair, sinon elles vibrent et deviennent illisibles. */
+:root{ --ao:#0F73A8; --rg:#C1461F; --wim:#0F7040; --uso:#7B3FA0;
+       --empty:#EDF0F5; --empty-ink:#C3CAD6; --cellrule:rgba(15,20,29,.06);
+       --hoverfx:brightness(.94); }
+:root[data-theme="dark"]{ --ao:#4fc3f7; --rg:#ff8a65; --wim:#69f0ae; --uso:#ce93d8;
+       --empty:#1a1a28; --empty-ink:#2d2d40; --cellrule:rgba(255,255,255,.04);
+       --hoverfx:brightness(1.35); }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-  background: #141420;
+  font-family: Carlito, Calibri, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  background: var(--ground);
   padding: 20px;
-  color: #e0e0e0;
+  color: var(--ink);
   min-height: 100vh;
 }
-h1 { text-align:center; font-size:1rem; font-weight:700; color:#e0e0e0; margin-bottom:4px; letter-spacing:.03em; }
-.subtitle { text-align:center; font-size:.68rem; color:#666; margin-bottom:14px; }
+h1 { text-align:center; font-size:1rem; font-weight:700; color:var(--ink); margin-bottom:4px; letter-spacing:.03em; }
+.subtitle { text-align:center; font-size:.68rem; color:var(--ink-3); margin-bottom:14px; }
 
 .legend {
   display:flex; align-items:center; justify-content:center;
-  gap:3px; margin-bottom:14px; font-size:.63rem; color:#666;
+  gap:3px; margin-bottom:14px; font-size:.63rem; color:var(--ink-3);
   flex-wrap:wrap;
 }
 .legend-label { margin:0 4px; }
@@ -32,73 +45,106 @@ table { border-collapse:collapse; margin:0 auto; }
 thead th {
   font-size:.7rem; font-weight:700; padding:6px 0; text-align:center;
   letter-spacing:.05em; text-transform:uppercase;
-  background:#141420; position:sticky; top:0; z-index:3;
+  background:var(--ground); position:sticky; top:0; z-index:3;
 }
-.th-y { width:42px; text-align:left; color:#555; }
-.th-ao { color:#4fc3f7; width:50px; }
-.th-rg { color:#ff8a65; width:50px; }
-.th-wim { color:#69f0ae; width:50px; }
-.th-uso { color:#ce93d8; width:50px; }
-.th-t { color:#888; width:42px; font-size:.6rem; }
+.th-y { width:42px; text-align:left; color:var(--ink-3); }
+.th-ao { color:var(--ao); width:50px; }
+.th-rg { color:var(--rg); width:50px; }
+.th-wim { color:var(--wim); width:50px; }
+.th-uso { color:var(--uso); width:50px; }
+.th-t { color:var(--ink-2); width:42px; font-size:.6rem; }
 
-tbody tr:hover td { filter:brightness(1.35); }
-tr.dec td { border-top:2px solid #2a2a3a; }
+tbody tr:hover td { filter:var(--hoverfx); }
+tr.dec td { border-top:2px solid var(--rule); }
 
-td { padding:0; text-align:center; height:22px; border:1px solid rgba(255,255,255,.04); }
+td { padding:0; text-align:center; height:22px; border:1px solid var(--cellrule); }
 td.y {
-  text-align:right; padding-right:7px; font-size:.71rem; font-weight:600; color:#666;
-  background:#141420 !important; border:none;
+  text-align:right; padding-right:7px; font-size:.71rem; font-weight:600; color:var(--ink-3);
+  background:var(--ground) !important; border:none;
   position:sticky; left:0; z-index:2; white-space:nowrap;
 }
-td.y.dec { color:#bbb; font-weight:700; }
+td.y.dec { color:var(--ink); font-weight:700; }
 .v { display:block; width:100%; height:100%; line-height:22px; font-size:.73rem; font-weight:700; }
-.na { display:block; width:100%; height:100%; line-height:22px; font-size:.62rem; color:#2d2d3d; background:#1a1a28; }
-.sp { display:block; width:100%; height:100%; line-height:22px; font-size:.58rem; color:#444; background:#1a1a28; }
-td.tc { font-size:.7rem; font-weight:700; background:#1a1a28 !important; border-left:1px solid #2a2a3a; }
+.na { display:block; width:100%; height:100%; line-height:22px; font-size:.62rem; color:var(--empty-ink); background:var(--empty); }
+.sp { display:block; width:100%; height:100%; line-height:22px; font-size:.58rem; color:var(--ink-3); background:var(--empty); }
+td.tc { font-size:.7rem; font-weight:700; background:var(--surface-2) !important; border-left:1px solid var(--rule); }
 
-.note { text-align:center; font-size:.6rem; color:#444; margin-top:10px; line-height:1.7; }
+.note { text-align:center; font-size:.6rem; color:var(--ink-3); margin-top:10px; line-height:1.7; }
 
-.gnav{--gn-bg:#FBFCFE;--gn-ink:#0F141D;--gn-ink2:#78828F;--gn-rule:#D4DAE3;--gn-hi:#2a78d6;
-  position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
-  padding:0 clamp(14px,3vw,28px);height:46px;background:var(--gn-bg);
-  border-bottom:1px solid var(--gn-rule);
-  font-family:Archivo,system-ui,-apple-system,'Segoe UI',sans-serif;
+:root{
+  color-scheme: light;
+  --ground:#EBEEF3; --surface:#FBFCFE; --surface-2:#F3F5F9;
+  --ink:#0F141D; --ink-2:#48525F; --ink-3:#78828F;
+  --rule:#D4DAE3; --rule-soft:#E3E8EF;
+  --fr:#2a78d6; --fr-soft:#E4EDFA;
+  --good:#0F7040; --bad:#B02C2C;
+  --n1:#2a78d6; --n2:#eb6834; --n3:#1baf7a; --n4:#eda100; --n5:#e87ba4; --n6:#008300; --n7:#4a3aa7; --n8:#e34948;
+  --band:#F0F2F6;
+  --c1:#2a78d6; --c3:#eb6834; --c4:#1baf7a;
+  --uefa:#2a78d6; --tennis:#0F7040;
+  --shadow:0 1px 2px rgba(15,20,29,.05),0 8px 24px -12px rgba(15,20,29,.14);
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --ground:#0A0D13; --surface:#141A24; --surface-2:#1B222E;
+  --ink:#E8ECF3; --ink-2:#A0AAB9; --ink-3:#727D8C;
+  --rule:#28313F; --rule-soft:#1F2733;
+  --fr:#5D9BF0; --fr-soft:#16233A;
+  --good:#43BE83; --bad:#EE7A76;
+  --n1:#3987e5; --n2:#d95926; --n3:#199e70; --n4:#c98500; --n5:#d55181; --n6:#008300; --n7:#9085e9; --n8:#e66767;
+  --band:#111823;
+  --c1:#3987e5; --c3:#d95926; --c4:#199e70;
+  --uefa:#5D9BF0; --tennis:#43BE83;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.8);
+}
+
+.gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
+  padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
+  border-bottom:1px solid var(--rule);
+  font-family:Carlito,Calibri,system-ui,-apple-system,'Segoe UI',sans-serif;
   -webkit-font-smoothing:antialiased}
-@media (prefers-color-scheme:dark){.gnav:not(.gnav--light){--gn-bg:#141A24;--gn-ink:#E8ECF3;--gn-ink2:#727D8C;--gn-rule:#28313F;--gn-hi:#5D9BF0}}
-.gnav.gnav--dark{--gn-bg:#181826;--gn-ink:#e0e0e0;--gn-ink2:#6b6b80;--gn-rule:#2a2a3a;--gn-hi:#69f0ae}
 .gnav a{color:inherit;text-decoration:none}
-.gnav .gn-mark{font-size:13px;font-weight:800;letter-spacing:.06em;color:var(--gn-ink);
+.gnav .gn-mark{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--ink);
   font-family:'IBM Plex Mono',ui-monospace,monospace;white-space:nowrap}
-.gnav .gn-mark span{color:var(--gn-ink2);font-weight:500}
+.gnav .gn-mark span{color:var(--ink-3);font-weight:500}
 .gnav nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
-.gnav nav a{font-size:12.5px;font-weight:600;color:var(--gn-ink2);
+.gnav nav a{font-size:12.5px;font-weight:600;color:var(--ink-3);
   padding:5px 10px;border-radius:6px;line-height:1.2;white-space:nowrap}
-.gnav nav a:hover{color:var(--gn-ink);background:color-mix(in srgb,var(--gn-ink) 7%,transparent)}
-.gnav nav a[aria-current="page"]{color:var(--gn-hi);
-  background:color-mix(in srgb,var(--gn-hi) 12%,transparent)}
-@media (max-width:520px){.gnav{height:auto;padding-block:8px;flex-wrap:wrap;gap:8px}
-  .gnav nav{margin-left:0;width:100%;justify-content:flex-start}}
+.gnav nav a:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 7%,transparent)}
+.gnav nav a[aria-current="page"]{color:var(--fr);
+  background:color-mix(in srgb,var(--fr) 12%,transparent)}
+.gn-theme{display:inline-flex;align-items:center;gap:7px;cursor:pointer;flex:none;
+  appearance:none;border:1px solid var(--rule);background:var(--surface-2);color:var(--ink-3);
+  font:inherit;font-size:12px;font-weight:600;border-radius:6px;padding:4px 10px;line-height:1.3}
+.gn-theme:hover{border-color:var(--ink-3);color:var(--ink)}
+.gn-theme:focus-visible{outline:2px solid var(--fr);outline-offset:2px}
+.gn-theme .gn-theme-i{width:11px;height:11px;border-radius:50%;flex:none;
+  border:1px solid var(--ink-3);background:linear-gradient(90deg,transparent 50%,var(--ink-3) 50%)}
+.gn-theme[aria-pressed="true"] .gn-theme-i{background:var(--fr);border-color:var(--fr)}
+@media (max-width:560px){.gnav{height:auto;padding-block:8px;flex-wrap:wrap;gap:8px}
+  .gnav nav{margin-left:0;width:100%;justify-content:flex-start;order:3}
+  .gn-theme{margin-left:auto}}
 
 body{padding-top:0}
 .gnav{margin:-20px -20px 18px}
 </style>
 </head>
 <body>
-<div class="gnav gnav--dark"><a class="gn-mark" href="/">GROTANG<span>.FR</span></a><nav><a href="/uefa/">Coefficient UEFA</a><a href="/tennis/" aria-current="page">Français en Grand Chelem</a></nav></div>
+<div class="gnav"><a class="gn-mark" href="/">GROTANG<span>.FR</span></a><nav><a href="/uefa/">Coefficient UEFA</a><a href="/tennis/" aria-current="page">Français en Grand Chelem</a></nav><button type="button" class="gn-theme" id="gn-theme" aria-pressed="false" title="Basculer clair / sombre"><span class="gn-theme-i" aria-hidden="true"></span><span class="gn-theme-t">Sombre</span></button></div>
 
 <h1>🇫🇷 Français au tableau principal — Simple Messieurs · Ère Open (1968–2026)</h1>
 <p class="subtitle">Nombre de joueurs français au 1er tour (tableau principal) par Grand Chelem · Sources : fr.wikipedia.org + en.wikipedia.org</p>
 
 <div class="legend">
   <span class="legend-label">0</span>
-  <span class="sw" style="background:#1a1a28"></span>
-  <span class="sw" style="background:#1c2e22"></span>
-  <span class="sw" style="background:#1d5035"></span>
-  <span class="sw" style="background:#237042"></span>
-  <span class="sw" style="background:#2b9050"></span>
-  <span class="sw" style="background:#36b05e"></span>
-  <span class="sw" style="background:#52cc72"></span>
-  <span class="sw" style="background:#76e88e"></span>
+  <span class="sw" data-sw="0"></span>
+  <span class="sw" data-sw="1"></span>
+  <span class="sw" data-sw="2"></span>
+  <span class="sw" data-sw="3"></span>
+  <span class="sw" data-sw="4"></span>
+  <span class="sw" data-sw="5"></span>
+  <span class="sw" data-sw="6"></span>
+  <span class="sw" data-sw="7"></span>
   <span class="legend-label">21+</span>
   <span style="margin-left:10px;color:#444">— = pas de page Wikipedia structurée</span>
   <span style="margin-left:10px;color:#444">✕ = annulé · ··· = à venir</span>
@@ -189,8 +235,12 @@ const D = {
   2026:{AO:14,   RG:21, WIM:'?', USO:'?'},
 };
 
-// Color stops: [minVal, bg, fg]
-const SC = [
+// Echelle de chaleur : [valeur mini, fond, encre].
+// Deux rampes, pas une inversion. Sur fond sombre on part d'un vert profond et
+// on monte vers un vert lumineux ; sur fond clair il faut faire l'inverse —
+// partir d'un vert presque blanc et foncer — sinon les fortes valeurs
+// disparaissent dans le blanc de la page. L'encre suit le contraste du fond.
+const SC_DARK = [
   [0, '#1a1a28','#2d2d40'],
   [1, '#1b2820','#4a7055'],
   [3, '#1c3225','#5a8860'],
@@ -204,11 +254,30 @@ const SC = [
   [19,'#55d476','#0a200a'],
   [21,'#72eb90','#082008'],
 ];
+const SC_LIGHT = [
+  [0, '#EDF0F5','#C3CAD6'],
+  [1, '#E4F1E6','#4C6B52'],
+  [3, '#D3E9D7','#3E6047'],
+  [5, '#BEDFC6','#33573D'],
+  [7, '#A6D3B2','#2A4E35'],
+  [9, '#8AC69C','#21452C'],
+  [11,'#6DB886','#FFFFFF'],
+  [13,'#4FA870','#FFFFFF'],
+  [15,'#33975C','#FFFFFF'],
+  [17,'#1E854A','#FFFFFF'],
+  [19,'#0F7040','#FFFFFF'],
+  [21,'#075A33','#FFFFFF'],
+];
+const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+const neutral = () => isDark()
+  ? {bg:'#1a1a28', dim:'#444', faint:'#333', na:'#2d2d40'}
+  : {bg:'#EDF0F5', dim:'#9AA3B0', faint:'#B6BDC8', na:'#C3CAD6'};
 function cs(v) {
-  if (v === null) return {bg:'#1a1a28', fg:'#2d2d40', t:'—', cls:'na'};
-  if (v === 'C')  return {bg:'#1a1a28', fg:'#444', t:'✕', cls:'sp'};
-  if (v === '?')  return {bg:'#1a1a28', fg:'#444', t:'···', cls:'sp'};
-  if (v === 'ND') return {bg:'#1a1a28', fg:'#333', t:'–', cls:'na'};
+  const SC = isDark() ? SC_DARK : SC_LIGHT, N = neutral();
+  if (v === null) return {bg:N.bg, fg:N.na,    t:'\u2014', cls:'na'};
+  if (v === 'C')  return {bg:N.bg, fg:N.dim,   t:'\u2715', cls:'sp'};
+  if (v === '?')  return {bg:N.bg, fg:N.dim,   t:'\u00b7\u00b7\u00b7', cls:'sp'};
+  if (v === 'ND') return {bg:N.bg, fg:N.faint, t:'\u2013', cls:'na'};
   let s = SC[0];
   for (const st of SC) { if (v >= st[0]) s = st; }
   return {bg:s[1], fg:s[2], t:String(v), cls:'v'};
@@ -218,6 +287,10 @@ const SLAMS = ['AO','RG','WIM','USO'];
 const tb = document.getElementById('tb');
 const years = Object.keys(D).map(Number).sort((a,b)=>b-a);
 
+/* Les couleurs des cases sont posées en style en ligne, pas en CSS : un simple
+   changement de variable ne les atteint pas, il faut redessiner la grille. */
+function draw(){
+tb.innerHTML = '';
 for (const y of years) {
   const d = D[y];
   const tr = document.createElement('tr');
@@ -247,14 +320,40 @@ for (const y of years) {
   tt.className = 'tc';
   if (cnt > 0) {
     tt.textContent = tot;
+    /* le total va du discret au marqué, dans le sens du fond */
     const p = Math.min(tot / 65, 1);
-    const g = Math.round(50 + p * 150);
+    const g = isDark() ? Math.round(50 + p * 150) : Math.round(170 - p * 155);
     tt.style.color = `rgb(${g},${g},${g})`;
     if (cnt < 4) tt.style.opacity = '.45';
   }
   tr.appendChild(tt);
   tb.appendChild(tr);
 }
+}
+function drawLegend(){
+  const SC = isDark() ? SC_DARK : SC_LIGHT;
+  document.querySelectorAll('.sw[data-sw]').forEach(el => {
+    const i = +el.dataset.sw;
+    el.style.background = (SC[i] || SC[SC.length-1])[1];
+  });
+}
+draw(); drawLegend();
+document.addEventListener('grotang:theme', () => { draw(); drawLegend(); });
 </script>
+<script>(function(){
+  var root=document.documentElement, btn=document.getElementById('gn-theme');
+  var store={get:function(){try{return localStorage.getItem('grotang-theme');}catch(e){return null;}},
+             set:function(v){try{localStorage.setItem('grotang-theme',v);}catch(e){}}};
+  function apply(t,persist){
+    if(t==='dark') root.setAttribute('data-theme','dark'); else root.removeAttribute('data-theme');
+    if(btn){ btn.setAttribute('aria-pressed', t==='dark');
+             btn.querySelector('.gn-theme-t').textContent = t==='dark' ? 'Clair' : 'Sombre'; }
+    if(persist) store.set(t);
+    document.dispatchEvent(new CustomEvent('grotang:theme',{detail:{theme:t}}));
+  }
+  apply(store.get()==='dark'?'dark':'light', false);
+  if(btn) btn.addEventListener('click', function(){
+    apply(root.getAttribute('data-theme')==='dark'?'light':'dark', true); });
+})();</script>
 </body>
 </html>

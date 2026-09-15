@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Coefficient UEFA des associations suivi étape par étape sur la saison 2026/2027 : classement, origine des points par compétition, clubs engagés, projections.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"%3E%3Crect width="32" height="32" rx="7" fill="%230F141D"/%3E%3Cpath d="M6 22V10h4.4c2.9 0 4.6 1.5 4.6 4 0 1.8-.9 3-2.5 3.6L15.4 22h-3l-2.3-4h-1.2v4H6zm2.9-6.3h1.3c1.2 0 1.9-.6 1.9-1.6s-.7-1.6-1.9-1.6H8.9v3.2z" fill="%23FBFCFE"/%3E%3Ccircle cx="22.5" cy="19" r="4.2" fill="none" stroke="%235D9BF0" stroke-width="2"/%3E%3C/svg%3E">
+<script>(function(){try{if(localStorage.getItem('grotang-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <title>Coefficient UEFA par journée</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -56,14 +57,6 @@ h1,h2,h3{margin:0; text-wrap:balance; letter-spacing:-.012em;
 h1{font-size:clamp(30px,4.8vw,48px); font-weight:600; line-height:1.04; letter-spacing:-.02em}
 .mast .sub{color:var(--ink-2); font-size:14px; margin-top:6px; max-width:64ch}
 .mast-right{display:grid; justify-items:end; gap:10px}
-.tsw{display:inline-flex; align-items:center; gap:7px; cursor:pointer;
-  background:var(--surface); color:var(--ink-2); border:1px solid var(--rule);
-  border-radius:999px; padding:5px 12px 5px 9px; font:inherit; font-size:12px; font-weight:600;
-  font-family:Calibri,"Carlito",sans-serif; line-height:1; transition:border-color .15s, color .15s}
-.tsw:hover{border-color:var(--ink-3); color:var(--ink)}
-.tsw .tsw-i{width:12px; height:12px; border-radius:50%; flex:none;
-  background:var(--ink-3); box-shadow:inset -3.5px -3.5px 0 0 var(--surface)}
-.tsw[aria-pressed="true"] .tsw-i{background:var(--fr); box-shadow:none}
 .stamp{display:grid; gap:3px; text-align:right; font-size:12px; color:var(--ink-2)}
 .stamp b{color:var(--ink); font-weight:600}
 /* la ligne tournée vers l'avenir se distingue des deux constats */
@@ -260,32 +253,38 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
 <style>
-.gnav{--gn-bg:#FBFCFE;--gn-ink:#0F141D;--gn-ink2:#78828F;--gn-rule:#D4DAE3;--gn-hi:#2a78d6;
-  position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
-  padding:0 clamp(14px,3vw,28px);height:46px;background:var(--gn-bg);
-  border-bottom:1px solid var(--gn-rule);
-  font-family:Archivo,system-ui,-apple-system,'Segoe UI',sans-serif;
+.gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
+  padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
+  border-bottom:1px solid var(--rule);
+  font-family:Carlito,Calibri,system-ui,-apple-system,'Segoe UI',sans-serif;
   -webkit-font-smoothing:antialiased}
-@media (prefers-color-scheme:dark){.gnav:not(.gnav--light){--gn-bg:#141A24;--gn-ink:#E8ECF3;--gn-ink2:#727D8C;--gn-rule:#28313F;--gn-hi:#5D9BF0}}
-.gnav.gnav--dark{--gn-bg:#181826;--gn-ink:#e0e0e0;--gn-ink2:#6b6b80;--gn-rule:#2a2a3a;--gn-hi:#69f0ae}
 .gnav a{color:inherit;text-decoration:none}
-.gnav .gn-mark{font-size:13px;font-weight:800;letter-spacing:.06em;color:var(--gn-ink);
+.gnav .gn-mark{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--ink);
   font-family:'IBM Plex Mono',ui-monospace,monospace;white-space:nowrap}
-.gnav .gn-mark span{color:var(--gn-ink2);font-weight:500}
+.gnav .gn-mark span{color:var(--ink-3);font-weight:500}
 .gnav nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
-.gnav nav a{font-size:12.5px;font-weight:600;color:var(--gn-ink2);
+.gnav nav a{font-size:12.5px;font-weight:600;color:var(--ink-3);
   padding:5px 10px;border-radius:6px;line-height:1.2;white-space:nowrap}
-.gnav nav a:hover{color:var(--gn-ink);background:color-mix(in srgb,var(--gn-ink) 7%,transparent)}
-.gnav nav a[aria-current="page"]{color:var(--gn-hi);
-  background:color-mix(in srgb,var(--gn-hi) 12%,transparent)}
-@media (max-width:520px){.gnav{height:auto;padding-block:8px;flex-wrap:wrap;gap:8px}
-  .gnav nav{margin-left:0;width:100%;justify-content:flex-start}}
+.gnav nav a:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 7%,transparent)}
+.gnav nav a[aria-current="page"]{color:var(--fr);
+  background:color-mix(in srgb,var(--fr) 12%,transparent)}
+.gn-theme{display:inline-flex;align-items:center;gap:7px;cursor:pointer;flex:none;
+  appearance:none;border:1px solid var(--rule);background:var(--surface-2);color:var(--ink-3);
+  font:inherit;font-size:12px;font-weight:600;border-radius:6px;padding:4px 10px;line-height:1.3}
+.gn-theme:hover{border-color:var(--ink-3);color:var(--ink)}
+.gn-theme:focus-visible{outline:2px solid var(--fr);outline-offset:2px}
+.gn-theme .gn-theme-i{width:11px;height:11px;border-radius:50%;flex:none;
+  border:1px solid var(--ink-3);background:linear-gradient(90deg,transparent 50%,var(--ink-3) 50%)}
+.gn-theme[aria-pressed="true"] .gn-theme-i{background:var(--fr);border-color:var(--fr)}
+@media (max-width:560px){.gnav{height:auto;padding-block:8px;flex-wrap:wrap;gap:8px}
+  .gnav nav{margin-left:0;width:100%;justify-content:flex-start;order:3}
+  .gn-theme{margin-left:auto}}
 
 .gnav{margin-bottom:0}
 body{margin:0}</style>
 </head>
 <body>
-<div class="gnav"><a class="gn-mark" href="/">GROTANG<span>.FR</span></a><nav><a href="/uefa/" aria-current="page">Coefficient UEFA</a><a href="/tennis/">Français en Grand Chelem</a></nav></div>
+<div class="gnav"><a class="gn-mark" href="/">GROTANG<span>.FR</span></a><nav><a href="/uefa/" aria-current="page">Coefficient UEFA</a><a href="/tennis/">Français en Grand Chelem</a></nav><button type="button" class="gn-theme" id="gn-theme" aria-pressed="false" title="Basculer clair / sombre"><span class="gn-theme-i" aria-hidden="true"></span><span class="gn-theme-t">Sombre</span></button></div>
 
 
 <div class="wrap">
@@ -297,8 +296,7 @@ body{margin:0}</style>
     <p class="sub">Classement des associations — compétitions de clubs masculines. Suivi de l'évolution étape par étape sur la saison en cours, et de ce que la France emporte pour les saisons suivantes.</p>
   </div>
   <div class="mast-right">
-    <button type="button" class="tsw" id="tsw" aria-pressed="false" title="Basculer clair / sombre">
-      <span class="tsw-i" aria-hidden="true"></span><span class="tsw-t">Sombre</span></button>
+    
     <div class="stamp" id="stamp"></div>
   </div>
 </header>
@@ -1100,24 +1098,11 @@ function hoverL(sel, LI, X, Y, W, H, mL, mR, PAD){
     tip.style.top=Math.max(4, Math.min(br.height-th-4, py-th/2))+'px';
   });
 }
-/* ---------- bascule clair / sombre ---------- */
-/* Le clair est le défaut. Le choix du lecteur est mémorisé dans son navigateur ;
-   s'il est indisponible (navigation privée, cookies bloqués), on retombe
-   simplement sur le clair sans rien casser. */
-(function(){
-  const btn = document.getElementById('tsw'), root = document.documentElement;
-  const store = { get(){ try { return localStorage.getItem('theme'); } catch(e) { return null; } },
-                  set(v){ try { localStorage.setItem('theme', v); } catch(e) {} } };
-  const apply = t => { root.setAttribute('data-theme', t);
-    btn.setAttribute('aria-pressed', t === 'dark');
-    btn.querySelector('.tsw-t').textContent = t === 'dark' ? 'Clair' : 'Sombre'; };
-  apply(store.get() === 'dark' ? 'dark' : 'light');
-  btn.addEventListener('click', () => {
-    const t = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    apply(t); store.set(t);
-    if (typeof drawAll === 'function') drawAll();
-  });
-})();
+/* Le thème est piloté par la barre de navigation (tools/chrome.mjs), partagée
+   par les trois pages. Ici on se contente de redessiner : les graphiques sont
+   peints en JS avec les couleurs résolues au moment du tracé, ils ne suivent
+   donc pas un simple changement de variable CSS. */
+document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'function') drawAll(); });
 
 mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
 
@@ -1400,5 +1385,20 @@ document.getElementById('anomaly').innerHTML = anomalous.length
 
 </script>
 
+<script>(function(){
+  var root=document.documentElement, btn=document.getElementById('gn-theme');
+  var store={get:function(){try{return localStorage.getItem('grotang-theme');}catch(e){return null;}},
+             set:function(v){try{localStorage.setItem('grotang-theme',v);}catch(e){}}};
+  function apply(t,persist){
+    if(t==='dark') root.setAttribute('data-theme','dark'); else root.removeAttribute('data-theme');
+    if(btn){ btn.setAttribute('aria-pressed', t==='dark');
+             btn.querySelector('.gn-theme-t').textContent = t==='dark' ? 'Clair' : 'Sombre'; }
+    if(persist) store.set(t);
+    document.dispatchEvent(new CustomEvent('grotang:theme',{detail:{theme:t}}));
+  }
+  apply(store.get()==='dark'?'dark':'light', false);
+  if(btn) btn.addEventListener('click', function(){
+    apply(root.getAttribute('data-theme')==='dark'?'light':'dark', true); });
+})();</script>
 </body>
 </html>

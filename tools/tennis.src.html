@@ -5,20 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Français aux Grands Chelems — Ère Open</title>
 <style>
+/* Jetons propres à la grille, déclinés dans les deux thèmes. Les couleurs des
+   quatre levées sont vives sur fond sombre et doivent être assombries sur fond
+   clair, sinon elles vibrent et deviennent illisibles. */
+:root{ --ao:#0F73A8; --rg:#C1461F; --wim:#0F7040; --uso:#7B3FA0;
+       --empty:#EDF0F5; --empty-ink:#C3CAD6; --cellrule:rgba(15,20,29,.06);
+       --hoverfx:brightness(.94); }
+:root[data-theme="dark"]{ --ao:#4fc3f7; --rg:#ff8a65; --wim:#69f0ae; --uso:#ce93d8;
+       --empty:#1a1a28; --empty-ink:#2d2d40; --cellrule:rgba(255,255,255,.04);
+       --hoverfx:brightness(1.35); }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-  background: #141420;
+  font-family: Carlito, Calibri, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  background: var(--ground);
   padding: 20px;
-  color: #e0e0e0;
+  color: var(--ink);
   min-height: 100vh;
 }
-h1 { text-align:center; font-size:1rem; font-weight:700; color:#e0e0e0; margin-bottom:4px; letter-spacing:.03em; }
-.subtitle { text-align:center; font-size:.68rem; color:#666; margin-bottom:14px; }
+h1 { text-align:center; font-size:1rem; font-weight:700; color:var(--ink); margin-bottom:4px; letter-spacing:.03em; }
+.subtitle { text-align:center; font-size:.68rem; color:var(--ink-3); margin-bottom:14px; }
 
 .legend {
   display:flex; align-items:center; justify-content:center;
-  gap:3px; margin-bottom:14px; font-size:.63rem; color:#666;
+  gap:3px; margin-bottom:14px; font-size:.63rem; color:var(--ink-3);
   flex-wrap:wrap;
 }
 .legend-label { margin:0 4px; }
@@ -30,31 +39,31 @@ table { border-collapse:collapse; margin:0 auto; }
 thead th {
   font-size:.7rem; font-weight:700; padding:6px 0; text-align:center;
   letter-spacing:.05em; text-transform:uppercase;
-  background:#141420; position:sticky; top:0; z-index:3;
+  background:var(--ground); position:sticky; top:0; z-index:3;
 }
-.th-y { width:42px; text-align:left; color:#555; }
-.th-ao { color:#4fc3f7; width:50px; }
-.th-rg { color:#ff8a65; width:50px; }
-.th-wim { color:#69f0ae; width:50px; }
-.th-uso { color:#ce93d8; width:50px; }
-.th-t { color:#888; width:42px; font-size:.6rem; }
+.th-y { width:42px; text-align:left; color:var(--ink-3); }
+.th-ao { color:var(--ao); width:50px; }
+.th-rg { color:var(--rg); width:50px; }
+.th-wim { color:var(--wim); width:50px; }
+.th-uso { color:var(--uso); width:50px; }
+.th-t { color:var(--ink-2); width:42px; font-size:.6rem; }
 
-tbody tr:hover td { filter:brightness(1.35); }
-tr.dec td { border-top:2px solid #2a2a3a; }
+tbody tr:hover td { filter:var(--hoverfx); }
+tr.dec td { border-top:2px solid var(--rule); }
 
-td { padding:0; text-align:center; height:22px; border:1px solid rgba(255,255,255,.04); }
+td { padding:0; text-align:center; height:22px; border:1px solid var(--cellrule); }
 td.y {
-  text-align:right; padding-right:7px; font-size:.71rem; font-weight:600; color:#666;
-  background:#141420 !important; border:none;
+  text-align:right; padding-right:7px; font-size:.71rem; font-weight:600; color:var(--ink-3);
+  background:var(--ground) !important; border:none;
   position:sticky; left:0; z-index:2; white-space:nowrap;
 }
-td.y.dec { color:#bbb; font-weight:700; }
+td.y.dec { color:var(--ink); font-weight:700; }
 .v { display:block; width:100%; height:100%; line-height:22px; font-size:.73rem; font-weight:700; }
-.na { display:block; width:100%; height:100%; line-height:22px; font-size:.62rem; color:#2d2d3d; background:#1a1a28; }
-.sp { display:block; width:100%; height:100%; line-height:22px; font-size:.58rem; color:#444; background:#1a1a28; }
-td.tc { font-size:.7rem; font-weight:700; background:#1a1a28 !important; border-left:1px solid #2a2a3a; }
+.na { display:block; width:100%; height:100%; line-height:22px; font-size:.62rem; color:var(--empty-ink); background:var(--empty); }
+.sp { display:block; width:100%; height:100%; line-height:22px; font-size:.58rem; color:var(--ink-3); background:var(--empty); }
+td.tc { font-size:.7rem; font-weight:700; background:var(--surface-2) !important; border-left:1px solid var(--rule); }
 
-.note { text-align:center; font-size:.6rem; color:#444; margin-top:10px; line-height:1.7; }
+.note { text-align:center; font-size:.6rem; color:var(--ink-3); margin-top:10px; line-height:1.7; }
 </style>
 </head>
 <body>
@@ -64,14 +73,14 @@ td.tc { font-size:.7rem; font-weight:700; background:#1a1a28 !important; border-
 
 <div class="legend">
   <span class="legend-label">0</span>
-  <span class="sw" style="background:#1a1a28"></span>
-  <span class="sw" style="background:#1c2e22"></span>
-  <span class="sw" style="background:#1d5035"></span>
-  <span class="sw" style="background:#237042"></span>
-  <span class="sw" style="background:#2b9050"></span>
-  <span class="sw" style="background:#36b05e"></span>
-  <span class="sw" style="background:#52cc72"></span>
-  <span class="sw" style="background:#76e88e"></span>
+  <span class="sw" data-sw="0"></span>
+  <span class="sw" data-sw="1"></span>
+  <span class="sw" data-sw="2"></span>
+  <span class="sw" data-sw="3"></span>
+  <span class="sw" data-sw="4"></span>
+  <span class="sw" data-sw="5"></span>
+  <span class="sw" data-sw="6"></span>
+  <span class="sw" data-sw="7"></span>
   <span class="legend-label">21+</span>
   <span style="margin-left:10px;color:#444">— = pas de page Wikipedia structurée</span>
   <span style="margin-left:10px;color:#444">✕ = annulé · ··· = à venir</span>
@@ -162,8 +171,12 @@ const D = {
   2026:{AO:14,   RG:21, WIM:'?', USO:'?'},
 };
 
-// Color stops: [minVal, bg, fg]
-const SC = [
+// Echelle de chaleur : [valeur mini, fond, encre].
+// Deux rampes, pas une inversion. Sur fond sombre on part d'un vert profond et
+// on monte vers un vert lumineux ; sur fond clair il faut faire l'inverse —
+// partir d'un vert presque blanc et foncer — sinon les fortes valeurs
+// disparaissent dans le blanc de la page. L'encre suit le contraste du fond.
+const SC_DARK = [
   [0, '#1a1a28','#2d2d40'],
   [1, '#1b2820','#4a7055'],
   [3, '#1c3225','#5a8860'],
@@ -177,11 +190,30 @@ const SC = [
   [19,'#55d476','#0a200a'],
   [21,'#72eb90','#082008'],
 ];
+const SC_LIGHT = [
+  [0, '#EDF0F5','#C3CAD6'],
+  [1, '#E4F1E6','#4C6B52'],
+  [3, '#D3E9D7','#3E6047'],
+  [5, '#BEDFC6','#33573D'],
+  [7, '#A6D3B2','#2A4E35'],
+  [9, '#8AC69C','#21452C'],
+  [11,'#6DB886','#FFFFFF'],
+  [13,'#4FA870','#FFFFFF'],
+  [15,'#33975C','#FFFFFF'],
+  [17,'#1E854A','#FFFFFF'],
+  [19,'#0F7040','#FFFFFF'],
+  [21,'#075A33','#FFFFFF'],
+];
+const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+const neutral = () => isDark()
+  ? {bg:'#1a1a28', dim:'#444', faint:'#333', na:'#2d2d40'}
+  : {bg:'#EDF0F5', dim:'#9AA3B0', faint:'#B6BDC8', na:'#C3CAD6'};
 function cs(v) {
-  if (v === null) return {bg:'#1a1a28', fg:'#2d2d40', t:'—', cls:'na'};
-  if (v === 'C')  return {bg:'#1a1a28', fg:'#444', t:'✕', cls:'sp'};
-  if (v === '?')  return {bg:'#1a1a28', fg:'#444', t:'···', cls:'sp'};
-  if (v === 'ND') return {bg:'#1a1a28', fg:'#333', t:'–', cls:'na'};
+  const SC = isDark() ? SC_DARK : SC_LIGHT, N = neutral();
+  if (v === null) return {bg:N.bg, fg:N.na,    t:'\u2014', cls:'na'};
+  if (v === 'C')  return {bg:N.bg, fg:N.dim,   t:'\u2715', cls:'sp'};
+  if (v === '?')  return {bg:N.bg, fg:N.dim,   t:'\u00b7\u00b7\u00b7', cls:'sp'};
+  if (v === 'ND') return {bg:N.bg, fg:N.faint, t:'\u2013', cls:'na'};
   let s = SC[0];
   for (const st of SC) { if (v >= st[0]) s = st; }
   return {bg:s[1], fg:s[2], t:String(v), cls:'v'};
@@ -191,6 +223,10 @@ const SLAMS = ['AO','RG','WIM','USO'];
 const tb = document.getElementById('tb');
 const years = Object.keys(D).map(Number).sort((a,b)=>b-a);
 
+/* Les couleurs des cases sont posées en style en ligne, pas en CSS : un simple
+   changement de variable ne les atteint pas, il faut redessiner la grille. */
+function draw(){
+tb.innerHTML = '';
 for (const y of years) {
   const d = D[y];
   const tr = document.createElement('tr');
@@ -220,14 +256,25 @@ for (const y of years) {
   tt.className = 'tc';
   if (cnt > 0) {
     tt.textContent = tot;
+    /* le total va du discret au marqué, dans le sens du fond */
     const p = Math.min(tot / 65, 1);
-    const g = Math.round(50 + p * 150);
+    const g = isDark() ? Math.round(50 + p * 150) : Math.round(170 - p * 155);
     tt.style.color = `rgb(${g},${g},${g})`;
     if (cnt < 4) tt.style.opacity = '.45';
   }
   tr.appendChild(tt);
   tb.appendChild(tr);
 }
+}
+function drawLegend(){
+  const SC = isDark() ? SC_DARK : SC_LIGHT;
+  document.querySelectorAll('.sw[data-sw]').forEach(el => {
+    const i = +el.dataset.sw;
+    el.style.background = (SC[i] || SC[SC.length-1])[1];
+  });
+}
+draw(); drawLegend();
+document.addEventListener('grotang:theme', () => { draw(); drawLegend(); });
 </script>
 </body>
 </html>

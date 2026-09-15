@@ -14,7 +14,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { nav, navCSS, FAVICON } from './chrome.mjs';
+import { nav, navCSS, FAVICON, TOKENS, THEME_BOOT, THEME_JS, FONTS } from './chrome.mjs';
 import { buildIndex } from './index.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -45,6 +45,7 @@ function buildUefa() {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Coefficient UEFA des associations suivi étape par étape sur la saison ${meta.season} : classement, origine des points par compétition, clubs engagés, projections.">
 ${FAVICON}
+${THEME_BOOT}
 ${head}
 <style>${navCSS}
 .gnav{margin-bottom:0}
@@ -53,6 +54,7 @@ body{margin:0}</style>
 <body>
 ${nav('uefa')}
 ${body.replace(/<\/body>\s*<\/html>\s*$/i, '')}
+${THEME_JS}
 </body>
 </html>` };
 }
@@ -66,12 +68,16 @@ function buildTennis() {
   let out = src.replace('<meta name="viewport" content="width=device-width, initial-scale=1.0">',
     `<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Nombre de joueurs français au tableau principal de chaque Grand Chelem, simple messieurs, ère Open 1968-2026.">
-${FAVICON}`);
-  out = out.replace('</style>', `${navCSS}
+${FAVICON}
+${FONTS}
+${THEME_BOOT}`);
+  out = out.replace('</style>', `${TOKENS}
+${navCSS}
 body{padding-top:0}
 .gnav{margin:-20px -20px 18px}
 </style>`);
-  out = out.replace('<body>\n', `<body>\n${nav('tennis', 'dark')}\n`);
+  out = out.replace('<body>\n', `<body>\n${nav('tennis')}\n`);
+  out = out.replace('</body>', `${THEME_JS}\n</body>`);
   if (!out.includes('gnav')) throw new Error('tennis : injection de la navigation ratée');
 
   /* chiffres pour la vignette d'accueil, lus dans la source — pas ressaisis */

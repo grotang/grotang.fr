@@ -1,6 +1,6 @@
 /* Page d'accueil de grotang.fr — générée, pour que les chiffres des vignettes
    restent synchronisés avec les pages qu'elles annoncent. */
-import { FONTS, FAVICON, navCSS, nav } from './chrome.mjs';
+import { FONTS, FAVICON, navCSS, nav, TOKENS, THEME_BOOT, THEME_JS } from './chrome.mjs';
 
 const nf = (v, d = 3) => v.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
 const ord = n => n === 1 ? '1<sup>er</sup>' : n + '<sup>e</sup>';
@@ -23,19 +23,11 @@ function bars(vals, { live = false, hi = null, w = 232, h = 46, gap = 5 } = {}) 
 
 export function buildIndex({ uefa, tennis }) {
   const css = `
-:root{color-scheme:light;
-  --ground:#EBEEF3;--surface:#FBFCFE;--surface-2:#F3F5F9;
-  --ink:#0F141D;--ink-2:#48525F;--ink-3:#78828F;
-  --rule:#D4DAE3;--rule-soft:#E3E8EF;
-  --uefa:#2a78d6;--tennis:#0F7040;--shadow:0 1px 2px rgba(15,20,29,.05),0 8px 24px -12px rgba(15,20,29,.14)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;
-  --ground:#0A0D13;--surface:#141A24;--surface-2:#1B222E;
-  --ink:#E8ECF3;--ink-2:#A0AAB9;--ink-3:#727D8C;
-  --rule:#28313F;--rule-soft:#1F2733;
-  --uefa:#5D9BF0;--tennis:#43BE83;--shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.8)}}
+`+TOKENS+`
+
 *{box-sizing:border-box}
 body{margin:0;background:var(--ground);color:var(--ink);
-  font-family:Archivo,system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-family:Carlito,Calibri,system-ui,-apple-system,'Segoe UI',sans-serif;
   -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
 ${navCSS}
 .wrap{max-width:1080px;margin:0 auto;padding:clamp(30px,7vw,72px) clamp(16px,4vw,32px) 56px}
@@ -121,6 +113,7 @@ ${navCSS}
 <meta property="og:type" content="website">
 ${FAVICON}
 ${FONTS}
+${THEME_BOOT}
 <style>${css}</style>
 </head>
 <body>
@@ -136,6 +129,7 @@ ${nav(null)}
     Les méthodes de calcul et leurs limites sont détaillées en bas de chaque page.
   </p>
 </div>
+${THEME_JS}
 </body>
 </html>`;
 }
