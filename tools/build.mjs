@@ -104,12 +104,40 @@ function uefaStats(meta) {
   const N = JSON.parse(read('tools/uefa/nations.json'));
   const fr = N.find(n => n.c === 'FRA');
   if (!fr) throw new Error('nations.json : France absente');
+
+  /* Les noms français vivent dans page.html, qui doit rester un fichier autonome.
+     On les relit ici plutôt que d'en garder une seconde copie : une seule source,
+     donc pas de dérive possible entre l'accueil et la page. */
+  const m = read('tools/uefa/page.html').match(/const FRNAME\s*=\s*(\{[^}]*\})/);
+  if (!m) throw new Error('page.html : table FRNAME introuvable');
+  const FRNAME = JSON.parse(m[1].replace(/([A-Z]{3}):/g, '"$1":'));
+  /* « 3,77 devant Portugal » n'est pas du français. L'article dépend du genre et
+     de l'initiale, deux choses qu'aucune règle ne déduit d'un code pays : on les
+     écrit. Un pays absent de la table sort sans article — Chypre, Israël, Malte
+     n'en prennent pas, et un oubli produit alors une phrase correcte plutôt
+     qu'une faute. */
+  const ART = {ENG:"l'", ITA:"l'", ESP:"l'", GER:"l'", FRA:'la ', POR:'le ', BEL:'la ',
+    NED:'les ', TUR:'la ', POL:'la ', CZE:'la ', GRE:'la ', NOR:'la ', DEN:'le ',
+    SUI:'la ', AUT:"l'", HUN:'la ', SCO:"l'", SWE:'la ', CRO:'la ', ROU:'la ',
+    UKR:"l'", AZE:"l'", SVN:'la ', SVK:'la ', BUL:'la ', SRB:'la ', RUS:'la ',
+    ISL:"l'", IRL:"l'", ARM:"l'", BIH:'la ', LVA:'la ', FIN:'la ', KAZ:'le ',
+    LIE:'le ', MDA:'la ', ALB:"l'", MKD:'la ', BLR:'la ', LTU:'la ', AND:"l'",
+    GIB:'', EST:"l'", NIR:"l'", GEO:'la ', LUX:'le ', MNE:'le ', WAL:'le ',
+    SMR:'', CYP:'', ISR:'', MLT:'', KOS:'le ', FRO:'les '};
+  const frName = c => (ART[c] ?? '') + (FRNAME[c] || c);
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+  const by = Object.fromEntries(N.map(n => [n.r, n]));
+  const ahead = by[fr.r - 1], behind = by[fr.r + 1];
+
   const endY = +String(meta.season).slice(0, 4);           // 2026 pour « 2026/2027 »
   const yrs = fr.y.map((_, i) => endY - (fr.y.length - 1 - i));
   return {
-    rank: fr.r, total: fr.t, season: fr.y[fr.y.length - 1],
-    spark: fr.y, sparkFrom: `${yrs[0]}/${String(yrs[0] + 1).slice(2)}`,
-    sparkTo: `${yrs[yrs.length - 1]}/${String(yrs[yrs.length - 1] + 1).slice(2)}`,
+    rank: fr.r, total: fr.t, season: fr.y[fr.y.length - 1], nations: N.length,
+    ahead:  ahead  ? { name: frName(ahead.c),  cap: cap(frName(ahead.c)),  gap: +(ahead.t - fr.t).toFixed(3) }  : null,
+    behind: behind ? { name: frName(behind.c), cap: cap(frName(behind.c)), gap: +(fr.t - behind.t).toFixed(3) } : null,
+    spark: fr.y,
+    years: yrs.map(y => `${String(y).slice(2)}/${String(y + 1).slice(2)}`),
     lastUpdated: meta.lastUpdated,
   };
 }

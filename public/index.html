@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>grotang.fr</title>
-<meta name="description" content="Deux tableaux de bord tenus à jour : le coefficient UEFA des associations, journée par journée, et les Français au tableau principal des Grands Chelems depuis 1968.">
+<title>grotang.fr — coefficient UEFA et Français en Grand Chelem</title>
+<meta name="description" content="La France est 5e au coefficient UEFA des associations. Suivi étape par étape, relevé deux fois par jour, plus la série des Français au tableau principal des Grands Chelems depuis 1968.">
 <meta property="og:title" content="grotang.fr">
 <meta property="og:description" content="Coefficient UEFA journée par journée · Français en Grand Chelem depuis 1968">
 <meta property="og:type" content="website">
@@ -45,7 +45,7 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--ground);color:var(--ink);
   font-family:Carlito,Calibri,system-ui,-apple-system,'Segoe UI',sans-serif;
-  -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+  -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;line-height:1.55}
 
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -74,84 +74,154 @@ body{margin:0;background:var(--ground);color:var(--ink);
   .gnav nav{margin-left:0;width:100%;justify-content:flex-start;order:3}
   .gn-theme{margin-left:auto}}
 
-.wrap{max-width:1080px;margin:0 auto;padding:clamp(30px,7vw,72px) clamp(16px,4vw,32px) 56px}
-.mast{margin-bottom:clamp(26px,5vw,44px)}
-.mark{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:clamp(30px,7vw,52px);
-  font-weight:600;letter-spacing:-.03em;line-height:1;margin:0}
-.mark span{color:var(--ink-3)}
-.sub{margin:12px 0 0;font-size:clamp(14px,2.2vw,16.5px);color:var(--ink-2);max-width:56ch;line-height:1.55}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:clamp(14px,2.4vw,22px)}
-.card{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--rule);
-  border-radius:14px;padding:clamp(20px,3vw,28px);text-decoration:none;color:inherit;
-  box-shadow:var(--shadow);transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;
-  position:relative;overflow:hidden}
-.card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--accent)}
-.card:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--accent) 45%,var(--rule));
-  box-shadow:0 1px 2px rgba(15,20,29,.06),0 18px 40px -18px color-mix(in srgb,var(--accent) 55%,transparent)}
-.card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-.card--uefa{--accent:var(--uefa)}
-.card--tennis{--accent:var(--tennis)}
-.kick{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10.5px;font-weight:600;
-  letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
-.card h2{margin:0;font-size:clamp(18px,2.6vw,21px);font-weight:700;letter-spacing:-.012em;line-height:1.25}
-.card p{margin:9px 0 0;font-size:13.6px;line-height:1.6;color:var(--ink-2)}
-.stats{display:flex;gap:22px;margin:20px 0 0;flex-wrap:wrap}
-.stat{min-width:0}
-.stat b{display:block;font-family:'IBM Plex Mono',ui-monospace,monospace;
-  font-size:clamp(19px,3vw,23px);font-weight:600;letter-spacing:-.02em;line-height:1.1;color:var(--ink)}
-.stat b sup{font-size:.55em;font-weight:600;top:-.55em;position:relative}
-.stat i{display:block;font-style:normal;font-size:10.5px;letter-spacing:.045em;
-  text-transform:uppercase;color:var(--ink-3);margin-top:5px;font-weight:600}
-.spark{display:block;width:100%;height:46px;margin-top:18px;color:var(--accent)}
-.sparkc{font-size:10.5px;color:var(--ink-3);margin:7px 0 0;letter-spacing:.02em}
-.foot{margin-top:auto;padding-top:18px;display:flex;align-items:center;gap:8px;
-  font-size:11.5px;color:var(--ink-3);white-space:nowrap}
-.dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
-.dot.stale{background:var(--ink-3)}
-.go{margin-left:auto;font-weight:700;color:var(--accent);font-size:12.5px;flex:none}
-.notes{margin:clamp(30px,5vw,48px) 0 0;padding-top:20px;border-top:1px solid var(--rule-soft);
-  font-size:12.2px;line-height:1.75;color:var(--ink-3);max-width:78ch}
-.notes a{color:var(--ink-2)}
-.notes code{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:.92em}
+.wrap{max-width:940px;margin:0 auto;padding:clamp(34px,7vw,76px) clamp(18px,5vw,32px) 64px}
+
+/* masthead — la marque reste discrète, la phrase porte le propos */
+.mark{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0}
+.lede{font-family:'Newsreader',Georgia,'Times New Roman',serif;font-optical-sizing:auto;
+  font-size:clamp(23px,4.2vw,34px);line-height:1.28;letter-spacing:-.012em;font-weight:400;
+  margin:14px 0 0;max-width:24ch;color:var(--ink)}
+.lede b{font-weight:600}
+.standfirst{margin:16px 0 0;max-width:62ch;font-size:15px;color:var(--ink-2)}
+
+/* entrées — un filet, un numéro, un chiffre, une phrase. Pas de boîte. */
+.entry{display:grid;grid-template-columns:minmax(0,1fr);gap:0;
+  border-top:1px solid var(--rule);margin-top:clamp(34px,5vw,54px);padding-top:18px}
+.entry-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.entry-no{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;font-weight:600;
+  color:var(--ink-3);letter-spacing:.08em}
+.entry-head h2{margin:0;font-size:15.5px;font-weight:700;letter-spacing:.01em}
+.entry-head h2 a{color:inherit;text-decoration:none;
+  border-bottom:2px solid color-mix(in srgb,var(--accent) 45%,transparent);padding-bottom:1px}
+.entry-head h2 a:hover{border-bottom-color:var(--accent);color:var(--accent)}
+.entry-tag{margin-left:auto;font-size:11.5px;color:var(--ink-3);display:inline-flex;align-items:center;gap:7px}
+.entry-tag i{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
+.entry-tag i.off{background:var(--ink-3);opacity:.5}
+.entry--uefa{--accent:var(--uefa)}
+.entry--tennis{--accent:var(--tennis)}
+
+.body{display:grid;grid-template-columns:minmax(130px,190px) minmax(0,1fr);
+  gap:clamp(18px,4vw,44px);align-items:start}
+.figure{margin:0}
+.figure b{display:block;font-family:'IBM Plex Mono',ui-monospace,monospace;
+  font-size:clamp(38px,7vw,58px);font-weight:600;letter-spacing:-.04em;line-height:.92;color:var(--accent)}
+.figure b sup{font-size:.42em;top:-.9em;position:relative;letter-spacing:0}
+.figure i{display:block;font-style:normal;margin-top:9px;font-size:12px;color:var(--ink-3);
+  letter-spacing:.05em;text-transform:uppercase;font-weight:600;line-height:1.35}
+.say{margin:0;font-size:16.5px;line-height:1.62;max-width:56ch;color:var(--ink)}
+.say b{font-weight:700;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:.94em}
+.say + .say{margin-top:11px;font-size:14.5px;color:var(--ink-2)}
+.meta{margin:18px 0 0;font-size:12.2px;color:var(--ink-3)}
+.meta a{color:var(--accent);font-weight:600;text-decoration:none;white-space:nowrap}
+.meta a:hover{text-decoration:underline}
+
+/* les cinq saisons du coefficient, lisibles une par une */
+.yrs{display:flex;gap:clamp(6px,1.4vw,14px);margin:22px 0 0;align-items:flex-end;max-width:420px}
+.yr{flex:1 1 0;display:flex;flex-direction:column;align-items:stretch;gap:5px;min-width:0}
+.yr-v{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;font-weight:600;
+  color:var(--ink-2);text-align:center}
+.yr-b{display:block;height:44px;position:relative;background:var(--rule-soft);border-radius:2px}
+.yr-b::after{content:"";position:absolute;inset:auto 0 0 0;height:var(--h);
+  background:color-mix(in srgb,var(--accent) 55%,transparent);border-radius:2px}
+.yr--live .yr-v{color:var(--accent)}
+.yr--live .yr-b::after{background:repeating-linear-gradient(135deg,
+  color-mix(in srgb,var(--accent) 55%,transparent) 0 4px,transparent 4px 8px);
+  box-shadow:inset 0 2px 0 var(--accent)}
+.yr-l{font-size:10.5px;color:var(--ink-3);text-align:center;letter-spacing:.02em}
+
+.colophon{margin:clamp(40px,6vw,64px) 0 0;padding-top:20px;border-top:1px solid var(--rule-soft);
+  font-size:12.6px;line-height:1.8;color:var(--ink-3);max-width:74ch}
+.colophon b{color:var(--ink-2);font-weight:600}
+.colophon code{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:.92em}
+
+@media (max-width:640px){
+  .body{grid-template-columns:1fr;gap:18px}
+  .entry-tag{margin-left:0;flex-basis:100%}
+}
 </style>
 </head>
 <body>
 <div class="gnav"><a class="gn-mark" href="/">GROTANG<span>.FR</span></a><nav><a href="/uefa/">Coefficient UEFA</a><a href="/tennis/">Français en Grand Chelem</a></nav><button type="button" class="gn-theme" id="gn-theme" aria-pressed="false" title="Basculer clair / sombre"><span class="gn-theme-i" aria-hidden="true"></span><span class="gn-theme-t">Sombre</span></button></div>
 <div class="wrap">
-  <header class="mast">
-    <h1 class="mark">grotang<span>.fr</span></h1>
-    <p class="sub">Deux tableaux de bord, tenus à jour. Des chiffres sourcés, la méthode assumée en bas de chaque page, et rien d’autre.</p>
+  <header>
+    <p class="mark">grotang.fr</p>
+    <h1 class="lede">La France est <b>5<sup>e</sup></b> au coefficient UEFA, <b>3,77</b> devant le Portugal.</h1>
+    <p class="standfirst">Deux séries de chiffres. La première est relue à la source et republiée
+      sans que personne n'y touche ; la seconde est saisie à la main et l'assume. Les méthodes,
+      les sources et leurs limites sont écrites en bas de chaque page.</p>
   </header>
-  <div class="cards">
-<a class="card card--uefa" href="/uefa/">
-  <p class="kick">Football · 55 associations</p>
-  <h2>Coefficient UEFA, journée par journée</h2>
-  <p>La course aux places européennes lue comme elle se joue : étape par étape, de l'entrée en lice à la finale, avec l'origine des points par compétition et le détail club par club.</p>
-  <div class="stats">
-    <div class="stat"><b>5<sup>e</sup></b><i>France, 5 ans</i></div>
-    <div class="stat"><b>68,724</b><i>Coefficient</i></div>
-    <div class="stat"><b>3,642</b><i>Saison en cours</i></div>
+  
+<section class="entry entry--uefa">
+  <div class="entry-head">
+    <span class="entry-no">01</span>
+    <h2><a href="/uefa/">Coefficient UEFA, journée par journée</a></h2>
+    <span class="entry-tag"><i></i>relevé deux fois par jour</span>
   </div>
-  <svg class="spark" viewBox="0 0 232 46" preserveAspectRatio="none" aria-hidden="true"><rect x="0.0" y="17.8" width="42.4" height="28.2" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="47.4" y="9.6" width="42.4" height="36.4" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="94.8" y="5.8" width="42.4" height="40.2" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="142.2" y="4.9" width="42.4" height="41.1" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="189.6" y="37.8" width="42.4" height="8.2" rx="1.5" fill="currentColor" opacity="0.2"/><rect x="189.6" y="37.8" width="42.4" height="2.2" rx="1.5" fill="currentColor" opacity="0.95"/></svg>
-  <p class="sparkc">Coefficient de saison, 2022/23 → 2026/27. La dernière barre est en cours : source arrêtée au 10/09/2026 - 22:57.</p>
-  <div class="foot"><span class="dot"></span><span>Actualisé chaque matin</span><span class="go">Ouvrir →</span></div>
-</a>
-<a class="card card--tennis" href="/tennis/">
-  <p class="kick">Tennis · 59 éditions</p>
-  <h2>🇫🇷 Français au tableau principal</h2>
-  <p>Simple messieurs, ère Open. Le nombre de Français au premier tour de chaque Grand Chelem depuis 1968, en une seule grille lisible d'un coup d'œil.</p>
-  <div class="stats">
-    <div class="stat"><b>64</b><i>Record, 2007</i></div>
-    <div class="stat"><b>52</b><i>Total 2025</i></div>
-    <div class="stat"><b>1968</b><i>Début de série</i></div>
+  <div class="body">
+    <p class="figure"><b>5<sup>e</sup></b><i>sur 55<br>associations</i></p>
+    <div>
+      <p class="say">La France pèse <b>68,724</b> points sur cinq ans.
+        L'Allemagne la précède de <b>12,54</b> ; 
+        le Portugal la suit à <b>3,77</b>.</p>
+      <p class="say">Le rang ne bouge qu'une fois l'an, l'écart bouge à chaque soirée européenne.
+        C'est lui que la page suit, tour par tour, de l'entrée en lice à la finale — avec l'origine
+        des points par compétition et le détail club par club.</p>
+      <div class="yrs"><div class="yr">
+      <span class="yr-v">12,6</span>
+      <span class="yr-b" style="--h:68.7%"></span>
+      <span class="yr-l">22/23</span>
+    </div><div class="yr">
+      <span class="yr-v">16,3</span>
+      <span class="yr-b" style="--h:88.7%"></span>
+      <span class="yr-l">23/24</span>
+    </div><div class="yr">
+      <span class="yr-v">17,9</span>
+      <span class="yr-b" style="--h:97.9%"></span>
+      <span class="yr-l">24/25</span>
+    </div><div class="yr">
+      <span class="yr-v">18,3</span>
+      <span class="yr-b" style="--h:100.0%"></span>
+      <span class="yr-l">25/26</span>
+    </div><div class="yr yr--live">
+      <span class="yr-v">3,6</span>
+      <span class="yr-b" style="--h:19.9%"></span>
+      <span class="yr-l">26/27</span>
+    </div></div>
+      <p class="meta">Cinq saisons glissantes ; la dernière, hachurée, est en cours
+        (<b>3,642</b> acquis). Source arrêtée au 10/09/2026 - 22:57.
+        &nbsp;·&nbsp; <a href="/uefa/">Lire la page</a></p>
+    </div>
   </div>
-  <svg class="spark" viewBox="0 0 232 46" preserveAspectRatio="none" aria-hidden="true"><rect x="0.0" y="19.0" width="4.9" height="27.0" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="9.9" y="13.9" width="4.9" height="32.1" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="19.8" y="13.3" width="4.9" height="32.7" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="29.6" y="6.2" width="4.9" height="39.8" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="39.5" y="12.0" width="4.9" height="34.0" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="49.4" y="13.3" width="4.9" height="32.7" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="59.3" y="4.9" width="4.9" height="41.1" rx="1.5" fill="currentColor" opacity="1"/><rect x="69.1" y="6.9" width="4.9" height="39.1" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="79.0" y="9.4" width="4.9" height="36.6" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="88.9" y="10.7" width="4.9" height="35.3" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="98.8" y="10.7" width="4.9" height="35.3" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="108.6" y="11.3" width="4.9" height="34.7" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="118.5" y="6.9" width="4.9" height="39.1" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="128.4" y="8.8" width="4.9" height="37.2" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="138.3" y="16.5" width="4.9" height="29.5" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="148.1" y="10.1" width="4.9" height="35.9" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="158.0" y="12.0" width="4.9" height="34.0" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="167.9" y="15.2" width="4.9" height="30.8" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="177.8" y="13.9" width="4.9" height="32.1" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="187.6" y="12.0" width="4.9" height="34.0" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="197.5" y="19.0" width="4.9" height="27.0" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="207.4" y="10.1" width="4.9" height="35.9" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="217.3" y="10.7" width="4.9" height="35.3" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="227.1" y="12.6" width="4.9" height="33.4" rx="1.5" fill="currentColor" opacity="0.5"/></svg>
-  <p class="sparkc">Total des quatre levées, 2001 → 2025. Barre pleine : le record.</p>
-  <div class="foot"><span class="dot stale"></span><span>Données figées, saisie manuelle</span><span class="go">Ouvrir →</span></div>
-</a></div>
-  <p class="notes">
-    Le tableau UEFA est reconstruit chaque matin à partir de la source publique et republié automatiquement ; la date affichée sur sa vignette est celle de la dernière donnée disponible, pas celle de la publication. La grille tennis est saisie à la main et ne bouge qu'après un Grand Chelem — c'est le prochain chantier d'automatisation.
-    Les méthodes de calcul et leurs limites sont détaillées en bas de chaque page.
+</section>
+  
+<section class="entry entry--tennis">
+  <div class="entry-head">
+    <span class="entry-no">02</span>
+    <h2><a href="/tennis/">Français au tableau principal, depuis 1968</a></h2>
+    <span class="entry-tag"><i class="off"></i>figé, saisie manuelle</span>
+  </div>
+  <div class="body">
+    <p class="figure"><b>52</b><i>Français<br>en 2025</i></p>
+    <div>
+      <p class="say">Sur les quatre Grands Chelems de 2025, <b>52</b> Français
+        au premier tour du simple messieurs — contre <b>64</b> en 2007,
+        le sommet de l'ère Open.</p>
+      <p class="say">59 années, quatre levées, une grille : l'effondrement
+        des années 1980 et le pic des années 2000 se lisent sans commentaire.</p>
+      <p class="meta">Données saisies à la main d'après Wikipédia ; elles ne bougent
+        qu'après un Grand Chelem. L'automatisation viendra.
+        &nbsp;·&nbsp; <a href="/tennis/">Lire la page</a></p>
+    </div>
+  </div>
+</section>
+  <p class="colophon">
+    <b>Comment ça tient.</b> Le tableau UEFA est reconstruit à partir de
+    <a href="https://www.5-jahres-wertung.de/">5-jahres-wertung.de</a>, site privé sans lien avec
+    l'UEFA : les chiffres sont recalculés puis soumis à sept contrôles — dont le barème vérifié
+    club par club sur les 463 engagés — et rien n'est publié si l'un d'eux échoue ; la page de la
+    veille reste alors en ligne. La date affichée est celle de la dernière donnée disponible,
+    pas celle de la publication.
   </p>
 </div>
 <script>(function(){
