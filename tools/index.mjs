@@ -10,7 +10,7 @@
  * tuiles jumelles était un mensonge de mise en page. Ici chaque entrée s'ouvre
  * sur le chiffre qui la résume et une phrase qui dit ce qu'il signifie.
  */
-import { FONTS, FAVICON, navCSS, nav, TOKENS, THEME_BOOT, THEME_JS } from './chrome.mjs';
+import { FONTS, FAVICON, navCSS, nav, TOKENS, THEME_BOOT, THEME_JS, ANALYTICS } from './chrome.mjs';
 
 const nf = (v, d = 3) => v.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
 const ord = n => n === 1 ? '1<sup>er</sup>' : n + '<sup>e</sup>';
@@ -195,6 +195,7 @@ ${nav(null)}
   </p>
 </div>
 ${THEME_JS}
+${ANALYTICS}
 </body>
 </html>`;
 }

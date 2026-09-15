@@ -14,7 +14,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { nav, navCSS, FAVICON, TOKENS, THEME_BOOT, THEME_JS, FONTS } from './chrome.mjs';
+import { nav, navCSS, FAVICON, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS } from './chrome.mjs';
 import { buildIndex } from './index.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -55,6 +55,7 @@ body{margin:0}</style>
 ${nav('uefa')}
 ${body.replace(/<\/body>\s*<\/html>\s*$/i, '')}
 ${THEME_JS}
+${ANALYTICS}
 </body>
 </html>` };
 }
@@ -77,7 +78,7 @@ body{padding-top:0}
 .gnav{margin:-20px -20px 18px}
 </style>`);
   out = out.replace('<body>\n', `<body>\n${nav('tennis')}\n`);
-  out = out.replace('</body>', `${THEME_JS}\n</body>`);
+  out = out.replace('</body>', `${THEME_JS}\n${ANALYTICS}\n</body>`);
   if (!out.includes('gnav')) throw new Error('tennis : injection de la navigation ratée');
 
   /* chiffres pour la vignette d'accueil, lus dans la source — pas ressaisis */

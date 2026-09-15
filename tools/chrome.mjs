@@ -13,6 +13,23 @@ export const FONTS = `<link rel="preconnect" href="https://fonts.googleapis.com"
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&family=Newsreader:opsz,wght@6..72,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">`;
 
+/* Mesure d'audience — Umami Cloud, palier gratuit.
+ *
+ * Un seul endroit pour les trois pages. Umami ne pose pas de cookie et
+ * n'empreinte pas le navigateur : pas de bandeau de consentement à afficher,
+ * ce qui est exactement la raison de ne pas avoir pris Google Analytics.
+ *
+ * Tant que l'identifiant est vide, AUCUNE balise n'est émise : le site n'appelle
+ * alors aucun tiers, et rien ne casse. Coller l'identifiant fourni à la création
+ * du site dans Umami suffit à activer la mesure partout.
+ *
+ * `defer` plutôt que `async` : le script ne bloque pas le rendu et part après le
+ * document. Une page de données n'a aucune raison d'attendre son compteur. */
+const UMAMI_ID = '';   // ← identifiant du site Umami (Settings → Websites)
+export const ANALYTICS = UMAMI_ID
+  ? `<script defer src="https://cloud.umami.is/script.js" data-website-id="${UMAMI_ID}"></script>`
+  : '<!-- mesure d\'audience : en attente de l\'identifiant Umami -->';
+
 /* Les jetons, définis une fois. Le clair est le défaut : le sombre est un choix
    que le lecteur pose, pas un réglage système qu'on lui impose — c'était le
    travers de l'ancienne accueil. */
