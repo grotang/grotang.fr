@@ -1,0 +1,21 @@
+# Les fins de ligne sont normalisées en LF dans le dépôt.
+#
+# Sans ça, un fichier passé par un éditeur Windows revient avec des retours
+# chariot et git le voit intégralement réécrit : 176 lignes de README « modifiées »
+# alors que pas un caractère n'a changé. C'est arrivé le 16/09/2026 sur README.md
+# et pages.yml, et ça noie les vrais changements dans le bruit.
+#
+# `text=auto` : git décide seul ce qui est du texte, et le stocke en LF.
+* text=auto
+
+# Le HTML publié est lu par le workflow de déploiement, jamais édité à la main.
+*.html text eol=lf
+*.mjs  text eol=lf
+*.yml  text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+
+# Binaires : aucune conversion, sous peine de corruption.
+*.png binary
+*.pdf binary
+*.ico binary
