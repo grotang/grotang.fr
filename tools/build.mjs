@@ -38,6 +38,19 @@ function buildUefa() {
   const meta = JSON.parse(src.slice(src.indexOf('/*DATA_START*/') + 14, src.indexOf('/*DATA_END*/'))
     .replace(/^const D\s*=\s*/, '').replace(/;\s*$/, '')).meta;
 
+  /* Horodatage de PUBLICATION, distinct de meta.built.
+     meta.built dit quand les DONNÉES ont été relues à la source : il ne bouge pas
+     tant que la source ne bouge pas, et reste donc figé pendant une semaine creuse.
+     Celui-ci dit quand CETTE PAGE a été fabriquée — il bouge à chaque changement,
+     y compris quand seuls le texte ou la mise en page changent. Les deux répondent
+     à deux questions différentes : « les chiffres datent de quand ? » et « la page
+     que je lis date de quand ? ».
+     Heure de Paris, parce que la page s'adresse à des lecteurs français. */
+  const publie = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  }).format(new Date()).replace(', ', ' ').replace(':', 'h');
+
   return { meta, html: `<!doctype html>
 <html lang="fr">
 <head>
@@ -47,6 +60,7 @@ function buildUefa() {
 ${FAVICON}
 ${THEME_BOOT}
 ${head}
+<script>window.PUBLIE = ${JSON.stringify(publie)};</script>
 <style>${navCSS}
 .gnav{margin-bottom:0}
 body{margin:0}</style>

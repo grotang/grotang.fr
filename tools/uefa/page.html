@@ -432,9 +432,9 @@ function dmy(v){
   if(!v) return '';
   const t = String(v).trim();
   let m = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/.exec(t);
-  if(m) return `${m[3]}/${m[2]}/${m[1]}` + (m[4] ? ` ${m[4]}:${m[5]}` : '');
+  if(m) return `${m[3]}/${m[2]}/${m[1]}` + (m[4] ? ` ${m[4]}h${m[5]}` : '');
   m = /^(\d{2})\/(\d{2})\/(\d{4})(?:\s*-\s*(\d{2}):(\d{2}))?/.exec(t);
-  if(m) return `${m[1]}/${m[2]}/${m[3]}` + (m[4] ? ` ${m[4]}:${m[5]}` : '');
+  if(m) return `${m[1]}/${m[2]}/${m[3]}` + (m[4] ? ` ${m[4]}h${m[5]}` : '');
   return t;
 }
 const nf = (v,d=3)=> v==null||Number.isNaN(v) ? "—" : v.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -635,8 +635,14 @@ const matchToday = AGENDA.find(m => m.iso === ISO_TODAY) || null;
 const nextMatch  = AGENDA.find(m => !passe(m.iso) && m.iso !== ISO_TODAY) || null;
 const joursAvant = iso => Math.round((dOf(iso) - dOf(ISO_TODAY)) / 86400000);
 document.getElementById('stamp').innerHTML =
-  "<div>Source mise à jour <b>" + dmy(D.meta.lastUpdated) + "</b></div>" +
-  "<div>Page recalculée <b>" + dmy(D.meta.built) + "</b></div>" +
+  "<div>Données arrêtées au <b>" + dmy(D.meta.lastUpdated) + "</b></div>" +
+  /* Deux dates, deux questions. « Données arrêtées » dit jusqu'où vont les
+     résultats pris en compte ; « Page publiée » dit de quand date la version
+     qu'on est en train de lire. L'ancienne étiquette « Page recalculée » affichait
+     en fait la date du dernier rafraîchissement des DONNÉES : elle restait figée
+     sur une semaine sans match alors que la page, elle, avait changé.
+     Hors construction (ouverture directe du gabarit), on retombe sur meta.built. */
+  "<div>Page publiée <b>" + (window.PUBLIE || dmy(D.meta.built)) + "</b></div>" +
   /* Jour de match : on le dit, fort, avec l'heure — c'est la seule information
      qui vaut d'être criée. Les autres jours : un compte à rebours, sans heure,
      parce qu'une heure à trois semaines de distance n'apprend rien. */
