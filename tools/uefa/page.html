@@ -437,6 +437,26 @@ function dmy(v){
   if(m) return `${m[1]}/${m[2]}/${m[3]}` + (m[4] ? ` ${m[4]}h${m[5]}` : '');
   return t;
 }
+/* « jeu. 10 sept. 2026 » plutôt que « 10/09/2026 » : le jour de la semaine ancre
+   la donnée dans la mémoire du lecteur — « ah oui, la soirée de jeudi » — là où un
+   quantième demande un calcul. Les abréviations sont celles de l'usage français,
+   irrégulières (mars et mai ne s'abrègent pas, septembre donne « sept. »).
+   Aucune conversion de fuseau : l'horodatage de la source est déjà à l'heure de
+   Paris, le faire transiter par un Date local le décalerait d'une heure l'été. */
+const JOURS = ['dim.','lun.','mar.','mer.','jeu.','ven.','sam.'];
+const MOIS  = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+function dlong(v){
+  if(!v) return '';
+  const t = String(v).trim();
+  let m = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/.exec(t)
+       || (/^(\d{2})\/(\d{2})\/(\d{4})(?:\s*-\s*(\d{2}):(\d{2}))?/.exec(t)
+            ? (([,d,mo,y,h,mi]) => [null,y,mo,d,h,mi])(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s*-\s*(\d{2}):(\d{2}))?/.exec(t))
+            : null);
+  if(!m) return t;
+  const [,y,mo,d,h,mi] = m;
+  const jour = JOURS[new Date(Date.UTC(+y, +mo-1, +d)).getUTCDay()];
+  return { txt: `${jour} ${d} ${MOIS[+mo-1]} ${y}`, h: h ? `${h}h${mi}` : null };
+}
 const nf = (v,d=3)=> v==null||Number.isNaN(v) ? "—" : v.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d});
 const nf1 = v => v.toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1});
 
@@ -635,14 +655,19 @@ const matchToday = AGENDA.find(m => m.iso === ISO_TODAY) || null;
 const nextMatch  = AGENDA.find(m => !passe(m.iso) && m.iso !== ISO_TODAY) || null;
 const joursAvant = iso => Math.round((dOf(iso) - dOf(ISO_TODAY)) / 86400000);
 document.getElementById('stamp').innerHTML =
-  "<div>Données arrêtées au <b>" + dmy(D.meta.lastUpdated) + "</b></div>" +
+    /* Le jour suffit au lecteur ; l'heure exacte est là pour qui la cherche, en
+     infobulle. C'est aussi plus honnête : ces 22h57 sont l'heure à laquelle la
+     source a publié ses chiffres, pas l'heure d'un coup de sifflet final. */
+  (function(){ const s = dlong(D.meta.lastUpdated);
+    return "<div>Derniers résultats <b" + (s.h ? ' title="Chiffres publiés par la source à ' + s.h + '"' : '')
+         + ">" + s.txt + "</b></div>"; })() +
   /* Deux dates, deux questions. « Données arrêtées » dit jusqu'où vont les
      résultats pris en compte ; « Page publiée » dit de quand date la version
      qu'on est en train de lire. L'ancienne étiquette « Page recalculée » affichait
      en fait la date du dernier rafraîchissement des DONNÉES : elle restait figée
      sur une semaine sans match alors que la page, elle, avait changé.
      Hors construction (ouverture directe du gabarit), on retombe sur meta.built. */
-  "<div>Page publiée <b>" + (window.PUBLIE || dmy(D.meta.built)) + "</b></div>" +
+  "<div>Page publiée <b>" + (window.PUBLIE || dlong(D.meta.built).txt) + "</b></div>" +
   /* Jour de match : on le dit, fort, avec l'heure — c'est la seule information
      qui vaut d'être criée. Les autres jours : un compte à rebours, sans heure,
      parce qu'une heure à trois semaines de distance n'apprend rien. */

@@ -46,10 +46,11 @@ function buildUefa() {
      à deux questions différentes : « les chiffres datent de quand ? » et « la page
      que je lis date de quand ? ».
      Heure de Paris, parce que la page s'adresse à des lecteurs français. */
-  const publie = new Intl.DateTimeFormat('fr-FR', {
-    timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  }).format(new Date()).replace(', ', ' ').replace(':', 'h');
+  const now = new Date();
+  const part = o => new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', ...o }).format(now);
+  const publie = `${part({ weekday: 'short' })} ${part({ day: '2-digit' })} `
+    + `${part({ month: 'short' })} ${part({ year: 'numeric' })} · `
+    + part({ hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
 
   return { meta, html: `<!doctype html>
 <html lang="fr">
