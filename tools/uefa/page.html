@@ -357,9 +357,44 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
     <p>Le rang bouge une fois par an ; l'écart, lui, bouge à chaque journée. L'axe vertical ne montre pas cet écart mais son <b>mouvement</b> depuis le 1<sup>er</sup> juillet : toutes les nations partent de la ligne France, monter c'est gagner du terrain sur elle, descendre c'est en perdre. L'écart réel, lui, est le chiffre inscrit à droite de chaque courbe.</p>
   </div>
   <div class="panel">
+    <div class="ptitle"><span class="no">5</span><h3>Le mouvement depuis le 1<sup>er</sup> juillet</h3></div>
     <figure>
       <div class="chartbox" id="boxB"><svg id="chartB" role="img" aria-label="Mouvement de l'écart de coefficient à la France depuis le 1er juillet"></svg><div class="tip" id="tipB" hidden></div></div>
       <figcaption id="capB"></figcaption>
+    </figure>
+  </div>
+
+  <div class="warnbox" id="biaisNote"></div>
+
+  <div class="panel">
+    <div class="ptitle"><span class="no">5a</span><h3>D'où vient le coefficient de la saison</h3></div>
+    <figure>
+      <div class="chartbox" id="boxDec"><svg id="chartDec" role="img" aria-label="Décomposition du coefficient de saison en bonus d'entrée, qualifications et phase de ligue"></svg><div class="tip" id="tipDec" hidden></div></div>
+      <figcaption id="capDec"></figcaption>
+    </figure>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle"><span class="no">5b</span><h3>À armes égales — la phase de ligue seule</h3></div>
+    <figure>
+      <div class="chartbox" id="boxEq"><svg id="chartEq" role="img" aria-label="Coefficient de phase de ligue, journée par journée"></svg><div class="tip" id="tipEq" hidden></div></div>
+      <figcaption id="capEq"></figcaption>
+    </figure>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle"><span class="no">5c</span><h3>Le rendement — points par match joué</h3></div>
+    <figure>
+      <div class="chartbox" id="boxRdt"><svg id="chartRdt" role="img" aria-label="Points marqués par match de phase de ligue"></svg><div class="tip" id="tipRdt" hidden></div></div>
+      <figcaption id="capRdt"></figcaption>
+    </figure>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle"><span class="no">5d</span><h3>Où ça peut finir</h3></div>
+    <figure>
+      <div class="chartbox" id="boxPrj"><svg id="chartPrj" role="img" aria-label="Fourchette de coefficient de saison en fin de phase de ligue"></svg><div class="tip" id="tipPrj" hidden></div></div>
+      <figcaption id="capPrj"></figcaption>
     </figure>
   </div>
 </section>
@@ -1517,6 +1552,245 @@ function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM();
     + `celles qui décident de la 5<sup>e</sup> place, et donc d'un club de plus en Ligue des champions. `
     + (best && best.m > 0.005 ? `Cette saison, ${name(best.c)} est la nation du groupe qui grignote le plus (${'+' + nf(best.m, 2)}) ` : `Cette saison, aucune nation du groupe ne grignote encore de terrain `)
     + (worst && worst.m < -0.005 ? `et ${name(worst.c)} celle qui décroche le plus (${'−' + nf(Math.abs(worst.m), 2)}).` : `sur la France.`);
+})();
+
+
+/* ================= bloc 5 · quatre lectures de la course =================
+ *
+ * Le graphe 5 ci-dessus mesure ce que chaque nation a gagné SUR LE TERRAIN
+ * depuis le 1er juillet. Deux biais le rendent trompeur si on s'arrête là :
+ *
+ *   1. il neutralise le bonus d'entrée (6 pts par club de phase de ligue C1),
+ *      qui est pourtant du coefficient bien réel — et qui récompense le rang
+ *      de l'an dernier, pas la saison en cours ;
+ *   2. l'axe horizontal donne le même nom aux mêmes colonnes pour tout le
+ *      monde, alors qu'elles ne veulent pas dire la même chose : une nation
+ *      mal classée entre en lice dès juillet et accumule pendant que les
+ *      grandes attendent septembre sans pouvoir marquer.
+ *
+ * D'où ces quatre sous-blocs, qui isolent chacun une lecture propre.
+ * =========================================================================*/
+(function(){
+  const iFR = N.findIndex(n => n.c === 'FRA');
+  if (iFR < 0) return;
+  const GRP = N.slice(Math.max(0, iFR - 3), iFR + 4).map(n => n.c);   // FRA comprise
+  const col = c => `var(${SLOT[c] || '--ink-3'})`;
+  /* « Portugal mène la saison » sonne comme une dépêche mal traduite. */
+  const ART = { ESP:"l'", ITA:"l'", ALL:"l'", GER:"l'", AUT:"l'", ANG:"l'", ENG:"l'", ECO:"l'",
+                NED:'les ', SCO:"l'", IRL:"l'", ISL:"l'", UKR:"l'" };
+  const leNom = c => (ART[c] || 'le ') + name(c);
+  const LeNom = c => { const s = leNom(c); return s[0].toUpperCase() + s.slice(1); };
+
+  /* --- décomposition exacte du coefficient de saison ---------------------
+     SER[c].q[0] porte le bonus d'entrée et rien d'autre : vérifié sur les 55
+     nations, il vaut exactement 6 × (clubs en C1) ÷ (clubs engagés).
+     Les gains q[1..7] sont les qualifications, les gains m[*] la phase de ligue. */
+  const part = c => {
+    const q = SER[c].q, m = SER[c].m;
+    const bonus  = q[0][1];
+    const qualif = q.slice(1).reduce((a, s) => a + s[1], 0);
+    const ligue  = m.reduce((a, s) => a + s[1], 0);
+    return { bonus, qualif, ligue, tot: bonus + qualif + ligue };
+  };
+
+  /* --- journées de phase de ligue présentes DANS LES DONNÉES, par compétition ---
+     Piège corrigé ici : `passe()` se cale sur l'horloge, or les données sont un
+     instantané figé au dernier relevé de la source. Le soir du 16 septembre, la
+     C3 avait donné son coup d'envoi mais les chiffres dataient du 10 : compter
+     cette journée comme disputée gonflait le dénominateur du rendement et faisait
+     chuter toutes les nations d'un tiers. On se cale donc sur la date des données,
+     jamais sur la date du jour. */
+  const ASOF = (() => { const m = /^(\d{2})\/(\d{2})\/(\d{4})(?:\s*-\s*(\d{2}):(\d{2}))?/.exec(String(D.meta.lastUpdated).trim());
+    return m ? new Date(+m[3], +m[2] - 1, +m[1], m[4] ? +m[4] : 23, m[5] ? +m[5] : 59) : TODAY; })();
+  const jouees = k => CAL[k].filter(([iso]) => kickAt(iso) < ASOF).length;
+  const totJ   = k => CAL[k].length;
+  const clubsK = c => { const a = BY[c].a; return [a[0], a[1], a[2]]; };
+  const div    = c => BY[c].a[3];
+  /* matchs de phase de ligue déjà disputés : un club = un match par journée */
+  const matchs = c => clubsK(c).reduce((a, n, k) => a + n * jouees(k), 0);
+  const matchsRestants = c => clubsK(c).reduce((a, n, k) => a + n * (totJ(k) - jouees(k)), 0);
+
+  const jTot = jouees(0) + jouees(1) + jouees(2);
+
+  /* ---------- outil commun : barres horizontales classées ---------- */
+  function barres({ svgId, rows, max, seg, droite, titre }) {
+    const W = 1000, rowH = 34, mT = 30, mB = 34, mL = 96, mR = 150;
+    const H = mT + rows.length * rowH + mB;
+    const X = v => mL + (W - mL - mR) * (v / max);
+    let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
+    const ticks = niceScale(0, max, 5);
+    ticks.ticks.forEach(v => {
+      if (v < 0 || v > max) return;
+      s += `<line x1="${X(v).toFixed(1)}" y1="${mT - 6}" x2="${X(v).toFixed(1)}" y2="${H - mB + 4}" stroke="var(--rule-soft)"/>`
+        + `<text x="${X(v).toFixed(1)}" y="${H - mB + 20}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${nf(v, ticks.dec)}</text>`;
+    });
+    if (titre) s += `<text x="${mL}" y="${mT - 14}" font-size="11" font-weight="600" fill="var(--ink-3)">${titre}</text>`;
+    rows.forEach((r, i) => {
+      const y = mT + i * rowH, h = 19, yb = y + (rowH - h) / 2;
+      const fr = r.c === 'FRA';
+      s += `<text x="${mL - 10}" y="${(yb + 14).toFixed(1)}" text-anchor="end" font-size="12.5" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${name(r.c)}</text>`;
+      let x = mL;
+      r.seg.forEach((v, k) => {
+        if (v <= 0) return;
+        const w = X(v) - mL;
+        s += `<rect x="${x.toFixed(1)}" y="${yb}" width="${Math.max(0.6, w).toFixed(1)}" height="${h}" fill="${seg[k].col}" opacity="${seg[k].op || 1}"><title>${name(r.c)} · ${seg[k].lab} : ${nf(v, 3)}</title></rect>`;
+        if (w > 34) s += `<text x="${(x + w / 2).toFixed(1)}" y="${(yb + 13.5).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="600" font-family="IBM Plex Mono, monospace" fill="${seg[k].fg || '#fff'}">${nf(v, 2)}</text>`;
+        x += w;
+      });
+      if (fr) s += `<rect x="${mL - 3}" y="${yb - 3}" width="${(x - mL + 6).toFixed(1)}" height="${h + 6}" fill="none" stroke="var(--fr)" stroke-width="1.5" rx="2"/>`;
+      s += `<text x="${(x + 10).toFixed(1)}" y="${(yb + 14).toFixed(1)}" font-size="12" font-weight="${fr ? 700 : 600}" font-family="IBM Plex Mono, monospace" fill="${fr ? 'var(--fr)' : 'var(--ink)'}">${droite(r)}</text>`;
+    });
+    /* outerHTML détruit l'élément : le SVG reconstruit doit porter l'id lui-même,
+       sinon plus rien ne le retrouve (et le bloc disparaît silencieusement). */
+    document.getElementById(svgId).outerHTML = (s + '</svg>').replace('<svg', `<svg id="${svgId}"`);
+  }
+
+  const legende = segs => segs.map(s =>
+    `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">
+       <i style="width:10px;height:10px;border-radius:2px;background:${s.col};opacity:${s.op || 1};display:inline-block"></i>${s.lab}</span>`).join('');
+
+  /* ===================== 5a · décomposition ===================== */
+  (function(){
+    const rows = GRP.map(c => { const d = part(c); return { c, d, seg: [d.bonus, d.qualif, d.ligue] }; })
+                    .sort((a, b) => b.d.tot - a.d.tot);
+    const max = Math.max(...rows.map(r => r.d.tot)) * 1.02;
+    const seg = [
+      { lab: "Bonus d'entrée (C1)", col: 'var(--ink-3)', op: .55, fg: '#fff' },
+      { lab: 'Qualifications',      col: 'var(--n4)',    fg: '#fff' },
+      { lab: 'Phase de ligue',      col: 'var(--fr)',    fg: '#fff' },
+    ];
+    /* Le total affiché est celui que publie la source, pas la somme des trois
+       barres : chaque composante est arrondie au millième, et les additionner
+       donne 3,640 là où le classement dit 3,642. Mieux vaut un millième
+       d'incohérence visuelle qu'un chiffre qui ne colle pas au bloc 1. */
+    barres({ svgId: 'chartDec', rows, max, seg, titre: 'coefficient de la saison en cours',
+             droite: r => nf(BY[r.c].y[4], 3) });
+    const fr = part('FRA'), leader = rows[0];
+    document.getElementById('capDec').innerHTML =
+      `<p style="margin:0 0 8px">${legende(seg)}</p>`
+      + `Trois composantes de natures différentes, que le classement additionne sans le dire. `
+      + `<b>Le bonus d'entrée</b> vaut 6 points par club qualifié pour la phase de ligue de C1, divisés par le nombre de clubs engagés : `
+      + `il est acquis avant le premier ballon et récompense le rang de la saison passée. `
+      + `<b>Les qualifications</b> ne sont ouvertes qu'aux nations dont les clubs entrent tôt — une nation dont tous les clubs sont directement qualifiés ne peut structurellement rien y marquer. `
+      + `<b>Seule la phase de ligue</b> met tout le monde sur le même terrain. `
+      + `Aujourd'hui ${leNom(leader.c)} mène la saison avec ${nf(BY[leader.c].y[4], 3)}, dont ${nf(leader.d.bonus, 3)} acquis d'avance `
+      + `(${Math.round(100 * leader.d.bonus / leader.d.tot)} %) ; la France est à ${nf(BY.FRA.y[4], 3)}, dont ${nf(fr.bonus, 3)} `
+      + `(${Math.round(100 * fr.bonus / fr.tot)} %).`;
+  })();
+
+  /* ===================== 5b · à armes égales ===================== */
+  (function(){
+    const rows = GRP.map(c => ({ c, v: part(c).ligue })).sort((a, b) => b.v - a.v);
+    const max = Math.max(0.001, ...rows.map(r => r.v)) * 1.12;
+    const seg = [{ lab: 'Phase de ligue', col: 'var(--fr)', fg: '#fff' }];
+    barres({ svgId: 'chartEq', rows: rows.map(r => ({ ...r, seg: [r.v] })), max, seg,
+             titre: `coefficient acquis en phase de ligue · ${jTot} journée${jTot > 1 ? 's' : ''} disputée${jTot > 1 ? 's' : ''}`,
+             droite: r => nf(r.v, 3) });
+    const fr = rows.findIndex(r => r.c === 'FRA');
+    document.getElementById('capEq').innerHTML =
+      `Ni bonus d'entrée, ni qualifications : uniquement ce qui a été marqué en phase de ligue, `
+      + `où les 36 clubs de C1 et de C3 jouent 8 journées et ceux de C4 en jouent 6. `
+      + `C'est la seule fenêtre où les nations sont réellement comparables. `
+      + `La France y est <b>${fr + 1}<sup>e</sup> sur ${rows.length}</b> du groupe avec ${nf(rows[fr].v, 3)}. `
+      + `<b>Réserve :</b> ${jTot} journée${jTot > 1 ? 's' : ''} sur 8, et la C3 comme la C4 n'ont pas encore commencé — `
+      + `à ce stade l'échantillon est trop court pour conclure quoi que ce soit.`;
+  })();
+
+  /* ===================== 5c · rendement ===================== */
+  (function(){
+    /* Points bruts = coefficient de phase de ligue × clubs engagés. En phase de
+       ligue une victoire vaut 2 points, un nul 1 : le rendement se lit donc sur
+       une échelle de 0 à 2, et 1,00 correspond à « un nul par match ». */
+    const rows = GRP.map(c => {
+      const brut = part(c).ligue * div(c), m = matchs(c);
+      return { c, brut: Math.round(brut * 100) / 100, m, v: m ? brut / m : 0 };
+    }).sort((a, b) => b.v - a.v);
+    const seg = [{ lab: 'Points par match', col: 'var(--n3)', fg: '#fff' }];
+    barres({ svgId: 'chartRdt', rows: rows.map(r => ({ ...r, seg: [r.v] })), max: 2,
+             seg, titre: 'points marqués par match de phase de ligue (victoire 2, nul 1)',
+             droite: r => `${nf(r.v, 2)}  ${r.m} match${r.m > 1 ? 's' : ''}` });
+    const best = rows[0], fr = rows.find(r => r.c === 'FRA');
+    document.getElementById('capRdt').innerHTML =
+      `Le nombre de clubs engagés cesse de compter : on rapporte les points au nombre de matchs réellement disputés. `
+      + `Une nation à 5 clubs et une à 9 deviennent comparables. `
+      + (fr ? `La France marque <b>${nf(fr.v, 2)} point par match</b> sur ${fr.m}, ` : '')
+      + `contre ${nf(best.v, 2)} pour ${leNom(best.c)}, le meilleur du groupe. `
+      + `<b>Réserve :</b> sur ${fr ? fr.m : 0} match${fr && fr.m > 1 ? 's' : ''}, un seul résultat déplace tout le classement — `
+      + `cette lecture ne devient solide qu'après trois ou quatre journées.`;
+  })();
+
+  /* ===================== 5d · fourchette de fin ===================== */
+  (function(){
+    /* Trois scénarios, pas une prédiction. Le bas suppose que plus aucun point
+       n'est marqué, le haut que tous les matchs restants sont gagnés : la
+       vérité est forcément entre les deux. Le point central prolonge le
+       rendement observé — c'est le scénario le plus faible des trois, puisqu'il
+       extrapole un échantillon minuscule, et il est dessiné comme tel.
+       La phase finale n'est pas simulée : qui s'y qualifie est inconnu. */
+    /* Premier essai : borner par « zéro point » et « tous les matchs gagnés ».
+       Mathématiquement exact, visuellement inutile — avec une cinquantaine de
+       matchs restants, les sept nations obtenaient la même barre de 4 à 19 et le
+       graphe ne disait plus rien. On borne donc par une variation PLAUSIBLE du
+       rendement, ±0,5 point par match, bornée à l'intervalle réel [0 ; 2]. C'est
+       une hypothèse, elle est écrite en toutes lettres sous le graphe, et les
+       extrêmes théoriques restent dans l'infobulle. */
+    const SWING = 0.5;
+    const rows = GRP.map(c => {
+      const acq = BY[c].y[4], d = div(c), m = matchs(c), r = matchsRestants(c);
+      const rdt = m ? part(c).ligue * d / m : 0;
+      const lo = Math.max(0, rdt - SWING), hi = Math.min(2, rdt + SWING);
+      return { c, acq, rdt, r,
+               bas: acq + lo * r / d, cen: acq + rdt * r / d, haut: acq + hi * r / d,
+               min: acq, max: acq + 2 * r / d };
+    }).sort((a, b) => b.cen - a.cen);
+    const W = 1000, rowH = 36, mT = 34, mB = 34, mL = 96, mR = 118;
+    const H = mT + rows.length * rowH + mB;
+    const loV = Math.min(...rows.map(r => r.acq)) * 0.92;
+    const hiV = Math.max(...rows.map(r => r.haut)) * 1.03;
+    const sc = niceScale(loV, hiV, 6);
+    const X = v => mL + (W - mL - mR) * ((v - sc.lo) / (sc.hi - sc.lo));
+    let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
+    sc.ticks.forEach(v => s += `<line x1="${X(v).toFixed(1)}" y1="${mT - 8}" x2="${X(v).toFixed(1)}" y2="${H - mB + 4}" stroke="var(--rule-soft)"/>`
+      + `<text x="${X(v).toFixed(1)}" y="${H - mB + 20}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${nf(v, sc.dec)}</text>`);
+    s += `<text x="${mL}" y="${mT - 16}" font-size="11" font-weight="600" fill="var(--ink-3)">coefficient de saison à la fin de la phase de ligue — fourchette</text>`;
+    rows.forEach((r, i) => {
+      const y = mT + i * rowH + rowH / 2, fr = r.c === 'FRA';
+      const c0 = col(r.c);
+      s += `<text x="${mL - 10}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="12.5" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${name(r.c)}</text>`;
+      /* trait fin entre l'acquis et le bas de la fourchette : sans lui, le repère
+         d'acquis flotte tout seul à gauche et ressemble à un bug d'affichage. */
+      s += `<line x1="${X(r.acq).toFixed(1)}" y1="${y.toFixed(1)}" x2="${X(r.bas).toFixed(1)}" y2="${y.toFixed(1)}" stroke="${c0}" stroke-width="1.5" opacity=".35" stroke-dasharray="2 3"/>`;
+      s += `<line x1="${X(r.bas).toFixed(1)}" y1="${y.toFixed(1)}" x2="${X(r.haut).toFixed(1)}" y2="${y.toFixed(1)}" stroke="${c0}" stroke-width="${fr ? 13 : 10}" opacity=".3" stroke-linecap="round"><title>${name(r.c)} · fourchette plausible ${nf(r.bas, 2)} – ${nf(r.haut, 2)} (rendement actuel ${nf(r.rdt, 2)} ± 0,5 pt/match) · extrêmes théoriques ${nf(r.min, 2)} – ${nf(r.max, 2)}</title></line>`;
+      s += `<line x1="${X(r.bas).toFixed(1)}" y1="${(y - 8).toFixed(1)}" x2="${X(r.bas).toFixed(1)}" y2="${(y + 8).toFixed(1)}" stroke="${c0}" stroke-width="1.6" opacity=".7"/>`;
+      s += `<line x1="${X(r.haut).toFixed(1)}" y1="${(y - 8).toFixed(1)}" x2="${X(r.haut).toFixed(1)}" y2="${(y + 8).toFixed(1)}" stroke="${c0}" stroke-width="1.6" opacity=".7"/>`;
+      s += `<circle cx="${X(r.cen).toFixed(1)}" cy="${y.toFixed(1)}" r="${fr ? 6 : 5}" fill="${c0}" stroke="var(--surface)" stroke-width="1.5"><title>${name(r.c)} · ${nf(r.cen, 2)} si le rythme actuel se prolonge</title></circle>`;
+      s += `<text x="${(X(r.haut) + 10).toFixed(1)}" y="${(y + 4).toFixed(1)}" font-size="11.5" font-weight="${fr ? 700 : 500}" font-family="IBM Plex Mono, monospace" fill="${fr ? 'var(--fr)' : 'var(--ink-3)'}">${nf(r.bas, 1)}–${nf(r.haut, 1)}</text>`;
+      /* repère : le coefficient déjà acquis, qu'aucun scénario ne peut reprendre */
+      s += `<line x1="${X(r.acq).toFixed(1)}" y1="${(y - 11).toFixed(1)}" x2="${X(r.acq).toFixed(1)}" y2="${(y + 11).toFixed(1)}" stroke="${c0}" stroke-width="2" opacity=".8"><title>${name(r.c)} · ${nf(r.acq, 3)} déjà acquis</title></line>`;
+    });
+    document.getElementById('chartPrj').outerHTML = (s + '</svg>').replace('<svg', '<svg id="chartPrj"');
+    const fr = rows.find(r => r.c === 'FRA');
+    document.getElementById('capPrj').innerHTML =
+      `<p style="margin:0 0 8px">
+         <span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px"><i style="width:3px;height:13px;background:var(--ink-3);display:inline-block"></i>déjà acquis, et le minimum garanti d'ici janvier</span>
+         <span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px"><i style="width:18px;height:7px;border-radius:4px;background:var(--ink-3);opacity:.35;display:inline-block"></i>fourchette plausible en fin de phase de ligue</span>
+         <span style="display:inline-flex;align-items:center;gap:5px"><i style="width:9px;height:9px;border-radius:50%;background:var(--ink-3);display:inline-block"></i>si le rendement actuel se prolonge</span></p>`
+      + `Une fourchette, pas une prédiction — et une hypothèse assumée : chaque nation est supposée finir la phase de ligue `
+      + `avec un rendement compris entre son rendement actuel <b>moins</b> et <b>plus</b> 0,5 point par match, borné à l'intervalle réel de 0 à 2. `
+      + `Borner par les extrêmes mathématiques (zéro point / tous les matchs gagnés) donnait la même barre à tout le monde et ne disait plus rien ; `
+      + `ces extrêmes restent lisibles au survol. `
+      + (fr ? `La France, qui a ${fr.r} matchs à jouer, finirait ainsi entre <b>${nf(fr.bas, 2)}</b> et <b>${nf(fr.haut, 2)}</b> — un intervalle de ${nf(fr.haut - fr.bas, 1)} point, `
+             + `c'est-à-dire que <b>rien n'est joué</b>. ` : '')
+      + `<b>Ce qui n'est pas simulé :</b> la phase finale, dont on ignore les qualifiés et qui pèse lourd. La fourchette ci-dessus s'arrête à la fin janvier.`;
+  })();
+
+  /* ---------- l'avertissement qui manque au graphe 5 ---------- */
+  document.getElementById('biaisNote').innerHTML =
+    `<p style="margin:0"><b>Pourquoi quatre lectures plutôt qu'une.</b> Le graphe ci-dessus mesure ce qui a été gagné `
+    + `<i>sur le terrain</i> depuis le 1<sup>er</sup> juillet, bonus d'entrée mis de côté. Deux biais l'empêchent de servir de classement : `
+    + `il ignore un bonus qui compte pour de vrai dans le coefficient, et il aligne sur les mêmes colonnes des nations qui `
+    + `n'entrent pas en lice au même moment — celles dont le championnat est moins bien classé jouent six tours de qualification `
+    + `que les autres n'ont pas le droit de jouer. Les quatre blocs qui suivent isolent chacun une lecture défendable.</p>`;
 })();
 
 /* ---------- projection ---------- */
