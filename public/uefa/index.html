@@ -285,7 +285,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "mer. 16 sept. 2026 18h31";</script>
+<script>window.PUBLIE = "mer. 16 sept. 2026 19h06";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -397,7 +397,7 @@ body{margin:0}</style>
 <section>
   <div class="shead">
     <h2>La course à la 5<sup>e</sup> place</h2>
-    <p>Le rang bouge une fois par an ; l'écart, lui, bouge à chaque journée. Ici la France est la ligne zéro : au-dessus, ce qu'il faut rattraper ; en dessous, l'avance sur les poursuivants.</p>
+    <p>Le rang bouge une fois par an ; l'écart, lui, bouge à chaque journée. L'axe vertical ne montre pas cet écart mais son <b>mouvement</b> depuis le 1<sup>er</sup> juillet : toutes les nations partent de la ligne France, monter c'est gagner du terrain sur elle, descendre c'est en perdre. L'écart réel, lui, est le chiffre inscrit à droite de chaque courbe.</p>
   </div>
   <div class="panel">
     <figure>
@@ -1471,6 +1471,10 @@ function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM();
     s += `<line x1="${mL}" y1="${Y(t).toFixed(1)}" x2="${W - mR}" y2="${Y(t).toFixed(1)}" stroke="var(--rule-soft)"/>`
       + `<text x="${mL - 9}" y="${(Y(t) + 4).toFixed(1)}" text-anchor="end" font-size="11.5" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${t > 0 ? '+' : ''}${nf(t, sc.dec)}</text>`;
   });
+  /* Sans titre d'axe, « +1,5 » ne veut rien dire — et un lecteur presse lit la
+     hauteur comme un classement. C'est exactement le contresens à empêcher ici :
+     la position verticale ne dit pas qui est devant, elle dit qui progresse. */
+  s += `<text transform="translate(16,${((mT + H - mB) / 2).toFixed(1)}) rotate(-90)" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink-3)">gagné (+) ou perdu (−) sur la France depuis le 1er juillet</text>`;
   s += `<line id="guideB" x1="0" y1="${mT}" x2="0" y2="${H - mB}" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>`;
   /* la ligne de France : c'est le rythme de référence, pas une courbe parmi d'autres */
   s += `<line x1="${mL}" y1="${Y(0).toFixed(1)}" x2="${W - mR}" y2="${Y(0).toFixed(1)}" stroke="var(--fr)" stroke-width="3"/>`
@@ -1497,9 +1501,16 @@ function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM();
   L.forEach(l => {
     if (Math.abs(l.y - l.y0) > 1.5)
       s += `<path d="M ${(W - mR - 2).toFixed(1)} ${l.y0.toFixed(1)} L ${(W - mR + 5).toFixed(1)} ${l.y.toFixed(1)}" stroke="${l.col}" stroke-width="1" fill="none" opacity=".45"/>`;
+    /* Le « +19,6 » de l'Italie se lit spontanément comme un avantage pour la
+       France. Le titre au survol dit « devant » ou « derrière » en toutes lettres,
+       et rappelle le mouvement — les deux nombres de la ligne, sans raccourci. */
+    const gl = l.self ? 0 : gap(l.c, last), ml = l.self ? 0 : mov(l.c, last);
+    const dit = l.self ? 'France — ligne de référence'
+      : `${name(l.c)} : ${nf(Math.abs(gl), 2)} ${gl > 0 ? 'devant' : 'derrière'} la France`
+        + ` · ${ml > 0 ? '+' : '−'}${nf(Math.abs(ml), 2)} depuis le 1er juillet`;
     s += `<text x="${W - mR + 8}" y="${(l.y + 4).toFixed(1)}" font-size="12" font-weight="${l.key ? '700' : '500'}" font-family="IBM Plex Mono, monospace" fill="${l.col}" opacity="${l.key ? 1 : .7}">${l.c}`
-       + (l.self ? '' : (g => `<tspan fill="var(--ink-3)" font-weight="500" font-size="11"> ${g > 0 ? '+' : '−'}${nf(Math.abs(g), 1)}</tspan>`)(gap(l.c, last)))
-       + `</text>`;
+       + (l.self ? '' : `<tspan fill="var(--ink-3)" font-weight="500" font-size="11"> ${gl > 0 ? '+' : '−'}${nf(Math.abs(gl), 1)}</tspan>`)
+       + `<title>${dit}</title></text>`;
   });
   s += `</svg>`;
   document.getElementById('chartB').outerHTML = s.replace('<svg', '<svg id="chartB" role="img" aria-label="Mouvement de l\'écart de coefficient à la France depuis le 1er juillet"');
@@ -1524,7 +1535,7 @@ function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM();
       guide.setAttribute('x1', X(k).toFixed(1)); guide.setAttribute('x2', X(k).toFixed(1)); guide.setAttribute('opacity', '1');
       const rows = around.map(c => ({ c, g: gap(c, i), m: mov(c, i), d: iPrev == null ? 0 : gap(c, i) - gap(c, iPrev) }))
                          .sort((a, b) => b.g - a.g);
-      tip.innerHTML = `<div class="th">${SHORT[i]} · écart à la France</div>` + rows.map(x =>
+      tip.innerHTML = `<div class="th">${SHORT[i]} · écart à la France <span style="font-weight:500;opacity:.7">(+ devant, − derrière)</span></div>` + rows.map(x =>
         `<div class="tr"><i style="background:var(${SLOT[x.c] || '--ink-3'})"></i><span class="nm">${name(x.c)}</span>`
         + `<b>${x.g > 0 ? '+' : '−'}${nf(Math.abs(x.g), 2)}</b>`
         + (Math.abs(x.m) > 0.0005 ? `<s style="color:${x.m > 0 ? 'var(--bad)' : 'var(--good)'}">${x.m > 0 ? '+' : '−'}${nf(Math.abs(x.m), 2)}</s>` : '<s style="opacity:.35">0</s>')
