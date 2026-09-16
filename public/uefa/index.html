@@ -64,6 +64,9 @@ h1{font-size:clamp(30px,4.8vw,48px); font-weight:600; line-height:1.04; letter-s
   display:flex; align-items:center; justify-content:flex-end; gap:6px}
 .stamp .comp{font-size:10.5px; font-weight:700; letter-spacing:.04em; color:#fff;
   padding:1px 6px; border-radius:999px; line-height:1.5}
+.stamp .shout{font-size:12.5px; font-weight:700; letter-spacing:.055em; text-transform:uppercase;
+  color:var(--fr)}
+.stamp .matchday{gap:8px}
 .eyebrow{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); font-weight:600;
          font-variation-settings:"wdth" 100}
 
@@ -511,6 +514,21 @@ const CAL = {
   2:[['2026-10-15','15 oct.'],['2026-10-22','22 oct.'],['2026-11-05','5 nov.'],['2026-11-26','26 nov.'],
      ['2026-12-10','10 déc.'],['2026-12-17','17 déc.']]
 };
+/* Phase finale, aller et retour, compétition par compétition. Les dates viennent
+   des pages officielles UEFA de chaque compétition ; la C1 joue deux jours avant
+   les deux autres, et les trois finales sont à trois dates distinctes. */
+const KO = {
+  0:[['PO','2027-02-16','2027-02-23'],['8es','2027-03-09','2027-03-16'],
+     ['1/4','2027-04-06','2027-04-13'],['1/2','2027-04-27','2027-05-04'],
+     ['F','2027-06-05']],
+  1:[['PO','2027-02-18','2027-02-25'],['8es','2027-03-11','2027-03-18'],
+     ['1/4','2027-04-08','2027-04-15'],['1/2','2027-04-29','2027-05-06'],
+     ['F','2027-05-26']],
+  2:[['PO','2027-02-18','2027-02-25'],['8es','2027-03-11','2027-03-18'],
+     ['1/4','2027-04-08','2027-04-15'],['1/2','2027-04-29','2027-05-06'],
+     ['F','2027-06-02']]
+};
+const KOLAB = {PO:'Barrages', '8es':'8es de finale', '1/4':'Quarts', '1/2':'Demies', F:'Finale'};
 const TODAY = new Date();
 const dOf = iso => new Date(iso+'T00:00:00');
 /* Une journée n'est pas « passée » à minuit : elle l'est au coup d'envoi. Sans ça,
@@ -608,21 +626,39 @@ const frDate = iso => dOf(iso).toLocaleDateString('fr-FR',{day:'numeric',month:'
    coup d'envoi européen, invariable à 18 h 45 (Paris) sur la phase de ligue. Une
    entrée de CAL peut porter un troisième champ pour un horaire dérogatoire. */
 const KICKOFF = '18h45';
-const nextMatch = (()=>{
-  let best = null;
-  [0,1,2].forEach(k => CAL[k].forEach(([iso,,h]) => {
-    if (!passe(iso) && (!best || iso < best.iso)) best = { iso, k, h: h || KICKOFF };
-  }));
-  if (!best) return null;
-  const p = best.iso.split('-');
-  return { txt: `${p[2]}/${p[1]}/${p[0]} ${best.h}`, comp: KSHORT[best.k], full: KNAME[best.k], k: best.k };
-})();
+/* Toutes les dates de match de la saison, phase de ligue et élimination directe
+   confondues — le prochain rendez-vous peut être un huitième de finale. */
+const AGENDA = [0,1,2].flatMap(k => [
+  ...CAL[k].map(([iso,,h], i) => ({ iso, k, h: h || KICKOFF, quoi: 'J' + (i+1) })),
+  ...KO[k].flatMap(([lab, a, r]) => r
+    ? [{ iso:a, k, h:KICKOFF, quoi:KOLAB[lab]+' aller' }, { iso:r, k, h:KICKOFF, quoi:KOLAB[lab]+' retour' }]
+    : [{ iso:a, k, h:KICKOFF, quoi:KOLAB[lab] }])
+]).sort((x,y) => x.iso < y.iso ? -1 : x.iso > y.iso ? 1 : x.k - y.k);
+
+const isoOf = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const ISO_TODAY = isoOf(TODAY);
+
+/* Un jour de match reste un jour de match jusqu'à minuit : on ne se cale pas sur
+   `passe()` ici, sinon la bannière disparaîtrait à 18 h 45, pile au moment où les
+   matchs commencent. Ailleurs dans la page, c'est bien le coup d'envoi qui fait
+   foi — une journée disputée doit compter dès qu'elle est jouée. */
+const matchToday = AGENDA.find(m => m.iso === ISO_TODAY) || null;
+const nextMatch  = AGENDA.find(m => !passe(m.iso) && m.iso !== ISO_TODAY) || null;
+const joursAvant = iso => Math.round((dOf(iso) - dOf(ISO_TODAY)) / 86400000);
 document.getElementById('stamp').innerHTML =
   "<div>Source mise à jour <b>" + dmy(D.meta.lastUpdated) + "</b></div>" +
   "<div>Page recalculée <b>" + dmy(D.meta.built) + "</b></div>" +
-  (nextMatch
-    ? `<div class="next">Prochain match <b title="Premier coup d'envoi, heure de Paris">${nextMatch.txt}</b><b class="comp" style="background:var(${KVAR[nextMatch.k]})" title="${nextMatch.full}">${nextMatch.comp}</b></div>`
-    : "<div>Prochain match <b>" + dmy(D.meta.nextMatchday) + "</b></div>");
+  /* Jour de match : on le dit, fort, avec l'heure — c'est la seule information
+     qui vaut d'être criée. Les autres jours : un compte à rebours, sans heure,
+     parce qu'une heure à trois semaines de distance n'apprend rien. */
+  (matchToday
+    ? `<div class="next matchday"><b class="shout">Jour de match les enfants&nbsp;!</b>`
+      + `<b title="Premier coup d'envoi, heure de Paris">${matchToday.h}</b>`
+      + `<b class="comp" style="background:var(${KVAR[matchToday.k]})" title="${KNAME[matchToday.k]} · ${matchToday.quoi}">${KSHORT[matchToday.k]}</b></div>`
+    : nextMatch
+      ? `<div class="next">Prochain match <b title="${KNAME[nextMatch.k]} · ${nextMatch.quoi} · ${dmy(nextMatch.iso)}">J−${joursAvant(nextMatch.iso)}</b>`
+        + `<b class="comp" style="background:var(${KVAR[nextMatch.k]})" title="${KNAME[nextMatch.k]}">${KSHORT[nextMatch.k]}</b></div>`
+      : "<div>Saison terminée</div>");
 
 /* ---------- 0 · où en est la saison ---------- */
 /* Trois pistes alignées sur les mêmes journées donnaient une fausse simultanéité :
@@ -632,23 +668,9 @@ document.getElementById('stamp').innerHTML =
    et il devient visible d'un coup d'œil. */
 (function(){
   const all = [0,1,2].flatMap(k => CAL[k].map(([iso]) => iso)).sort();
-  /* Phase finale, aller et retour, compétition par compétition. Les dates viennent
-     des pages officielles UEFA de chaque compétition ; la C1 joue deux jours avant
-     les deux autres, et les trois finales sont à trois dates distinctes — regrouper
-     tout ça en une bande unique effaçait justement ce qui fait la finesse du
-     calendrier. Chaque tour est un aller et un retour reliés par un trait. */
-  const KO = {
-    0:[['PO','2027-02-16','2027-02-23'],['8es','2027-03-09','2027-03-16'],
-       ['1/4','2027-04-06','2027-04-13'],['1/2','2027-04-27','2027-05-04'],
-       ['F','2027-06-05']],
-    1:[['PO','2027-02-18','2027-02-25'],['8es','2027-03-11','2027-03-18'],
-       ['1/4','2027-04-08','2027-04-15'],['1/2','2027-04-29','2027-05-06'],
-       ['F','2027-05-26']],
-    2:[['PO','2027-02-18','2027-02-25'],['8es','2027-03-11','2027-03-18'],
-       ['1/4','2027-04-08','2027-04-15'],['1/2','2027-04-29','2027-05-06'],
-       ['F','2027-06-02']]
-  };
-  const KOLAB = {PO:'Barrages',  '8es':'8es de finale', '1/4':'Quarts', '1/2':'Demies', F:'Finale'};
+  /* KO et KOLAB sont définis plus haut, avec CAL : le tampon d'en-tête compte les
+     jours jusqu'au prochain match, et ce match peut être un tour à élimination
+     directe. Une seule table de dates pour toute la page. */
   const t0 = dOf(all[0]).getTime(), t1 = dOf('2027-06-05').getTime();
   const tLeague = dOf(all[all.length-1]).getTime();
   const W = 1000, mL = 46, mR = 30, mT = 62, LANE = 36, H = mT + 3*LANE + 44;
