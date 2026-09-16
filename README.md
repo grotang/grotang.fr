@@ -75,7 +75,38 @@ retardées et que « some queued jobs may be dropped ». C'est arrivé dès le p
 passage automatique. Pour la même raison la minute n'est jamais `00` : « High load
 times include the start of every hour. »
 
-### Le budget de déploiements
+### L'hébergement
+
+Le site est servi par **GitHub Pages**, depuis le dossier `public/` de ce dépôt,
+publié par `.github/workflows/pages.yml` à chaque commit qui touche ce dossier.
+Il n'y a toujours aucune étape de build distante : *ce qui est commité est ce qui
+est en ligne.*
+
+Il a d'abord vécu chez Netlify. La bascule n'est pas un caprice : depuis leur
+tarification au crédit, **un déploiement de production coûte 15 crédits** sur les
+300 mensuels de l'offre gratuite, soit **20 déploiements par mois**, après quoi la
+publication est suspendue. Un site conçu pour se republier deux fois par jour, plus
+le travail de mise en forme, ne tient pas dans ce budget — la limite a été atteinte
+en trois semaines, dont une seule journée de design. GitHub Pages ne compte pas les
+déploiements d'un dépôt public.
+
+Ce qu'on a perdu au change, et qu'il faut savoir :
+
+- **les en-têtes HTTP personnalisés** (`X-Content-Type-Options`, `Referrer-Policy`,
+  `X-Frame-Options`, `Permissions-Policy`) : GitHub Pages ne permet pas de les
+  définir. Sans formulaire ni cookie sur le site, la perte est théorique, mais elle
+  est réelle ;
+- **le contrôle du cache** : Pages sert le HTML avec `max-age=600`, donc une page
+  peut rester dix minutes en cache après une publication. Pour une page rafraîchie
+  deux fois par jour, c'est sans conséquence ;
+- **le retour arrière en un clic** : Netlify gardait chaque déploiement et savait en
+  republier un ancien. Ici on revient en arrière par un `git revert`, ce qui est de
+  toute façon la source de vérité.
+
+`netlify.toml` reste dans le dépôt : il documente la configuration précédente et
+permettrait de revenir sans rien réécrire.
+
+### Le budget de déploiements (historique, Netlify)
 
 Netlify facture au crédit : **un déploiement de production coûte 15 crédits**, et le
 plan gratuit en donne 300 par mois. Soit **20 déploiements mensuels**, sans dépassement
