@@ -72,6 +72,7 @@ function ecrireBloc(src, sent, prefixe, data) {
 export function recouper(D, K) {
   const mien = new Map(D.nations.map(n => [n.n, n]));
   const vus = new Set();
+  const lignes = [];      // relevé complet : [code, rang, total, [5 saisons]] côté kassiesa
   const ecarts = [];      // désaccords sur une valeur
   const absents = [];     // pays présent d'un côté seulement
   let nPays = 0, nVal = 0;
@@ -92,6 +93,11 @@ export function recouper(D, K) {
     nVal++; if (m.r !== r.rank) ecarts.push({ p: m.c, quoi: 'rang', moi: m.r, lui: r.rank, d: m.r - r.rank, gros: true });
     nVal++; pose('total 5 ans', m.t, r.tot);
     for (let i = 0; i < 5; i++) { nVal++; pose(YR[i], m.y[i], r.y[i]); }
+
+    /* Le relevé complet, pas seulement les désaccords. « 55 pays, accord
+       complet » est une affirmation ; la table des 55 lignes est une preuve, et
+       c'est elle que l'expert vient vérifier. Coût : ~3 Ko sur une page de 150. */
+    lignes.push([m.c, r.rank, +r.tot.toFixed(3), r.y.map(v => +v.toFixed(3))]);
   }
   for (const [nom, n] of mien) if (!vus.has(nom)) absents.push({ nom, ou: 'nous', p: n.c });
 
@@ -103,7 +109,7 @@ export function recouper(D, K) {
     srcAt: K.upd || null,
     nousAt: D.meta.lastUpdated,
     pays: nPays, valeurs: nVal,
-    ecarts, absents,
+    lignes, ecarts, absents,
     verdict: ecarts.length === 0 && absents.length === 0 ? 'ok'
            : ecarts.some(e => e.gros) || absents.length ? 'ecart' : 'mineur',
   };
