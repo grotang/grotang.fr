@@ -48,8 +48,10 @@ function buildUefa() {
      Heure de Paris, parce que la page s'adresse à des lecteurs français. */
   const now = new Date();
   const part = o => new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', ...o }).format(now);
+  /* Même forme que la ligne du dessus, séparateur compris : deux lignes de tampon
+     côte à côte avec deux ponctuations différentes, ça se voit tout de suite. */
   const publie = `${part({ weekday: 'short' })} ${part({ day: '2-digit' })} `
-    + `${part({ month: 'short' })} ${part({ year: 'numeric' })} · `
+    + `${part({ month: 'short' })} ${part({ year: 'numeric' })} `
     + part({ hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
 
   return { meta, html: `<!doctype html>

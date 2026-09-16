@@ -285,7 +285,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "mer. 16 sept. 2026 · 18h12";</script>
+<script>window.PUBLIE = "mer. 16 sept. 2026 18h24";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -698,12 +698,13 @@ const matchToday = AGENDA.find(m => m.iso === ISO_TODAY) || null;
 const nextMatch  = AGENDA.find(m => !passe(m.iso) && m.iso !== ISO_TODAY) || null;
 const joursAvant = iso => Math.round((dOf(iso) - dOf(ISO_TODAY)) / 86400000);
 document.getElementById('stamp').innerHTML =
-    /* Le jour suffit au lecteur ; l'heure exacte est là pour qui la cherche, en
-     infobulle. C'est aussi plus honnête : ces 22h57 sont l'heure à laquelle la
-     source a publié ses chiffres, pas l'heure d'un coup de sifflet final. */
+    /* Jour ET heure en clair. L'heure est celle à laquelle la source a arrêté son
+     calcul, pas un coup de sifflet final — mais elle tombe juste après la fin des
+     matchs, et « jeu. 10 sept. 2026 22h57 » raconte la soirée mieux qu'une date
+     nue. L'infobulle lève l'ambiguïté pour qui se pose la question. */
   (function(){ const s = dlong(D.meta.lastUpdated);
-    return "<div>Derniers résultats <b" + (s.h ? ' title="Chiffres publiés par la source à ' + s.h + '"' : '')
-         + ">" + s.txt + "</b></div>"; })() +
+    return "<div>Derniers matchs <b" + (s.h ? ' title="Heure à laquelle la source a arrêté son calcul"' : '')
+         + ">" + s.txt + (s.h ? " " + s.h : "") + "</b></div>"; })() +
   /* Deux dates, deux questions. « Données arrêtées » dit jusqu'où vont les
      résultats pris en compte ; « Page publiée » dit de quand date la version
      qu'on est en train de lire. L'ancienne étiquette « Page recalculée » affichait
