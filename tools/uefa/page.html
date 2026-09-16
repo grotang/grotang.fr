@@ -660,7 +660,9 @@ document.getElementById('stamp').innerHTML =
      matchs, et « jeu. 10 sept. 2026 22h57 » raconte la soirée mieux qu'une date
      nue. L'infobulle lève l'ambiguïté pour qui se pose la question. */
   (function(){ const s = dlong(D.meta.lastUpdated);
-    return "<div>Derniers matchs <b" + (s.h ? ' title="Heure à laquelle la source a arrêté son calcul"' : '')
+    /* Espace insécable avant le deux-points : règle typographique française, et
+       surtout ça évite que « : » se retrouve seul en début de ligne au repli. */
+    return "<div>Derniers matchs&nbsp;: <b" + (s.h ? ' title="Heure à laquelle la source a arrêté son calcul"' : '')
          + ">" + s.txt + (s.h ? " " + s.h : "") + "</b></div>"; })() +
   /* Deux dates, deux questions. « Données arrêtées » dit jusqu'où vont les
      résultats pris en compte ; « Page publiée » dit de quand date la version
@@ -668,7 +670,7 @@ document.getElementById('stamp').innerHTML =
      en fait la date du dernier rafraîchissement des DONNÉES : elle restait figée
      sur une semaine sans match alors que la page, elle, avait changé.
      Hors construction (ouverture directe du gabarit), on retombe sur meta.built. */
-  "<div>Page publiée <b>" + (window.PUBLIE || dlong(D.meta.built).txt) + "</b></div>" +
+  "<div>Page publiée&nbsp;: <b>" + (window.PUBLIE || dlong(D.meta.built).txt) + "</b></div>" +
   /* Jour de match : on le dit, fort, avec l'heure — c'est la seule information
      qui vaut d'être criée. Les autres jours : un compte à rebours, sans heure,
      parce qu'une heure à trois semaines de distance n'apprend rien. */
