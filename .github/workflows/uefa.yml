@@ -43,10 +43,25 @@ on:
         type: boolean
         default: false
 
-# Le seul droit nécessaire : écrire dans ce dépôt. Le workflow de publication
-# prend le relais tout seul en voyant le commit toucher public/.
+# POURQUOI DEUX DROITS ET PAS UN.
+#
+# On a cru longtemps que déposer le commit suffisait : pages.yml écoute les push
+# sur public/**, donc il devait publier tout seul. Il ne l'a jamais fait. Sur les
+# quinze passages de pages.yml, aucun n'a été déclenché par le robot — tous
+# venaient d'un push manuel ou d'un lancement à la main.
+#
+# La raison est une règle documentée de GitHub : « events triggered by the
+# GITHUB_TOKEN will not create a new workflow run ». Un workflow ne peut pas en
+# réveiller un autre par un simple push, sous peine de boucles infinies. Le push
+# du robot arrive donc bien sur main, mais silencieusement : pages.yml ne le voit
+# pas. Le site restait figé jusqu'au push manuel suivant.
+#
+# La règle a deux exceptions, dont `workflow_dispatch`. On appelle donc pages.yml
+# explicitement, ce qui demande le droit `actions: write`. Pas de jeton personnel
+# à créer, à stocker, ni à renouveler tous les six mois.
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: uefa-refresh
@@ -91,6 +106,7 @@ jobs:
           fi
 
       - name: Déposer si quelque chose a changé
+        id: depot
         run: |
           set -euo pipefail
           git config user.name  "grotang.fr (robot)"
@@ -112,6 +128,7 @@ jobs:
             git commit -m "$MSG"
             git push
             echo "Déposé : $MSG"
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -129,3 +146,19 @@ jobs:
             git push
             echo "Signe de vie déposé, la tâche planifiée reste active."
           fi
+
+      # Le push ci-dessus ne réveille pas pages.yml (voir la note sur les droits).
+      # On l'appelle donc nommément. `workflow_dispatch` est l'une des deux
+      # exceptions à la règle : un lancement explicite part toujours, même
+      # déclenché par le GITHUB_TOKEN.
+      #
+      # Conditionné au dépôt : un passage qui ne trouve rien de neuf ne republie
+      # pas, et le signe de vie mensuel ne touche pas public/ — inutile de
+      # déployer dans ces deux cas.
+      - name: Publier le site
+        if: steps.depot.outputs.deploy == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run pages.yml --ref main
+          echo "Publication demandée à pages.yml."
