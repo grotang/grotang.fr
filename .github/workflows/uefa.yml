@@ -19,12 +19,23 @@ name: Rafraîchissement UEFA
 # dropped » et qu'un passage a déjà été escamoté.
 #
 # La minute n'est jamais 00 : « High load times include the start of every hour. »
+#
+# REPUBLICATION QUOTIDIENNE — le passage de 06 h 12 UTC est FORCÉ (voir plus bas).
+# Les trois autres ne republient que si les chiffres ont bougé ; celui-là
+# reconstruit et republie tous les matins, même un jour sans match. Chez Netlify
+# c'était impensable : 15 crédits par déploiement, 20 par mois, le site aurait été
+# suspendu en trois semaines. GitHub Pages ne compte pas les déploiements d'un
+# dépôt public, et la limite douce de 10 constructions par heure ne s'applique pas
+# aux sites publiés par un workflow maison. Une republication par jour est donc
+# gratuite — et elle a son utilité : l'horodatage « Page publiée » redevient celui
+# du jour, et un incident de la source se voit le matin même plutôt qu'au premier
+# soir de match.
 on:
   schedule:
     - cron: '38 21 * * *'
     - cron: '38 22 * * *'
     - cron: '12 5 * * *'
-    - cron: '12 6 * * *'
+    - cron: '12 6 * * *'   # ← celui-ci republie tous les jours, données inchangées ou non
   workflow_dispatch:
     inputs:
       force:
@@ -32,8 +43,8 @@ on:
         type: boolean
         default: false
 
-# Le seul droit nécessaire : écrire dans ce dépôt. Netlify prend le relais tout
-# seul en voyant le commit.
+# Le seul droit nécessaire : écrire dans ce dépôt. Le workflow de publication
+# prend le relais tout seul en voyant le commit toucher public/.
 permissions:
   contents: write
 
@@ -61,9 +72,23 @@ jobs:
       - name: Contrôles sur capture de référence
         run: npm run test:extract
 
+      # `--force` saute la comparaison avec la publication précédente : la page est
+      # reconstruite même si la source n'a pas bougé d'un millième. On le déclenche
+      # sur un seul des quatre rendez-vous quotidiens — sinon on republierait
+      # quatre fois par jour pour rien, et l'historique du dépôt deviendrait
+      # illisible. `github.event.schedule` porte la ligne cron qui a déclenché le
+      # passage ; c'est le seul moyen de distinguer les quatre.
       - name: Relire la source et reconstruire
         id: refresh
-        run: node tools/uefa/refresh.mjs ${{ inputs.force && '--force' || '' }}
+        env:
+          QUOTIDIEN: ${{ github.event.schedule == '12 6 * * *' }}
+        run: |
+          if [ "${{ inputs.force }}" = "true" ] || [ "$QUOTIDIEN" = "true" ]; then
+            echo "Republication quotidienne : reconstruction forcée."
+            node tools/uefa/refresh.mjs --force
+          else
+            node tools/uefa/refresh.mjs
+          fi
 
       - name: Déposer si quelque chose a changé
         run: |
@@ -73,10 +98,20 @@ jobs:
 
           if [ -n "$(git status --porcelain)" ]; then
             STAND=$(node -p "JSON.parse(require('fs').readFileSync('tools/uefa/page.html','utf8').split('/*DATA_START*/')[1].split('/*DATA_END*/')[0].replace(/^const D\s*=\s*/,'').replace(/;\s*$/,'')).meta.lastUpdated")
+            # Deux natures de commit, deux messages. nations.json est réécrit à
+            # l'identique quand la source n'a pas bougé : s'il est inchangé, le
+            # seul écart vient de l'horodatage de publication. Le dire évite un
+            # historique où « source arrêtée au 17/09 » revient tous les matins
+            # alors que rien n'a changé depuis une semaine.
+            if git diff --quiet HEAD -- tools/uefa/nations.json; then
+              MSG="Republication quotidienne (source inchangée, arrêtée au $STAND)"
+            else
+              MSG="Coefficient UEFA : source arrêtée au $STAND"
+            fi
             git add -A
-            git commit -m "Coefficient UEFA : source arrêtée au $STAND"
+            git commit -m "$MSG"
             git push
-            echo "Déposé. Netlify publie dans la minute."
+            echo "Déposé : $MSG"
             exit 0
           fi
 
