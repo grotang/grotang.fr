@@ -312,13 +312,21 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">2</span><h3>D'où viennent les points</h3>
+    <div class="ptitle"><span class="no">2a</span><h3>D'où viennent les points — par compétition</h3>
       <span class="sub"><span class="ctl"><span class="lb">Échelle</span><span class="seg" role="group" aria-label="Échelle"><button type="button" id="k-abs" aria-pressed="true">Points</button><button type="button" id="k-pct" aria-pressed="false">Part</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelK" aria-label="Saison"></select></span></span></span></div>
     <div class="klegend" id="kleg"></div>
     <div class="barswrap"><div class="bars" id="kbars"></div><div class="tip" id="tipK" hidden></div></div>
     <p class="figc" id="kNote"></p>
     <div class="cl8" id="cl8"></div>
     <p class="figc" id="clNote"></p>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle"><span class="no">2b</span><h3>D'où viennent les points — bonus, qualifications, phase de ligue</h3></div>
+    <figure>
+      <div class="chartbox" id="boxDec"><svg id="chartDec" role="img" aria-label="Décomposition du coefficient de saison en bonus d'entrée, qualifications et phase de ligue"></svg><div class="tip" id="tipDec" hidden></div></div>
+      <figcaption id="capDec"></figcaption>
+    </figure>
   </div>
 
   <div class="panel">
@@ -354,42 +362,27 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
 <section>
   <div class="shead">
     <h2>La course à la 5<sup>e</sup> place</h2>
-    <p>Le rang bouge une fois par an ; l'écart, lui, bouge à chaque journée. L'axe vertical ne montre pas cet écart mais son <b>mouvement</b> depuis le 1<sup>er</sup> juillet : toutes les nations partent de la ligne France, monter c'est gagner du terrain sur elle, descendre c'est en perdre. L'écart réel, lui, est le chiffre inscrit à droite de chaque courbe.</p>
+    <p>Le rang bouge une fois par an ; l'écart, lui, bouge à chaque journée. Mais on ne compare que ce qui se compare : ces deux lectures ne retiennent que la <b>phase de ligue</b>, la seule fenêtre où les huit nations partent le même jour, du même zéro, avec le même nombre de journées devant elles.</p>
   </div>
   <div class="panel">
-    <div class="ptitle"><span class="no">6</span><h3>Le mouvement depuis le 1<sup>er</sup> juillet</h3></div>
+    <div class="ptitle"><span class="no">6a</span><h3>À armes égales — depuis la 1<sup>re</sup> journée</h3>
+      <span class="sub"><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelQ" aria-label="Saison"></select></span></span></span></div>
+    <div class="chips" id="qchips"></div>
     <figure>
-      <div class="chartbox" id="boxB"><svg id="chartB" role="img" aria-label="Mouvement de l'écart de coefficient à la France depuis le 1er juillet"></svg><div class="tip" id="tipB" hidden></div></div>
-      <figcaption id="capB"></figcaption>
-    </figure>
-  </div>
-
-  <div class="warnbox" id="biaisNote"></div>
-
-  <div class="panel">
-    <div class="ptitle"><span class="no">6a</span><h3>D'où vient le coefficient de la saison</h3></div>
-    <figure>
-      <div class="chartbox" id="boxDec"><svg id="chartDec" role="img" aria-label="Décomposition du coefficient de saison en bonus d'entrée, qualifications et phase de ligue"></svg><div class="tip" id="tipDec" hidden></div></div>
-      <figcaption id="capDec"></figcaption>
-    </figure>
-  </div>
-
-  <div class="panel">
-    <div class="ptitle"><span class="no">6b</span><h3>À armes égales — la phase de ligue seule</h3></div>
-    <figure>
-      <div class="chartbox" id="boxEq"><svg id="chartEq" role="img" aria-label="Coefficient de phase de ligue, journée par journée"></svg><div class="tip" id="tipEq" hidden></div></div>
+      <div class="chartbox" id="boxEq"><svg id="chartEq" role="img" aria-label="Écart à la France sur la seule phase de ligue, journée par journée"></svg><div class="tip" id="tipEq" hidden></div></div>
       <figcaption id="capEq"></figcaption>
     </figure>
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">6c</span><h3>Le rendement — points par match joué</h3></div>
+    <div class="ptitle"><span class="no">6b</span><h3>Le rendement — points par match</h3>
+      <span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">aire du disque = points par match</span></span></span></div>
+    <div class="chips" id="rchips"></div>
     <figure>
-      <div class="chartbox" id="boxRdt"><svg id="chartRdt" role="img" aria-label="Points marqués par match de phase de ligue"></svg><div class="tip" id="tipRdt" hidden></div></div>
+      <div class="chartbox" id="boxRdt"><svg id="chartRdt" role="img" aria-label="Points marqués par match de phase de ligue, journée par journée"></svg><div class="tip" id="tipRdt" hidden></div></div>
       <figcaption id="capRdt"></figcaption>
     </figure>
   </div>
-
 </section>
 
 <section>
@@ -1435,132 +1428,6 @@ function drawM(){
 syncP(); syncK(); drawClubs(); drawL(); drawZ(); drawM();
 function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM(); }
 
-/* ---------- chart B : la course à la 5e place ---------- */
-/* Un bump chart sur le rang à 5 ans donne des lignes plates : le rang ne bouge
-   qu'une fois par an. Tracer l'écart brut à la France ne vaut guère mieux —
-   l'Italie à +20 écrase l'échelle et on ne voit plus les dixièmes qui décident
-   réellement de la 5e place.
-   On trace donc le MOUVEMENT de cet écart depuis le 1er juillet : chaque nation
-   part de zéro à l'entrée en lice, monte si elle gagne du terrain sur la France,
-   descend si elle en perd. L'écart absolu, lui, reste lisible dans l'étiquette
-   de droite et dans l'infobulle. */
-(function(){
-  const iFR = N.findIndex(n => n.c === 'FRA');
-  if (iFR < 0) return;
-  const around = N.slice(Math.max(0, iFR - 3), iFR + 4).map(n => n.c).filter(c => c !== 'FRA');
-  const above = N[iFR - 1] && N[iFR - 1].c, below = N[iFR + 1] && N[iFR + 1].c;
-  const xs = played;
-  if (!around.length || xs.length < 2) return;
-
-  const W = 1000, H = 470, mL = 62, mR = 112, mT = 26, mB = 52, PAD = 18;
-  const X = k => mL + PAD + (W - mL - mR - 2 * PAD) * (xs.length < 2 ? 0.5 : k / (xs.length - 1));
-  const gap = (c, i) => step(c, i)[0] - step('FRA', i)[0];
-  const base = {}; around.forEach(c => base[c] = gap(c, xs[0]));
-  const mov = (c, i) => gap(c, i) - base[c];
-
-  let lo = 0, hi = 0;
-  around.forEach(c => xs.forEach(i => { const v = mov(c, i); if (v < lo) lo = v; if (v > hi) hi = v; }));
-  const pad = Math.max(0.15, (hi - lo) * 0.18); lo -= pad; hi += pad;
-  const sc = niceScale(lo, hi, 6);
-  const Y = v => mT + (H - mT - mB) * (1 - (v - sc.lo) / (sc.hi - sc.lo));
-
-  let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
-  sc.ticks.forEach(t => {
-    s += `<line x1="${mL}" y1="${Y(t).toFixed(1)}" x2="${W - mR}" y2="${Y(t).toFixed(1)}" stroke="var(--rule-soft)"/>`
-      + `<text x="${mL - 9}" y="${(Y(t) + 4).toFixed(1)}" text-anchor="end" font-size="11.5" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${t > 0 ? '+' : ''}${nf(t, sc.dec)}</text>`;
-  });
-  /* Sans titre d'axe, « +1,5 » ne veut rien dire — et un lecteur presse lit la
-     hauteur comme un classement. C'est exactement le contresens à empêcher ici :
-     la position verticale ne dit pas qui est devant, elle dit qui progresse. */
-  s += `<text transform="translate(16,${((mT + H - mB) / 2).toFixed(1)}) rotate(-90)" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink-3)">gagné (+) ou perdu (−) sur la France depuis le 1er juillet</text>`;
-  s += `<line id="guideB" x1="0" y1="${mT}" x2="0" y2="${H - mB}" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>`;
-  /* la ligne de France : c'est le rythme de référence, pas une courbe parmi d'autres */
-  s += `<line x1="${mL}" y1="${Y(0).toFixed(1)}" x2="${W - mR}" y2="${Y(0).toFixed(1)}" stroke="var(--fr)" stroke-width="3"/>`
-     + `<text x="${mL + PAD}" y="${(Y(0) - 9).toFixed(1)}" font-size="10.5" font-weight="600" fill="var(--fr)">rythme de la France</text>`;
-
-  xs.forEach((i, k) => s += `<text x="${X(k).toFixed(1)}" y="${H - mB + 20}" text-anchor="middle" font-size="11" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${SHORT[i]}</text>`);
-
-  const L = [];
-  around.forEach(c => {
-    const key = (c === above || c === below);
-    const col = `var(${SLOT[c] || '--ink-3'})`;
-    const pts = xs.map((i, k) => `${X(k).toFixed(1)},${Y(mov(c, i)).toFixed(1)}`).join(' ');
-    s += `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="${key ? 2.8 : 1.6}" stroke-linejoin="round" stroke-linecap="round" opacity="${key ? 1 : .5}"/>`;
-    const yEnd = Y(mov(c, xs[xs.length - 1]));
-    L.push({ c, key, col, y0: yEnd, y: yEnd });
-  });
-  L.push({ c: 'FRA', key: true, col: 'var(--fr)', y0: Y(0), y: Y(0), self: true });
-  /* décollement vertical des étiquettes de droite */
-  L.sort((a, b) => a.y0 - b.y0);
-  const G = 15;
-  for (let i = 1; i < L.length; i++) if (L[i].y - L[i - 1].y < G) L[i].y = L[i - 1].y + G;
-  for (let i = L.length - 2; i >= 0; i--) if (L[i + 1].y - L[i].y < G) L[i].y = L[i + 1].y - G;
-  const last = xs[xs.length - 1];
-  L.forEach(l => {
-    if (Math.abs(l.y - l.y0) > 1.5)
-      s += `<path d="M ${(W - mR - 2).toFixed(1)} ${l.y0.toFixed(1)} L ${(W - mR + 5).toFixed(1)} ${l.y.toFixed(1)}" stroke="${l.col}" stroke-width="1" fill="none" opacity=".45"/>`;
-    /* Le « +19,6 » de l'Italie se lit spontanément comme un avantage pour la
-       France. Le titre au survol dit « devant » ou « derrière » en toutes lettres,
-       et rappelle le mouvement — les deux nombres de la ligne, sans raccourci. */
-    const gl = l.self ? 0 : gap(l.c, last), ml = l.self ? 0 : mov(l.c, last);
-    const dit = l.self ? 'France — ligne de référence'
-      : `${name(l.c)} : ${nf(Math.abs(gl), 2)} ${gl > 0 ? 'devant' : 'derrière'} la France`
-        + ` · ${ml > 0 ? '+' : '−'}${nf(Math.abs(ml), 2)} depuis le 1er juillet`;
-    s += `<text x="${W - mR + 8}" y="${(l.y + 4).toFixed(1)}" font-size="12" font-weight="${l.key ? '700' : '500'}" font-family="IBM Plex Mono, monospace" fill="${l.col}" opacity="${l.key ? 1 : .7}">${l.c}`
-       + (l.self ? '' : `<tspan fill="var(--ink-3)" font-weight="500" font-size="11"> ${gl > 0 ? '+' : '−'}${nf(Math.abs(gl), 1)}</tspan>`)
-       + `<title>${dit}</title></text>`;
-  });
-  s += `</svg>`;
-  document.getElementById('chartB').outerHTML = s.replace('<svg', '<svg id="chartB" role="img" aria-label="Mouvement de l\'écart de coefficient à la France depuis le 1er juillet"');
-
-  /* infobulle : écart absolu, mouvement depuis l'entrée, gain de l'étape */
-  (function(){
-    const svg = document.getElementById('chartB'), box = document.getElementById('boxB'), tip = document.getElementById('tipB');
-    const guide = document.getElementById('guideB');
-    if (!svg || !box || !tip) return;
-    const hide = () => { tip.hidden = true; if (guide) guide.setAttribute('opacity', '0'); };
-    const geo = () => { const r = svg.getBoundingClientRect();
-      if (!r.width || !r.height) return null;
-      const sq = Math.min(r.width / W, r.height / H);
-      return { r, s: sq, ox: r.left + (r.width - W * sq) / 2, oy: r.top + (r.height - H * sq) / 2 }; };
-    svg.addEventListener('mouseleave', hide);
-    svg.addEventListener('mousemove', ev => {
-      const Gm = geo(); if (!Gm) return;
-      const vx = (ev.clientX - Gm.ox) / Gm.s;
-      const stepW = (W - mL - mR - 2 * PAD) / (xs.length - 1);
-      const k = Math.max(0, Math.min(xs.length - 1, Math.round((vx - mL - PAD) / stepW)));
-      const i = xs[k], iPrev = k > 0 ? xs[k - 1] : null;
-      guide.setAttribute('x1', X(k).toFixed(1)); guide.setAttribute('x2', X(k).toFixed(1)); guide.setAttribute('opacity', '1');
-      const rows = around.map(c => ({ c, g: gap(c, i), m: mov(c, i), d: iPrev == null ? 0 : gap(c, i) - gap(c, iPrev) }))
-                         .sort((a, b) => b.g - a.g);
-      tip.innerHTML = `<div class="th">${SHORT[i]} · écart à la France <span style="font-weight:500;opacity:.7">(+ devant, − derrière)</span></div>` + rows.map(x =>
-        `<div class="tr"><i style="background:var(${SLOT[x.c] || '--ink-3'})"></i><span class="nm">${name(x.c)}</span>`
-        + `<b>${x.g > 0 ? '+' : '−'}${nf(Math.abs(x.g), 2)}</b>`
-        + (Math.abs(x.m) > 0.0005 ? `<s style="color:${x.m > 0 ? 'var(--bad)' : 'var(--good)'}">${x.m > 0 ? '+' : '−'}${nf(Math.abs(x.m), 2)}</s>` : '<s style="opacity:.35">0</s>')
-        + `</div>`).join('');
-      tip.hidden = false;
-      const br = box.getBoundingClientRect();
-      const px = Gm.ox + X(k) * Gm.s - br.left, py = ev.clientY - br.top;
-      const tw = tip.offsetWidth || 190, th = tip.offsetHeight || 130;
-      const left = px + 14 + tw > br.width - 4 ? px - 14 - tw : px + 14;
-      tip.style.left = Math.max(4, Math.min(br.width - tw - 4, left)) + 'px';
-      tip.style.top = Math.max(4, Math.min(br.height - th - 4, py - th / 2)) + 'px';
-    });
-  })();
-
-  const say = c => c ? `${name(c)} <b>${gap(c, last) > 0 ? '+' : '−'}${nf(Math.abs(gap(c, last)), 2)}</b>` : null;
-  const bits = [above && `devant elle, ${say(above)}`, below && `derrière elle, ${say(below)}`].filter(Boolean);
-  const movers = around.map(c => ({ c, m: mov(c, last) })).sort((a, b) => b.m - a.m);
-  const best = movers[0], worst = movers[movers.length - 1];
-  document.getElementById('capB').innerHTML =
-    `Chaque nation part de son écart du 1<sup>er</sup> juillet : la courbe montre ce qu'elle a <b>gagné ou perdu sur la France</b> depuis, en points de coefficient. `
-    + `L'étiquette de droite rappelle l'écart réel du jour. Les deux courbes épaisses sont les voisines immédiates au classement — ${bits.join(' ; ')} — `
-    + `celles qui décident de la 5<sup>e</sup> place, et donc d'un club de plus en Ligue des champions. `
-    + (best && best.m > 0.005 ? `Cette saison, ${name(best.c)} est la nation du groupe qui grignote le plus (${'+' + nf(best.m, 2)}) ` : `Cette saison, aucune nation du groupe ne grignote encore de terrain `)
-    + (worst && worst.m < -0.005 ? `et ${name(worst.c)} celle qui décroche le plus (${'−' + nf(Math.abs(worst.m), 2)}).` : `sur la France.`);
-})();
-
-
 /* ================= bloc 5 · quatre lectures de la course =================
  *
  * Le graphe 5 ci-dessus mesure ce que chaque nation a gagné SUR LE TERRAIN
@@ -1577,9 +1444,12 @@ function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM();
  * D'où ces quatre sous-blocs, qui isolent chacun une lecture propre.
  * =========================================================================*/
 (function(){
-  const iFR = N.findIndex(n => n.c === 'FRA');
-  if (iFR < 0) return;
-  const GRP = N.slice(Math.max(0, iFR - 3), iFR + 4).map(n => n.c);   // FRA comprise
+  if (!BY.FRA) return;
+  /* Les huit premières associations, Angleterre comprise : c'est le périmètre
+     des blocs 1 à 5, et il n'y avait aucune raison que cette section en retienne
+     un autre. Le voisinage immédiat de la France reste lisible par le sélecteur
+     de nations, qui permet d'isoler qui on veut. */
+  const GRP = TOP8;
   const col = c => `var(${SLOT[c] || '--ink-3'})`;
   /* « Portugal mène la saison » sonne comme une dépêche mal traduite. */
   const ART = { ESP:"l'", ITA:"l'", ALL:"l'", GER:"l'", AUT:"l'", ANG:"l'", ENG:"l'", ECO:"l'",
@@ -1659,7 +1529,8 @@ function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM();
      C'est la forme que le bloc 6 a rendue lisible et qu'on reprend ici : une
      ligne par nation, la France épaissie, les étiquettes décollées à droite.
      `zero` bascule entre la valeur absolue et l'écart à la France. */
-  function courbes({ svgId, xs, xlab, val, zero, yTitre, ligne1, fmt = 2, capMin }) {
+  function courbes({ svgId, xs, xlab, val, zero, yTitre, ligne1, fmt = 2, capMin, nations }) {
+    const SET = nations && nations.length ? nations : GRP;
     const n = xs.length;
     /* Une seule journée jouée : un graphe de 400 px de haut pour une colonne de
        points est une page blanche avec des axes. On resserre tant que la saison
@@ -1668,7 +1539,7 @@ function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM();
     const X = k => mL + PAD + (W - mL - mR - 2 * PAD) * (n < 2 ? 0.5 : k / (n - 1));
     const v = (c, k) => zero ? val(c, k) - val('FRA', k) : val(c, k);
     let lo = 0, hi = 0;
-    GRP.forEach(c => xs.forEach((_, k) => { const y = v(c, k); if (y < lo) lo = y; if (y > hi) hi = y; }));
+    SET.forEach(c => xs.forEach((_, k) => { const y = v(c, k); if (y < lo) lo = y; if (y > hi) hi = y; }));
     if (ligne1 != null) { lo = Math.min(lo, ligne1); hi = Math.max(hi, ligne1); }
     const pad = Math.max(capMin || 0.1, (hi - lo) * 0.18); lo -= pad; hi += pad;
     const sc = niceScale(lo, hi, 5);
@@ -1684,7 +1555,7 @@ function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM();
     xs.forEach((_, k) => s += `<text x="${X(k).toFixed(1)}" y="${H - mB + 20}" text-anchor="middle" font-size="11" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${xlab[k]}</text>`);
 
     const L = [];
-    GRP.forEach(c => {
+    SET.forEach(c => {
       if (zero && c === 'FRA') { L.push({ c, y0: Y(0), y: Y(0), self: true }); return; }
       const pts = xs.map((_, k) => `${X(k).toFixed(1)},${Y(v(c, k)).toFixed(1)}`).join(' ');
       const fr = c === 'FRA';
@@ -1714,110 +1585,177 @@ function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM();
   const JX = Array.from({ length: Math.max(1, jMax) }, (_, i) => i);
   const JLAB = JX.map(i => 'J' + (i + 1));
 
-  /* ===================== 6a · décomposition dans le temps =====================
-     La version en barres empilées disait d'où vient le coefficient, mais pas
-     QUAND. Ici chaque nation a sa propre petite aire empilée sur les 16 étapes
-     de la saison, toutes à la même échelle : on voit le bonus tomber d'un bloc
-     au 1er juillet, les qualifications monter en escalier pendant l'été chez les
-     unes et rester plates chez les autres, puis la phase de ligue démarrer pour
-     tout le monde en même temps. C'est la dimension qui manquait. */
+  /* ===================== 2b · décomposition du coefficient de saison =====================
+     Barres empilées, une par nation : d'où vient le coefficient, et dans quelle
+     proportion. Sa place est ici, à côté de la répartition par compétition :
+     c'est la même question — d'où viennent les points — posée selon l'autre axe. */
   (function(){
-    const NS = nStepsQ + nStepsM;
-    const cum = (c, i) => {                       // [bonus, qualif, ligue] cumulés à l'étape i
-      const q = SER[c].q, m = SER[c].m;
-      const bonus = q[0][1];
-      let qa = 0; for (let k = 1; k <= Math.min(i, nStepsQ - 1); k++) qa += q[k][1];
-      let li = 0; for (let k = 0; k <= i - nStepsQ; k++) li += m[k][1];
-      return [bonus, qa, li];
-    };
-    const tot = c => { const x = cum(c, NS - 1); return x[0] + x[1] + x[2]; };
-    const ordre = [...GRP].sort((a, b) => tot(b) - tot(a));
-    const MAXY = Math.max(...GRP.map(tot)) * 1.06;
-
-    const COLS = 4, CW = 246, CH = 158, GAP = 8;
-    const rowsN = Math.ceil(ordre.length / COLS);
-    const W = COLS * CW + (COLS - 1) * GAP, H = rowsN * CH + (rowsN - 1) * GAP + 16;
-    /* Aires opaques, sans transparence : les trois couches se recouvrent, et un
-       gris à 50 % posé sur l'orange du dessous donnait un kaki qui ne
-       correspondait à aucune vignette de légende. */
-    const SEG = [
-      { lab: "Bonus d'entrée (C1)", col: 'var(--ink-3)', op: 1 },
-      { lab: 'Qualifications',      col: 'var(--n4)',    op: 1 },
-      { lab: 'Phase de ligue',      col: 'var(--fr)',    op: 1 },
+    const rows = GRP.map(c => { const d = part(c); return { c, d, seg: [d.bonus, d.qualif, d.ligue] }; })
+                    .sort((a, b) => BY[b.c].y[4] - BY[a.c].y[4]);
+    const max = Math.max(...rows.map(r => BY[r.c].y[4])) * 1.02;
+    const seg = [
+      { lab: "Bonus d'entrée (C1)", col: 'var(--ink-3)', fg: '#fff' },
+      { lab: 'Qualifications',      col: 'var(--n4)',    fg: '#fff' },
+      { lab: 'Phase de ligue',      col: 'var(--fr)',    fg: '#fff' },
     ];
-    let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
-    ordre.forEach((c, idx) => {
-      const ox = (idx % COLS) * (CW + GAP), oy = Math.floor(idx / COLS) * (CH + GAP);
-      const pL = 6, pR = 6, pT = 22, pB = 18;
-      const X = i => ox + pL + (CW - pL - pR) * (i / (NS - 1));
-      const Y = v => oy + pT + (CH - pT - pB) * (1 - v / MAXY);
-      const fr = c === 'FRA';
-      s += `<rect x="${ox}" y="${oy}" width="${CW}" height="${CH}" fill="var(--band)" rx="3" stroke="${fr ? 'var(--fr)' : 'transparent'}" stroke-width="${fr ? 1.5 : 0}"/>`;
-      /* aires empilées : on trace de la plus haute à la plus basse, chacune
-         depuis le bas du cadre — pas de chemin fermé à assembler, pas de
-         risque d'auto-intersection quand une composante reste à zéro. */
-      [2, 1, 0].forEach(seuil => {
-        const pts = [];
-        for (let i = 0; i < NS; i++) { const x = cum(c, i); pts.push(`${X(i).toFixed(1)},${Y(x.slice(0, seuil + 1).reduce((a, b) => a + b, 0)).toFixed(1)}`); }
-        s += `<polygon points="${X(0).toFixed(1)},${Y(0).toFixed(1)} ${pts.join(' ')} ${X(NS - 1).toFixed(1)},${Y(0).toFixed(1)}" fill="${SEG[seuil].col}" opacity="${SEG[seuil].op}"/>`;
-      });
-      /* repère : début de la phase de ligue, le moment où tout le monde joue */
-      s += `<line x1="${X(nStepsQ).toFixed(1)}" y1="${(oy + pT).toFixed(1)}" x2="${X(nStepsQ).toFixed(1)}" y2="${Y(0).toFixed(1)}" stroke="var(--ink)" stroke-width="1" stroke-dasharray="3 3" opacity=".35"/>`;
-      s += `<text x="${ox + pL}" y="${oy + 14}" font-size="12" font-weight="${fr ? 700 : 600}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${name(c)}</text>`;
-      s += `<text x="${ox + CW - pR}" y="${oy + 14}" text-anchor="end" font-size="11.5" font-weight="600" font-family="IBM Plex Mono, monospace" fill="${fr ? 'var(--fr)' : 'var(--ink-3)'}">${nf(BY[c].y[4], 3)}</text>`;
-      s += `<text x="${ox + pL}" y="${(oy + CH - 5).toFixed(1)}" font-size="9.5" fill="var(--ink-3)">1ᵉʳ juil.</text>`;
-      s += `<text x="${(X(nStepsQ) + 3).toFixed(1)}" y="${(oy + CH - 5).toFixed(1)}" font-size="9.5" fill="var(--ink-3)">phase de ligue →</text>`;
-      s += `<title>${name(c)} · ${nf(BY[c].y[4], 3)}</title>`;
-    });
-    document.getElementById('chartDec').outerHTML = (s + '</svg>').replace('<svg', '<svg id="chartDec"');
-
-    const fr = cum('FRA', NS - 1), lead = cum(ordre[0], NS - 1);
+    /* Le total affiché est celui que publie la source, pas la somme des trois
+       barres : chaque composante est arrondie au millième, et les additionner
+       donne 3,640 là où le classement dit 3,642. */
+    barres({ svgId: 'chartDec', rows, max, seg, titre: 'coefficient de la saison en cours',
+             droite: r => nf(BY[r.c].y[4], 3) });
+    const fr = part('FRA'), leader = rows[0];
     document.getElementById('capDec').innerHTML =
-      `<p style="margin:0 0 8px">${legende(SEG)}<span style="color:var(--ink-3)">— trait pointillé : début de la phase de ligue</span></p>`
-      + `Même décomposition que précédemment, mais <b>dans le temps</b> : chaque vignette suit une nation du 1<sup>er</sup> juillet à aujourd'hui, toutes à la même échelle verticale. `
-      + `Le gris tombe d'un bloc au départ — c'est le bonus d'entrée, 6 points par club qualifié pour la phase de ligue de C1, acquis avant le premier ballon. `
-      + `L'orange monte en escalier pendant l'été chez les nations qui disputent les qualifications, et reste <b>parfaitement plat</b> chez celles dont les clubs entrent directement : elles n'ont pas le droit d'y marquer. `
-      + `Le bleu ne démarre qu'après le pointillé, au même moment pour tout le monde. `
-      + `${LeNom(ordre[0])} mène avec ${nf(BY[ordre[0]].y[4], 3)}, dont ${nf(lead[0], 2)} de bonus et ${nf(lead[1], 2)} de qualifications ; `
-      + `la France est à ${nf(BY.FRA.y[4], 3)}, dont ${nf(fr[0], 2)} et ${nf(fr[1], 2)}.`;
+      `<p style="margin:0 0 8px">${legende(seg)}</p>`
+      + `Trois composantes de natures différentes, que le classement additionne sans le dire. `
+      + `<b>Le bonus d'entrée</b> vaut 6 points par club qualifié pour la phase de ligue de C1, divisés par le nombre de clubs engagés : `
+      + `il est acquis avant le premier ballon et récompense le rang de la saison passée. `
+      + `<b>Les qualifications</b> ne sont ouvertes qu'aux nations dont les clubs entrent tôt — une nation dont tous les clubs sont directement qualifiés ne peut structurellement rien y marquer. `
+      + `<b>Seule la phase de ligue</b> met tout le monde sur le même terrain, et c'est elle qu'isolent les blocs 6a et 6b. `
+      + `${LeNom(leader.c)} mène la saison avec ${nf(BY[leader.c].y[4], 3)}, dont ${nf(leader.d.bonus, 3)} acquis d'avance `
+      + `(${Math.round(100 * leader.d.bonus / Math.max(1e-9, BY[leader.c].y[4]))} %) ; la France est à ${nf(BY.FRA.y[4], 3)}, dont ${nf(fr.bonus, 3)} `
+      + `(${Math.round(100 * fr.bonus / Math.max(1e-9, BY.FRA.y[4]))} %).`;
   })();
 
-  /* ===================== 6b · à armes égales, journée par journée =====================
-     Ici la ligne de départ commune est RÉELLE : en phase de ligue, tout le monde
-     part de zéro le même jour. Prendre la France comme référence est donc
-     légitime, contrairement au bloc 6 où le point de départ était arbitraire. */
-  (function(){
-    const cumL = (c, k) => { let v = 0; for (let i = 0; i <= k; i++) v += SER[c].m[i][1]; return v; };
-    courbes({ svgId: 'chartEq', xs: JX, xlab: JLAB, val: cumL, zero: true, fmt: 3,
-              yTitre: 'écart à la France, en coefficient de phase de ligue', capMin: 0.08 });
-    const rank = [...GRP].sort((a, b) => cumL(b, JX.length - 1) - cumL(a, JX.length - 1));
+  /* ===================== 6a · à armes égales, depuis J1 =====================
+     Fusion de l'ancien « mouvement depuis le 1er juillet » et de l'ancien 6b.
+     L'idée de comparer au rythme de la France était bonne ; l'appliquer depuis
+     le 1er juillet ne l'était pas, puisque les nations n'entrent pas en lice au
+     même moment. Ramenée à la phase de ligue, la ligne de départ commune est
+     RÉELLE : même jour, même zéro, huit journées pour tout le monde.
+     Le sélecteur de saison change tout : sur une saison close, les huit journées
+     sont là et la courbe a enfin une forme. */
+  const selQ = new Set(TOP8);
+  let yQ = 'cur';
+  const JN = 8;                                   // journées de phase de ligue
+  const cumJ = (c, k, y) => {                     // coefficient de phase de ligue cumulé après k+1 journées
+    const arr = y === 'cur'
+      ? [...Array(nG).keys()].map(gi => gi <= lastRealG ? gCum(c, gi) : null)
+      : (HIST[y] && HIST[y][c] ? pad18(HIST[y][c]) : null);
+    if (!arr) return null;
+    const base = arr[G_J1 - 1], v = arr[G_J1 + k];
+    return (base == null || v == null) ? null : v - base;
+  };
+  const dispoQ = (c, y) => y === 'cur' ? true : !!(HIST[y] && HIST[y][c]);
+  const jDispo = y => { let n = 0; for (let k = 0; k < JN; k++) if (cumJ('FRA', k, y) != null) n = k + 1; return Math.max(1, n); };
+
+  function drawQ(){
+    const list = TOP8.filter(c => selQ.has(c) && dispoQ(c, yQ));
+    const nj = jDispo(yQ);
+    const xs = Array.from({ length: nj }, (_, i) => i);
+    courbes({ svgId: 'chartEq', xs, xlab: xs.map(i => 'J' + (i + 1)),
+              nations: list.includes('FRA') ? list : ['FRA', ...list],
+              val: (c, k) => cumJ(c, k, yQ) ?? 0, zero: true, fmt: 3,
+              yTitre: 'écart à la France, sur la seule phase de ligue', capMin: 0.08 });
+    const last = nj - 1;
+    const rank = TOP8.filter(c => dispoQ(c, yQ)).sort((a, b) => (cumJ(b, last, yQ) ?? 0) - (cumJ(a, last, yQ) ?? 0));
     const iFr = rank.indexOf('FRA');
+    const lib = (SEAS.find(s => s[0] === yQ) || [, yQ])[1];
     document.getElementById('capEq').innerHTML =
-      `Ni bonus d'entrée, ni qualifications : uniquement la phase de ligue, où les clubs de C1 et de C3 jouent 8 journées et ceux de C4 en jouent 6. `
-      + `<b>C'est la seule fenêtre où la ligne de départ est la même pour tous</b> — d'où la France posée à zéro : au-dessus, les nations qui la devancent sur cette seule phase ; en dessous, celles qu'elle devance. `
-      + `L'étiquette de droite donne le coefficient absolu. La France est <b>${iFr + 1}<sup>e</sup> sur ${rank.length}</b> du groupe avec ${nf(cumL('FRA', JX.length - 1), 3)}. `
-      + `<b>Réserve :</b> ${jMax} journée${jMax > 1 ? 's' : ''} sur 8 — la courbe n'a pas encore de forme, elle en prendra une à partir d'octobre.`;
+      `Ni bonus d'entrée, ni qualifications : uniquement la phase de ligue. `
+      + `<b>C'est la seule fenêtre où la ligne de départ est la même pour tous</b> — d'où la France posée à zéro. `
+      + `Au-dessus, les nations qui la devancent sur cette seule phase ; en dessous, celles qu'elle devance. L'étiquette de droite donne le coefficient absolu. `
+      + `En ${lib}, la France est <b>${iFr + 1}<sup>e</sup> sur ${rank.length}</b> avec ${nf(cumJ('FRA', last, yQ) ?? 0, 3)} après ${nj} journée${nj > 1 ? 's' : ''}`
+      + (yQ === 'cur' && nj < JN ? ` — la saison n'en est qu'au début, le sélecteur de saison montre à quoi ressemble une courbe complète.` : `.`);
+  }
+  (function(){
+    const sel = document.getElementById('seasonSelQ');
+    sel.innerHTML = SEAS.map(([v, l]) => `<option value="${v}"${v === yQ ? ' selected' : ''}>${l}${v === 'cur' ? ' · en cours' : ''}</option>`).join('');
+    sel.onchange = () => { yQ = sel.value; drawQ(); };
+    mkChips(document.getElementById('qchips'), TOP8, selQ, true, drawQ);
+    drawQ();
   })();
 
-  /* ===================== 6c · rendement, journée par journée ===================== */
-  (function(){
-    /* Rendement CUMULÉ après k journées : points bruts marqués ÷ matchs joués.
-       Le dénominateur suit le calendrier de chaque compétition — une nation dont
-       les clubs sont en C4 n'a pas encore de match au compteur en septembre. */
+  /* ===================== 6b · rendement, en disques =====================
+     Une courbe sur une seule journée jouée n'est pas un graphique, c'est un
+     point perdu dans du vide. Une grille de disques, elle, se lit dès la
+     première journée et se remplit au fil de la saison : une colonne par
+     journée, une ligne par nation, l'aire du disque proportionnelle au
+     rendement, la teinte disant si l'on est au-dessus ou en dessous de 1,00.
+     Le rendement exige le nombre de clubs par compétition, que la source ne
+     donne que pour la saison en cours : pas de sélecteur de saison ici. */
+  const selR = new Set(TOP8);
+  function drawR(){
+    const list = TOP8.filter(c => selR.has(c));
+    const nj = Math.max(1, Math.max(jouees(0), jouees(1), jouees(2)));
     const matchsA = (c, k) => clubsK(c).reduce((a, n, ki) => a + n * Math.min(k + 1, jouees(ki)), 0);
     const brutA = (c, k) => { let v = 0; for (let i = 0; i <= k; i++) v += SER[c].m[i][1]; return v * div(c); };
-    const rdt = (c, k) => { const m = matchsA(c, k); return m ? brutA(c, k) / m : 0; };
-    courbes({ svgId: 'chartRdt', xs: JX, xlab: JLAB, val: rdt, zero: false, fmt: 2, ligne1: 1,
-              yTitre: 'points par match, en cumul (victoire 2, nul 1)', capMin: 0.15 });
-    const last = JX.length - 1;
-    const rank = [...GRP].sort((a, b) => rdt(b, last) - rdt(a, last));
-    const fr = rdt('FRA', last), best = rank[0];
+    const rdtC = (c, k) => { const m = matchsA(c, k); return m ? brutA(c, k) / m : null; };      // cumulé
+    const rdtJ = (c, k) => {                                                                     // sur la seule journée k
+      const m = matchsA(c, k) - (k ? matchsA(c, k - 1) : 0);
+      const b = brutA(c, k) - (k ? brutA(c, k - 1) : 0);
+      return m ? b / m : null;
+    };
+    const rows = [...list].sort((a, b) => (rdtC(b, nj - 1) ?? -1) - (rdtC(a, nj - 1) ?? -1));
+
+    /* Deux mises en page pour la même grille. En septembre il n'y a qu'une ou
+       deux journées : mettre les journées en colonnes donne un tableau étroit et
+       très haut, que le navigateur étire en une colonne de disques géants. On
+       transpose donc tant que la saison est jeune — les nations en colonnes,
+       une ligne par journée — et on bascule dans l'autre sens dès qu'il y a de
+       quoi remplir la largeur. */
+    const transpose = nj <= 2;
+    const cellW = transpose ? Math.min(118, 940 / Math.max(1, rows.length)) : Math.max(72, Math.min(112, 660 / nj));
+    const cellH = transpose ? 132 : 46;
+    const nCol = transpose ? rows.length : nj, nRow = transpose ? nj : rows.length;
+    const mL = transpose ? 74 : 118, mR = transpose ? 96 : 132, mT = transpose ? 64 : 42, mB = transpose ? 34 : 30;
+    const W = mL + nCol * cellW + mR, H = mT + nRow * cellH + mB;
+    const R = 0.5 * Math.min(cellH, cellW) - (transpose ? 20 : 6);
+    const rad = v => v == null || v <= 0 ? 0 : R * Math.sqrt(Math.min(v, 2) / 2);   // AIRE proportionnelle
+    const cx = (ci) => mL + ci * cellW + cellW / 2;
+    const cy = (ri) => mT + ri * cellH + cellH / 2;
+
+    let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
+    s += `<text x="${mL}" y="16" font-size="11" font-weight="600" fill="var(--ink-3)">points par match sur la journée · aire du disque = rendement · vert au-dessus de 1,00, rouge en dessous</text>`;
+
+    /* en-têtes */
+    if (transpose) {
+      rows.forEach((c, ci) => { const fr = c === 'FRA';
+        s += `<text x="${cx(ci).toFixed(1)}" y="${mT - 26}" text-anchor="middle" font-size="12" font-weight="${fr ? 700 : 600}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${name(c)}</text>`
+          + `<text x="${cx(ci).toFixed(1)}" y="${mT - 11}" text-anchor="middle" font-size="10.5" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${matchsA(c, nj - 1)} m.</text>`; });
+    } else {
+      for (let k = 0; k < nj; k++)
+        s += `<text x="${cx(k).toFixed(1)}" y="${mT - 12}" text-anchor="middle" font-size="11.5" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">J${k + 1}</text>`;
+      s += `<text x="${(mL + nj * cellW + 14).toFixed(1)}" y="${mT - 12}" font-size="10.5" font-weight="600" fill="var(--ink-3)">cumul</text>`;
+    }
+
+    for (let ri = 0; ri < nRow; ri++) {
+      if (!transpose && ri % 2) s += `<rect x="${mL - 8}" y="${(cy(ri) - cellH / 2).toFixed(1)}" width="${(nj * cellW + 16).toFixed(1)}" height="${cellH}" fill="var(--band)"/>`;
+      if (transpose) s += `<text x="${mL - 14}" y="${(cy(ri) + 4).toFixed(1)}" text-anchor="end" font-size="12" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">J${ri + 1}</text>`;
+      else { const c = rows[ri], fr = c === 'FRA';
+        s += `<text x="${mL - 16}" y="${(cy(ri) + 4).toFixed(1)}" text-anchor="end" font-size="12.5" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${name(c)}</text>`; }
+      for (let ci = 0; ci < nCol; ci++) {
+        const c = transpose ? rows[ci] : rows[ri], k = transpose ? ri : ci;
+        const v = rdtJ(c, k), X = cx(ci), Y = cy(ri);
+        if (v == null) { s += `<text x="${X.toFixed(1)}" y="${(Y + 4).toFixed(1)}" text-anchor="middle" font-size="11" fill="var(--ink-3)" opacity=".4">—</text>`; continue; }
+        const r = rad(v), teinte = v >= 1 ? 'var(--good)' : 'var(--bad)';
+        if (r > 0) s += `<circle cx="${X.toFixed(1)}" cy="${Y.toFixed(1)}" r="${r.toFixed(1)}" fill="${teinte}" opacity=".26"/>`
+                     + `<circle cx="${X.toFixed(1)}" cy="${Y.toFixed(1)}" r="${r.toFixed(1)}" fill="none" stroke="${teinte}" stroke-width="1.4" opacity=".9"/>`;
+        else s += `<circle cx="${X.toFixed(1)}" cy="${Y.toFixed(1)}" r="3" fill="none" stroke="var(--ink-3)" stroke-width="1.2" opacity=".5"/>`;
+        s += `<text x="${X.toFixed(1)}" y="${(Y + 4).toFixed(1)}" text-anchor="middle" font-size="${transpose ? 12 : 10.5}" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink)">${nf(v, 2)}</text>`;
+        s += `<title>${name(c)} · J${k + 1} : ${nf(v, 2)} point par match</title>`;
+      }
+      if (!transpose) { const c = rows[ri], fr = c === 'FRA', cu = rdtC(c, nj - 1);
+        s += `<text x="${(mL + nj * cellW + 14).toFixed(1)}" y="${(cy(ri) + 4).toFixed(1)}" font-size="12" font-weight="${fr ? 700 : 600}" font-family="IBM Plex Mono, monospace" fill="${fr ? 'var(--fr)' : 'var(--ink)'}">${cu == null ? '—' : nf(cu, 2)}</text>`
+          + `<text x="${(W - 6).toFixed(1)}" y="${(cy(ri) + 4).toFixed(1)}" text-anchor="end" font-size="10.5" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)" opacity=".85">${matchsA(c, nj - 1)} m.</text>`; }
+    }
+    /* repère d'échelle : à quoi ressemble « un nul par match » */
+    const rx = mL + rad(1) + 2, ry = H - 14 - rad(1) / 2;
+    s += `<circle cx="${rx.toFixed(1)}" cy="${ry.toFixed(1)}" r="${rad(1).toFixed(1)}" fill="none" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="2 2" opacity=".7"/>`
+      + `<text x="${(rx + rad(1) + 8).toFixed(1)}" y="${(ry + 4).toFixed(1)}" font-size="10.5" fill="var(--ink-3)">disque de référence : 1,00, un nul par match</text>`;
+    document.getElementById('chartRdt').outerHTML = (s + '</svg>').replace('<svg', '<svg id="chartRdt"');
+
+    const last = nj - 1;
+    const best = [...TOP8].sort((a, b) => (rdtC(b, last) ?? -1) - (rdtC(a, last) ?? -1))[0];
     document.getElementById('capRdt').innerHTML =
-      `Le nombre de clubs engagés cesse de compter : les points sont rapportés aux matchs réellement disputés, en cumul depuis la première journée. `
-      + `Une nation à 5 clubs et une à 9 deviennent comparables. Le pointillé marque <b>1,00</b> — un nul par match en moyenne. `
-      + `La France est à <b>${nf(fr, 2)}</b> sur ${matchsA('FRA', last)} match${matchsA('FRA', last) > 1 ? 's' : ''}, contre ${nf(rdt(best, last), 2)} pour ${leNom(best)}. `
-      + `<b>Réserve :</b> sur si peu de matchs, un seul résultat retourne le classement ; la courbe ne se stabilise qu'après trois ou quatre journées.`;
-  })();
+      `Le nombre de clubs engagés cesse de compter : les points sont rapportés aux matchs réellement disputés. `
+      + `Une nation à 5 clubs et une à 9 deviennent comparables. En phase de ligue une victoire vaut 2 points et un nul 1 : `
+      + `<b>1,00 signifie « un nul par match »</b>, au-delà on gagne plus qu'on ne perd. Chaque disque mesure une journée`
+      + (nj <= 2 ? `. ` : `, et la colonne de droite donne le cumul. `)
+      + `La France est à <b>${nf(rdtC('FRA', last) ?? 0, 2)}</b> sur ${matchsA('FRA', last)} match${matchsA('FRA', last) > 1 ? 's' : ''}, contre ${nf(rdtC(best, last) ?? 0, 2)} pour ${leNom(best)}. `
+      + `<b>Deux réserves :</b> sur si peu de matchs un seul résultat retourne le classement ; et le rendement demande le nombre de clubs engagés par compétition, que la source ne publie que pour la saison en cours — d'où l'absence de sélecteur de saison ici.`;
+  }
+  mkChips(document.getElementById('rchips'), TOP8, selR, true, drawR);
+  drawR();
 
   /* ===================== 5d · fourchette de fin ===================== */
   (function(){
@@ -1909,13 +1847,6 @@ function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM();
       + `<b>Ce qui n'est pas simulé :</b> la phase finale, dont on ignore les qualifiés et qui pèse lourd. La fourchette ci-dessus s'arrête à la fin janvier.`;
   })();
 
-  /* ---------- l'avertissement qui manque au graphe 5 ---------- */
-  document.getElementById('biaisNote').innerHTML =
-    `<p style="margin:0"><b>Pourquoi quatre lectures plutôt qu'une.</b> Le graphe ci-dessus mesure ce qui a été gagné `
-    + `<i>sur le terrain</i> depuis le 1<sup>er</sup> juillet, bonus d'entrée mis de côté. Deux biais l'empêchent de servir de classement : `
-    + `il ignore un bonus qui compte pour de vrai dans le coefficient, et il aligne sur les mêmes colonnes des nations qui `
-    + `n'entrent pas en lice au même moment — celles dont le championnat est moins bien classé jouent six tours de qualification `
-    + `que les autres n'ont pas le droit de jouer. Les quatre blocs qui suivent isolent chacun une lecture défendable.</p>`;
 })();
 
 /* ---------- projection ---------- */
