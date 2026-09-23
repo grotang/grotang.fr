@@ -20,22 +20,28 @@ name: Rafraîchissement UEFA
 #
 # La minute n'est jamais 00 : « High load times include the start of every hour. »
 #
-# REPUBLICATION QUOTIDIENNE — le passage de 06 h 12 UTC est FORCÉ (voir plus bas).
-# Les trois autres ne republient que si les chiffres ont bougé ; celui-là
-# reconstruit et republie tous les matins, même un jour sans match. Chez Netlify
-# c'était impensable : 15 crédits par déploiement, 20 par mois, le site aurait été
-# suspendu en trois semaines. GitHub Pages ne compte pas les déploiements d'un
-# dépôt public, et la limite douce de 10 constructions par heure ne s'applique pas
-# aux sites publiés par un workflow maison. Une republication par jour est donc
-# gratuite — et elle a son utilité : l'horodatage « Page publiée » redevient celui
-# du jour, et un incident de la source se voit le matin même plutôt qu'au premier
-# soir de match.
+# ON NE REPUBLIE QUE S'IL Y A DU NEUF. Une republication quotidienne à vide a été
+# essayée puis retirée : elle ne changeait qu'un horodatage et noyait l'historique.
+# Le seul intérêt d'un passage est donc de déposer de vrais chiffres.
+#
+# Reste à ne pas rater le soir de match. Le risque n'est pas le script — il tourne
+# en quinze secondes — mais GitHub, qui prévient que « some queued jobs may be
+# dropped » et qui en a déjà escamoté. La parade est le nombre d'essais : trois
+# dans l'heure qui suit la fin des matchs, puis deux le lendemain matin en filet.
+# Un passage qui ne trouve rien de neuf sort sans rien écrire et ne coûte rien.
+#
+#   38 21 UTC → 23 h 38 été · 22 h 38 hiver   1er essai, les matchs viennent de finir
+#   58 21 UTC → 23 h 58 été · 22 h 58 hiver   2e essai, vingt minutes plus tard
+#   38 22 UTC → 00 h 38 été · 23 h 38 hiver   3e essai
+#   12 05 UTC → 07 h 12 été · 06 h 12 hiver   filet du matin
+#   12 06 UTC → 08 h 12 été · 07 h 12 hiver   filet du matin (heure d'hiver)
 on:
   schedule:
     - cron: '38 21 * * *'
+    - cron: '58 21 * * *'
     - cron: '38 22 * * *'
     - cron: '12 5 * * *'
-    - cron: '12 6 * * *'   # ← celui-ci republie tous les jours, données inchangées ou non
+    - cron: '12 6 * * *'
   workflow_dispatch:
     inputs:
       force:
@@ -87,23 +93,13 @@ jobs:
       - name: Contrôles sur capture de référence
         run: npm run test:extract
 
-      # `--force` saute la comparaison avec la publication précédente : la page est
-      # reconstruite même si la source n'a pas bougé d'un millième. On le déclenche
-      # sur un seul des quatre rendez-vous quotidiens — sinon on republierait
-      # quatre fois par jour pour rien, et l'historique du dépôt deviendrait
-      # illisible. `github.event.schedule` porte la ligne cron qui a déclenché le
-      # passage ; c'est le seul moyen de distinguer les quatre.
+      # Aucun passage planifié n'est forcé : le script compare les chiffres à ceux
+      # déjà publiés et sort sans rien écrire s'ils n'ont pas bougé. `--force` ne
+      # sert qu'au lancement à la main, pour republier après une correction de
+      # gabarit qui ne touche pas les données.
       - name: Relire la source et reconstruire
         id: refresh
-        env:
-          QUOTIDIEN: ${{ github.event.schedule == '12 6 * * *' }}
-        run: |
-          if [ "${{ inputs.force }}" = "true" ] || [ "$QUOTIDIEN" = "true" ]; then
-            echo "Republication quotidienne : reconstruction forcée."
-            node tools/uefa/refresh.mjs --force
-          else
-            node tools/uefa/refresh.mjs
-          fi
+        run: node tools/uefa/refresh.mjs ${{ inputs.force && '--force' || '' }}
 
       - name: Déposer si quelque chose a changé
         id: depot

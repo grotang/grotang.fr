@@ -172,8 +172,8 @@ svg{display:block; width:100%; height:auto}
 .legend i{width:14px; height:3px; border-radius:2px; display:inline-block}
 
 /* ---------- compétitions ---------- */
-:root{ --c1:#2a78d6; --c3:#eb6834; --c4:#1baf7a; }
-:root[data-theme="dark"]{ --c1:#3987e5; --c3:#d95926; --c4:#199e70; }
+:root{ --c1:#17368C; --c3:#C2410C; --c4:#0B7A38; }
+:root[data-theme="dark"]{ --c1:#6E9CF0; --c3:#F07A42; --c4:#2FC97A; }
 
 .ptitle{display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 9px; margin-bottom:14px}
 .ptitle .no{font-size:11px; font-weight:700; letter-spacing:.06em; color:var(--surface); background:var(--ink);
@@ -285,7 +285,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "mer. 23 sept. 2026 13h26";</script>
+<script>window.PUBLIE = "mer. 23 sept. 2026 23h15";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -342,7 +342,8 @@ body{margin:0}</style>
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">0</span><h3>Où en est la saison</h3></div>
+    <div class="ptitle"><span class="no">0</span><h3>Où en est la saison</h3>
+      <span class="sub"><span class="ctl"><span class="seg" role="group" aria-label="Phase qualificative"><button type="button" id="cal-qual" aria-pressed="false">Afficher la phase qualificative</button></span></span></span></div>
     <p class="calmeta" id="calmeta"></p>
     <div class="cal" id="cal"></div>
   </div>
@@ -614,6 +615,24 @@ const KO = {
      ['1/4','2027-04-08','2027-04-15'],['1/2','2027-04-29','2027-05-06'],
      ['F','2027-06-02']]
 };
+/* Tours de qualification 2026/27, aller et retour, compétition par compétition.
+   Source : les pages Wikipédia FR des trois éditions, tableau « Calendrier des
+   tirages et des matchs ». Quand un tour s'étale sur deux soirs (« 7 et 8
+   juillet »), on retient le premier : c'est la convention déjà appliquée au
+   calendrier de phase de ligue et à la phase finale, et elle suffit à placer le
+   tour sur un axe qui court sur onze mois.
+   Ces dates sont figées pour la saison ; elles ne sont pas rechargées chaque
+   matin, contrairement aux chiffres. */
+const QUAL = {
+  0:[['Q1','2026-07-07','2026-07-14'],['Q2','2026-07-21','2026-07-28'],
+     ['Q3','2026-08-04','2026-08-11'],['Bar.','2026-08-18','2026-08-25']],
+  1:[['Q1','2026-07-09','2026-07-16'],['Q2','2026-07-23','2026-07-30'],
+     ['Q3','2026-08-06','2026-08-13'],['Bar.','2026-08-20','2026-08-27']],
+  2:[['Q1','2026-07-09','2026-07-16'],['Q2','2026-07-23','2026-07-30'],
+     ['Q3','2026-08-06','2026-08-13'],['Bar.','2026-08-20','2026-08-27']]
+};
+const QLABL = {'Q1':'1er tour de qualification','Q2':'2e tour de qualification',
+               'Q3':'3e tour de qualification','Bar.':'Barrages d\'accès'};
 const KOLAB = {PO:'Barrages', '8es':'8es de finale', '1/4':'Quarts', '1/2':'Demies', F:'Finale'};
 const TODAY = new Date();
 const dOf = iso => new Date(iso+'T00:00:00');
@@ -805,7 +824,7 @@ document.getElementById('stamp').innerHTML =
     + 'Ce n\'est pas une seconde observation du réel — une erreur de l\'UEFA passerait des deux côtés — '
     + 'mais un second calcul : il attrape une faute de saisie, une règle mal appliquée, ou une erreur de notre '
     + 'propre reconstruction. Un désaccord ne retire jamais la page&nbsp;: il s\'affiche. '
-    + 'Dernier relevé le ' + dmy(XCHK.at) + ' — <b>' + XCHK.pays + ' pays, ' + XCHK.valeurs
+    + 'Dernier recoupement : ' + (dlong(XCHK.at).txt || dmy(XCHK.at)) + ' — <b>' + XCHK.pays + ' pays, ' + XCHK.valeurs
     + ' valeurs comparées</b> (rang, cinq saisons, total), '
     + (XCHK.ecarts.length === 0 ? '<b>aucun écart</b>.' : '<b>' + XCHK.ecarts.length + ' écart(s)</b> :')
     + '</p>'
@@ -844,12 +863,18 @@ document.getElementById('stamp').innerHTML =
    occupaient la même colonne. On passe donc à un axe de temps réel, commun aux trois
    compétitions : c'est le décalage entre elles qui explique l'essentiel du bloc 2,
    et il devient visible d'un coup d'œil. */
-(function(){
+/* Le calendrier se redessine : un bouton ouvre la phase qualificative, ce qui
+   recule l'origine de l'axe au 7 juillet. Replié par défaut — les qualifications
+   sont finies depuis août, et les étaler en permanence tasserait la phase de
+   ligue, qui est ce qu'on vient lire. */
+let calQual = false;
+function drawCal(){
   const all = [0,1,2].flatMap(k => CAL[k].map(([iso]) => iso)).sort();
+  const q0 = [0,1,2].map(k => QUAL[k][0][1]).sort()[0];
   /* KO et KOLAB sont définis plus haut, avec CAL : le tampon d'en-tête compte les
      jours jusqu'au prochain match, et ce match peut être un tour à élimination
      directe. Une seule table de dates pour toute la page. */
-  const t0 = dOf(all[0]).getTime(), t1 = dOf('2027-06-05').getTime();
+  const t0 = dOf(calQual ? q0 : all[0]).getTime(), t1 = dOf('2027-06-05').getTime();
   const tLeague = dOf(all[all.length-1]).getTime();
   const W = 1000, mL = 46, mR = 30, mT = 62, LANE = 36, H = mT + 3*LANE + 44;
   const span = (t1 - t0) || 1;
@@ -896,7 +921,14 @@ document.getElementById('stamp').innerHTML =
         + `<rect x="${(x1 + w/2 - lab.length*3.3 - 7).toFixed(1)}" y="6" width="${(lab.length*6.6 + 14).toFixed(1)}" height="16" fill="var(--surface)"/>`
         + `<text x="${(x1 + w/2).toFixed(1)}" y="19" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink-2)">${lab}</text>`;
     };
-    s += zone(mL, xa - 3, 'Phase de ligue') + zone(xa + 3, W - mR, 'Phase finale');
+    if (calQual) {
+      const xq = (X(QUAL[0][3][2]) + X(CAL[0][0][0])) / 2;
+      s += zone(mL, xq - 3, 'Phase qualificative') + zone(xq + 3, xa - 3, 'Phase de ligue') + zone(xa + 3, W - mR, 'Phase finale');
+      /* mêmes étiquettes de tour qu'en phase finale, au même endroit, à la même
+         taille : c'est la cohérence qui fait qu'on lit les deux bouts de la
+         saison avec la même grille de lecture. */
+      QUAL[0].forEach(([lab, a]) => s += `<text x="${X(a).toFixed(1)}" y="${mT-8}" text-anchor="middle" font-size="10" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${lab}</text>`);
+    } else s += zone(mL, xa - 3, 'Phase de ligue') + zone(xa + 3, W - mR, 'Phase finale');
     /* les tours, au-dessus de leur zone : à deux jours près les trois compétitions
        jouent ensemble, donc une seule série d'étiquettes suffit. */
     KO[0].forEach(([lab, a]) => { const x = X(a);
@@ -905,6 +937,17 @@ document.getElementById('stamp').innerHTML =
   [0,1,2].forEach(k => {
     const y = mT + k*LANE + LANE/2;
     const xEnd = X(KO[k][KO[k].length-1][1]);
+    /* Aller et retour reliés, cercle plein si joué : exactement la forme des tours
+       à élimination directe. Un tour de qualification EST un aller-retour — lui
+       donner une autre forme aurait inventé une différence qui n'existe pas. */
+    if (calQual) QUAL[k].forEach(([lab, a, r]) => {
+      const xa2 = X(a), xr2 = X(r), da = passe(a), dr = passe(r);
+      s += `<line x1="${xa2.toFixed(1)}" y1="${y}" x2="${xr2.toFixed(1)}" y2="${y}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${da?.8:.4}"/>`
+        +  `<g><title>${QLABL[lab]} ${KSHORT[k]}, aller — ${frDate(a)}</title>`
+        +  `<circle cx="${xa2.toFixed(1)}" cy="${y}" r="4.2" fill="${da?`var(${KVAR[k]})`:'var(--surface)'}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${da?1:.55}"/></g>`
+        +  `<g><title>${QLABL[lab]} ${KSHORT[k]}, retour — ${frDate(r)}</title>`
+        +  `<circle cx="${xr2.toFixed(1)}" cy="${y}" r="4.2" fill="${dr?`var(${KVAR[k]})`:'var(--surface)'}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${dr?1:.55}"/></g>`;
+    });
     s += `<line x1="${mL}" y1="${y}" x2="${xEnd.toFixed(1)}" y2="${y}" stroke="var(--rule-soft)" stroke-width="1"/>`
       +  `<rect x="0" y="${y-8}" width="11" height="11" rx="2" fill="var(${KVAR[k]})"/>`
       +  `<text x="16" y="${y+4}" font-size="12.5" font-weight="700" fill="var(--ink-2)">${KSHORT[k]}</text>`;
@@ -953,8 +996,18 @@ document.getElementById('stamp').innerHTML =
     + st(0) + ' · ' + st(1) + ' · ' + st(2) + '. '
     + (notyet.length
        ? `Tant qu'une compétition n'a pas démarré, ses clubs pèsent zéro — et le bloc suivant paraît dominé par la C1 pour cette seule raison. Tout devient comparable le ${frDate(CAL[notyet[notyet.length-1]][0][0])}.`
-       : `Les trois compétitions tournent : les comparaisons entre nations redeviennent honnêtes.`);
-})();
+       : `Les trois compétitions tournent : les comparaisons entre nations redeviennent honnêtes.`)
+    + (calQual
+       ? ` <b>Phase qualificative dépliée</b> : les quatre tours de juillet-août, aller et retour reliés comme en phase finale. C'est là que se joue l'essentiel de l'écart entre nations — une association mal classée y engage ses clubs dès le 7 juillet quand les grandes attendent septembre.`
+       : ``);
+}
+document.getElementById('cal-qual').onclick = function(){
+  calQual = !calQual;
+  this.setAttribute('aria-pressed', calQual);
+  this.textContent = calQual ? 'Masquer la phase qualificative' : 'Afficher la phase qualificative';
+  drawCal();
+};
+drawCal();
 
 /* ---------- 1 · le classement ---------- */
 let period='season';

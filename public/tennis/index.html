@@ -80,7 +80,13 @@ td.tc { font-size:.7rem; font-weight:700; background:var(--surface-2) !important
   --good:#0F7040; --bad:#B02C2C;
   --n1:#2a78d6; --n2:#eb6834; --n3:#1baf7a; --n4:#eda100; --n5:#e87ba4; --n6:#008300; --n7:#4a3aa7; --n8:#e34948;
   --band:#F0F2F6;
-  --c1:#2a78d6; --c3:#eb6834; --c4:#1baf7a;
+  /* Les trois compétitions portent leurs couleurs UEFA : bleu nuit pour la Ligue
+     des champions, orange pour la Ligue Europa, vert pour la Conference League.
+     Les teintes de marque sont volontairement assombries en mode clair : la
+     pastille du calendrier est remplie et le numéro de journée s'écrit en blanc
+     dessus. L'orange de marque donnait 3,1:1, illisible ; ces valeurs tiennent
+     toutes au-dessus de 5:1, mesuré. */
+  --c1:#17368C; --c3:#C2410C; --c4:#0B7A38;
   --uefa:#2a78d6; --tennis:#0F7040;
   --shadow:0 1px 2px rgba(15,20,29,.05),0 8px 24px -12px rgba(15,20,29,.14);
 }
@@ -93,7 +99,9 @@ td.tc { font-size:.7rem; font-weight:700; background:var(--surface-2) !important
   --good:#43BE83; --bad:#EE7A76;
   --n1:#3987e5; --n2:#d95926; --n3:#199e70; --n4:#c98500; --n5:#d55181; --n6:#008300; --n7:#9085e9; --n8:#e66767;
   --band:#111823;
-  --c1:#3987e5; --c3:#d95926; --c4:#199e70;
+  /* En sombre le rapport s'inverse — le chiffre s'écrit en sombre sur la pastille
+     remplie — donc les mêmes teintes, éclaircies. 6,3:1 au pire. */
+  --c1:#6E9CF0; --c3:#F07A42; --c4:#2FC97A;
   --uefa:#5D9BF0; --tennis:#43BE83;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.8);
 }
