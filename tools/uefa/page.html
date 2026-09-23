@@ -850,10 +850,14 @@ function drawCal(){
   const MN = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
 
   let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">`;
-  s += `<text x="${mL}" y="${mT-28}" font-size="11" fill="var(--ink-3)">${MN[firstMonth.getMonth()]}</text>`;
+  /* Les mois portent tout le repérage : c'est par eux qu'on situe une journée
+     sans lire une date. Ils étaient en gris clair et maigre ; les voilà en
+     --ink-2 et demi-gras, la graduation qui les accompagne un cran plus nette. */
+  const moisTxt = (x, m, ancre) => `<text x="${x.toFixed(1)}" y="${mT-28}" text-anchor="${ancre}" font-size="11.5" font-weight="600" fill="var(--ink-2)">${MN[m]}</text>`;
+  s += moisTxt(mL, firstMonth.getMonth(), 'start');
   months.forEach(d => { const x = mL + (W-mL-mR)*(d.getTime()-t0)/span;
-    s += `<line x1="${x.toFixed(1)}" y1="${mT-22}" x2="${x.toFixed(1)}" y2="${mT+3*LANE-6}" stroke="var(--rule-soft)"/>`
-      +  `<text x="${(x+5).toFixed(1)}" y="${mT-28}" font-size="11" fill="var(--ink-3)">${MN[d.getMonth()]}</text>`; });
+    s += `<line x1="${x.toFixed(1)}" y1="${mT-22}" x2="${x.toFixed(1)}" y2="${mT+3*LANE-6}" stroke="var(--rule)" stroke-width="1" opacity=".75"/>`
+      +  moisTxt(x+5, d.getMonth(), 'start'); });
 
   /* la ligne d'aujourd'hui : la seule information vraiment datée du bloc */
   const now = TODAY.getTime();
@@ -876,23 +880,29 @@ function drawCal(){
        phase finale ne garde que les survivants. Ces bascules méritaient mieux
        qu'un filet de 1 px : chaque phase reçoit son fond et sa frontière pleine
        hauteur, et son nom sur une pastille pleine plutôt qu'en texte flottant. */
-    const yTop = 26, yBot = mT + 3*LANE - 4;
+    /* Premier essai : teinter le fond de chaque phase sur toute la hauteur. Raté —
+       le voile passait derrière les noms de mois, qui sont la clé de voûte de la
+       lecture, et tout le calendrier perdait en netteté. Le repère de phase est
+       donc remonté sur sa propre ligne, en haut : un bandeau coloré par phase,
+       le nom dedans. Rien ne recouvre plus la zone de données.
+       Les frontières, elles, restent tracées pleine hauteur : ce sont de vrais
+       changements de régime, pas des découpages décoratifs. */
+    const yBot = mT + 3*LANE - 4;
     const zone = (x1, x2, lab, teinte) => {
-      const w = x2 - x1, pad = 9;
-      return `<rect x="${x1.toFixed(1)}" y="${yTop}" width="${w.toFixed(1)}" height="${(yBot-yTop).toFixed(1)}" fill="var(${teinte})" opacity=".55"/>`
-        + `<line x1="${x1.toFixed(1)}" y1="${yTop}" x2="${x1.toFixed(1)}" y2="${yBot}" stroke="var(--rule)" stroke-width="1"/>`
-        + `<line x1="${x2.toFixed(1)}" y1="${yTop}" x2="${x2.toFixed(1)}" y2="${yBot}" stroke="var(--rule)" stroke-width="1"/>`
-        + `<rect x="${(x1 + w/2 - lab.length*3.35 - pad).toFixed(1)}" y="4" width="${(lab.length*6.7 + pad*2).toFixed(1)}" height="18" rx="9" fill="var(--ink-2)"/>`
-        + `<text x="${(x1 + w/2).toFixed(1)}" y="17" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing=".04em" fill="var(--surface)">${lab}</text>`;
+      const w = x2 - x1;
+      return `<rect x="${(x1+1).toFixed(1)}" y="4" width="${(w-2).toFixed(1)}" height="19" rx="4" fill="var(${teinte})" opacity=".17"/>`
+        + `<line x1="${x1.toFixed(1)}" y1="4" x2="${x1.toFixed(1)}" y2="${yBot}" stroke="var(--rule)" stroke-width="1"/>`
+        + `<line x1="${x2.toFixed(1)}" y1="4" x2="${x2.toFixed(1)}" y2="${yBot}" stroke="var(--rule)" stroke-width="1"/>`
+        + `<text x="${(x1 + w/2).toFixed(1)}" y="17.5" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing=".05em" fill="var(--ink-2)">${lab}</text>`;
     };
     if (calQual) {
       const xq = (X(QUAL[0][3][2]) + X(CAL[0][0][0])) / 2;
-      s += zone(mL, xq, 'Phase qualificative', '--band') + zone(xq, xa, 'Phase de ligue', '--surface-2') + zone(xa, W - mR, 'Phase finale', '--band');
+      s += zone(mL, xq, 'Phase qualificative', '--n4') + zone(xq, xa, 'Phase de ligue', '--fr') + zone(xa, W - mR, 'Phase finale', '--n7');
       /* mêmes étiquettes de tour qu'en phase finale, au même endroit, à la même
          taille : c'est la cohérence qui fait qu'on lit les deux bouts de la
          saison avec la même grille de lecture. */
       QUAL[0].forEach(([lab, a, r]) => s += `<text x="${((X(a)+X(r))/2).toFixed(1)}" y="${mT-8}" text-anchor="middle" font-size="10" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${lab}</text>`);
-    } else s += zone(mL, xa, 'Phase de ligue', '--surface-2') + zone(xa, W - mR, 'Phase finale', '--band');
+    } else s += zone(mL, xa, 'Phase de ligue', '--fr') + zone(xa, W - mR, 'Phase finale', '--n7');
     /* les tours, au-dessus de leur zone : à deux jours près les trois compétitions
        jouent ensemble, donc une seule série d'étiquettes suffit. */
     /* Le libellé se centre sur la confrontation entière, pas sur son seul aller :
