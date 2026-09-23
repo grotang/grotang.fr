@@ -285,7 +285,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "mer. 23 sept. 2026 23h22";</script>
+<script>window.PUBLIE = "mer. 23 sept. 2026 23h32";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -913,22 +913,29 @@ function drawCal(){
      « phase de ligue » et « phase finale » — pour qu'on parle de la même chose
      d'un bloc à l'autre. */
   { const xa = (X(CAL[0][7][0]) + X('2027-02-16')) / 2;
-    const zone = (x1, x2, lab) => {
-      const w = x2 - x1;
-      return `<line x1="${x1.toFixed(1)}" y1="14" x2="${x2.toFixed(1)}" y2="14" stroke="var(--rule)" stroke-width="1"/>`
-        + `<line x1="${x1.toFixed(1)}" y1="10" x2="${x1.toFixed(1)}" y2="14" stroke="var(--rule)" stroke-width="1"/>`
-        + `<line x1="${x2.toFixed(1)}" y1="10" x2="${x2.toFixed(1)}" y2="14" stroke="var(--rule)" stroke-width="1"/>`
-        + `<rect x="${(x1 + w/2 - lab.length*3.3 - 7).toFixed(1)}" y="6" width="${(lab.length*6.6 + 14).toFixed(1)}" height="16" fill="var(--surface)"/>`
-        + `<text x="${(x1 + w/2).toFixed(1)}" y="19" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink-2)">${lab}</text>`;
+    /* Les trois phases ne sont pas trois morceaux du même continuum : on ne passe
+       pas de juillet à septembre, on change de régime. Les qualifications sont
+       réservées aux mal classés, la phase de ligue met tout le monde ensemble, la
+       phase finale ne garde que les survivants. Ces bascules méritaient mieux
+       qu'un filet de 1 px : chaque phase reçoit son fond et sa frontière pleine
+       hauteur, et son nom sur une pastille pleine plutôt qu'en texte flottant. */
+    const yTop = 26, yBot = mT + 3*LANE - 4;
+    const zone = (x1, x2, lab, teinte) => {
+      const w = x2 - x1, pad = 9;
+      return `<rect x="${x1.toFixed(1)}" y="${yTop}" width="${w.toFixed(1)}" height="${(yBot-yTop).toFixed(1)}" fill="var(${teinte})" opacity=".55"/>`
+        + `<line x1="${x1.toFixed(1)}" y1="${yTop}" x2="${x1.toFixed(1)}" y2="${yBot}" stroke="var(--rule)" stroke-width="1"/>`
+        + `<line x1="${x2.toFixed(1)}" y1="${yTop}" x2="${x2.toFixed(1)}" y2="${yBot}" stroke="var(--rule)" stroke-width="1"/>`
+        + `<rect x="${(x1 + w/2 - lab.length*3.35 - pad).toFixed(1)}" y="4" width="${(lab.length*6.7 + pad*2).toFixed(1)}" height="18" rx="9" fill="var(--ink-2)"/>`
+        + `<text x="${(x1 + w/2).toFixed(1)}" y="17" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing=".04em" fill="var(--surface)">${lab}</text>`;
     };
     if (calQual) {
       const xq = (X(QUAL[0][3][2]) + X(CAL[0][0][0])) / 2;
-      s += zone(mL, xq - 3, 'Phase qualificative') + zone(xq + 3, xa - 3, 'Phase de ligue') + zone(xa + 3, W - mR, 'Phase finale');
+      s += zone(mL, xq, 'Phase qualificative', '--band') + zone(xq, xa, 'Phase de ligue', '--surface-2') + zone(xa, W - mR, 'Phase finale', '--band');
       /* mêmes étiquettes de tour qu'en phase finale, au même endroit, à la même
          taille : c'est la cohérence qui fait qu'on lit les deux bouts de la
          saison avec la même grille de lecture. */
       QUAL[0].forEach(([lab, a, r]) => s += `<text x="${((X(a)+X(r))/2).toFixed(1)}" y="${mT-8}" text-anchor="middle" font-size="10" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${lab}</text>`);
-    } else s += zone(mL, xa - 3, 'Phase de ligue') + zone(xa + 3, W - mR, 'Phase finale');
+    } else s += zone(mL, xa, 'Phase de ligue', '--surface-2') + zone(xa, W - mR, 'Phase finale', '--band');
     /* les tours, au-dessus de leur zone : à deux jours près les trois compétitions
        jouent ensemble, donc une seule série d'étiquettes suffit. */
     /* Le libellé se centre sur la confrontation entière, pas sur son seul aller :
@@ -997,7 +1004,7 @@ function drawCal(){
         s += `<g><title>Finale ${KSHORT[k]} — ${frDate(a)}</title>`
           +  `<path d="M ${xa.toFixed(1)} ${y-6.4} L ${(xa+6.4).toFixed(1)} ${y} L ${xa.toFixed(1)} ${y+6.4} L ${(xa-6.4).toFixed(1)} ${y} Z"`
           +  ` fill="${done?`var(${KVAR[k]})`:'var(--surface)'}" stroke="var(${KVAR[k]})" stroke-width="1.6" opacity="${op}"/></g>`
-          +  `<text x="${(xa).toFixed(1)}" y="${y+19}" text-anchor="middle" font-size="8.5" font-weight="600" fill="var(--ink-3)">${dOf(a).getDate()}/${String(dOf(a).getMonth()+1).padStart(2,'0')}</text>`;
+          +  `<text x="${(xa).toFixed(1)}" y="${y+19}" text-anchor="middle" font-size="8.5" font-weight="600" fill="var(--ink-3)">${String(dOf(a).getDate()).padStart(2,'0')}/${String(dOf(a).getMonth()+1).padStart(2,'0')}</text>`;
       }
     });
   });
