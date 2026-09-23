@@ -285,7 +285,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "mer. 23 sept. 2026 23h15";</script>
+<script>window.PUBLIE = "mer. 23 sept. 2026 23h22";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -927,12 +927,28 @@ function drawCal(){
       /* mêmes étiquettes de tour qu'en phase finale, au même endroit, à la même
          taille : c'est la cohérence qui fait qu'on lit les deux bouts de la
          saison avec la même grille de lecture. */
-      QUAL[0].forEach(([lab, a]) => s += `<text x="${X(a).toFixed(1)}" y="${mT-8}" text-anchor="middle" font-size="10" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${lab}</text>`);
+      QUAL[0].forEach(([lab, a, r]) => s += `<text x="${((X(a)+X(r))/2).toFixed(1)}" y="${mT-8}" text-anchor="middle" font-size="10" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${lab}</text>`);
     } else s += zone(mL, xa - 3, 'Phase de ligue') + zone(xa + 3, W - mR, 'Phase finale');
     /* les tours, au-dessus de leur zone : à deux jours près les trois compétitions
        jouent ensemble, donc une seule série d'étiquettes suffit. */
-    KO[0].forEach(([lab, a]) => { const x = X(a);
+    /* Le libellé se centre sur la confrontation entière, pas sur son seul aller :
+       sinon il tire vers la gauche et ne désigne plus la capsule qu'il nomme. */
+    KO[0].forEach(([lab, a, r]) => { const x = r ? (X(a)+X(r))/2 : X(a);
       s += `<text x="${Math.min(x, W-mR).toFixed(1)}" y="${mT-8}" text-anchor="${x > W-mR-12 ? 'end':'middle'}" font-size="10" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${lab}</text>`; }); }
+
+  /* Une confrontation aller-retour se dessine en capsule : un fond arrondi qui
+     englobe les deux manches, puis les deux cercles reliés par-dessus.
+     Pourquoi : en phase finale, quatorze jours séparent deux tours contre sept
+     entre l'aller et le retour — les paires se détachent toutes seules. En
+     qualifications, les deux écarts valent sept jours (mesuré : 19 px contre
+     20 px), et les huit cercles d'une ligne formaient une chenille continue où
+     l'on ne distinguait plus les tours. L'axe est un axe de temps, on n'allait
+     pas l'étirer pour faire joli ; la capsule règle la lecture sans toucher aux
+     dates, et elle est appliquée aux deux bouts de la saison pour que la
+     grammaire reste la même. */
+  const capsule = (xa, xr, y, k, done) =>
+    `<rect x="${(xa-7).toFixed(1)}" y="${(y-9.5).toFixed(1)}" width="${(xr-xa+14).toFixed(1)}" height="19" rx="9.5"`
+    + ` fill="var(${KVAR[k]})" opacity="${done ? .13 : .07}"/>`;
 
   [0,1,2].forEach(k => {
     const y = mT + k*LANE + LANE/2;
@@ -942,7 +958,8 @@ function drawCal(){
        donner une autre forme aurait inventé une différence qui n'existe pas. */
     if (calQual) QUAL[k].forEach(([lab, a, r]) => {
       const xa2 = X(a), xr2 = X(r), da = passe(a), dr = passe(r);
-      s += `<line x1="${xa2.toFixed(1)}" y1="${y}" x2="${xr2.toFixed(1)}" y2="${y}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${da?.8:.4}"/>`
+      s += capsule(xa2, xr2, y, k, da)
+        +  `<line x1="${xa2.toFixed(1)}" y1="${y}" x2="${xr2.toFixed(1)}" y2="${y}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${da?.8:.4}"/>`
         +  `<g><title>${QLABL[lab]} ${KSHORT[k]}, aller — ${frDate(a)}</title>`
         +  `<circle cx="${xa2.toFixed(1)}" cy="${y}" r="4.2" fill="${da?`var(${KVAR[k]})`:'var(--surface)'}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${da?1:.55}"/></g>`
         +  `<g><title>${QLABL[lab]} ${KSHORT[k]}, retour — ${frDate(r)}</title>`
@@ -970,7 +987,8 @@ function drawCal(){
       const xa = X(a), done = passe(a);
       const op = done ? 1 : .55;
       if (r) { const xr = X(r), dr = passe(r);
-        s += `<line x1="${xa.toFixed(1)}" y1="${y}" x2="${xr.toFixed(1)}" y2="${y}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${op*.8}"/>`
+        s += capsule(xa, xr, y, k, done)
+          +  `<line x1="${xa.toFixed(1)}" y1="${y}" x2="${xr.toFixed(1)}" y2="${y}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${op*.8}"/>`
           +  `<g><title>${KOLAB[lab]} ${KSHORT[k]}, aller — ${frDate(a)}</title>`
           +  `<circle cx="${xa.toFixed(1)}" cy="${y}" r="4.2" fill="${done?`var(${KVAR[k]})`:'var(--surface)'}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${op}"/></g>`
           +  `<g><title>${KOLAB[lab]} ${KSHORT[k]}, retour — ${frDate(r)}</title>`
