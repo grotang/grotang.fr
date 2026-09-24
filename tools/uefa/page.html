@@ -204,14 +204,19 @@ section > .panel + .panel{margin-top:14px}
    hachurée : elle est dans le total mais elle bougera encore à chaque soirée
    européenne. Le même motif sert sur la page d'accueil pour la même idée — une
    valeur vivante se hachure, une valeur figée est pleine. */
-.barrow .fill-wip{height:100%; border-left:2px solid var(--surface);
-  background:repeating-linear-gradient(135deg,
-    color-mix(in srgb, var(--ink-3) 62%, transparent) 0 5px, transparent 5px 10px),
-    color-mix(in srgb, var(--ink-3) 16%, transparent)}
-.barrow.me .fill-wip{border-left-color:var(--surface);
-  background:repeating-linear-gradient(135deg,
-    color-mix(in srgb, var(--fr) 70%, transparent) 0 5px, transparent 5px 10px),
-    color-mix(in srgb, var(--fr) 18%, transparent)}
+/* Vue « 5 dernières saisons ». La barre porte les cinq saisons dans la couleur
+   de la nation — la même que dans les blocs 3 à 6, pour qu'une couleur veuille
+   dire la même chose partout sur la page.
+   Les quatre saisons closes sont en teinte pâle, la saison en cours en pleine
+   couleur : l'acquis devient un fond calme et l'œil va droit au seul segment qui
+   bougera encore. C'est l'inverse de la hiérarchie habituelle, et c'est voulu
+   sur une page republiée deux fois par jour.
+   Les quatre closes sont séparées par un filet clair et se révèlent au survol,
+   comme les segments du bloc 2a. */
+.barrow .yseg{height:100%; box-shadow:inset -1px 0 0 var(--surface); transition:filter .08s}
+.barrow .yseg:last-child{box-shadow:none}
+.barrow .yseg.on{filter:brightness(1.12) saturate(1.15)}
+.barrow .yseg.wip{box-shadow:inset 2px 0 0 var(--surface)}
 .barrow .seg{height:100%; box-shadow:inset -2px 0 0 var(--surface)}
 .barrow .seg:last-child{box-shadow:none}
 /* découpe club par club à l'intérieur d'une compétition : un filet clair, jamais
@@ -223,6 +228,7 @@ section > .panel + .panel{margin-top:14px}
 .barrow .cseg.kend{box-shadow:inset -3px 0 0 var(--surface)}
 .barrow .cseg:last-child{box-shadow:none}
 .barrow .track{cursor:crosshair}
+.barswrap .barrow .track{cursor:crosshair}
 .barrow .cseg.on{filter:brightness(1.15) saturate(1.2)}
 .barswrap{position:relative}
 .barrow.me .fill{background:var(--fr)}
@@ -321,7 +327,7 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
   <div class="panel">
     <div class="ptitle"><span class="no">1</span><h3>Le classement</h3>
       <span class="sub"><span class="seg" role="group" aria-label="Période"><button type="button" id="p-season" aria-pressed="true">Saison en cours</button><button type="button" id="p-five" aria-pressed="false">5 dernières saisons</button></span></span></div>
-    <div class="bars" id="bars"></div>
+    <div class="barswrap"><div class="bars" id="bars"></div><div class="tip" id="tipY" hidden></div></div>
     <p class="figc" id="barNote"></p>
   </div>
 
@@ -1031,25 +1037,62 @@ function drawBars(){
     return `<div class="barrow${c==='FRA'?' me':''}">
       <div class="nm"><span class="rk">${i+1}.</span><b>${name(c)}</b></div>
       <div class="cnt num">${n.a[0]}·${n.a[1]}·${n.a[2]}</div>
-      <div class="track">${isS
+      <div class="track" data-nat="${c}">${isS
         ? `<div class="fill" style="width:${(val(c)/max*100).toFixed(1)}%"></div>`
-        : `<div class="fill" style="width:${((n.t-n.y[4])/max*100).toFixed(1)}%" title="Quatre saisons closes : ${nf(n.t-n.y[4])}"></div>`
-          + `<div class="fill-wip" style="width:${(n.y[4]/max*100).toFixed(1)}%" title="Saison ${D.meta.season}, en cours : ${nf(n.y[4])}"></div>`}</div>
+        : n.y.map((v, yi) => { const C = `var(${SLOT[c] || '--ink-3'})`, wip = yi === 4;
+            return `<div class="yseg${wip ? ' wip' : ''}" data-y="${yi}" style="width:${(v/max*100).toFixed(1)}%;`
+              + `background:${wip ? C : `color-mix(in srgb, ${C} 38%, var(--surface-2))`}"></div>`;
+          }).join('')}</div>
       <div class="val num">${nf(val(c))}</div>
       <div class="split num">${isS?`sur ${divisor(n)} clubs engagés`:`${nf(n.t-n.y[4],2)} acquis + ${nf(n.y[4],2)} en cours`}</div>
     </div>`;}).join('');
   const posS=[...TOP8].sort((x,y)=>seasonNow(y)-seasonNow(x)).indexOf('FRA')+1;
   const leg = isS ? '' :
     `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px">`
-    + `<i style="width:16px;height:10px;border-radius:2px;background:var(--ink-3);display:inline-block"></i>quatre saisons closes</span>`
-    + `<span style="display:inline-flex;align-items:center;gap:6px">`
-    + `<i style="width:16px;height:10px;border-radius:2px;display:inline-block;background:`
-    + `repeating-linear-gradient(135deg,color-mix(in srgb,var(--ink-3) 62%,transparent) 0 5px,transparent 5px 10px),`
-    + `color-mix(in srgb,var(--ink-3) 16%,transparent)"></i>saison ${D.meta.season}, en cours</span><br>`;
+    + `<i style="width:26px;height:10px;border-radius:2px;display:inline-block;`
+    + `background:color-mix(in srgb,var(--ink-3) 38%,var(--surface-2))"></i>quatre saisons closes</span>`
+    + `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px">`
+    + `<i style="width:12px;height:10px;border-radius:2px;display:inline-block;background:var(--ink-3)"></i>saison ${D.meta.season}, en cours</span>`
+    + `<span style="color:var(--ink-3)">— survolez une barre pour le détail saison par saison</span><br>`;
   document.getElementById('barNote').innerHTML = leg + (isS
     ? `Coefficient acquis depuis le 1<sup>er</sup> juillet. La France est ${posS}<sup>e</sup> des huit — mais à ce stade ce classement dépend surtout du nombre de clubs déjà entrés en lice, colonne « C1·C3·C4 » : les nations dont les clubs ont disputé les qualifications de juillet ont plusieurs semaines d'avance sur celles qui n'entrent qu'en phase de ligue.`
-    : `Somme des cinq dernières saisons — <b>c'est ce total qui fixe les places européennes</b>, et c'est pourquoi la page s'ouvre dessus. La partie pleine est acquise : quatre saisons closes que plus aucun résultat ne changera. La partie hachurée est la saison en cours, seule à bouger encore — elle ne pèse pour l'instant que ${nf(BY.FRA.y[4]/BY.FRA.t*100,1)} % du total français. Le rang du jour se lit ici ; la saison en cours, elle, se regarde dans l'autre onglet et dans les blocs suivants.`);
+    : `Somme des cinq dernières saisons — <b>c'est ce total qui fixe les places européennes</b>, et c'est pourquoi la page s'ouvre dessus. Les quatre segments pâles sont acquis : des saisons closes que plus aucun résultat ne changera. Le segment vif, en bout de barre, est la saison en cours — seule à bouger encore, et pour l'instant seulement ${nf(BY.FRA.y[4]/BY.FRA.t*100,1)} % du total français. Le rang du jour se lit ici ; la saison en cours, elle, se regarde dans l'autre onglet et dans les blocs suivants. Chaque barre se lit aussi saison par saison au survol.`);
 }
+/* Infobulle saison par saison, calquée sur celle du bloc 2a : même repérage du
+   segment survolé, même mise en avant par filtre, même positionnement. Une seule
+   mécanique d'infobulle à connaître sur toute la page.
+   Elle donne aussi le poids relatif de chaque saison : c'est la question qu'on se
+   pose en la survolant — « combien pèse celle-là dans le total ? ». */
+(function(){
+  const wrap = document.getElementById('bars'), tip = document.getElementById('tipY');
+  if (!wrap || !tip) return;
+  let last = null;
+  const hide = () => { tip.hidden = true; if (last) { last.classList.remove('on'); last = null; } };
+  wrap.addEventListener('mouseleave', hide);
+  wrap.addEventListener('mousemove', ev => {
+    const seg = ev.target.closest('.yseg');
+    if (!seg) { hide(); return; }
+    if (seg !== last) { if (last) last.classList.remove('on'); seg.classList.add('on'); last = seg; }
+    const c = seg.closest('.track').dataset.nat, n = BY[c], chaud = +seg.dataset.y;
+    const C = `var(${SLOT[c] || '--ink-3'})`;
+    tip.innerHTML = `<div class="th">${name(c)} · ${nf(n.t)} sur cinq saisons</div>`
+      + n.y.map((v, yi) => {
+          const wip = yi === 4;
+          const pastille = `<i style="background:${wip ? C : `color-mix(in srgb, ${C} 38%, var(--surface-2))`}"></i>`;
+          return `<div class="tr" style="${yi === chaud ? '' : 'opacity:.55'}">${pastille}`
+            + `<span class="nm"${yi === chaud ? ' style="color:var(--ink);font-weight:600"' : ''}>${SEASONS[yi]}`
+            + (wip ? ' <span style="color:var(--ink-3)">en cours</span>' : '') + `</span>`
+            + `<b>${nf(v, 2)}</b>`
+            + `<s style="color:var(--ink-3)">${nf(v / n.t * 100, 1)} %</s></div>`;
+        }).join('');
+    tip.hidden = false;
+    const br = wrap.getBoundingClientRect();
+    const tw = tip.offsetWidth || 240, th = tip.offsetHeight || 150;
+    const px = ev.clientX - br.left, py = ev.clientY - br.top;
+    tip.style.left = Math.max(4, Math.min(br.width - tw - 4, px + 16)) + 'px';
+    tip.style.top  = Math.max(4, Math.min(br.height - th - 4, py - th / 2)) + 'px';
+  });
+})();
 document.getElementById('p-season').onclick=()=>{period='season';syncP();};
 document.getElementById('p-five').onclick  =()=>{period='five';  syncP();};
 function syncP(){ document.getElementById('p-season').setAttribute('aria-pressed',period==='season');
