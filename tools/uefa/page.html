@@ -499,7 +499,7 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
     <p>Le classement du jour ne dit pas où l'on atterrit. Voici, pour chaque nation du groupe, l'intervalle dans lequel son coefficient de saison peut encore se déplacer d'ici la fin de la phase de ligue — et ce qui est déjà hors d'atteinte.</p>
   </div>
   <div class="panel">
-    <div class="ptitle"><span class="no">8</span><h3>La fourchette</h3>
+    <div class="ptitle"><span class="no">8</span><h3>La projection</h3>
       <span class="sub"><span class="ctl"><span class="lb">Horizon</span><span class="seg" role="group" aria-label="Horizon">
         <button type="button" id="h-ligue" aria-pressed="true">Fin de phase de ligue</button><button type="button" id="h-saison" aria-pressed="false">Fin de saison</button></span></span></span></div>
     <figure>
@@ -2198,6 +2198,17 @@ const legende = segs => segs.map(s =>
   const JTOT = [8, 8, 6];                    // journées de phase de ligue par compétition
   const KOBON = [1.5, 1, 0.5];               // bonus par tour de phase finale atteint
   const BETA = 1.15, GAMMA = 1.10, PNUL = 0.24, NSIM = 1200;
+  /* Poids de la saison en cours dans la force d'un club.
+     Première version : zéro. La force valait le coefficient à cinq ans, point,
+     et ce que le pays faisait CETTE saison n'entrait nulle part — une nation qui
+     venait de perdre ses six premiers matchs était projetée comme si de rien.
+     Un poids fixe (« 30 % saison, 70 % historique ») serait faux aux deux bouts :
+     en septembre la saison en cours ne pèse que six matchs, en janvier elle en
+     pèse cinquante. Le poids suit donc l'échantillon, w = m / (m + KPSEUDO), avec
+     KPSEUDO calé pour que la saison en cours vaille la moitié une fois la phase
+     de ligue terminée. En clair : aujourd'hui elle compte pour une dizaine de
+     pour cent, en janvier pour la moitié. */
+  const KPSEUDO = 56;
 
   /* Barème de classement de phase de ligue (2024/25 →) : les places 24 à 1
      rapportent 0,25 point par rang gravi en C1 et en C3 ; en C4, 0,125 de la 24e
@@ -2228,20 +2239,45 @@ const legende = segs => segs.map(s =>
        renormalisé à une moyenne de 1. Ce n'est pas cosmétique — un match distribue
        toujours exactement deux points, donc la moyenne par club EST 1, et sans
        cette contrainte le modèle inventerait ou perdrait des points. */
-    const E = CH.map((cl, k) => { const f = F[k], fb = f.reduce((a,b)=>a+b,0) / f.length;
-      const e = f.map(x => 2 * sig(BETA * (x - fb)));
+    /* Rendement attendu par match, en deux temps.
+       1. L'a priori : logistique sur l'écart de force au champ de la compétition.
+       2. Le mélange avec ce que la nation fait RÉELLEMENT cette saison en phase
+          de ligue, pondéré par le nombre de matchs déjà joués. Un pays à deux
+          matchs ne prouve rien, un pays à cinquante a prouvé quelque chose.
+       Puis renormalisation à une moyenne de 1 : un match distribue toujours
+       exactement deux points, donc la moyenne par club EST 1. Sans cette
+       contrainte le modèle inventerait ou perdrait des points à chaque journée. */
+    const E = CH.map((cl, k) => {
+      const f = F[k], fb = f.reduce((a,b)=>a+b,0) / f.length;
+      const e = f.map((x, i) => {
+        const apriori = 2 * sig(BETA * (x - fb));
+        const c = cl[i], m = matchs(c);
+        if (!m) return apriori;
+        const obs = part(c).ligue * divisor(BY[c]) / m;     // points par match, observés
+        const w = m / (m + KPSEUDO);
+        return (1 - w) * apriori + w * obs;
+      });
       const s = e.reduce((a,b)=>a+b,0) / e.length; return e.map(x => x / s); });
     const PW = E.map(e => e.map(x => Math.max(0, (x - PNUL) / 2)));
 
     const codes = N.filter(n => engages(n) > 0).map(n => n.c);
-    const tir = Object.fromEntries(codes.map(c => [c, new Float64Array(NSIM)]));
+    const tir   = Object.fromEntries(codes.map(c => [c, new Float64Array(NSIM)]));
+    /* Deux relevés par tirage, pas un. `ligue` arrête le compteur à la fin de la
+       phase de ligue — bonus de classement compris, puisqu'il est acquis à ce
+       moment-là — et `tir` va jusqu'au bout de la saison. Les deux horizons du
+       graphe sortent ainsi du même tirage, donc du même modèle : avant, l'un
+       était une simulation et l'autre une fourchette de rendement bricolée, et
+       les deux ne se comparaient pas. */
+    const ligue = Object.fromEntries(codes.map(c => [c, new Float64Array(NSIM)]));
     const ctrl = { koM: [0,0,0], ko: [0,0,0], rb: [0,0,0] };
 
     for (let s = 0; s < NSIM; s++) {
-      const gain = {};
+      const gain = {}, gainL = {};              // tout / arrêté à la fin de la phase de ligue
       for (let k = 0; k < 3; k++) {
         const cl = CH[k], f = F[k], pw = PW[k], nj = JTOT[k], reste = nj - jouees(k);
-        const add = (i, v) => { gain[cl[i]] = (gain[cl[i]] || 0) + v; };
+        const add  = (i, v) => { gain[cl[i]] = (gain[cl[i]] || 0) + v; };
+        const addL = (i, v) => { addL0(i, v); add(i, v); };
+        const addL0 = (i, v) => { gainL[cl[i]] = (gainL[cl[i]] || 0) + v; };
         const match = i => { const u = rnd(); return u < pw[i] ? 2 : (u < pw[i] + PNUL ? 1 : 0); };
         /* Deux tirages distincts, et c'est voulu :
            - une phase de ligue COMPLÈTE sert à classer les 36 clubs, donc à
@@ -2250,9 +2286,9 @@ const legende = segs => segs.map(s =>
              journées déjà jouées sont dans les chiffres acquis.
            Mélanger les deux double-compterait la journée du 8 septembre. */
         const pts = cl.map((_, i) => { let p = 0; for (let j = 0; j < nj; j++) p += match(i); return p; });
-        for (let i = 0; i < cl.length; i++) { let p = 0; for (let j = 0; j < reste; j++) p += match(i); add(i, p); }
+        for (let i = 0; i < cl.length; i++) { let p = 0; for (let j = 0; j < reste; j++) p += match(i); addL(i, p); }
         const ord = [...cl.keys()].sort((a, b) => (pts[b] - pts[a]) || (f[b] - f[a]) || (rnd() - 0.5));
-        ord.forEach((i, r) => { const v = rankBonus(k, r + 1); add(i, v); ctrl.rb[k] += v; });
+        ord.forEach((i, r) => { const v = rankBonus(k, r + 1); addL(i, v); ctrl.rb[k] += v; });
         /* Un tour de phase finale : les manches sont jouées, chacune distribue ses
            deux points, et le qualifié est celui qui en a pris le plus. Rien n'est
            plaqué par-dessus, donc le total du tour est juste par construction. */
@@ -2276,7 +2312,10 @@ const legende = segs => segs.map(s =>
           lot = duel(lot, t === 3 ? 1 : 2);
         }
       }
-      for (const c of codes) tir[c][s] = (BY[c].tp + (gain[c] || 0)) / engages(BY[c]);
+      for (const c of codes) {
+        ligue[c][s] = (BY[c].tp + (gainL[c] || 0)) / engages(BY[c]);
+        tir[c][s]   = (BY[c].tp + (gain[c]  || 0)) / engages(BY[c]);
+      }
     }
     /* Contrôles de conservation. Un modèle qui invente des points ne se voit pas à
        l'œil : 45 matchs de phase finale par compétition, donc 90 points ; 30
@@ -2287,138 +2326,145 @@ const legende = segs => segs.map(s =>
       const v = ctrl[f][k] / NSIM;
       if (Math.abs(v - attendu[f][k]) > 0.01) ecarts.push(`${f} C${[1,3,4][k]} ${nf(v,2)} ≠ ${attendu[f][k]}`);
     }
-    SIMS = { tir, codes, ecarts };
+    const mFRA = matchs('FRA');
+    SIMS = { tir, ligue, codes, ecarts, wFRA: mFRA / (mFRA + KPSEUDO), mFRA };
     return SIMS;
   }
   const quant = (a, p) => { const v = Float64Array.from(a).sort(); return v[Math.min(v.length - 1, Math.floor(p * v.length))]; };
-    const SWING = 0.5;
     let horizon = 'ligue';
 
-    /* Deux horizons, deux modèles. Fin de phase de ligue : une fourchette de
-       rendement, aucune simulation, rien d'inventé. Fin de saison : le modèle
-       ci-dessus, avec ses hypothèses et sa part de hasard — d'où des quantiles
-       plutôt qu'une fourchette, et un vocabulaire différent. */
-    const rowsLigue = () => GRP.map(c => {
-      const acq = BY[c].y[4], d = div(c), m = matchs(c), r = matchsRestants(c);
-      const rdt = m ? part(c).ligue * d / m : 0;
-      const lo = Math.max(0, rdt - SWING), hi = Math.min(2, rdt + SWING);
-      return { c, acq, rdt, r,
-               bas: acq + lo * r / d, cen: acq + rdt * r / d, haut: acq + hi * r / d,
-               min: acq, max: acq + 2 * r / d };
-    }).sort((a, b) => b.cen - a.cen);
+    /* Les deux horizons sortent maintenant du MÊME tirage, et se lisent avec le
+       même vocabulaire : cinq quantiles.
 
-    const rowsSaison = () => { const S = simule(); if (!S.tir) return [];
-      return GRP.filter(c => S.tir[c]).map(c => {
-        const t = S.tir[c], acq = BY[c].y[4];
-        return { c, acq, r: matchsRestants(c), rdt: null,
-                 bas: quant(t, .10), cen: quant(t, .50), haut: quant(t, .90),
-                 min: quant(t, .01), max: quant(t, .99) };
+       Ce que l'ancienne version montrait, et qui prêtait à confusion : le repère
+       de gauche était le coefficient DÉJÀ ACQUIS — un plancher à 100 %, pas un
+       quantile bas ; les deux bornes étaient « le rendement actuel ± 0,5 point
+       par match », un écart choisi à la main auquel aucune probabilité n'était
+       attachée ; et le rond n'était pas une médiane mais une extrapolation du
+       rythme observé. Trois repères, trois natures différentes, aucune loi de
+       probabilité derrière. C'est réparé : tout ce qui suit est lu dans la
+       distribution simulée. */
+    const Q = [.05, .20, .50, .80, .95];
+    const lignes = (tirages) => { const S = simule(); if (!S[tirages]) return [];
+      return GRP.filter(c => S[tirages][c]).map(c => {
+        const t = S[tirages][c], q = Q.map(p => quant(t, p));
+        return { c, acq: BY[c].y[4], r: matchsRestants(c),
+                 p05: q[0], p20: q[1], cen: q[2], p80: q[3], p95: q[4] };
       }).sort((a, b) => b.cen - a.cen); };
 
     function dessine(){
-    const rows = horizon === 'ligue' ? rowsLigue() : rowsSaison();
+    const rows = lignes(horizon === 'ligue' ? 'ligue' : 'tir');
     if (!rows.length) return;
-    const W = 1000, rowH = 36, mT = 40, mB = 34, mL = 96, mR = 156;
+    const W = 1000, rowH = 36, mT = 44, mB = 34, mL = 96, mR = 176;
     const H = mT + rows.length * rowH + mB;
-    const loV = Math.min(...rows.map(r => r.acq)) * 0.92;
-    const hiV = Math.max(...rows.map(r => r.haut)) * 1.03;
-    const sc = niceScale(loV, hiV, 6);
+    const loV = Math.min(...rows.map(r => Math.min(r.acq, r.p05))) * 0.94;
+    const hiV = Math.max(...rows.map(r => r.p95)) * 1.03;
+    const sc = niceScale(loV, hiV, 9)   /* 9 intervalles : à 6, le pas tombait sur 5 et l'axe courait jusqu'à 25 pour un maximum de 21 */;
     const X = v => mL + (W - mL - mR) * ((v - sc.lo) / (sc.hi - sc.lo));
     let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
     sc.ticks.forEach(v => s += `<line x1="${X(v).toFixed(1)}" y1="${mT - 8}" x2="${X(v).toFixed(1)}" y2="${H - mB + 4}" stroke="var(--rule-soft)"/>`
       + `<text x="${X(v).toFixed(1)}" y="${H - mB + 20}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${nf(v, sc.dec)}</text>`);
-    s += `<text x="${mL}" y="${mT - 16}" font-size="11" font-weight="600" fill="var(--ink-3)">${horizon === 'ligue'
-      ? 'coefficient de saison à la fin de la phase de ligue — fourchette'
-      : 'coefficient de saison en fin de saison, phase finale comprise — 8 tirages sur 10'}</text>`;
+    s += `<text x="${mL}" y="${mT - 18}" font-size="11" font-weight="600" fill="var(--ink-3)">coefficient de saison ${horizon === 'ligue'
+      ? 'à la fin de la phase de ligue' : 'en fin de saison, phase finale comprise'}</text>`;
     /* La question n'est pas « où finit la France » mais « qui peut encore la
-       doubler ». La bande verticale matérialise son intervalle : toute nation
-       dont la barre la recoupe est encore à sa portée, dans les deux sens. */
+       doubler ». La bande verticale matérialise son intervalle à 60 % : toute
+       nation dont la barre épaisse la recoupe est encore à sa portée. */
     const FR = rows.find(r => r.c === 'FRA');
     if (FR) {
-      s += `<rect x="${X(FR.bas).toFixed(1)}" y="${(mT - 6).toFixed(1)}" width="${(X(FR.haut) - X(FR.bas)).toFixed(1)}" height="${(H - mB - mT + 10).toFixed(1)}" fill="var(--fr)" opacity=".07"/>`;
-      s += `<line x1="${X(FR.bas).toFixed(1)}" y1="${(mT - 6).toFixed(1)}" x2="${X(FR.bas).toFixed(1)}" y2="${(H - mB + 4).toFixed(1)}" stroke="var(--fr)" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>`;
-      s += `<line x1="${X(FR.haut).toFixed(1)}" y1="${(mT - 6).toFixed(1)}" x2="${X(FR.haut).toFixed(1)}" y2="${(H - mB + 4).toFixed(1)}" stroke="var(--fr)" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>`;
-      s += `<text x="${((X(FR.bas) + X(FR.haut)) / 2).toFixed(1)}" y="${(mT - 16).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--fr)">portée de la France</text>`;
+      s += `<rect x="${X(FR.p20).toFixed(1)}" y="${(mT - 6).toFixed(1)}" width="${(X(FR.p80) - X(FR.p20)).toFixed(1)}" height="${(H - mB - mT + 10).toFixed(1)}" fill="var(--fr)" opacity=".07"/>`;
+      [FR.p20, FR.p80].forEach(v => s += `<line x1="${X(v).toFixed(1)}" y1="${(mT - 6).toFixed(1)}" x2="${X(v).toFixed(1)}" y2="${(H - mB + 4).toFixed(1)}" stroke="var(--fr)" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>`);
+      s += `<text x="${((X(FR.p20) + X(FR.p80)) / 2).toFixed(1)}" y="${(mT - 18).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--fr)">portée de la France</text>`;
     }
     rows.forEach((r, i) => {
       const y = mT + i * rowH + rowH / 2, fr = r.c === 'FRA';
       const c0 = col(r.c);
+      const tt = `${name(r.c)} · médiane ${nf(r.cen, 2)} · 3 tirages sur 5 entre ${nf(r.p20, 2)} et ${nf(r.p80, 2)}`
+        + ` · 9 sur 10 entre ${nf(r.p05, 2)} et ${nf(r.p95, 2)} · acquis ${nf(r.acq, 3)}`;
       s += `<text x="${mL - 10}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="12.5" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${name(r.c)}</text>`;
-      /* trait fin entre l'acquis et le bas de la fourchette : sans lui, le repère
+      /* trait fin entre l'acquis et le premier quantile : sans lui, le repère
          d'acquis flotte tout seul à gauche et ressemble à un bug d'affichage. */
-      s += `<line x1="${X(r.acq).toFixed(1)}" y1="${y.toFixed(1)}" x2="${X(r.bas).toFixed(1)}" y2="${y.toFixed(1)}" stroke="${c0}" stroke-width="1.5" opacity=".35" stroke-dasharray="2 3"/>`;
-      s += `<line x1="${X(r.bas).toFixed(1)}" y1="${y.toFixed(1)}" x2="${X(r.haut).toFixed(1)}" y2="${y.toFixed(1)}" stroke="${c0}" stroke-width="${fr ? 13 : 10}" opacity=".3" stroke-linecap="round"><title>${name(r.c)} · ${horizon === 'ligue'
-        ? `fourchette plausible ${nf(r.bas, 2)} – ${nf(r.haut, 2)} (rendement actuel ${nf(r.rdt, 2)} ± 0,5 pt/match) · extrêmes théoriques ${nf(r.min, 2)} – ${nf(r.max, 2)}`
-        : `8 tirages sur 10 entre ${nf(r.bas, 2)} et ${nf(r.haut, 2)} · médiane ${nf(r.cen, 2)} · 98 % entre ${nf(r.min, 2)} et ${nf(r.max, 2)}`}</title></line>`;
-      s += `<line x1="${X(r.bas).toFixed(1)}" y1="${(y - 8).toFixed(1)}" x2="${X(r.bas).toFixed(1)}" y2="${(y + 8).toFixed(1)}" stroke="${c0}" stroke-width="1.6" opacity=".7"/>`;
-      s += `<line x1="${X(r.haut).toFixed(1)}" y1="${(y - 8).toFixed(1)}" x2="${X(r.haut).toFixed(1)}" y2="${(y + 8).toFixed(1)}" stroke="${c0}" stroke-width="1.6" opacity=".7"/>`;
-      s += `<circle cx="${X(r.cen).toFixed(1)}" cy="${y.toFixed(1)}" r="${fr ? 6 : 5}" fill="${c0}" stroke="var(--surface)" stroke-width="1.5"><title>${name(r.c)} · ${horizon === 'ligue' ? `${nf(r.cen, 2)} si le rythme actuel se prolonge` : `médiane ${nf(r.cen, 2)}`}</title></circle>`;
-      s += `<text x="${(X(r.haut) + 10).toFixed(1)}" y="${(y + 4).toFixed(1)}" font-size="11.5" font-weight="${fr ? 700 : 500}" font-family="IBM Plex Mono, monospace" fill="${fr ? 'var(--fr)' : 'var(--ink-3)'}">${nf(r.bas, 1)}–${nf(r.haut, 1)}</text>`;
-      /* nombre de matchs restants : c'est lui qui explique la largeur de la
-         fourchette, et il diffère beaucoup d'une nation à l'autre. */
+      s += `<line x1="${X(r.acq).toFixed(1)}" y1="${y.toFixed(1)}" x2="${X(r.p05).toFixed(1)}" y2="${y.toFixed(1)}" stroke="${c0}" stroke-width="1.5" opacity=".3" stroke-dasharray="2 3"/>`;
+      /* Éventail à cinq repères, du plus large au plus étroit : le trait fin va
+         du 5e au 95e centile, la barre épaisse du 20e au 80e, le disque est la
+         médiane. Une seule famille de repères, une seule lecture. */
+      s += `<line x1="${X(r.p05).toFixed(1)}" y1="${y.toFixed(1)}" x2="${X(r.p95).toFixed(1)}" y2="${y.toFixed(1)}" stroke="${c0}" stroke-width="${fr ? 5 : 4}" opacity=".22" stroke-linecap="round"><title>${tt}</title></line>`;
+      s += `<line x1="${X(r.p20).toFixed(1)}" y1="${y.toFixed(1)}" x2="${X(r.p80).toFixed(1)}" y2="${y.toFixed(1)}" stroke="${c0}" stroke-width="${fr ? 15 : 12}" opacity=".34" stroke-linecap="round"><title>${tt}</title></line>`;
+      [[r.p05, 7], [r.p95, 7]].forEach(([v, h]) => s += `<line x1="${X(v).toFixed(1)}" y1="${(y - h).toFixed(1)}" x2="${X(v).toFixed(1)}" y2="${(y + h).toFixed(1)}" stroke="${c0}" stroke-width="1.4" opacity=".55"/>`);
+      [[r.p20, 9], [r.p80, 9]].forEach(([v, h]) => s += `<line x1="${X(v).toFixed(1)}" y1="${(y - h).toFixed(1)}" x2="${X(v).toFixed(1)}" y2="${(y + h).toFixed(1)}" stroke="${c0}" stroke-width="1.8" opacity=".85"/>`);
+      s += `<circle cx="${X(r.cen).toFixed(1)}" cy="${y.toFixed(1)}" r="${fr ? 6 : 5}" fill="${c0}" stroke="var(--surface)" stroke-width="1.5"><title>${tt}</title></circle>`;
+      s += `<text x="${(X(r.p95) + 10).toFixed(1)}" y="${(y + 4).toFixed(1)}" font-size="11.5" font-weight="${fr ? 700 : 500}" font-family="IBM Plex Mono, monospace" fill="${fr ? 'var(--fr)' : 'var(--ink-3)'}">${nf(r.cen, 1)}</text>`;
       s += `<text x="${(W - 6).toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="10.5" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)" opacity=".85">${horizon === 'ligue' ? `${r.r} m.` : `${nf(BY[r.c].t - r.acq + r.cen, 1)}`}</text>`;
       /* repère : le coefficient déjà acquis, qu'aucun scénario ne peut reprendre */
-      s += `<line x1="${X(r.acq).toFixed(1)}" y1="${(y - 11).toFixed(1)}" x2="${X(r.acq).toFixed(1)}" y2="${(y + 11).toFixed(1)}" stroke="${c0}" stroke-width="2" opacity=".8"><title>${name(r.c)} · ${nf(r.acq, 3)} déjà acquis</title></line>`;
+      s += `<line x1="${X(r.acq).toFixed(1)}" y1="${(y - 11).toFixed(1)}" x2="${X(r.acq).toFixed(1)}" y2="${(y + 11).toFixed(1)}" stroke="${c0}" stroke-width="2" opacity=".8"><title>${name(r.c)} · ${nf(r.acq, 3)} déjà acquis, plancher garanti</title></line>`;
     });
     document.getElementById('chartPrj').outerHTML = (s + '</svg>').replace('<svg', '<svg id="chartPrj"');
     const fr = rows.find(r => r.c === 'FRA');
-    if (horizon === 'saison') { capSaison(rows, fr); return; }
-    document.getElementById('capPrj').innerHTML =
-      `<p style="margin:0 0 8px">
-         <span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px"><i style="width:3px;height:13px;background:var(--ink-3);display:inline-block"></i>déjà acquis, et le minimum garanti d'ici janvier</span>
-         <span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px"><i style="width:18px;height:7px;border-radius:4px;background:var(--ink-3);opacity:.35;display:inline-block"></i>fourchette plausible en fin de phase de ligue</span>
-         <span style="display:inline-flex;align-items:center;gap:5px"><i style="width:9px;height:9px;border-radius:50%;background:var(--ink-3);display:inline-block"></i>si le rendement actuel se prolonge</span></p>`
-      + `Une fourchette, pas une prédiction — et une hypothèse assumée : chaque nation est supposée finir la phase de ligue `
-      + `avec un rendement compris entre son rendement actuel <b>moins</b> et <b>plus</b> 0,5 point par match, borné à l'intervalle réel de 0 à 2. `
-      + `Borner par les extrêmes mathématiques (zéro point / tous les matchs gagnés) donnait la même barre à tout le monde et ne disait plus rien ; `
-      + `ces extrêmes restent lisibles au survol. `
-      + (fr ? `La France, qui a ${fr.r} matchs à jouer, finirait ainsi entre <b>${nf(fr.bas, 2)}</b> et <b>${nf(fr.haut, 2)}</b> — un intervalle de ${nf(fr.haut - fr.bas, 1)} point, `
-             + `c'est-à-dire que <b>rien n'est joué</b>. ` : '')
-      + (fr ? (() => {
-          /* La vraie question n'est pas « où finit la France » mais « qui reste
-             à sa portée ». Deux fourchettes qui se recoupent = ordre encore
-             indécis ; deux qui ne se touchent pas = écart déjà hors d'atteinte. */
-          const croise = rows.filter(r => r.c !== 'FRA' && r.haut >= fr.bas && r.bas <= fr.haut);
-          const dessus = rows.filter(r => r.bas > fr.haut), dessous = rows.filter(r => r.haut < fr.bas);
-          return `<b>Ce qu'il faut y lire :</b> la bande bleue est la portée de la France. `
-            + (croise.length ? `${croise.length} nation${croise.length > 1 ? 's' : ''} du groupe la recoupe${croise.length > 1 ? 'nt' : ''} — ${croise.map(r => name(r.c)).join(', ')} — `
-                + `l'ordre entre elles et nous n'est donc pas encore décidé. ` : `Aucune nation du groupe ne la recoupe. `)
-            + (dessus.length ? `${dessus.map(r => name(r.c)).join(', ')} ${dessus.length > 1 ? 'restent hors' : 'reste hors'} d'atteinte d'ici janvier. ` : '')
-            + (dessous.length ? `${dessous.map(r => name(r.c)).join(', ')} ne peu${dessous.length > 1 ? 'vent' : 't'} plus la rattraper sur cette phase. ` : '');
-        })() : '')
-      + `<b>Ce qui n'est pas simulé :</b> la phase finale, dont on ignore les qualifiés et qui pèse lourd. La fourchette ci-dessus s'arrête à la fin janvier.`;
+    const S = simule();
+    const tirages = horizon === 'ligue' ? 'ligue' : 'tir';
 
-    function capSaison(rows, fr){
-      const S = simule();
+    /* Une seule légende pour les deux horizons : les repères sont les mêmes. */
+    const jeton = (w, h, o, rd) => `<i style="width:${w}px;height:${h}px;${rd ? 'border-radius:' + rd + ';' : ''}background:var(--ink-3);opacity:${o};display:inline-block"></i>`;
+    const leg = `<p style="margin:0 0 8px">`
+      + `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">${jeton(3,13,.9)}acquis — plancher garanti</span>`
+      + `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">${jeton(22,5,.22,'3px')}9 tirages sur 10 &nbsp;(5<sup>e</sup>–95<sup>e</sup> centile)</span>`
+      + `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">${jeton(22,11,.34,'5px')}3 tirages sur 5 &nbsp;(20<sup>e</sup>–80<sup>e</sup>)</span>`
+      + `<span style="display:inline-flex;align-items:center;gap:5px">${jeton(9,9,1,'50%')}médiane`
+      + (horizon === 'saison' ? ` · colonne de droite : total à 5 ans projeté` : ` · colonne de droite : matchs restants`) + `</span></p>`;
+
+    /* Le poids réellement donné à la saison en cours, écrit en clair : c'est la
+       première question qu'on se pose devant une projection, et la réponse bouge
+       à chaque journée. */
+    const poids = `<b>Ce qui nourrit le modèle.</b> La force d'un club est pour l'instant celle de son championnat — le logarithme du coefficient à cinq ans de son association — corrigée par ce que la nation fait réellement cette saison en phase de ligue. `
+      + `Le poids de la saison en cours n'est pas fixé à l'avance : il suit l'échantillon, w = m / (m + ${KPSEUDO}) où m est le nombre de matchs de phase de ligue déjà joués par la nation. `
+      + `Pour la France, ${S.mFRA} match${S.mFRA > 1 ? 's' : ''} joué${S.mFRA > 1 ? 's' : ''} : la saison en cours pèse <b>${Math.round((S.wFRA||0)*100)} %</b>, l'historique ${100 - Math.round((S.wFRA||0)*100)} %. `
+      + `En fin de phase de ligue ce sera moitié-moitié. Un poids fixe serait faux aux deux bouts. `;
+
+    if (horizon === 'saison') { capSaison(rows, fr, leg, poids, S); return; }
+
+    const croise  = fr ? rows.filter(r => r.c !== 'FRA' && r.p80 >= fr.p20 && r.p20 <= fr.p80) : [];
+    const dessus  = fr ? rows.filter(r => r.p20 > fr.p80) : [];
+    const dessous = fr ? rows.filter(r => r.p80 < fr.p20) : [];
+    document.getElementById('capPrj').innerHTML = leg
+      + `<b>Cinq repères, tous tirés de la même simulation</b> : le 5<sup>e</sup> et le 95<sup>e</sup> centile aux extrémités du trait fin, le 20<sup>e</sup> et le 80<sup>e</sup> aux bouts de la barre épaisse, la médiane au disque. `
+      + `Lecture : une nation a une chance sur vingt de finir sous son trait fin gauche, une sur vingt de finir au-dessus du droit, et trois chances sur cinq d'atterrir dans la barre épaisse. `
+      + `Le trait vertical isolé, à gauche, n'est pas un quantile : c'est le coefficient <b>déjà acquis</b>, que plus aucun résultat ne peut reprendre. `
+      + `Cet horizon s'arrête à la fin de la phase de ligue, bonus de classement compris — il est acquis à ce moment-là. `
+      + poids
+      + (fr ? `<b>La France</b>, qui a ${fr.r} matchs de phase de ligue à jouer : médiane <b>${nf(fr.cen, 2)}</b>, trois tirages sur cinq entre ${nf(fr.p20, 2)} et ${nf(fr.p80, 2)}, neuf sur dix entre ${nf(fr.p05, 2)} et ${nf(fr.p95, 2)}. ` : '')
+      + (fr ? `<b>Ce qu'il faut y lire :</b> la bande bleue est la portée de la France, son intervalle à 60 %. `
+            + (croise.length ? `${croise.length} nation${croise.length > 1 ? 's' : ''} la recoupe${croise.length > 1 ? 'nt' : ''} — ${croise.map(r => name(r.c)).join(', ')} — l'ordre entre elles et nous n'est pas décidé. ` : `Aucune nation du groupe ne la recoupe. `)
+            + (dessus.length ? `${dessus.map(r => name(r.c)).join(', ')} ${dessus.length > 1 ? 'restent hors' : 'reste hors'} d'atteinte d'ici janvier. ` : '')
+            + (dessous.length ? `${dessous.map(r => name(r.c)).join(', ')} ne peu${dessous.length > 1 ? 'vent' : 't'} plus la rattraper sur cette phase. ` : '') : '')
+      + `<b>Ce qui n'est pas compté ici :</b> la phase finale, qui pèse lourd. Bascule sur « fin de saison » pour l'inclure.`;
+
+    function capSaison(rows, fr, leg, poids, S){
       const rang = (() => {                       // rang à 5 ans avec la médiane de chacun
         const proj = N.filter(n => S.tir && S.tir[n.c]).map(n => ({ c: n.c, v: n.t - n.y[4] + quant(S.tir[n.c], .50) }));
         proj.sort((a, b) => b.v - a.v);
         const i = proj.findIndex(p => p.c === 'FRA');
         return i < 0 ? null : { r: i + 1, v: proj[i].v, dessus: proj[i-1], dessous: proj[i+1] };
       })();
-      /* Probabilité que X finisse la saison devant la France : on compare les
-         tirages deux à deux, dans le même tirage — c'est ce qui rend la mesure
-         honnête, puisque les deux nations partagent les mêmes aléas de terrain. */
+      /* Probabilité que X finisse devant la France : on compare les deux nations
+         DANS le même tirage. C'est ce qui rend la mesure honnête — les deux
+         partagent alors les mêmes aléas de terrain. */
       const devant = c => { const a = S.tir[c], b = S.tir.FRA; if (!a || !b) return null;
         let n = 0; for (let i = 0; i < a.length; i++) if (a[i] > b[i]) n++; return n / a.length; };
       const menaces = rows.filter(r => r.c !== 'FRA').map(r => ({ c: r.c, p: devant(r.c) }))
         .filter(x => x.p != null && x.p > 0.05 && x.p < 0.95).sort((a, b) => b.p - a.p);
-      document.getElementById('capPrj').innerHTML =
-        `<p style="margin:0 0 8px">
-           <span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px"><i style="width:3px;height:13px;background:var(--ink-3);display:inline-block"></i>déjà acquis</span>
-           <span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px"><i style="width:18px;height:7px;border-radius:4px;background:var(--ink-3);opacity:.35;display:inline-block"></i>8 tirages sur 10</span>
-           <span style="display:inline-flex;align-items:center;gap:5px"><i style="width:9px;height:9px;border-radius:50%;background:var(--ink-3);display:inline-block"></i>médiane · colonne de droite : total à 5 ans projeté</span></p>`
-        + `<b>Un modèle, donc des hypothèses.</b> ${NSIM} saisons complètes sont rejouées — phase de ligue restante, classement final, barrages, huitièmes, quarts, demies, finale — avec le barème 2024/25 : 2 points par victoire, 1 par nul, 6 points d'entrée en C1, le bonus de classement de phase de ligue (jusqu'à 6 points pour la 1<sup>re</sup> place en C1 et en C3, 4 en C4) et 1,5 / 1 / 0,5 point par tour de phase finale atteint selon la compétition. `
-        + `<b>La seule variable explicative est la force du championnat</b> : chaque club reçoit la force de son pays, mesurée par le logarithme du coefficient à cinq ans de l'association. Tous les clubs anglais ont donc la même valeur — faux club par club, à peu près juste en moyenne, et c'est ce qui rend le modèle tenable sans données de club. Trois paramètres seulement, choisis à vue et pas ajustés : sensibilité du rendement de poule à l'écart de force, sensibilité d'un duel de phase finale, et un taux de nul de ${nf(PNUL*100, 0)} % pour tout le monde. `
-        + (fr ? `<b>La France :</b> médiane à <b>${nf(fr.cen, 2)}</b>, huit tirages sur dix entre ${nf(fr.bas, 2)} et ${nf(fr.haut, 2)}` : '')
+      document.getElementById('capPrj').innerHTML = leg
+        + `<b>${NSIM} saisons complètes rejouées</b> — phase de ligue restante, classement final, barrages, huitièmes, quarts, demies, finale — avec le barème 2024/25 : 2 points par victoire, 1 par nul, 6 points d'entrée en C1, le bonus de classement de phase de ligue (jusqu'à 6 points pour la 1<sup>re</sup> place en C1 et en C3, 4 en C4) et 1,5 / 1 / 0,5 point par tour de phase finale atteint. `
+        + `Les cinq repères sont les centiles 5, 20, 50, 80 et 95 de ces ${NSIM} tirages. `
+        + poids
+        + `Le reste du modèle tient en trois paramètres, choisis à vue et jamais ajustés : sensibilité du rendement de poule à l'écart de force, sensibilité d'un duel de phase finale, et un taux de nul de ${nf(PNUL*100, 0)} % pour tout le monde. `
+        + (fr ? `<b>La France :</b> médiane <b>${nf(fr.cen, 2)}</b>, trois tirages sur cinq entre ${nf(fr.p20, 2)} et ${nf(fr.p80, 2)}, neuf sur dix entre ${nf(fr.p05, 2)} et ${nf(fr.p95, 2)}` : '')
         + (rang ? `, ce qui la placerait <b>${rang.r}<sup>${rang.r === 1 ? 're' : 'e'}</sup></b> au classement à cinq ans avec ${nf(rang.v, 1)} points`
             + (rang.dessous ? `, devant ${leNom(rang.dessous.c)} (${nf(rang.dessous.v, 1)})` : '')
             + (rang.dessus ? ` et derrière ${leNom(rang.dessus.c)} (${nf(rang.dessus.v, 1)})` : '') + `. ` : '. ')
         + (menaces.length
             ? `<b>Ce qui se joue vraiment :</b> ${menaces.map(m => `${name(m.c)} finit devant la France dans ${Math.round(m.p*100)} % des tirages`).join(', ')}. Le reste du groupe est décidé dans plus de 19 tirages sur 20. `
-            : `Aucune nation du groupe ne bascule d'un côté ou de l'autre dans plus d'un tirage sur vingt : à ce modèle, l'ordre est déjà écrit. `)
-        + `<b>Ce que ça ne vaut pas.</b> Les tirages au sort sont aléatoires alors qu'ils sont têtes de série ; aucune force propre au club, donc ni blessure, ni forme, ni le fait qu'un club anglais moyen ne vaut pas Arsenal ; et les trois paramètres n'ont été calés sur aucun historique. `
-        + `C'est une première pierre : brancher un classement de puissance par club à la place de la force nationale ne changerait qu'une ligne du calcul. `
+            : `Aucune nation du groupe ne bascule d'un côté ou de l'autre dans plus d'un tirage sur vingt. `)
+        + `<b>Ce que ça ne vaut pas.</b> Les tirages au sort sont aléatoires alors qu'ils sont têtes de série ; aucune force propre au club, donc ni blessure, ni forme, ni le fait qu'un club anglais moyen ne vaut pas Arsenal ; et les paramètres n'ont été calés sur aucun historique. `
+        + `Brancher un classement de puissance par club à la place de la force nationale ne changerait qu'une ligne du calcul. `
         + (S.ecarts && S.ecarts.length
             ? `<b style="color:var(--s2)">Contrôle en échec :</b> ${S.ecarts.join(' · ')}.`
             : `<b>Contrôles passés :</b> sur les trois compétitions, la simulation distribue exactement 90 points de phase finale, 30 participations à un tour et 75 / 75 / 42 points de bonus de classement — ni plus, ni moins.`);

@@ -161,7 +161,17 @@ try {
   if (DRY) { log('essai à blanc : les contrôles passent, rien n\'est écrit'); process.exit(0); }
 
   fs.writeFileSync(PAGE, majSurvie(writeBlock(src, data), data));
-  fs.writeFileSync(path.join(HERE, 'nations.json'), JSON.stringify(data.nations, null, 0));
+  /* nations.json porte en plus `lp`, les points marqués en PHASE DE LIGUE seuls.
+     Il est déductible de data.series (les gains m[*] ramenés en points par le
+     diviseur), mais pas de nations.json lui-même — et c'est la seule entrée dont
+     le script R de projection a besoin pour pondérer la saison en cours. Le
+     calculer ici évite de publier la série complète juste pour ça. */
+  const nationsOut = data.nations.map(n => {
+    const m = (data.series[n.c] || {}).m || [];
+    const lp = +(m.reduce((a, s) => a + s[1], 0) * (n.divisor || 1)).toFixed(3);
+    return n.divisor ? { ...n, lp } : n;
+  });
+  fs.writeFileSync(path.join(HERE, 'nations.json'), JSON.stringify(nationsOut, null, 0));
   log('page.html et nations.json réécrits');
 
   const { execFileSync } = await import('node:child_process');
