@@ -293,6 +293,9 @@ section > .panel + .panel{margin-top:14px}
 .bscroll.large{max-height:600px; overflow:auto; padding:8px 10px 8px 2px;
   border:1px solid var(--rule); border-radius:6px; background:var(--surface)}
 @media (max-width:680px){ .bscroll.large{max-height:70vh} }
+/* Même traitement pour la projection : 53 lignes font un SVG de deux mètres. */
+#boxPrj.large{max-height:640px; overflow:auto; border:1px solid var(--rule); border-radius:6px}
+@media (max-width:680px){ #boxPrj.large{max-height:70vh} }
 .vscroll{max-height:560px; overflow:auto; padding:8px 10px 8px 2px;
   border:1px solid var(--rule); border-radius:6px; background:var(--surface)}
 @media (max-width:680px){ .vscroll{max-height:70vh} }
@@ -355,7 +358,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "jeu. 24 sept. 2026 15h36";</script>
+<script>window.PUBLIE = "jeu. 24 sept. 2026 15h46";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -544,9 +547,10 @@ body{margin:0}</style>
   <div class="panel">
     <div class="ptitle"><span class="no">8</span><h3>La projection</h3>
       <span class="sub"><span class="ctl"><span class="lb">Horizon</span><span class="seg" role="group" aria-label="Horizon">
-        <button type="button" id="h-ligue" aria-pressed="true">Fin de phase de ligue</button><button type="button" id="h-saison" aria-pressed="false">Fin de saison</button></span></span></span></div>
+        <button type="button" id="h-ligue" aria-pressed="true">Fin de phase de ligue</button><button type="button" id="h-saison" aria-pressed="false">Fin de saison</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
+        <button type="button" id="j-top" aria-pressed="true">Les 8 premières</button><button type="button" id="j-all" aria-pressed="false">Toutes</button></span></span></span></div>
     <figure>
-      <div class="chartbox" id="boxPrj"><svg id="chartPrj" role="img" aria-label="Fourchette de coefficient de saison"></svg><div class="tip" id="tipPrj" hidden></div></div>
+      <div class="chartbox" id="boxPrj"><svg id="chartPrj" role="img" aria-label="Projection du coefficient de saison"></svg><div class="tip" id="tipPrj" hidden></div></div>
       <figcaption id="capPrj"></figcaption>
     </figure>
   </div>
@@ -2388,8 +2392,14 @@ const legende = segs => segs.map(s =>
        probabilité derrière. C'est réparé : tout ce qui suit est lu dans la
        distribution simulée. */
     const Q = [.05, .20, .50, .80, .95];
+    /* Le périmètre par défaut reste les huit premières — c'est le sujet de la
+       page. « Toutes » sert à situer le groupe : on y voit que la 9e nation est
+       déjà à dix points, et que la moitié du continent se tient dans trois
+       points. Les couleurs d'identité ne valent que pour les huit. */
+    let porteeP = 'top';
+    const jeuP = () => porteeP === 'top' ? GRP : ENGAGEES.map(n => n.c);
     const lignes = (tirages) => { const S = simule(); if (!S[tirages]) return [];
-      return GRP.filter(c => S[tirages][c]).map(c => {
+      return jeuP().filter(c => S[tirages][c]).map(c => {
         const t = S[tirages][c], q = Q.map(p => quant(t, p));
         return { c, acq: BY[c].y[4], r: matchsRestants(c),
                  p05: q[0], p20: q[1], cen: q[2], p80: q[3], p95: q[4] };
@@ -2415,13 +2425,14 @@ const legende = segs => segs.map(s =>
     s += `<text x="${mL}" y="${mT - 32}" font-size="11" font-weight="600" fill="var(--ink-3)">coefficient de saison ${horizon === 'ligue'
       ? 'à la fin de la phase de ligue' : 'en fin de saison, phase finale comprise'}</text>`;
     /* La question n'est pas « où finit la France » mais « qui peut encore la
-       doubler ». La bande verticale matérialise son intervalle à 60 % : toute
-       nation dont la barre épaisse la recoupe est encore à sa portée. */
+       doubler ». La bande couvre son intervalle à 90 %, du 5e au 95e centile :
+       à 60 % elle excluait des nations qui la doublent une fois sur sept, ce qui
+       n'est pas « hors de portée ». */
     const FR = rows.find(r => r.c === 'FRA');
     if (FR) {
-      s += `<rect x="${X(FR.p20).toFixed(1)}" y="${(mT - 6).toFixed(1)}" width="${(X(FR.p80) - X(FR.p20)).toFixed(1)}" height="${(H - mB - mT + 10).toFixed(1)}" fill="var(--fr)" opacity=".07"/>`;
-      [FR.p20, FR.p80].forEach(v => s += `<line x1="${X(v).toFixed(1)}" y1="${(mT - 6).toFixed(1)}" x2="${X(v).toFixed(1)}" y2="${(H - mB + 4).toFixed(1)}" stroke="var(--fr)" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>`);
-      s += `<text x="${((X(FR.p20) + X(FR.p80)) / 2).toFixed(1)}" y="${(mT - 16).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--fr)">portée de la France</text>`;
+      s += `<rect x="${X(FR.p05).toFixed(1)}" y="${(mT - 6).toFixed(1)}" width="${(X(FR.p95) - X(FR.p05)).toFixed(1)}" height="${(H - mB - mT + 10).toFixed(1)}" fill="var(--fr)" opacity=".07"/>`;
+      [FR.p05, FR.p95].forEach(v => s += `<line x1="${X(v).toFixed(1)}" y1="${(mT - 6).toFixed(1)}" x2="${X(v).toFixed(1)}" y2="${(H - mB + 4).toFixed(1)}" stroke="var(--fr)" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>`);
+      s += `<text x="${((X(FR.p05) + X(FR.p95)) / 2).toFixed(1)}" y="${(mT - 16).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--fr)">portée de la France · 9 tirages sur 10</text>`;
     }
     rows.forEach((r, i) => {
       const y = mT + i * rowH + rowH / 2, fr = r.c === 'FRA';
@@ -2463,9 +2474,9 @@ const legende = segs => segs.map(s =>
 
     if (horizon === 'saison') { capSaison(rows, fr, leg, poids, S); return; }
 
-    const croise  = fr ? rows.filter(r => r.c !== 'FRA' && r.p80 >= fr.p20 && r.p20 <= fr.p80) : [];
-    const dessus  = fr ? rows.filter(r => r.p20 > fr.p80) : [];
-    const dessous = fr ? rows.filter(r => r.p80 < fr.p20) : [];
+    const croise  = fr ? rows.filter(r => r.c !== 'FRA' && r.p95 >= fr.p05 && r.p05 <= fr.p95) : [];
+    const dessus  = fr ? rows.filter(r => r.p05 > fr.p95) : [];
+    const dessous = fr ? rows.filter(r => r.p95 < fr.p05) : [];
     document.getElementById('capPrj').innerHTML = leg
       + `<b>Cinq repères, tous tirés de la même simulation</b> : le 5<sup>e</sup> et le 95<sup>e</sup> centile aux extrémités du trait fin, le 20<sup>e</sup> et le 80<sup>e</sup> aux bouts de la barre épaisse, la médiane au disque. `
       + `Lecture : une nation a une chance sur vingt de finir sous son trait fin gauche, une sur vingt de finir au-dessus du droit, et trois chances sur cinq d'atterrir dans la barre épaisse. `
@@ -2473,7 +2484,7 @@ const legende = segs => segs.map(s =>
       + `Le coefficient déjà acquis n'est plus dessiné : posé tout à gauche, loin de la distribution, il étirait l'axe pour un repère que personne ne lisait. Il reste au survol. `
       + poids
       + (fr ? `<b>La France</b>, qui a ${fr.r} matchs de phase de ligue à jouer : médiane <b>${nf(fr.cen, 2)}</b>, trois tirages sur cinq entre ${nf(fr.p20, 2)} et ${nf(fr.p80, 2)}, neuf sur dix entre ${nf(fr.p05, 2)} et ${nf(fr.p95, 2)}. ` : '')
-      + (fr ? `<b>Ce qu'il faut y lire :</b> la bande bleue est la portée de la France, son intervalle à 60 %. `
+      + (fr ? `<b>Ce qu'il faut y lire :</b> la bande bleue est la portée de la France, son intervalle à 90 %. `
             + (croise.length ? `${croise.length} nation${croise.length > 1 ? 's' : ''} la recoupe${croise.length > 1 ? 'nt' : ''} — ${croise.map(r => name(r.c)).join(', ')} — l'ordre entre elles et nous n'est pas décidé. ` : `Aucune nation du groupe ne la recoupe. `)
             + (dessus.length ? `${dessus.map(r => name(r.c)).join(', ')} ${dessus.length > 1 ? 'restent hors' : 'reste hors'} d'atteinte d'ici janvier. ` : '')
             + (dessous.length ? `${dessous.map(r => name(r.c)).join(', ')} ne peu${dessous.length > 1 ? 'vent' : 't'} plus la rattraper sur cette phase. ` : '') : '')
@@ -2517,6 +2528,13 @@ const legende = segs => segs.map(s =>
       bS.setAttribute('aria-pressed', horizon === 'saison'); dessine(); };
     bL.onclick = () => { horizon = 'ligue';  syncH(); };
     bS.onclick = () => { horizon = 'saison'; syncH(); };
+    const bJT = document.getElementById('j-top'), bJA = document.getElementById('j-all');
+    const syncJ = () => { bJT.setAttribute('aria-pressed', porteeP === 'top');
+      bJA.setAttribute('aria-pressed', porteeP === 'all');
+      document.getElementById('boxPrj').classList.toggle('large', porteeP !== 'top');
+      dessine(); };
+    bJT.onclick = () => { porteeP = 'top'; syncJ(); };
+    bJA.onclick = () => { porteeP = 'all'; syncJ(); };
     dessine();
   })();
 
