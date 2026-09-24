@@ -207,6 +207,19 @@ section > .panel + .panel{margin-top:14px}
 .barrow .cnt{font-size:11.5px; color:var(--ink-3); text-align:right; letter-spacing:.02em}
 .barrow .track{height:20px; background:var(--surface-2); border-radius:2px; overflow:hidden; display:flex}
 .barrow .fill{height:100%; background:var(--ink-3)}
+/* Vue « 5 dernières saisons » : la barre se coupe en deux. À gauche les quatre
+   saisons closes, pleines, définitivement acquises. À droite la saison en cours,
+   hachurée : elle est dans le total mais elle bougera encore à chaque soirée
+   européenne. Le même motif sert sur la page d'accueil pour la même idée — une
+   valeur vivante se hachure, une valeur figée est pleine. */
+.barrow .fill-wip{height:100%; border-left:2px solid var(--surface);
+  background:repeating-linear-gradient(135deg,
+    color-mix(in srgb, var(--ink-3) 62%, transparent) 0 5px, transparent 5px 10px),
+    color-mix(in srgb, var(--ink-3) 16%, transparent)}
+.barrow.me .fill-wip{border-left-color:var(--surface);
+  background:repeating-linear-gradient(135deg,
+    color-mix(in srgb, var(--fr) 70%, transparent) 0 5px, transparent 5px 10px),
+    color-mix(in srgb, var(--fr) 18%, transparent)}
 .barrow .seg{height:100%; box-shadow:inset -2px 0 0 var(--surface)}
 .barrow .seg:last-child{box-shadow:none}
 /* découpe club par club à l'intérieur d'une compétition : un filet clair, jamais
@@ -285,7 +298,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "jeu. 24 sept. 2026 07h17";</script>
+<script>window.PUBLIE = "jeu. 24 sept. 2026 07h27";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -1046,7 +1059,11 @@ document.getElementById('cal-qual').onclick = function(){
 drawCal();
 
 /* ---------- 1 · le classement ---------- */
-let period='season';
+/* La vue par défaut est le classement à CINQ ANS, pas la saison en cours.
+   C'est lui qui attribue les places européennes ; la saison en cours n'en est
+   qu'un cinquième, et en septembre elle ne pèse que quelques pourcents. Ouvrir
+   sur elle donnait un classement spectaculaire et sans portée. */
+let period='five';
 function drawBars(){
   const isS = period==='season';
   const val = c => isS ? seasonNow(c) : BY[c].t;
@@ -1057,14 +1074,24 @@ function drawBars(){
     return `<div class="barrow${c==='FRA'?' me':''}">
       <div class="nm"><span class="rk">${i+1}.</span><b>${name(c)}</b></div>
       <div class="cnt num">${n.a[0]}·${n.a[1]}·${n.a[2]}</div>
-      <div class="track"><div class="fill" style="width:${(val(c)/max*100).toFixed(1)}%"></div></div>
+      <div class="track">${isS
+        ? `<div class="fill" style="width:${(val(c)/max*100).toFixed(1)}%"></div>`
+        : `<div class="fill" style="width:${((n.t-n.y[4])/max*100).toFixed(1)}%" title="Quatre saisons closes : ${nf(n.t-n.y[4])}"></div>`
+          + `<div class="fill-wip" style="width:${(n.y[4]/max*100).toFixed(1)}%" title="Saison ${D.meta.season}, en cours : ${nf(n.y[4])}"></div>`}</div>
       <div class="val num">${nf(val(c))}</div>
-      <div class="split num">${isS?`sur ${divisor(n)} clubs engagés`:`rang ${n.r} · ${nf(n.y[4],2)} cette saison`}</div>
+      <div class="split num">${isS?`sur ${divisor(n)} clubs engagés`:`${nf(n.t-n.y[4],2)} acquis + ${nf(n.y[4],2)} en cours`}</div>
     </div>`;}).join('');
   const posS=[...TOP8].sort((x,y)=>seasonNow(y)-seasonNow(x)).indexOf('FRA')+1;
-  document.getElementById('barNote').innerHTML = isS
+  const leg = isS ? '' :
+    `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px">`
+    + `<i style="width:16px;height:10px;border-radius:2px;background:var(--ink-3);display:inline-block"></i>quatre saisons closes</span>`
+    + `<span style="display:inline-flex;align-items:center;gap:6px">`
+    + `<i style="width:16px;height:10px;border-radius:2px;display:inline-block;background:`
+    + `repeating-linear-gradient(135deg,color-mix(in srgb,var(--ink-3) 62%,transparent) 0 5px,transparent 5px 10px),`
+    + `color-mix(in srgb,var(--ink-3) 16%,transparent)"></i>saison ${D.meta.season}, en cours</span><br>`;
+  document.getElementById('barNote').innerHTML = leg + (isS
     ? `Coefficient acquis depuis le 1<sup>er</sup> juillet. La France est ${posS}<sup>e</sup> des huit — mais à ce stade ce classement dépend surtout du nombre de clubs déjà entrés en lice, colonne « C1·C3·C4 » : les nations dont les clubs ont disputé les qualifications de juillet ont plusieurs semaines d'avance sur celles qui n'entrent qu'en phase de ligue.`
-    : `Somme des cinq dernières saisons — c'est ce total qui fixe les places européennes. Les quatre premières colonnes sont figées ; seule la saison en cours bouge encore, et elle ne pèse pour l'instant que ${nf(BY.FRA.y[4]/BY.FRA.t*100,1)} % du total français.`;
+    : `Somme des cinq dernières saisons — <b>c'est ce total qui fixe les places européennes</b>, et c'est pourquoi la page s'ouvre dessus. La partie pleine est acquise : quatre saisons closes que plus aucun résultat ne changera. La partie hachurée est la saison en cours, seule à bouger encore — elle ne pèse pour l'instant que ${nf(BY.FRA.y[4]/BY.FRA.t*100,1)} % du total français. Le rang du jour se lit ici ; la saison en cours, elle, se regarde dans l'autre onglet et dans les blocs suivants.`);
 }
 document.getElementById('p-season').onclick=()=>{period='season';syncP();};
 document.getElementById('p-five').onclick  =()=>{period='five';  syncP();};
