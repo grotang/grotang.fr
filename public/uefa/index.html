@@ -206,7 +206,10 @@ section > .panel + .panel{margin-top:14px}
 .barrow .rk{font-size:10.5px; color:var(--ink-3); font-weight:600; flex:none}
 .barrow .cnt{font-size:11.5px; color:var(--ink-3); text-align:right; letter-spacing:.02em}
 .barrow .track{height:20px; background:var(--surface-2); border-radius:2px; overflow:hidden; display:flex}
-.barrow .fill{height:100%; background:var(--ink-3)}
+.barrow .fill{height:100%; background:var(--ink-3);
+  display:flex; align-items:center; justify-content:flex-end; overflow:hidden}
+.barrow .fill span{font:700 9.5px/1 "IBM Plex Mono",monospace; letter-spacing:.02em;
+  white-space:nowrap; padding-right:7px; opacity:.95; user-select:none}
 /* Vue « 5 dernières saisons » : la barre se coupe en deux. À gauche les quatre
    saisons closes, pleines, définitivement acquises. À droite la saison en cours,
    hachurée : elle est dans le total mais elle bougera encore à chaque soirée
@@ -242,7 +245,9 @@ section > .panel + .panel{margin-top:14px}
 .barswrap .barrow .track{cursor:crosshair}
 .barrow .cseg.on{filter:brightness(1.15) saturate(1.2)}
 .barswrap{position:relative}
-.barrow.me .fill{background:var(--fr)}
+/* La couleur de la barre est posée en ligne, à partir du jeton de la nation :
+   même identité que la vue à cinq saisons et que les blocs 3 à 6. La règle
+   France ne concerne plus que le libellé, la barre est déjà à sa couleur. */
 .barrow.me .nm b{color:var(--fr); font-weight:700}
 .barrow.me .nm::before{content:"\25B8"; color:var(--fr); font-size:11px}
 .barrow .val{text-align:right; font-size:14px; font-weight:700; white-space:nowrap}
@@ -307,7 +312,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "jeu. 24 sept. 2026 08h05";</script>
+<script>window.PUBLIE = "jeu. 24 sept. 2026 08h27";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -1115,7 +1120,16 @@ function drawBars(){
       <div class="nm"><span class="rk">${i+1}.</span><b>${name(c)}</b></div>
       <div class="cnt num">${n.a[0]}·${n.a[1]}·${n.a[2]}</div>
       <div class="track" data-nat="${c}">${isS
-        ? `<div class="fill" style="width:${(val(c)/max*100).toFixed(1)}%"></div>`
+        ? (() => {
+            /* Vue « saison en cours » : tout est vivant, donc tout est en pleine
+               couleur — exactement la teinte du segment de saison en cours de
+               l'autre vue. Une nation garde la même couleur d'un onglet à l'autre
+               et d'un bloc à l'autre ; c'est tout ce qu'il y avait à changer.
+               Pas de libellé dans la barre : le nombre de clubs est déjà en clair
+               dans la colonne de droite, l'écrire deux fois n'apprend rien. */
+            const base = toRGB(cssHex(SLOT[c] || '--ink-3'));
+            return `<div class="fill" style="width:${(val(c)/max*100).toFixed(1)}%;background:${toHex(base)}"></div>`;
+          })()
         : n.y.map((v, yi) => { const wip = yi === 4;
             const base = toRGB(cssHex(SLOT[c] || '--ink-3'));
             const fond = wip ? base : melange(base, toRGB(cssHex('--surface-2')), .38);
