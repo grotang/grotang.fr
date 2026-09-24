@@ -197,6 +197,15 @@ section > .panel + .panel{margin-top:14px}
 .barrow .nm b{font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .barrow .rk{font-size:10.5px; color:var(--ink-3); font-weight:600; flex:none}
 .barrow .cnt{font-size:11.5px; color:var(--ink-3); text-align:right; letter-spacing:.02em}
+/* Effectif en une rangée de pastilles : une par club engagé, à la couleur de sa
+   compétition tant qu'il est en lice, en creux une fois éliminé. Le diviseur du
+   coefficient se lit alors d'un coup d'œil — c'est le nombre de pastilles, pleines
+   ET creuses — et le poids mort aussi. Un chiffre « 5 » ne montrait ni l'un ni
+   l'autre. La colonne s'élargit en conséquence : neuf clubs pour l'Angleterre. */
+#bars .barrow{grid-template-columns:minmax(88px,132px) 74px minmax(0,1fr) 62px minmax(132px,max-content)}
+.pips{display:flex; gap:2px; justify-content:flex-end; align-items:center}
+.pips i{width:6px; height:12px; border-radius:1.5px; display:block; flex:none}
+.pips i.out{box-shadow:inset 0 0 0 1px var(--ink-3); opacity:.45}
 .barrow .track{height:20px; background:var(--surface-2); border-radius:2px; overflow:hidden; display:flex}
 .barrow .fill{height:100%; background:var(--ink-3);
   display:flex; align-items:center; justify-content:flex-end; overflow:hidden}
@@ -245,8 +254,36 @@ section > .panel + .panel{margin-top:14px}
 .barrow .val{text-align:right; font-size:14px; font-weight:700; white-space:nowrap}
 .barrow .split{text-align:right; font-size:11.5px; color:var(--ink-3); white-space:nowrap}
 .barrow .split u{text-decoration:none; display:inline-block; width:38px; text-align:right}
-@media (max-width:680px){ .barrow{grid-template-columns:1fr 62px; gap:3px 10px}
+/* Le sélecteur #bars .barrow ci-dessus est plus spécifique que .barrow : sans le
+   rappeler ici, la grille à cinq colonnes du bureau s'imposait au téléphone et
+   la page débordait de 37 px. */
+@media (max-width:680px){ .barrow, #bars .barrow{grid-template-columns:1fr 62px; gap:3px 10px}
   .barrow .cnt{display:none} .barrow .track{grid-column:1/-1; order:3} .barrow .split{grid-column:1/-1; order:4; text-align:left} }
+
+/* ---------- effectifs : une case par club engagé ---------- */
+/* Largeur de case FIXE, jamais proportionnelle : la longueur d'une ligne dit
+   combien de clubs le pays a engagés, et c'est une information en soi. Neuf cases
+   pour l'Angleterre, trois pour Andorre — l'inégalité de départ se voit. */
+.vlist{display:grid; gap:6px; max-width:704px}
+.vrow{display:grid; grid-template-columns:minmax(88px,124px) minmax(0,1fr) minmax(196px,max-content);
+  align-items:center; gap:12px}
+.vrow .nm{font-size:13.5px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.vrow.me .nm{color:var(--fr); font-weight:700}
+.vgrid{display:flex; gap:4px; flex-wrap:wrap}
+.vcell{width:24px; height:22px; border-radius:3px; flex:none; display:flex; align-items:center;
+  justify-content:center; font:700 9.5px/1 "IBM Plex Mono",monospace; color:#fff; letter-spacing:.02em}
+.vcell.out{background:none!important; color:var(--ink-3); box-shadow:inset 0 0 0 1.5px var(--ink-3); opacity:.5}
+.vrow .rd{text-align:right; font-size:12px; color:var(--ink-2); white-space:nowrap}
+.vrow .rd b{font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink)}
+.vrow .rd s{text-decoration:none; color:var(--ink-3)}
+/* Cinquante-trois lignes, dont la moitié sans enjeu : on borne la hauteur et on
+   marque franchement le cadre, pour que la zone se lise comme une liste qui
+   défile et non comme une page tronquée. */
+.vscroll{max-height:560px; overflow:auto; padding:8px 10px 8px 2px;
+  border:1px solid var(--rule); border-radius:6px; background:var(--surface)}
+@media (max-width:680px){ .vscroll{max-height:70vh} }
+@media (max-width:680px){ .vrow{grid-template-columns:1fr; gap:3px}
+  .vrow .rd{text-align:left} }
 
 .klegend{display:flex; flex-wrap:wrap; gap:8px 18px; margin-bottom:12px; font-size:12.5px}
 .klegend span{display:inline-flex; align-items:center; gap:7px; color:var(--ink-2)}
@@ -415,6 +452,43 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
 
 <section>
   <div class="shead">
+    <h2>Les clubs encore en vie</h2>
+    <p>Le coefficient divise par les clubs <b>engagés</b> au 1<sup>er</sup> juillet, jamais par ceux qui jouent encore : le diviseur est figé pour la saison. Un club éliminé continue donc de peser dans la division sans plus jamais rapporter un point. C'est le paramètre le moins lu du classement, et souvent celui qui explique un écart.</p>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle"><span class="no">7a</span><h3>Qui est encore en course</h3>
+      <span class="sub"><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
+        <button type="button" id="v-top" aria-pressed="false">Les 8 premières</button><button type="button" id="v-all" aria-pressed="true">Toutes</button></span></span><span class="ctl"><span class="lb">Ordre</span><span class="seg" role="group" aria-label="Ordre">
+        <button type="button" id="v-rk" aria-pressed="true">Classement</button><button type="button" id="v-pm" aria-pressed="false">Poids mort</button></span></span></span></div>
+    <div class="klegend" id="vleg"></div>
+    <div class="vscroll"><div class="vlist" id="vlist"></div></div>
+    <p class="figc" id="vNote"></p>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle"><span class="no">7b</span><h3>Ce que pèse un club encore en lice</h3>
+      <span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">plein : le coefficient · creux : les mêmes points divisés par les seuls survivants</span></span></span></div>
+    <figure>
+      <div class="chartbox" id="boxDead"><svg id="chartDead" role="img" aria-label="Coefficient de saison et points par club encore en lice"></svg></div>
+      <figcaption id="capDead"></figcaption>
+    </figure>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle"><span class="no">7c</span><h3>La courbe de survie</h3>
+      <span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="seg" role="group" aria-label="Lecture">
+        <button type="button" id="s-nat" aria-pressed="true">Par nation</button><button type="button" id="s-eur" aria-pressed="false">Toute l'Europe</button></span></span></span></div>
+    <div class="chips" id="vchips"></div>
+    <figure>
+      <div class="chartbox" id="boxSurv"><svg id="chartSurv" role="img" aria-label="Nombre de clubs encore en lice au fil de la saison"></svg></div>
+      <figcaption id="capSurv"></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <div class="shead">
     <h2>Où ça peut finir</h2>
     <p>Le classement du jour ne dit pas où l'on atterrit. Voici, pour chaque nation du groupe, l'intervalle dans lequel son coefficient de saison peut encore se déplacer d'ici la fin de la phase de ligue — et ce qui est déjà hors d'atteinte.</p>
   </div>
@@ -462,7 +536,9 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
     <p><b>Le calendrier commande la lecture.</b> Les trois phases de ligue ne commencent pas en même temps : C1 le 8 septembre, C3 le 16 septembre, C4 le 15 octobre 2026. Tant qu'une compétition n'a pas démarré, ses clubs n'ont ni match ni bonus de participation, et la répartition par compétition est donc structurellement déséquilibrée en faveur de la C1. Elle ne devient comparable d'une nation à l'autre qu'à partir de la mi-octobre. Le calendrier affiché en tête de page est celui des rencontres publié par football-coefficient.eu ; il est figé pour la saison et n'est pas rechargé chaque matin.</p>
     <p><b>Pourquoi diviser par le nombre de clubs engagés.</b> Le diviseur est fixé en début de saison et ne bouge pas : un club éliminé continue de peser dans la division. Un pays qui engage beaucoup de clubs a donc besoin de plus de résultats pour le même coefficient. La France divise par 7 cette saison.</p>
     <p><b>Le classement de la saison n'est pas le classement à 5 ans.</b> En début de saison, le coefficient de la saison favorise mécaniquement les pays dont les clubs disputent de nombreux tours de qualification en juillet-août. Un rang de saison médiocre à ce stade ne dit pas grand-chose ; il devient lisible à partir de la phase de ligue.</p>
-    <p><b>Source.</b> <a href="https://eurocoeff.com/" target="_blank" rel="noopener">eurocoeff.com</a>, jeu de données public sous licence CC BY 4.0, lui-même construit à partir de <a href="https://www.5-jahres-wertung.de/" target="_blank" rel="noopener">5-jahres-wertung.de</a>. Ces chiffres sont non officiels : l'UEFA fait foi. Chaque publication de cette page rejoue le calcul complet depuis la source, sans état conservé d'un jour sur l'autre.</p>
+    <p><b>Source.</b> <a href="https://eurocoeff.com/" target="_blank" rel="noopener">eurocoeff.com</a>, jeu de données public sous licence CC BY 4.0, lui-même construit à partir de <a href="https://www.5-jahres-wertung.de/" target="_blank" rel="noopener">5-jahres-wertung.de</a>. Ces chiffres sont non officiels : l'UEFA fait foi. Chaque publication de cette page rejoue le calcul complet depuis la source ; une seule série fait exception, l'archive des effectifs décrite ci-dessous.</p>
+    <p><b>Clubs engagés, clubs encore en lice.</b> Ce sont deux nombres distincts et la page les tient séparés. Le diviseur du coefficient compte les clubs <b>engagés</b> au 1<sup>er</sup> juillet : il est figé pour la saison, éliminés compris. La source publie en parallèle l'effectif <b>encore en lice</b>, qui ne fait que décroître. La section « Les clubs encore en vie » ne repose que sur ces deux nombres, tels que publiés — rien n'y est estimé. À ce stade de la saison, « éliminé » signifie « n'a pas atteint sa phase de ligue » ; à partir de février s'y ajouteront les sorties de la phase finale.</p>
+    <p><b>La seule série que la page conserve.</b> La source publie l'effectif du jour, jamais son historique : sans archive, la courbe de survie n'existerait pas. La page enregistre donc l'effectif à chaque rafraîchissement, et n'ajoute une ligne que lorsqu'un nombre change ; aucune ligne passée n'est réécrite. Les éliminations antérieures au premier relevé archivé ne sont pas datées club par club — elles se sont toutes produites pendant les qualifications, et la courbe les regroupe au dernier soir de barrages, en pointillé, plutôt que d'inventer des dates.</p>
     <p><b>Contrôles passés à la publication.</b> Somme des cinq saisons égale au total pour les 55 associations ; rangs strictement ordonnés ; écart au rang précédent recalculé ; dernier cumul de la série égal au total ; continuité entre qualifications et phase de ligue ; pour douze pays, somme des points clubs égale au total national déclaré. Aucun écart.</p>
     <p><b>Ce que la page ne dit pas.</b> Le nombre exact de places attribuées par rang dépend du règlement d'accès de la saison concernée et des vainqueurs de coupes ; il n'est pas déduit ici. Les arrondis sont ceux de la source, au millième, ce qui peut produire quelques millièmes d'écart entre la somme des étapes et le total publié.</p>
   </div>
@@ -472,6 +548,12 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
 </div>
 
 <script>
+/* Effectif encore en lice, relevé après relevé. Écrit par refresh.mjs : une
+   entrée [date, {nation: [C1, C3, C4, total]}] ajoutée seulement quand un
+   effectif change. C'est la seule série de cette page qui s'accumule au lieu
+   d'être recalculée — la source ne publie que l'état du jour, jamais son
+   histoire, et sans archive la courbe de survie n'existerait pas. */
+/*SURVIE_START*/const SURVIE = {"rel":[["2026-09-17",{"ENG":[5,3,1,9],"ITA":[4,2,1,7],"ESP":[5,2,1,8],"GER":[4,2,1,7],"FRA":[3,3,1,7],"POR":[2,2,1,5],"BEL":[1,2,2,5],"NED":[2,2,2,6],"TUR":[2,1,1,4],"CZE":[1,2,1,4],"POL":[0,2,0,2],"GRE":[1,2,1,4],"NOR":[2,1,1,4],"DEN":[0,0,4,4],"CYP":[0,1,1,2],"SUI":[0,0,2,2],"AUT":[1,2,0,3],"HUN":[0,1,0,1],"SCO":[0,1,1,2],"CRO":[0,1,1,2],"SWE":[0,0,1,1],"ROU":[0,0,1,1],"UKR":[1,0,0,1],"ISR":[0,1,0,1],"AZE":[1,0,0,1],"SVN":[0,1,0,1],"SVK":[1,0,0,1],"BUL":[0,1,1,2],"SRB":[0,0,1,1],"RUS":[0,0,0,0],"ISL":[0,0,0,0],"IRL":[0,0,0,0],"ARM":[0,1,0,1],"KOS":[0,0,0,0],"BIH":[0,0,1,1],"LVA":[0,0,1,1],"FIN":[0,0,1,1],"KAZ":[0,0,1,1],"LIE":[0,0,0,0],"MDA":[0,0,0,0],"FRO":[0,0,0,0],"ALB":[0,0,1,1],"MKD":[0,0,0,0],"BLR":[0,0,0,0],"LTU":[0,0,1,1],"AND":[0,0,1,1],"MLT":[0,0,0,0],"GIB":[0,0,1,1],"EST":[0,0,0,0],"NIR":[0,0,0,0],"GEO":[0,0,1,1],"LUX":[0,0,0,0],"MNE":[0,0,0,0],"WAL":[0,0,0,0],"SMR":[0,0,0,0]}]]};/*SURVIE_END*/
 /*XCHK_START*/const XCHK = {"at":"2026-09-16","src":"kassiesa.net","srcUrl":"https://kassiesa.net/uefa/data/method5/crank2027.html","srcAt":"Thu, 10 Sep 2026 22:58:37 CET","nousAt":"10/09/2026 - 22:57","pays":55,"valeurs":385,"lignes":[["ENG",1,103.13,[23,17.375,29.464,28.68,4.611]],["ITA",2,88.303,[22.357,21,21.875,19,4.071]],["ESP",3,83.243,[16.571,16.062,23.892,22.093,4.625]],["GER",4,81.259,[17.125,19.357,18.421,21.785,4.571]],["FRA",5,68.724,[12.583,16.25,17.928,18.321,3.642]],["POR",6,64.95,[12.5,11,16.25,20.5,4.7]],["BEL",7,59.05,[14.2,14.4,15.65,11.4,3.4]],["NED",8,52.562,[13.5,10,15.25,9.979,3.833]],["TUR",9,49.875,[11.8,12,10.3,11.075,4.7]],["POL",10,45.125,[7.75,6.875,11.75,15.75,3]],["CZE",11,44.725,[6.75,13.5,10.55,11.025,2.9]],["GRE",12,44.212,[2.125,11.4,12.687,14.2,3.8]],["NOR",13,38.612,[5.75,8,11.812,8.05,5]],["DEN",14,38.306,[5.9,8.5,7.656,12.25,4]],["CYP",15,34.193,[5.1,3.75,10.562,12.156,2.625]],["SUI",16,30.2,[8.5,5.2,7.05,6.2,3.25]],["AUT",17,27.65,[4.9,4.8,9.65,4.1,4.2]],["HUN",18,27.312,[5.875,4.5,6.625,7.437,2.875]],["SCO",19,26.25,[3.5,6.4,9.25,5,2.1]],["SWE",20,25.75,[6.25,1.875,11.375,5,1.25]],["CRO",21,25.656,[3.375,5.875,5.875,7.031,3.5]],["ROU",22,24.875,[6.25,3.25,7.75,5.75,1.875]],["UKR",23,24.337,[5.7,4.1,3.6,8.312,2.625]],["ISR",24,23.875,[6.25,8.75,2.875,2.875,3.125]],["AZE",25,23.687,[4,5.875,2.875,5.812,5.125]],["SVN",26,22.843,[2.125,3.875,9.093,6.375,1.375]],["SVK",27,22.375,[6,5,4.625,2.625,4.125]],["BUL",28,20.562,[4.5,4.375,3.625,5.187,2.875]],["SRB",29,18.25,[5.375,1.4,3.725,5.75,2]],["RUS",30,17.332,[4.333,4.333,4.333,4.333,0]],["ISL",31,17.02,[3,3.833,4.562,3.625,2]],["IRL",32,16.343,[3.375,1.5,5.343,4.25,1.875]],["ARM",33,15.812,[2.375,2.25,4.375,4.187,2.625]],["KOS",34,14.031,[2.875,3,2,3.781,2.375]],["BIH",35,13.968,[2,2.25,4.531,3.312,1.875]],["LVA",36,13.875,[2.75,1.625,3.875,2,3.625]],["FIN",37,13.625,[2.625,1.75,2.25,3.625,3.375]],["KAZ",38,12.375,[1.125,3.125,3,3.625,1.5]],["LIE",39,11,[6.5,0.5,0.5,1,2.5]],["MDA",40,10.25,[3.75,2,2.125,1.5,0.875]],["FRO",41,9.875,[2.25,2.75,1.5,1.75,1.625]],["ALB",42,9,[0.875,2.125,1.25,2.25,2.5]],["MKD",43,8.967,[1.625,1.5,0.666,3.343,1.833]],["BLR",44,8.708,[0.625,1.75,1.875,2.125,2.333]],["LTU",45,8.125,[2.375,1.125,1.375,1.125,2.125]],["AND",46,7.832,[0.666,1.666,1,2,2.5]],["MLT",47,7.625,[2.625,1.5,1,2,0.5]],["GIB",48,7.207,[0.875,0.166,1.5,3.333,1.333]],["EST",49,7.041,[1.166,0.125,1.625,1.625,2.5]],["NIR",50,6.625,[1.25,1.125,1.5,1.75,1]],["GEO",51,6.5,[1.125,1.25,1.25,1.125,1.75]],["LUX",52,6.25,[1.125,2.25,1.25,0.75,0.875]],["MNE",53,5.833,[1,1.333,2.5,1,0]],["WAL",54,4.499,[1.166,0.625,2,0.333,0.375]],["SMR",55,2.998,[0.833,0.333,0.666,0.833,0.333]]],"ecarts":[],"absents":[],"verdict":"ok"};/*XCHK_END*/
 /*HIST_START*/const HIST = {"2021":{"ENG":[2.286,2.286,2.286,2.286,2.429,3.857,5,6.714,8.286,10,14.143,14.143,14.143,14.143,14.714,17.286,19.857,21],"ITA":[2.286,2.286,2.286,2.286,2.571,3.429,4.714,5.714,7.143,8.429,11.714,11.714,11.714,11.714,12.714,14.286,14.857,15.429,15.714],"ESP":[2.857,2.857,2.857,2.857,2.857,4,4.857,6.286,7.286,8.286,12.143,12.143,12.143,12.143,13.857,16.429,17.714,18.143,18.429],"GER":[2.286,2.286,2.286,2.286,2.5,3.643,5.214,5.929,7.214,8.5,11.786,11.786,11.786,11.786,12.5,13.786,15.071,16.071,16.214],"FRA":[1.333,1.333,1.333,1.667,2.083,3.417,4.75,6.417,7.917,9.083,14.417,14.417,14.417,14.417,15.083,17.25,18.25,18.417],"POR":[2,2,2.333,3.167,3.75,4.083,4.75,5.75,6.583,7.083,9.583,9.583,9.583,9.583,10.75,12.417,12.917],"BEL":[0.8,0.8,1,1.7,2.2,3.2,4,4.6,5,5.4,6.6,6.6],"NED":[0.8,0.8,1.5,2.6,3.4,4.8,6.4,8,9.4,10.8,14.4,14.4,14.4,14.4,15.4,17.4,18.4,19.2],"TUR":[0.8,0.8,1.2,2,2.7,3.3,3.5,4.1,4.7,5.1,6.5,6.5,6.5,6.5,6.5,6.7],"POL":[0,1,2.25,3,3.625,4.125,4.625,4.625],"CZE":[0,0,0.8,1.2,1.9,2.9,3.3,3.5,4.1,4.5,5.3,5.3,5.3,5.3,6.1,6.5,6.7],"GRE":[0,0,1,1.5,2.25,3.25,4,4.5,4.5,5.25,6.5,6.5,6.5,6.5,7,8],"NOR":[0,0,1.5,2.5,2.875,3.375,3.625,4.125,4.375,4.875,5.375,5.375,5.375,5.375,6.375,7.125,7.625],"DEN":[0,0,0.8,1.1,1.6,2.6,3.2,3.6,4.8,6,7.2,7.2,7.2,7.2,7.6,7.8],"CYP":[0,0,0.625,1.25,1.875,2.125,2.125,2.375,2.875,3.625,4.125,4.125],"SUI":[1,1,2.125,3,3.75,4.5,5,5.5,5.75,6.5,7.75,7.75]},"2022":{"ENG":[2.286,2.286,2.286,2.286,2.571,3.714,5.286,7.143,9,10.429,16.571,16.571,16.571,16.571,17.143,19.857,21.143,22.429,23],"ITA":[2.286,2.286,2.286,2.286,2.5,3.357,4.5,5.786,6.786,8.5,11.929,11.929,11.929,11.929,13.929,17.643,20.357,22.214,22.357],"ESP":[2.286,2.286,2.286,2.286,2.571,4.286,5.571,6.714,8,9.143,12.429,12.429,12.429,12.429,13,14.429,15.714,16.429,16.571],"GER":[2.5,2.5,2.5,2.5,2.625,3.5,4.75,6.125,7.25,8.875,13.75,13.75,13.75,13.75,14.625,16.375,17,17.125],"FRA":[1.333,1.333,1.333,1.417,1.583,3.083,3.75,5.25,6.083,7.417,10.917,10.917,10.917,10.917,11.75,12.417,12.583],"POR":[2,2,2.25,3,3.333,4.333,5.333,5.833,6.5,7.333,10,10,10,10,10.667,12.167,12.5],"BEL":[0.8,0.8,1.1,2.1,2.4,3.8,5.2,6,6.4,7.2,10.6,10.6,10.6,10.6,11.4,13.4,14.2],"NED":[0.8,0.8,1.2,2.1,2.7,3.7,4.5,5.5,6.1,6.9,10.3,10.3,10.3,10.3,10.9,12.5,13.5],"TUR":[0,0,0.8,1.6,2.4,3.4,4.8,5.4,7,7.6,10.8,10.8,10.8,10.8,11.2,11.8],"POL":[0,1,2.125,2.875,3.5,3.5,4,4.25,4.5,4.75,5.5,5.5,5.5,5.5,6.25,7.25,7.75],"CZE":[1,1,2.125,3.125,4.25,4.75,5.25,5.25,5.75,6.25,6.75,6.75],"GRE":[0,0,0.75,1.375,1.625,1.625,1.625,1.625,1.875,2.125,2.125],"NOR":[0,0.25,1.875,2.75,3.5,4,4.5,5,5.5,5.5,5.5,5.5,5.5,5.5,5.75],"DEN":[0.8,0.8,1.7,2.3,2.7,2.7,3.3,3.9,4.7,4.7,5.7,5.7,5.7,5.7,5.9],"CYP":[0,0,0.7,1.5,2.7,2.9,3.3,3.3,3.7,3.9,4.5,4.5,4.5,4.5,5.1],"SUI":[0,0,1,2.25,3.25,3.75,4.25,4.25,4.5,5.25,6,6,6,6,6.5,7,8,8.5]},"2023":{"ENG":[2,2,2,2,2.25,3.375,4.75,6.25,7.5,9.25,13.625,13.625,13.625,13.625,13.625,16.25,17.375],"ITA":[2.286,2.286,2.286,2.286,2.429,3.857,5.286,6.571,8.143,9.143,14,14,14,14,14.857,17.714,19.429,20.714,21],"ESP":[2.5,2.5,2.5,2.5,2.563,3.438,5.063,6.313,7.563,8.688,12.688,12.688,12.688,12.688,12.813,14.438,15.313,15.813,16.063],"GER":[2.286,2.286,2.286,2.286,2.5,3.929,4.643,6.357,8.214,9.357,13.643,13.643,13.643,13.643,14.357,16.357,17.929,19.357],"FRA":[1.333,1.333,1.333,1.5,1.75,3.25,4.25,5.75,6.917,8.25,11.583,11.583,11.583,11.583,12.917,14.75,16.083,16.25],"POR":[2,2,2.167,2.667,3,3.667,4,4.5,5.167,5.667,7.833,7.833,7.833,7.833,9.5,10.667,11],"BEL":[0.8,0.8,1.6,2.3,4,4.8,6,7.4,8.4,9.4,11.6,11.6,11.6,11.6,12.4,13.2,14.2,14.4],"NED":[1.6,1.6,1.9,3.1,3.8,4.4,5.2,5.8,6.2,7,8.6,8.6,8.6,8.6,9.6,10],"TUR":[1,1,2.75,4.5,6.25,7.25,8.25,8.75,8.75,9,10.5,10.5,10.5,10.5,11,11.5,12],"POL":[0,0.5,2.25,3.5,3.875,4.375,4.375,5.125,5.625,6.125,6.875,6.875],"CZE":[0,0,0.375,1.5,2.5,4,5,5.75,6.75,8.25,12,12,12,12,12.75,13.25,13.5],"GRE":[0,0,0.9,2.2,3,4.2,5.2,6,6.2,6.6,7.8,7.8,7.8,7.8,8.6,9.4,10,11,11.4],"NOR":[0,0,1.125,2.375,3,3.25,3.25,4.25,5.25,6,6.25,6.25,6.25,6.25,7.5,8],"DEN":[1,1,2,2.875,4,4.25,4.75,5.25,6,6.75,8.5,8.5],"CYP":[0,0,1.875,2.75,3,3,3.5,3.5,3.5,3.75,3.75],"SUI":[0.8,0.8,1.5,1.7,2,2.2,2.8,3,3.4,4,4,4,4,4,4.8,5.2]},"2024":{"ENG":[3.429,3.429,3.429,3.429,3.571,5.143,7,8.857,9.714,11.286,12.857,14,15.429,20.893,20.893,24.25,26.821,28.893,29.464],"ITA":[3.75,3.75,3.75,3.75,3.875,5.125,6.375,7.5,9,10.375,11.625,13,13.75,17.313,18.188,19.938,21.188,21.875],"ESP":[3.429,3.429,3.429,3.429,3.714,4.571,5.286,7,7.857,9.286,11,11.857,13.143,17.179,19.036,21.679,23.25,23.893],"GER":[3.75,3.75,3.75,3.75,4,5.25,6.625,7.5,8.375,9.375,10.375,11.125,12.125,14.672,16.047,17.922,18.422],"FRA":[3.429,3.429,3.429,3.643,3.929,5.214,6.214,7.071,8.071,8.643,9.786,10.5,11.357,13.929,14.857,16.214,16.857,17.643,17.929],"POR":[2.4,2.4,3.2,3.9,4.6,6.2,7.4,8.6,9.4,10.8,11.6,11.6,13,14.75,16.05,16.25],"BEL":[1.2,1.2,1.9,2.4,3.4,4.2,5.6,6.6,7.8,9.4,10.8,11.4,11.4,13.15,15.25,15.65],"NED":[2,2,2.417,2.667,3,3.833,4.667,5.5,6.667,7.333,8,9.333,10.333,11.917,14.75,15.25],"TUR":[0,0,1.2,1.7,2.5,3.3,3.7,4.9,5.9,6.9,7.3,8.1,8.3,8.9,9.9,10.3],"POL":[0,0.5,1.75,2.625,3.375,4.375,5.375,6.375,7.125,7.125,7.375,7.375,7.375,8.625,9.75,11,11.75],"CZE":[1.2,1.2,2.4,4,5.3,6.3,6.9,7.1,7.9,8.7,8.7,9.1,9.3,9.75,10.35,10.55],"GRE":[0,0,1.5,2.125,2.875,3.125,3.625,4.375,5.125,6.375,7.625,8.625,9.125,11.063,11.688,12.688],"NOR":[0,0,1.625,2.875,3.625,4.625,4.875,5.375,5.375,5.625,6.625,7.125,7.375,8.438,9.813,11.063,11.813],"DEN":[0,0,1.625,2.5,3,3.25,4,4.75,5.25,5.75,5.75,6.25,6.5,7.032,7.657],"CYP":[0,0,1.125,2,2.75,4,4,5,5.5,7,7.75,7.75,7.75,8.69,10.065,10.565],"SUI":[1.2,1.2,1.9,2.5,3.4,3.8,4.2,4.6,5.2,5.6,6,6,6,6.65,6.65,7.05]},"2025":{"ENG":[4,4,4,4,4.167,5.611,6.722,8.389,9.944,11.056,12.611,13.944,15.611,20.959,22.292,24.792,26.57,28.126,28.681],"ITA":[3.429,3.429,3.429,3.429,3.714,4.714,6.143,6.857,8.143,9.857,11,11.857,12.714,15.5,17.357,18.714,19],"ESP":[3.75,3.75,3.75,3.75,4,4.875,6.125,7.5,8.375,9.5,10.625,11.75,12.375,15.531,17.406,20.281,21.406,22.094],"GER":[3.429,3.429,3.429,3.429,3.571,5.286,6.429,7.571,8.857,10,11.429,12,12.857,16.214,17.571,19.429,21.214,21.786],"FRA":[2.571,2.571,2.571,2.571,2.786,3.929,5.357,6.357,6.929,8.5,9.786,10.357,11.214,13.75,14.964,16.393,17.536,18.179,18.321],"POR":[2.4,2.4,2.9,4,4.8,6,6.8,7.6,8,9.4,10.6,11.6,13,16.6,16.6,18.9,20.1,20.5],"BEL":[2.4,2.4,2.7,3.4,4.1,5.3,5.3,5.5,6.1,6.9,6.9,7.7,8.9,10,11,11.4],"NED":[2,2,2.5,3.333,3.917,3.917,4.75,5.75,6.417,7.083,7.583,8.25,8.417,8.647,9.063,9.813,9.98],"TUR":[1.2,1.2,1.6,2.5,2.8,3.2,4.4,5.6,6.4,6.6,7,7.2,7.4,8.276,10.276,11.076],"POL":[0,0.5,2.375,3.375,4.875,6.375,7.375,7.875,9.375,10.125,11.875,11.875,11.875,13.625,15.25,15.75],"CZE":[1.2,1.2,1.7,2.6,2.8,3.6,4.2,5.4,6.4,7.2,7.8,8,8.4,9.726,10.826,11.026],"GRE":[1.2,1.2,1.7,2.5,3.3,4.1,4.5,5.1,6.5,7.5,8.7,9.7,10.3,12.1,12.9,13.8,14.2],"NOR":[1.2,1.2,2.1,2.7,3.6,3.8,4.4,4.8,5,5.2,5.4,6,6.4,6.55,7.65,8.05],"DEN":[1.5,1.5,3.125,4.375,5.375,6.125,6.625,7.125,7.625,8.125,9.125,9.625,10.125,11.75,11.75,12.25],"CYP":[1.5,1.75,3.5,4.875,5.5,6.25,7,7.75,9,10,10.5,10.5,11,11.908,11.908,12.158],"SUI":[0,0,0.5,1.1,2,2.4,3.6,4.2,4.6,4.8,5.6,5.6,5.6,6,6.2]}};/*HIST_END*/
 /* Détail club par club des cinq saisons closes, pour les huit premières nations.
@@ -664,7 +746,53 @@ const firstMain = nStepsQ;
 const anomalous = played.filter(i => i > firstMain && !played.includes(i-1));
 
 /* diviseur = clubs engagés */
-const divisor = n => n.y[4] > 0 ? Math.round(n.tp / n.y[4]) : null;
+/* L'extracteur publie déjà le diviseur, contrôlé à la source (points d'équipe ÷
+   coefficient de saison, avec échec de publication si le rapport n'est pas entier).
+   On le lit plutôt que de le recalculer ; le calcul reste en secours pour les
+   captures antérieures à ce champ. */
+const divisor = n => n.divisor ?? (n.y[4] > 0 ? Math.round(n.tp / n.y[4]) : null);
+
+/* ---------- clubs engagés, clubs encore en vie ----------
+   Deux nombres différents, et c'est tout l'objet de la section « Les clubs encore
+   en vie ». Le coefficient divise par les clubs ENGAGÉS au 1er juillet : ce
+   diviseur est figé pour la saison. Le nombre de clubs ENCORE EN LICE, lui, ne
+   fait que décroître — un club éliminé continue de peser dans la division sans
+   plus jamais rapporter un point.
+   La source publie les deux (« 4 von 5 Teams aktiv » dans PktNat) et l'extracteur
+   garde les deux : n.divisor pour les engagés, n.a[3] pour les vivants, n.a[0..2]
+   pour leur répartition C1 · C3 · C4. */
+const engages = n => divisor(n) ?? 0;
+const enVie   = n => n.a[3] ?? 0;
+const elimines= n => Math.max(0, engages(n) - enVie(n));
+const partMorte = n => { const e = engages(n); return e > 0 ? elimines(n) / e : 0; };
+/* Rendement par club encore en course : les points marqués rapportés aux seuls
+   clubs qui peuvent encore en marquer. Ce n'est PAS un coefficient — le
+   coefficient divise par les engagés — c'est ce que pèse en moyenne un survivant. */
+const parSurvivant = n => enVie(n) > 0 ? n.tp / enVie(n) : null;
+/* Nations réellement engagées cette saison : la Russie (suspendue) et le
+   Monténégro (aucun club) n'ont ni diviseur ni effectif, les écarter évite des
+   lignes vides et des divisions par zéro. */
+const ENGAGEES = N.filter(n => engages(n) > 0);
+
+/* Historique de l'effectif, relevé à chaque rafraîchissement.
+   Aucune source ne publie la date d'élimination club par club ; en revanche le
+   nombre de clubs actifs est publié à chaque relevé. On l'archive donc à chaque
+   fois qu'il change, et la courbe de survie se construit d'elle-même au fil de la
+   saison. Les éliminations antérieures au premier relevé archivé ne sont pas
+   datées : elles se sont toutes produites en qualifications, et la courbe le dit
+   en pointillé plutôt que de prétendre les situer. */
+const SURV = (typeof SURVIE === 'object' && SURVIE && Array.isArray(SURVIE.rel))
+  ? SURVIE.rel.slice().sort((a, b) => a[0] < b[0] ? -1 : 1) : [];
+const survAt = (c, iso) => { let v = null;
+  for (const [d, m] of SURV) { if (d > iso) break; if (m[c]) v = m[c]; }
+  return v || (SURV.length && SURV[0][1][c]) || null; };
+/* Effectif engagé dans la phase de ligue d'une compétition : l'effectif relevé le
+   lendemain de sa première journée. C'est ce nombre-là qui fixe le nombre de
+   matchs de phase de ligue, et il ne doit pas suivre les éliminations de février
+   — sinon le rendement du bloc 6b s'effondrerait à l'ouverture de la phase finale
+   alors que les matchs, eux, ont bien été joués. */
+const lendemain = iso => { const d = dOf(iso); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); };
+const clubsLigue = (c, k) => { const a = survAt(c, lendemain(CAL[k][0][0])); return a ? a[k] : BY[c].a[k]; };
 
 /* rang sur le coefficient de la saison */
 const seasonRank = (()=>{ const s=[...N].sort((a,b)=>b.y[4]-a.y[4]); return Object.fromEntries(s.map((n,i)=>[n.c,i+1])); })();
@@ -1065,6 +1193,22 @@ const encre = (fond, teinte) => {
   return cssHex('--ink');
 };
 
+/* Une pastille par club ENGAGÉ : pleine à la couleur de sa compétition tant que
+   le club est en lice, creuse une fois éliminé. Les vivants d'abord, dans l'ordre
+   C1 · C3 · C4, les éliminés ensuite — on ne sait pas de quelle compétition ils
+   venaient, la source ne donne que les effectifs actuels. */
+function pastilles(n){
+  const a = n.a, mort = elimines(n);
+  const vivants = [0,1,2].flatMap(k => Array.from({length: a[k]||0}, () => k));
+  const titre = mort
+    ? `${enVie(n)} clubs encore en lice sur ${engages(n)} engagés — ${Math.round(partMorte(n)*100)} % du diviseur ne peut plus rien rapporter`
+    : `${enVie(n)} clubs engagés, tous encore en lice`;
+  return `<span class="pips" title="${titre}">`
+    + vivants.map(k => `<i style="background:var(${KVAR[k]})"></i>`).join('')
+    + Array.from({length: mort}, () => '<i class="out"></i>').join('')
+    + `</span>`;
+}
+
 let period='five';
 function drawBars(){
   const isS = period==='season';
@@ -1075,7 +1219,7 @@ function drawBars(){
     const n=BY[c];
     return `<div class="barrow${c==='FRA'?' me':''}">
       <div class="nm"><span class="rk">${i+1}.</span><b>${name(c)}</b></div>
-      <div class="cnt num">${n.a[0]}·${n.a[1]}·${n.a[2]}</div>
+      <div class="cnt">${pastilles(n)}</div>
       <div class="track" data-nat="${c}">${isS
         ? (() => {
             /* Vue « saison en cours » : tout est vivant, donc tout est en pleine
@@ -1105,7 +1249,9 @@ function drawBars(){
               + `background:${toHex(fond)}">${lab}</div>`;
           }).join('')}</div>
       <div class="val num">${nf(val(c))}</div>
-      <div class="split num">${isS?`sur ${divisor(n)} clubs engagés`:`${nf(n.t-n.y[4],2)} acquis + ${nf(n.y[4],2)} en cours`}</div>
+      <div class="split num">${isS
+        ? `${enVie(n)} en lice sur ${engages(n)} engagés`
+        : `${nf(n.t-n.y[4],2)} acquis + ${nf(n.y[4],2)} en cours`}</div>
     </div>`;}).join('');
   const posS=[...TOP8].sort((x,y)=>seasonNow(y)-seasonNow(x)).indexOf('FRA')+1;
   const leg = isS ? '' :
@@ -1115,9 +1261,16 @@ function drawBars(){
     + `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px">`
     + `<i style="width:12px;height:10px;border-radius:2px;display:inline-block;background:var(--ink-3)"></i>saison ${D.meta.season}, en cours</span>`
     + `<span style="color:var(--ink-3)">— survolez une barre pour le détail saison par saison</span><br>`;
+  const survie = (() => {
+    const morts = TOP8.filter(c => elimines(BY[c]) > 0);
+    const pips = `La colonne de gauche donne l'effectif : <b>une pastille par club engagé</b>, à la couleur de sa compétition tant qu'il est en lice, <b>en creux une fois éliminé</b>. C'est le diviseur du coefficient, rendu visible — un club éliminé continue de diviser sans plus jamais rapporter. `;
+    return pips + (morts.length
+      ? `${morts.length === 1 ? 'Une nation du groupe a' : morts.length + ' nations du groupe ont'} déjà perdu des clubs : ${morts.map(c => `${name(c)} ${enVie(BY[c])}/${engages(BY[c])}`).join(', ')}. Le détail est dans la section « Les clubs encore en vie ».`
+      : `Aucune des huit n'a encore perdu un club : toutes les pastilles sont pleines. C'est une information, pas un vide — plus bas au classement, la Pologne n'en a gardé que 2 sur 5. Le détail est dans la section « Les clubs encore en vie ».`);
+  })();
   document.getElementById('barNote').innerHTML = leg + (isS
-    ? `Coefficient acquis depuis le 1<sup>er</sup> juillet. La France est ${posS}<sup>e</sup> des huit — mais à ce stade ce classement dépend surtout du nombre de clubs déjà entrés en lice, colonne « C1·C3·C4 » : les nations dont les clubs ont disputé les qualifications de juillet ont plusieurs semaines d'avance sur celles qui n'entrent qu'en phase de ligue.`
-    : `Somme des cinq dernières saisons — <b>c'est ce total qui fixe les places européennes</b>, et c'est pourquoi la page s'ouvre dessus. Les quatre segments pâles sont acquis : des saisons closes que plus aucun résultat ne changera. Le segment vif, en bout de barre, est la saison en cours — seule à bouger encore, et pour l'instant seulement ${nf(BY.FRA.y[4]/BY.FRA.t*100,1)} % du total français. Le rang du jour se lit ici ; la saison en cours, elle, se regarde dans l'autre onglet et dans les blocs suivants. Chaque barre se lit aussi saison par saison au survol.`);
+    ? survie + `<br>Coefficient acquis depuis le 1<sup>er</sup> juillet. La France est ${posS}<sup>e</sup> des huit — mais à ce stade ce classement dépend surtout du nombre de clubs déjà entrés en lice, colonne « C1·C3·C4 » : les nations dont les clubs ont disputé les qualifications de juillet ont plusieurs semaines d'avance sur celles qui n'entrent qu'en phase de ligue.`
+    : survie + `<br>Somme des cinq dernières saisons — <b>c'est ce total qui fixe les places européennes</b>, et c'est pourquoi la page s'ouvre dessus. Les quatre segments pâles sont acquis : des saisons closes que plus aucun résultat ne changera. Le segment vif, en bout de barre, est la saison en cours — seule à bouger encore, et pour l'instant seulement ${nf(BY.FRA.y[4]/BY.FRA.t*100,1)} % du total français. Le rang du jour se lit ici ; la saison en cours, elle, se regarde dans l'autre onglet et dans les blocs suivants. Chaque barre se lit aussi saison par saison au survol.`);
 }
 /* Infobulle saison par saison, calquée sur celle du bloc 2a : même repérage du
    segment survolé, même mise en avant par filtre, même positionnement. Une seule
@@ -1703,8 +1856,19 @@ function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM();
     return m ? new Date(+m[3], +m[2] - 1, +m[1], m[4] ? +m[4] : 23, m[5] ? +m[5] : 59) : TODAY; })();
   const jouees = k => CAL[k].filter(([iso]) => kickAt(iso) < ASOF).length;
   const totJ   = k => CAL[k].length;
-  const clubsK = c => { const a = BY[c].a; return [a[0], a[1], a[2]]; };
-  const div    = c => BY[c].a[3];
+  /* Deux corrections de fond, invisibles aujourd'hui, fatales plus tard.
+     1. `div` reconvertit un coefficient en points bruts (et l'inverse) : le seul
+        diviseur qui fait ça est celui du coefficient, c'est-à-dire les clubs
+        ENGAGÉS. On lisait ici a[3], les clubs encore EN LICE. Les deux coïncident
+        tant que le groupe n'a perdu personne — c'est le cas des huit premiers
+        aujourd'hui — et divergent à la première élimination.
+     2. le nombre de matchs de phase de ligue dépend des clubs qui ont DISPUTÉ
+        cette phase de ligue, pas de ceux qui sont encore en vie : en février, les
+        éliminations de la phase finale auraient fait fondre le dénominateur et
+        le rendement de toutes les nations aurait bondi sans qu'un match soit
+        joué. On lit donc l'effectif archivé au lendemain de la 1re journée. */
+  const clubsK = c => [0, 1, 2].map(k => clubsLigue(c, k));
+  const div    = c => divisor(BY[c]) || 1;
   /* matchs de phase de ligue déjà disputés : un club = un match par journée */
   const matchs = c => clubsK(c).reduce((a, n, k) => a + n * jouees(k), 0);
   const matchsRestants = c => clubsK(c).reduce((a, n, k) => a + n * (totJ(k) - jouees(k)), 0);
@@ -2070,6 +2234,304 @@ function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM();
       + `<b>Ce qui n'est pas simulé :</b> la phase finale, dont on ignore les qualifiés et qui pèse lourd. La fourchette ci-dessus s'arrête à la fin janvier.`;
   })();
 
+})();
+
+/* ================= 7 · LES CLUBS ENCORE EN VIE ================= */
+/* Trois lectures d'un seul couple de nombres : clubs engagés, clubs encore en
+   lice. Tout vient de la source (« 4 von 5 Teams aktiv »), rien n'est estimé. */
+(function(){
+  let porte = 'all';                      // 'top' = les huit premières · 'all' = toutes
+  let ordre = 'rk';                       // 'rk' = classement à 5 ans · 'pm' = poids mort
+  const jeu = () => porte === 'top' ? TOP8.map(c => BY[c]) : ENGAGEES;
+
+  /* ---------- 7a · qui est encore en course ---------- */
+  const vleg = document.getElementById('vleg');
+  vleg.innerHTML = KNAME.map((n, i) => `<span><i style="background:var(${KVAR[i]})"></i>${n}</span>`).join('')
+    + `<span><i style="background:none;box-shadow:inset 0 0 0 1.5px var(--ink-3);opacity:.5"></i>éliminé — pèse encore dans le diviseur</span>`;
+
+  /* Le sigle écrit dans la case : blanc quand il passe le contraste, une encre
+     foncée de la même teinte sinon. En thème sombre les jetons de compétition
+     s'éclaircissent et le blanc y tombe sous 3:1 — le même calcul qu'au bloc 1
+     règle les deux thèmes d'un coup, sans table de couleurs à maintenir. */
+  let ENCRE = ['#fff','#fff','#fff'];
+  const majEncre = () => { ENCRE = KVAR.map(v => { const t = toRGB(cssHex(v)); return encre(t, t); }); };
+
+  function drawV(){
+    majEncre();
+    /* Deux ordres, parce qu'aucun des deux ne suffit.
+       « Classement » est l'ordre du reste de la page : on cherche une nation, on
+       la trouve où elle est partout ailleurs, et on lit son effectif au passage.
+       « Poids mort » range par part du diviseur déjà perdue — c'est la lecture
+       du bloc, mais elle ouvre sur une vingtaine de petites nations à 1 club sur
+       4 qui se ressemblent toutes, et les gros cas (Pologne 2/5, Autriche 3/5)
+       arrivent après. Les effectifs à zéro passent en dernier dans cet ordre :
+       ils sont l'extrême du poids mort, mais leur saison est finie.
+       À poids mort égal, la plus grosse délégation d'abord : perdre la moitié de
+       huit clubs n'est pas perdre la moitié de quatre. */
+    const rows = [...jeu()].sort(ordre === 'rk'
+      ? (a, b) => a.r - b.r
+      : (a, b) => (enVie(b) > 0) - (enVie(a) > 0) || partMorte(b) - partMorte(a)
+                  || engages(b) - engages(a) || a.r - b.r);
+    document.getElementById('vlist').innerHTML = rows.map(n => {
+      const vivants = [0,1,2].flatMap(k => Array.from({length: n.a[k] || 0}, () => k));
+      const cases = vivants.map(k => `<i class="vcell" style="background:var(${KVAR[k]});color:${ENCRE[k]}" title="${name(n.c)} · ${KSHORT[k]}">${KSHORT[k]}</i>`).join('')
+        + Array.from({length: elimines(n)}, () => `<i class="vcell out" title="${name(n.c)} · club éliminé, toujours dans le diviseur">×</i>`).join('');
+      const pm = partMorte(n);
+      return `<div class="vrow${n.c === 'FRA' ? ' me' : ''}">
+        <div class="nm">${name(n.c)}</div>
+        <div class="vgrid">${cases}</div>
+        <div class="rd"><b>${enVie(n)}/${engages(n)}</b> ${pm > 0
+          ? `<s>— ${Math.round(pm*100)} % du diviseur ne rapporte plus rien</s>`
+          : `<s>— effectif intact</s>`}</div>
+      </div>`;
+    }).join('');
+
+    const pleines = rows.filter(n => elimines(n) === 0).length;
+    const vides   = rows.filter(n => enVie(n) === 0).length;
+    const pire    = rows.filter(n => enVie(n) > 0).sort((a,b) => partMorte(b) - partMorte(a))[0];
+    document.getElementById('vNote').innerHTML =
+      `<b>Une case par club engagé</b>, à la couleur de sa compétition tant qu'il est en lice, en creux une fois éliminé. La longueur de la ligne est donc le diviseur du coefficient : neuf cases pour l'Angleterre, trois pour Andorre. `
+      + `Sur ${rows.length} associations affichées, ${pleines} ${pleines > 1 ? 'ont' : 'a'} encore l'intégralité de leur effectif`
+      + (vides ? ` et ${vides} n'${vides > 1 ? 'ont' : 'a'} plus aucun club en lice — leur coefficient de saison est définitivement arrêté` : '')
+      + (pire ? `. La plus entamée parmi celles qui jouent encore : ${name(pire.c)}, ${enVie(pire)} sur ${engages(pire)}` : '')
+      + `. Rangé par ${ordre === 'rk' ? 'classement à cinq ans, l\'ordre du reste de la page' : 'part du diviseur déjà perdue, les effectifs à zéro en dernier'}`
+      + `. <b>À ce stade de la saison, « éliminé » veut dire « n'a pas atteint sa phase de ligue »</b> : toutes les sorties enregistrées à ce jour datent des tours de juillet-août. Les éliminations de la phase finale viendront à partir de février.`;
+  }
+
+  /* ---------- 7b · ce que pèse un club encore en lice ---------- */
+  /* Deux valeurs, les mêmes points au numérateur, deux dénominateurs :
+       plein  = points ÷ clubs ENGAGÉS  → c'est le coefficient officiel ;
+       creux  = points ÷ clubs EN LICE  → ce que pèse en moyenne un survivant.
+     L'écart entre les deux est le prix des éliminés, en points de coefficient.
+     Une nation réduite à un seul club est écartée : « la moyenne » y serait le
+     total d'un club unique, un nombre qui ne se compare à rien. */
+  function drawDead(){
+    const rows = jeu().filter(n => enVie(n) >= 2)
+      .map(n => ({ c: n.c, co: n.y[4], ps: parSurvivant(n), v: enVie(n), e: engages(n) }))
+      .sort((a, b) => b.ps - a.ps);
+    const seuls = jeu().filter(n => enVie(n) === 1).sort((a,b) => b.tp - a.tp);
+    const morts = jeu().filter(n => enVie(n) === 0);
+    const box = document.getElementById('boxDead');
+    if (!rows.length) { box.hidden = true; document.getElementById('capDead').textContent = ''; return; }
+    box.hidden = false;
+
+    const W = 1000, rowH = 30, mT = 34, mB = 36, mL = 104, mR = 178;
+    const H = mT + rows.length * rowH + mB;
+    /* Neuf intervalles plutôt que six : à six, le pas tombait sur 2 et l'axe
+       s'arrêtait à 10 pour un maximum de 8 — deux graduations de vide à droite. */
+    const sc = niceScale(0, Math.max(...rows.map(r => r.ps)) * 1.04, 9);
+    const X = v => mL + (W - mL - mR) * ((v - sc.lo) / (sc.hi - sc.lo));
+    let g = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
+    sc.ticks.forEach(v => { if (v < sc.lo || v > sc.hi) return;
+      g += `<line x1="${X(v).toFixed(1)}" y1="${mT-8}" x2="${X(v).toFixed(1)}" y2="${H-mB+4}" stroke="var(--rule-soft)"/>`
+        + `<text x="${X(v).toFixed(1)}" y="${H-mB+20}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${nf(v, sc.dec)}</text>`; });
+    g += `<text x="${mL}" y="${mT-16}" font-size="11" font-weight="600" fill="var(--ink-3)">points de coefficient par club</text>`;
+    rows.forEach((r, i) => {
+      const y = mT + i * rowH + rowH / 2, fr = r.c === 'FRA';
+      const col = fr ? 'var(--fr)' : 'var(--ink-2)';
+      const x1 = X(r.co), x2 = X(r.ps);
+      g += `<text x="${mL-12}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="12.5" font-weight="${fr?700:500}" fill="${fr?'var(--fr)':'var(--ink-2)'}">${name(r.c)}</text>`;
+      if (x2 - x1 > 1)
+        g += `<line x1="${x1.toFixed(1)}" y1="${y.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${col}" stroke-width="2" opacity=".28"/>`;
+      g += `<circle cx="${x1.toFixed(1)}" cy="${y.toFixed(1)}" r="5.5" fill="${col}"><title>${name(r.c)} · coefficient de saison ${nf(r.co)} = ${nf1(BY[r.c].tp)} points ÷ ${r.e} clubs engagés</title></circle>`;
+      if (x2 - x1 > 1)
+        g += `<circle cx="${x2.toFixed(1)}" cy="${y.toFixed(1)}" r="5.5" fill="var(--surface)" stroke="${col}" stroke-width="2"><title>${name(r.c)} · ${nf(r.ps)} points par club encore en lice (${nf1(BY[r.c].tp)} ÷ ${r.v})</title></circle>`;
+      const ratio = r.co > 0 ? r.ps / r.co : 1;
+      g += `<text x="${(Math.max(x1,x2)+12).toFixed(1)}" y="${(y+4).toFixed(1)}" font-size="11.5" font-family="IBM Plex Mono, monospace" fill="${fr?'var(--fr)':'var(--ink-3)'}" font-weight="${fr?700:500}">`
+        + `${r.v}/${r.e}${ratio > 1.001 ? ` · ×${nf1(ratio)}` : ' · intact'}</text>`;
+    });
+    document.getElementById('chartDead').outerHTML = (g + '</svg>').replace('<svg', '<svg id="chartDead"');
+
+    const top = rows[0], dia = rows.filter(r => r.ps / r.co < 1.001).length;
+    document.getElementById('capDead').innerHTML =
+      `<b>Point plein : le coefficient de saison</b> — les points marqués divisés par les clubs engagés, diviseur figé, éliminés compris. <b>Point creux : les mêmes points divisés par les seuls clubs encore en lice.</b> L'écart entre les deux n'est pas une performance cachée : c'est le prix des éliminés, en points de coefficient. `
+      + `Une nation dont l'effectif est intact n'a qu'un point — les deux se superposent ; ${dia} ${dia > 1 ? 'sont' : 'est'} dans ce cas ici. `
+      + (top ? `En tête du classement par survivant, ${name(top.c)} : ${nf(top.ps)} points par club encore en course contre un coefficient de ${nf(top.co)}, parce que ${enVie(BY[top.c])} de ses ${engages(BY[top.c])} engagés portent tout. ` : '')
+      + `<b>Ce que ce graphique ne dit pas</b> : les points des éliminés restent au numérateur des deux colonnes. Le point creux mesure la charge portée par les survivants, pas le coefficient qu'aurait eu le pays en engageant moins de clubs. `
+      + (seuls.length ? `Écartées, faute de moyenne : ${seuls.map(n => `${name(n.c)} (1 club, ${nf1(n.tp)} pts)`).join(', ')}. ` : '')
+      + (morts.length ? `Sans aucun club en lice : ${morts.map(n => name(n.c)).join(', ')}.` : '');
+  }
+
+  /* ---------- 7c · la courbe de survie ---------- */
+  /* Aucune source ne publie la date d'élimination club par club. Ce qu'on publie
+     à chaque relevé, c'est l'effectif du jour ; la page l'archive (bloc SURVIE) et
+     la courbe se construit relevé après relevé. Tout ce qui précède le premier
+     relevé archivé est en pointillé : on sait que ces clubs sont sortis pendant
+     les qualifications, on ne sait pas quel soir. */
+  const selV = new Set(TOP8);
+  let vue = 'nat';                        // 'nat' = par nation · 'eur' = toute l'Europe
+  const JUL = '2026-07-01';
+  /* Fin de la phase qualificative : le dernier match de barrage des trois
+     compétitions, pas seulement de la C1 — la C3 et la C4 jouent deux jours plus
+     tard, et c'est la dernière soirée qui clôt les éliminations de l'été. */
+  const finQual = [0,1,2].map(k => QUAL[k][QUAL[k].length-1][2]).sort().pop();
+  const debQual = [0,1,2].map(k => QUAL[k][0][1]).sort()[0];
+  const t = iso => dOf(iso).getTime();
+
+  /* Cadre commun aux deux lectures : le temps en abscisse, du 1er juillet au
+     dernier relevé plus trois semaines. L'axe s'allonge avec la saison plutôt que
+     de réserver d'emblée onze mois de vide. */
+  function cadre(hi, H){
+    const dernier = SURV[SURV.length - 1][0];
+    const fin = (() => { const d = dOf(dernier); d.setDate(d.getDate() + 21); return d; })();
+    const t0 = t(JUL), t1 = Math.max(fin.getTime(), t(finQual) + 2592e6);
+    const W = 1000, mT = 26, mB = 42, mL = 52, mR = 96;
+    const X = ms => mL + (W - mL - mR) * ((ms - t0) / (t1 - t0));
+    const Y = v => mT + (H - mT - mB) * (1 - v / hi);
+    return { W, H, mT, mB, mL, mR, t0, t1, X, Y };
+  }
+  function grille(f, pas){
+    let g = '';
+    for (let v = 0; v <= f.hiV + 1e-9; v += pas)
+      g += `<line x1="${f.mL}" y1="${f.Y(v).toFixed(1)}" x2="${f.W-f.mR}" y2="${f.Y(v).toFixed(1)}" stroke="var(--rule-soft)"/>`
+        + `<text x="${f.mL-8}" y="${(f.Y(v)+4).toFixed(1)}" text-anchor="end" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${v}</text>`;
+    for (let d = new Date(2026, 6, 1); d.getTime() <= f.t1; d = new Date(d.getFullYear(), d.getMonth()+1, 1)) {
+      const x = f.X(d.getTime()); if (x < f.mL - 1 || x > f.W - f.mR + 1) continue;
+      g += `<line x1="${x.toFixed(1)}" y1="${f.mT}" x2="${x.toFixed(1)}" y2="${f.H-f.mB}" stroke="var(--rule-soft)"/>`
+        + `<text x="${x.toFixed(1)}" y="${f.H-f.mB+18}" text-anchor="middle" font-size="11" fill="var(--ink-3)">`
+        + d.toLocaleDateString('fr-FR',{month:'short'}) + `</text>`;
+    }
+    /* la fenêtre où tout s'est joué jusqu'ici */
+    g += `<rect x="${f.X(t(debQual)).toFixed(1)}" y="${f.mT}" width="${(f.X(t(finQual))-f.X(t(debQual))).toFixed(1)}" height="${f.H-f.mB-f.mT}" fill="var(--n4)" opacity=".07"/>`
+      + `<text x="${((f.X(t(debQual))+f.X(t(finQual)))/2).toFixed(1)}" y="${f.mT+13}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--ink-3)">qualifications</text>`;
+    return g;
+  }
+  /* Étiquettes de fin de courbe : trois nations à 7 clubs se posent au même pixel
+     et deviennent une bouillie. On les écarte verticalement du strict minimum, en
+     partant du haut, sans jamais toucher à la courbe elle-même. */
+  function poseEtiquettes(items, hMin, bas){
+    const o = items.slice().sort((a, b) => a.y - b.y);
+    for (let i = 1; i < o.length; i++) if (o[i].y - o[i-1].y < hMin) o[i].y = o[i-1].y + hMin;
+    const trop = o.length ? o[o.length-1].y - bas : 0;
+    if (trop > 0) for (let i = o.length - 1; i >= 0; i--)
+      o[i].y = Math.min(o[i].y - trop, i ? o[i-1].y + 1e9 : o[i].y - trop);
+    for (let i = o.length - 2; i >= 0; i--) if (o[i+1].y - o[i].y < hMin) o[i].y = o[i+1].y - hMin;
+    return o;
+  }
+
+  function drawSurv(){
+    const svg = document.getElementById('chartSurv');
+    if (!SURV.length) return;
+    const H = 292;
+    if (vue === 'eur') { svg.outerHTML = europe(H); return; }
+
+    const list = TOP8.filter(c => selV.has(c));
+    if (!list.length) return;
+    const hi = Math.max(...list.map(c => engages(BY[c]))) + 0.6;
+    const f = cadre(hi, H); f.hiV = Math.floor(hi);
+    let g = `<svg viewBox="0 0 ${f.W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">` + grille(f, 1);
+
+    /* Les effectifs sont des entiers : à 7 clubs, trois nations se superposent au
+       pixel près et il n'en resterait qu'une visible. On décale chaque courbe de
+       quelques centièmes de club — assez pour les distinguer, trop peu pour
+       tromper la lecture, et la grille reste sur les entiers. */
+    const dec = i => (i - (list.length - 1) / 2) * 0.075;
+    const etiq = [];
+    list.forEach((c, i) => {
+      const e = engages(BY[c]), col = `var(${SLOT[c]||'--ink-3'})`, fr = c === 'FRA';
+      const o = dec(i), w = fr ? 2.6 : 1.7;
+      const pts = SURV.map(([d, m]) => [t(d), (m[c] ? m[c][3] : null)]).filter(p => p[1] != null);
+      if (!pts.length) return;
+      /* segment non daté : du 1er juillet, effectif au complet, jusqu'au premier
+         relevé archivé. Pointillé, parce que la marche exacte est inconnue. */
+      /* La marche est posée à la FIN DES BARRAGES, pas au premier relevé : c'est
+         là qu'elle s'est produite. La descendre au 17 septembre laisserait croire
+         que ces clubs sont sortis en pleine phase de ligue. Le trait reste en
+         pointillé — la date exacte de chaque élimination, elle, reste inconnue. */
+      const yE = f.Y(e + o), y0 = f.Y(pts[0][1] + o), xq = f.X(t(finQual));
+      g += `<path d="M${f.X(f.t0).toFixed(1)} ${yE.toFixed(1)} L${xq.toFixed(1)} ${yE.toFixed(1)}`
+        + ` L${xq.toFixed(1)} ${y0.toFixed(1)} L${f.X(pts[0][0]).toFixed(1)} ${y0.toFixed(1)}"`
+        + ` fill="none" stroke="${col}" stroke-width="${w}" stroke-dasharray="4 4" opacity=".55"/>`;
+      let d = `M${f.X(pts[0][0]).toFixed(1)} ${y0.toFixed(1)}`;
+      for (let k = 1; k < pts.length; k++)
+        d += ` L${f.X(pts[k][0]).toFixed(1)} ${f.Y(pts[k-1][1]+o).toFixed(1)} L${f.X(pts[k][0]).toFixed(1)} ${f.Y(pts[k][1]+o).toFixed(1)}`;
+      d += ` L${(f.W-f.mR).toFixed(1)} ${f.Y(pts[pts.length-1][1]+o).toFixed(1)}`;
+      g += `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round"/>`;
+      etiq.push({ y: f.Y(pts[pts.length-1][1] + o) + 4, col, fr,
+                  txt: `${name(c)} ${pts[pts.length-1][1]}/${e}`, yv: f.Y(pts[pts.length-1][1] + o) });
+    });
+    poseEtiquettes(etiq, 14, H - f.mB).forEach(e => {
+      /* un filet de rattachement quand l'étiquette a dû s'écarter de sa courbe */
+      if (Math.abs(e.y - 4 - e.yv) > 2)
+        g += `<line x1="${(f.W-f.mR+2).toFixed(1)}" y1="${e.yv.toFixed(1)}" x2="${(f.W-f.mR+7).toFixed(1)}" y2="${(e.y-4).toFixed(1)}" stroke="${e.col}" stroke-width="1" opacity=".6"/>`;
+      g += `<text x="${(f.W-f.mR+9).toFixed(1)}" y="${e.y.toFixed(1)}" font-size="11.5" font-weight="${e.fr?700:600}" fill="${e.col}">${e.txt}</text>`;
+    });
+    svg.outerHTML = (g + '</svg>').replace('<svg', '<svg id="chartSurv"');
+    legSurv();
+  }
+
+  /* Lecture d'ensemble : les 233 clubs engagés par les 53 associations, et ce
+     qu'il en reste. C'est la seule vue où la courbe descend vraiment aujourd'hui —
+     les huit premières n'ont encore perdu personne. */
+  function europe(H){
+    const tot = ENGAGEES.reduce((a, n) => a + engages(n), 0);
+    const somme = m => ENGAGEES.reduce((a, n) => a + (m[n.c] ? m[n.c][3] : 0), 0);
+    const pts = SURV.map(([d, m]) => [t(d), somme(m)]);
+    const sc = niceScale(0, tot * 1.04, 6);
+    const f = cadre(sc.hi, H); f.hiV = sc.hi;
+    let g = `<svg viewBox="0 0 ${f.W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
+    /* grille sur les graduations calculées, pas sur tous les entiers */
+    sc.ticks.forEach(v => { if (v < 0 || v > sc.hi) return;
+      g += `<line x1="${f.mL}" y1="${f.Y(v).toFixed(1)}" x2="${f.W-f.mR}" y2="${f.Y(v).toFixed(1)}" stroke="var(--rule-soft)"/>`
+        + `<text x="${f.mL-8}" y="${(f.Y(v)+4).toFixed(1)}" text-anchor="end" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${v}</text>`; });
+    f.hiV = -1; g += grille(f, 1e9).replace(/<text[^>]*text-anchor="end"[^>]*>[^<]*<\/text>/g, '');
+    const col = 'var(--fr)';
+    const yT = f.Y(tot), y0 = f.Y(pts[0][1]), xq = f.X(t(finQual));
+    let d = `M${f.X(f.t0).toFixed(1)} ${yT.toFixed(1)} L${xq.toFixed(1)} ${yT.toFixed(1)}`
+      + ` L${xq.toFixed(1)} ${y0.toFixed(1)} L${f.X(pts[0][0]).toFixed(1)} ${y0.toFixed(1)}`;
+    g += `<path d="${d}" fill="none" stroke="${col}" stroke-width="2.6" stroke-dasharray="5 4" opacity=".6"/>`;
+    let e = `M${f.X(pts[0][0]).toFixed(1)} ${y0.toFixed(1)}`;
+    for (let k = 1; k < pts.length; k++)
+      e += ` L${f.X(pts[k][0]).toFixed(1)} ${f.Y(pts[k-1][1]).toFixed(1)} L${f.X(pts[k][0]).toFixed(1)} ${f.Y(pts[k][1]).toFixed(1)}`;
+    e += ` L${(f.W-f.mR).toFixed(1)} ${f.Y(pts[pts.length-1][1]).toFixed(1)}`;
+    g += `<path d="${e}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linejoin="round"/>`;
+    /* les deux nombres qui font la lecture, posés sur la courbe */
+    g += `<circle cx="${f.X(f.t0+864e5).toFixed(1)}" cy="${yT.toFixed(1)}" r="4" fill="${col}"/>`
+      + `<text x="${(f.X(f.t0)+8).toFixed(1)}" y="${(yT-9).toFixed(1)}" font-size="11.5" font-weight="700" fill="${col}">${tot} clubs engagés</text>`
+      + `<text x="${(f.W-f.mR+9).toFixed(1)}" y="${(f.Y(pts[pts.length-1][1])+4).toFixed(1)}" font-size="12" font-weight="700" fill="${col}">${pts[pts.length-1][1]} en lice</text>`;
+    return (g + '</svg>').replace('<svg', '<svg id="chartSurv"');
+  }
+
+  function legSurv(){}
+
+  function capSurv(){
+    const n1 = SURV.length;
+    const tot = ENGAGEES.reduce((a, n) => a + engages(n), 0);
+    const viv = ENGAGEES.reduce((a, n) => a + enVie(n), 0);
+    const base = `<b>Trait plein : des relevés réels</b> — la page archive l'effectif publié par la source chaque fois qu'il change, et la courbe se construit au fil de la saison (${n1} relevé${n1>1?'s':''} à ce jour, depuis le ${frDate(SURV[0][0])}). `
+      + `<b>Pointillé : une descente non datée.</b> Aucune source ne publie la date d'élimination club par club. On sait que tous les clubs sortis avant le premier relevé l'ont été pendant les qualifications ; la marche est donc posée au dernier soir de barrages, le ${frDate(finQual)} — le seul point du calendrier où l'on est certain que ces éliminations étaient toutes consommées. Le détail de l'été, tour par tour, n'est pas reconstituable. `;
+    document.getElementById('capSurv').innerHTML = vue === 'eur'
+      ? `Les <b>${tot} clubs engagés</b> par les ${ENGAGEES.length} associations, et ce qu'il en reste : <b>${viv} encore en lice</b>, soit ${Math.round((tot-viv)/tot*100)} % du total européen déjà sorti — et déjà figé dans les diviseurs jusqu'en juin. ` + base
+        + `La deuxième grande marche viendra en février, avec les barrages de phase finale.`
+      : `Nombre de clubs encore en lice, du 1<sup>er</sup> juillet à aujourd'hui. ` + base
+        + `Les courbes sont décalées de quelques centièmes de club pour rester distinctes : à 7 clubs, trois des huit se superposent exactement. `
+        + `<b>Aucune des huit n'a encore perdu un club</b> : les huit traits sont plats, et c'est le fait marquant du moment — l'élite a passé les qualifications au complet. Bascule sur « toute l'Europe » pour voir la courbe qui, elle, descend. La chute des huit commencera avec les barrages de phase finale, en février.`;
+  }
+
+  /* ---------- pilotage commun ---------- */
+  const surv = () => { drawSurv(); capSurv(); };
+  function tout(){ drawV(); drawDead(); surv(); }
+  const bTop = document.getElementById('v-top'), bAll = document.getElementById('v-all');
+  const syncV = () => { bTop.setAttribute('aria-pressed', porte === 'top');
+    bAll.setAttribute('aria-pressed', porte === 'all'); drawV(); drawDead(); };
+  bTop.onclick = () => { porte = 'top'; syncV(); };
+  bAll.onclick = () => { porte = 'all'; syncV(); };
+  const bRk = document.getElementById('v-rk'), bPm = document.getElementById('v-pm');
+  const syncO = () => { bRk.setAttribute('aria-pressed', ordre === 'rk');
+    bPm.setAttribute('aria-pressed', ordre === 'pm'); drawV(); };
+  bRk.onclick = () => { ordre = 'rk'; syncO(); };
+  bPm.onclick = () => { ordre = 'pm'; syncO(); };
+  /* Les chips de nation ne servent qu'à la lecture par nation : on les masque sur
+     la vue d'ensemble plutôt que de laisser des boutons sans effet. */
+  const bNat = document.getElementById('s-nat'), bEur = document.getElementById('s-eur');
+  const syncS = () => { bNat.setAttribute('aria-pressed', vue === 'nat');
+    bEur.setAttribute('aria-pressed', vue === 'eur');
+    document.getElementById('vchips').hidden = vue === 'eur'; surv(); };
+  bNat.onclick = () => { vue = 'nat'; syncS(); };
+  bEur.onclick = () => { vue = 'eur'; syncS(); };
+  mkChips(document.getElementById('vchips'), TOP8, selV, true, surv);
+  document.addEventListener('grotang:theme', () => { drawV(); drawDead(); drawSurv(); });
+  tout();
 })();
 
 /* ---------- projection ---------- */

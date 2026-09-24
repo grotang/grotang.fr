@@ -78,6 +78,51 @@ function writeBlock(src, data) {
   return src.slice(0, a) + SENTINEL.open + 'const D = ' + JSON.stringify(data) + ';' + src.slice(b);
 }
 
+/* ---------- archive des effectifs ----------
+ * Le reste de la page est sans mémoire : chaque publication rejoue le calcul
+ * complet depuis la source, et c'est ce qui la rend vérifiable. Une seule série
+ * fait exception, et il n'y avait pas le choix : la source publie le nombre de
+ * clubs encore en lice AUJOURD'HUI, jamais son histoire. Sans archive, la courbe
+ * de survie ne pourrait pas exister.
+ * On n'ajoute donc une entrée que lorsqu'un effectif change, on n'en réécrit
+ * jamais une ancienne, et la date est celle du relevé de la source — pas celle
+ * de la machine qui fait tourner ce script.
+ */
+const SURV_SENTINEL = { open: '/*SURVIE_START*/', close: '/*SURVIE_END*/' };
+
+function majSurvie(src, data) {
+  const a = src.indexOf(SURV_SENTINEL.open), b = src.indexOf(SURV_SENTINEL.close);
+  if (a < 0 || b < 0) { log('  ⚠ bloc SURVIE absent de page.html : effectifs non archivés'); return src; }
+  const prev = JSON.parse(src.slice(a + SURV_SENTINEL.open.length, b)
+    .replace(/^const SURVIE\s*=\s*/, '').replace(/;\s*$/, ''));
+  const rel = Array.isArray(prev.rel) ? prev.rel.slice() : [];
+
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})/.exec(String(data.meta.lastUpdated).trim());
+  if (!m) { log('  ⚠ date de relevé illisible : effectifs non archivés'); return src; }
+  const iso = `${m[3]}-${m[2]}-${m[1]}`;
+
+  const vec = {};
+  for (const n of data.nations) vec[n.c] = [n.a[0], n.a[1], n.a[2], n.a[3]];
+
+  const dernier = rel.length ? rel[rel.length - 1] : null;
+  const identique = dernier && JSON.stringify(dernier[1]) === JSON.stringify(vec);
+  if (identique) { log('effectifs inchangés — archive non modifiée'); return src; }
+
+  /* Un relevé plus ancien que le dernier archivé ne peut pas être une nouveauté :
+     c'est une source qui recule, on refuse plutôt que de désordonner l'archive. */
+  if (dernier && iso < dernier[0]) { log(`  ⚠ relevé ${iso} antérieur à ${dernier[0]} : archive inchangée`); return src; }
+
+  /* Même journée, effectif différent : on remplace, sinon deux marches tombent
+     sur la même abscisse et l'escalier devient vertical. */
+  if (dernier && iso === dernier[0]) rel[rel.length - 1] = [iso, vec]; else rel.push([iso, vec]);
+
+  const chg = dernier ? data.nations.filter(n => dernier[1][n.c] && dernier[1][n.c][3] !== n.a[3]) : [];
+  log(`effectifs archivés au ${iso} · ${rel.length} relevés`
+    + (chg.length ? ` · ${chg.map(n => `${n.c} ${dernier[1][n.c][3]}→${n.a[3]}`).join(', ')}` : ''));
+
+  return src.slice(0, a) + SURV_SENTINEL.open + 'const SURVIE = ' + JSON.stringify({ rel }) + ';' + src.slice(b);
+}
+
 /* ---------- comparaison avec la veille ---------- */
 /* Ce qu'on regarde n'est pas la date affichée par la source mais les chiffres
    eux-mêmes : la source republie parfois à l'identique, et on ne veut pas d'un
@@ -115,7 +160,7 @@ try {
   if (same && !FORCE) { log('inchangé depuis la dernière publication — rien à faire'); process.exit(0); }
   if (DRY) { log('essai à blanc : les contrôles passent, rien n\'est écrit'); process.exit(0); }
 
-  fs.writeFileSync(PAGE, writeBlock(src, data));
+  fs.writeFileSync(PAGE, majSurvie(writeBlock(src, data), data));
   fs.writeFileSync(path.join(HERE, 'nations.json'), JSON.stringify(data.nations, null, 0));
   log('page.html et nations.json réécrits');
 
