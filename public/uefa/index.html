@@ -290,6 +290,9 @@ section > .panel + .panel{margin-top:14px}
 /* Le bloc 1 passe de 8 à 55 lignes : sans borne, il pousse tout le reste de la
    page hors de vue. Le cadre n'apparaît qu'en vue complète, sinon il encadrerait
    huit lignes qui n'en ont pas besoin. */
+/* Le rendement passe de 8 à 25 lignes : même cadre défilant que les autres. */
+#boxRdt.large{max-height:620px; overflow:auto; border:1px solid var(--rule); border-radius:6px}
+@media (max-width:680px){ #boxRdt.large{max-height:70vh} }
 .bscroll.large{max-height:600px; overflow:auto; padding:8px 10px 8px 2px;
   border:1px solid var(--rule); border-radius:6px; background:var(--surface)}
 @media (max-width:680px){ .bscroll.large{max-height:70vh} }
@@ -358,7 +361,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "jeu. 24 sept. 2026 16h49";</script>
+<script>window.PUBLIE = "jeu. 24 sept. 2026 18h24";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -492,8 +495,8 @@ body{margin:0}</style>
 
   <div class="panel">
     <div class="ptitle"><span class="no">6b</span><h3>Le rendement — points par match</h3>
-      <span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">aire du disque = points par match</span></span></span></div>
-    <div class="chips" id="rchips"></div>
+      <span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">aire du disque = points par match</span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
+        <button type="button" id="r-top" aria-pressed="true">Les 8 premières</button><button type="button" id="r-all" aria-pressed="false">Toutes</button></span></span></span></div>
     <figure>
       <div class="chartbox" id="boxRdt"><svg id="chartRdt" role="img" aria-label="Points marqués par match de phase de ligue, journée par journée"></svg><div class="tip" id="tipRdt" hidden></div></div>
       <figcaption id="capRdt"></figcaption>
@@ -2117,9 +2120,18 @@ const legende = segs => segs.map(s =>
      rendement, la teinte disant si l'on est au-dessus ou en dessous de 1,00.
      Le rendement exige le nombre de clubs par compétition, que la source ne
      donne que pour la saison en cours : pas de sélecteur de saison ici. */
-  const selR = new Set(TOP8);
+  /* Filtre : le même couple de boutons que partout ailleurs sur la page. Pas de
+     chips ici — une grille classée n'a pas besoin qu'on isole des lignes à la
+     main, le tri fait déjà ce travail, et vingt-cinq chips seraient une forêt.
+     « Toutes » ne veut pas dire les 53 engagées mais celles qui ont DÉJÀ joué
+     une journée de phase de ligue : les autres n'ont pas de rendement, et
+     vingt-huit lignes de tirets n'apprennent rien. */
+  let porteeR = 'top';
+  const aJoue = c => [0, 1, 2].some(k => clubsLigue(c, k) > 0 && jouees(k) > 0);
+  const jeuR = () => porteeR === 'top' ? GRP : ENGAGEES.map(n => n.c).filter(aJoue);
   function drawR(){
-    const list = TOP8.filter(c => selR.has(c));
+    const list = jeuR();
+    document.getElementById('boxRdt').classList.toggle('large', porteeR !== 'top');
     const nj = Math.max(1, Math.max(jouees(0), jouees(1), jouees(2)));
     const matchsA = (c, k) => clubsK(c).reduce((a, n, ki) => a + n * Math.min(k + 1, jouees(ki)), 0);
     const brutA = (c, k) => { let v = 0; for (let i = 0; i <= k; i++) v += SER[c].m[i][1]; return v * div(c); };
@@ -2129,7 +2141,17 @@ const legende = segs => segs.map(s =>
       const b = brutA(c, k) - (k ? brutA(c, k - 1) : 0);
       return m ? b / m : null;
     };
-    const rows = [...list].sort((a, b) => (rdtC(b, nj - 1) ?? -1) - (rdtC(a, nj - 1) ?? -1));
+    /* À rendement égal, la plus grosse série d'abord : Chypre et son unique match
+       ne passent pas devant l'Angleterre et ses huit, tous deux à 2,00 — même
+       chiffre, pas même valeur de preuve.
+       Le tri compare la valeur ARRONDIE À L'AFFICHAGE, pas la valeur brute. Les
+       coefficients de la source sont au millième : l'Angleterre vaut 1,999125 et
+       la Grèce 2,000000, les deux s'affichent « 2,00 », et trier sur le brut
+       plaçait l'Angleterre derrière sans que rien ne le montre à l'écran. Un
+       classement doit s'expliquer par ce qu'on lit. */
+    const cle = c => Math.round((rdtC(c, nj - 1) ?? -1) * 100);
+    const rows = [...list].sort((a, b) => (cle(b) - cle(a))
+      || (matchsA(b, nj - 1) - matchsA(a, nj - 1)) || (BY[a].r - BY[b].r));
 
     /* Une seule orientation, la même que partout ailleurs sur la page : une
        LIGNE par nation, le temps en colonnes. J'avais transposé tant que la
@@ -2184,15 +2206,23 @@ const legende = segs => segs.map(s =>
     document.getElementById('chartRdt').outerHTML = (s + '</svg>').replace('<svg', '<svg id="chartRdt"');
 
     const last = nj - 1;
-    const best = [...TOP8].sort((a, b) => (rdtC(b, last) ?? -1) - (rdtC(a, last) ?? -1))[0];
+    const best = rows[0];
+    const horsJeu = ENGAGEES.length - ENGAGEES.map(n => n.c).filter(aJoue).length;
     document.getElementById('capRdt').innerHTML =
-      `Le nombre de clubs engagés cesse de compter : les points sont rapportés aux matchs réellement disputés. `
+      (porteeR === 'top'
+        ? `Les huit premières du classement à cinq ans. `
+        : `Les <b>${list.length} associations</b> dont au moins un club a déjà disputé une journée de phase de ligue ; les ${horsJeu} autres n'ont pas encore de rendement — leurs clubs n'entrent qu'en C4, le 15 octobre. `)
+      + `Le nombre de clubs engagés cesse de compter : les points sont rapportés aux matchs réellement disputés. `
       + `Une nation à 5 clubs et une à 9 deviennent comparables. En phase de ligue une victoire vaut 2 points et un nul 1 : `
       + `<b>1,00 signifie « un nul par match »</b>, au-delà on gagne plus qu'on ne perd. Chaque disque mesure une journée, et la colonne de droite donne le cumul. `
-      + `La France est à <b>${nf(rdtC('FRA', last) ?? 0, 2)}</b> sur ${matchsA('FRA', last)} match${matchsA('FRA', last) > 1 ? 's' : ''}, contre ${nf(rdtC(best, last) ?? 0, 2)} pour ${leNom(best)}. `
+      + `La France est <b>${rows.indexOf('FRA') + 1}<sup>e</sup> sur ${rows.length}</b> avec ${nf(rdtC('FRA', last) ?? 0, 2)} sur ${matchsA('FRA', last)} match${matchsA('FRA', last) > 1 ? 's' : ''}, contre ${nf(rdtC(best, last) ?? 0, 2)} pour ${leNom(best)}. `
       + `<b>Deux réserves :</b> sur si peu de matchs un seul résultat retourne le classement ; et le rendement demande le nombre de clubs engagés par compétition, que la source ne publie que pour la saison en cours — d'où l'absence de sélecteur de saison ici.`;
   }
-  mkChips(document.getElementById('rchips'), TOP8, selR, true, drawR);
+  const bRT = document.getElementById('r-top'), bRA = document.getElementById('r-all');
+  const syncR = () => { bRT.setAttribute('aria-pressed', porteeR === 'top');
+    bRA.setAttribute('aria-pressed', porteeR === 'all'); drawR(); };
+  bRT.onclick = () => { porteeR = 'top'; syncR(); };
+  bRA.onclick = () => { porteeR = 'all'; syncR(); };
   drawR();
 
   /* ===================== 5d · fourchette de fin ===================== */
