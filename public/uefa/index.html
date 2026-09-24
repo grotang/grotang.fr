@@ -349,7 +349,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "jeu. 24 sept. 2026 09h03";</script>
+<script>window.PUBLIE = "jeu. 24 sept. 2026 14h21";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -536,8 +536,11 @@ body{margin:0}</style>
     <p>Le classement du jour ne dit pas où l'on atterrit. Voici, pour chaque nation du groupe, l'intervalle dans lequel son coefficient de saison peut encore se déplacer d'ici la fin de la phase de ligue — et ce qui est déjà hors d'atteinte.</p>
   </div>
   <div class="panel">
+    <div class="ptitle"><span class="no">8</span><h3>La fourchette</h3>
+      <span class="sub"><span class="ctl"><span class="lb">Horizon</span><span class="seg" role="group" aria-label="Horizon">
+        <button type="button" id="h-ligue" aria-pressed="true">Fin de phase de ligue</button><button type="button" id="h-saison" aria-pressed="false">Fin de saison</button></span></span></span></div>
     <figure>
-      <div class="chartbox" id="boxPrj"><svg id="chartPrj" role="img" aria-label="Fourchette de coefficient de saison en fin de phase de ligue"></svg><div class="tip" id="tipPrj" hidden></div></div>
+      <div class="chartbox" id="boxPrj"><svg id="chartPrj" role="img" aria-label="Fourchette de coefficient de saison"></svg><div class="tip" id="tipPrj" hidden></div></div>
       <figcaption id="capPrj"></figcaption>
     </figure>
   </div>
@@ -2202,8 +2205,128 @@ function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM();
        rendement, ±0,5 point par match, bornée à l'intervalle réel [0 ; 2]. C'est
        une hypothèse, elle est écrite en toutes lettres sous le graphe, et les
        extrêmes théoriques restent dans l'infobulle. */
+  /* ---------- modèle de saison entière ----------
+     Première pierre d'un vrai modèle prédictif, et volontairement rustique : une
+     seule variable explicative, la force du championnat.
+
+     Hypothèse centrale, assumée : la force d'un club vaut celle de son pays. On
+     prend le logarithme du coefficient à cinq ans de l'association — le log parce
+     que l'écart qui compte entre 100 et 50 n'est pas le même qu'entre 10 et 5.
+     Tous les clubs anglais reçoivent donc la même force. C'est faux club par club
+     et à peu près juste en moyenne, ce qui suffit pour une projection nationale.
+     Le jour où un classement de puissance par club (Opta, coefficient de club
+     UEFA) sera branché ici, seule la fonction `force` changera.
+
+     Trois paramètres, trois seulement :
+       BETA  écart de rendement en poule pour un écart de force donné ;
+       GAMMA idem pour un duel de phase finale ;
+       PNUL  taux de match nul, la même valeur pour tout le monde.
+     Ils ne sont calés sur rien d'autre que le bon sens ; ils sont écrits ici pour
+     qu'on puisse les contester. */
+  const JTOT = [8, 8, 6];                    // journées de phase de ligue par compétition
+  const KOBON = [1.5, 1, 0.5];               // bonus par tour de phase finale atteint
+  const BETA = 1.15, GAMMA = 1.10, PNUL = 0.24, NSIM = 1200;
+
+  /* Barème de classement de phase de ligue (2024/25 →) : les places 24 à 1
+     rapportent 0,25 point par rang gravi en C1 et en C3 ; en C4, 0,125 de la 24e
+     à la 9e puis 0,25 de la 8e à la 1re. Total distribué : 75, 75 et 42 points. */
+  const rankBonus = (k, r) => r > 24 ? 0
+    : (k === 2 ? (r >= 9 ? 0.125 * (25 - r) : 2 + 0.25 * (9 - r)) : 0.25 * (25 - r));
+  const sig = x => 1 / (1 + Math.exp(-x));
+  const force = c => Math.log(BY[c].t);
+
+  /* Générateur déterministe : deux visiteurs du même jour doivent voir les mêmes
+     chiffres, et un écart d'un jour à l'autre doit venir des résultats, jamais du
+     hasard de la simulation. La graine est la date des données. */
+  function tirages(){
+    let g = 0; for (const ch of String(D.meta.lastUpdated)) g = (g * 31 + ch.charCodeAt(0)) & 0x7fffffff;
+    return () => { g = (g * 1103515245 + 12345) & 0x7fffffff; return g / 0x7fffffff; };
+  }
+
+  /* Le champ de chaque compétition se reconstruit à partir des effectifs publiés :
+     a[k] clubs par nation, 36 au total dans chacune des trois. Contrôlé plus bas. */
+  let SIMS = null;
+  function simule(){
+    if (SIMS) return SIMS;
+    const rnd = tirages();
+    const CH = [0,1,2].map(k => N.flatMap(n => Array.from({length: n.a[k] || 0}, () => n.c)));
+    if (CH.some(cl => cl.length !== 36)) { SIMS = {}; return SIMS; }   // champ incomplet : on ne projette pas
+    const F  = CH.map(cl => cl.map(force));
+    /* Rendement attendu par match : logistique sur l'écart de force, puis
+       renormalisé à une moyenne de 1. Ce n'est pas cosmétique — un match distribue
+       toujours exactement deux points, donc la moyenne par club EST 1, et sans
+       cette contrainte le modèle inventerait ou perdrait des points. */
+    const E = CH.map((cl, k) => { const f = F[k], fb = f.reduce((a,b)=>a+b,0) / f.length;
+      const e = f.map(x => 2 * sig(BETA * (x - fb)));
+      const s = e.reduce((a,b)=>a+b,0) / e.length; return e.map(x => x / s); });
+    const PW = E.map(e => e.map(x => Math.max(0, (x - PNUL) / 2)));
+
+    const codes = N.filter(n => engages(n) > 0).map(n => n.c);
+    const tir = Object.fromEntries(codes.map(c => [c, new Float64Array(NSIM)]));
+    const ctrl = { koM: [0,0,0], ko: [0,0,0], rb: [0,0,0] };
+
+    for (let s = 0; s < NSIM; s++) {
+      const gain = {};
+      for (let k = 0; k < 3; k++) {
+        const cl = CH[k], f = F[k], pw = PW[k], nj = JTOT[k], reste = nj - jouees(k);
+        const add = (i, v) => { gain[cl[i]] = (gain[cl[i]] || 0) + v; };
+        const match = i => { const u = rnd(); return u < pw[i] ? 2 : (u < pw[i] + PNUL ? 1 : 0); };
+        /* Deux tirages distincts, et c'est voulu :
+           - une phase de ligue COMPLÈTE sert à classer les 36 clubs, donc à
+             attribuer le bonus de rang et les places de phase finale ;
+           - seules les journées RESTANTES sont créditées en points, puisque les
+             journées déjà jouées sont dans les chiffres acquis.
+           Mélanger les deux double-compterait la journée du 8 septembre. */
+        const pts = cl.map((_, i) => { let p = 0; for (let j = 0; j < nj; j++) p += match(i); return p; });
+        for (let i = 0; i < cl.length; i++) { let p = 0; for (let j = 0; j < reste; j++) p += match(i); add(i, p); }
+        const ord = [...cl.keys()].sort((a, b) => (pts[b] - pts[a]) || (f[b] - f[a]) || (rnd() - 0.5));
+        ord.forEach((i, r) => { const v = rankBonus(k, r + 1); add(i, v); ctrl.rb[k] += v; });
+        /* Un tour de phase finale : les manches sont jouées, chacune distribue ses
+           deux points, et le qualifié est celui qui en a pris le plus. Rien n'est
+           plaqué par-dessus, donc le total du tour est juste par construction. */
+        const duel = (pool, manches) => {
+          const p = pool.slice();
+          for (let i = p.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [p[i], p[j]] = [p[j], p[i]]; }
+          const out = [];
+          for (let i = 0; i < p.length; i += 2) {
+            const a = p[i], b = p[i+1], pa = (1 - PNUL) * sig(GAMMA * (f[a] - f[b]));
+            let sa = 0, sb = 0;
+            for (let g = 0; g < manches; g++) { const u = rnd();
+              if (u < pa) sa += 2; else if (u < pa + PNUL) { sa++; sb++; } else sb += 2; }
+            add(a, sa); add(b, sb); ctrl.koM[k] += sa + sb;
+            out.push(sa > sb ? a : sb > sa ? b : (rnd() < sig(GAMMA * (f[a] - f[b])) ? a : b));
+          }
+          return out;
+        };
+        let lot = ord.slice(0, 8).concat(duel(ord.slice(8, 24), 2));   // barrages : pas de bonus de tour
+        for (let t = 0; t < 4; t++) {                                  // 8es, quarts, demies, finale
+          lot.forEach(i => { add(i, KOBON[k]); ctrl.ko[k] += KOBON[k]; });
+          lot = duel(lot, t === 3 ? 1 : 2);
+        }
+      }
+      for (const c of codes) tir[c][s] = (BY[c].tp + (gain[c] || 0)) / engages(BY[c]);
+    }
+    /* Contrôles de conservation. Un modèle qui invente des points ne se voit pas à
+       l'œil : 45 matchs de phase finale par compétition, donc 90 points ; 30
+       participations à un tour ; 75 / 75 / 42 points de bonus de rang. */
+    const attendu = { koM: [90, 90, 90], ko: [45, 30, 15], rb: [75, 75, 42] };
+    const ecarts = [];
+    for (const f of ['koM','ko','rb']) for (let k = 0; k < 3; k++) {
+      const v = ctrl[f][k] / NSIM;
+      if (Math.abs(v - attendu[f][k]) > 0.01) ecarts.push(`${f} C${[1,3,4][k]} ${nf(v,2)} ≠ ${attendu[f][k]}`);
+    }
+    SIMS = { tir, codes, ecarts };
+    return SIMS;
+  }
+  const quant = (a, p) => { const v = Float64Array.from(a).sort(); return v[Math.min(v.length - 1, Math.floor(p * v.length))]; };
     const SWING = 0.5;
-    const rows = GRP.map(c => {
+    let horizon = 'ligue';
+
+    /* Deux horizons, deux modèles. Fin de phase de ligue : une fourchette de
+       rendement, aucune simulation, rien d'inventé. Fin de saison : le modèle
+       ci-dessus, avec ses hypothèses et sa part de hasard — d'où des quantiles
+       plutôt qu'une fourchette, et un vocabulaire différent. */
+    const rowsLigue = () => GRP.map(c => {
       const acq = BY[c].y[4], d = div(c), m = matchs(c), r = matchsRestants(c);
       const rdt = m ? part(c).ligue * d / m : 0;
       const lo = Math.max(0, rdt - SWING), hi = Math.min(2, rdt + SWING);
@@ -2211,6 +2334,18 @@ function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM();
                bas: acq + lo * r / d, cen: acq + rdt * r / d, haut: acq + hi * r / d,
                min: acq, max: acq + 2 * r / d };
     }).sort((a, b) => b.cen - a.cen);
+
+    const rowsSaison = () => { const S = simule(); if (!S.tir) return [];
+      return GRP.filter(c => S.tir[c]).map(c => {
+        const t = S.tir[c], acq = BY[c].y[4];
+        return { c, acq, r: matchsRestants(c), rdt: null,
+                 bas: quant(t, .10), cen: quant(t, .50), haut: quant(t, .90),
+                 min: quant(t, .01), max: quant(t, .99) };
+      }).sort((a, b) => b.cen - a.cen); };
+
+    function dessine(){
+    const rows = horizon === 'ligue' ? rowsLigue() : rowsSaison();
+    if (!rows.length) return;
     const W = 1000, rowH = 36, mT = 40, mB = 34, mL = 96, mR = 156;
     const H = mT + rows.length * rowH + mB;
     const loV = Math.min(...rows.map(r => r.acq)) * 0.92;
@@ -2220,7 +2355,9 @@ function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM();
     let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
     sc.ticks.forEach(v => s += `<line x1="${X(v).toFixed(1)}" y1="${mT - 8}" x2="${X(v).toFixed(1)}" y2="${H - mB + 4}" stroke="var(--rule-soft)"/>`
       + `<text x="${X(v).toFixed(1)}" y="${H - mB + 20}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${nf(v, sc.dec)}</text>`);
-    s += `<text x="${mL}" y="${mT - 16}" font-size="11" font-weight="600" fill="var(--ink-3)">coefficient de saison à la fin de la phase de ligue — fourchette</text>`;
+    s += `<text x="${mL}" y="${mT - 16}" font-size="11" font-weight="600" fill="var(--ink-3)">${horizon === 'ligue'
+      ? 'coefficient de saison à la fin de la phase de ligue — fourchette'
+      : 'coefficient de saison en fin de saison, phase finale comprise — 8 tirages sur 10'}</text>`;
     /* La question n'est pas « où finit la France » mais « qui peut encore la
        doubler ». La bande verticale matérialise son intervalle : toute nation
        dont la barre la recoupe est encore à sa portée, dans les deux sens. */
@@ -2238,19 +2375,22 @@ function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM();
       /* trait fin entre l'acquis et le bas de la fourchette : sans lui, le repère
          d'acquis flotte tout seul à gauche et ressemble à un bug d'affichage. */
       s += `<line x1="${X(r.acq).toFixed(1)}" y1="${y.toFixed(1)}" x2="${X(r.bas).toFixed(1)}" y2="${y.toFixed(1)}" stroke="${c0}" stroke-width="1.5" opacity=".35" stroke-dasharray="2 3"/>`;
-      s += `<line x1="${X(r.bas).toFixed(1)}" y1="${y.toFixed(1)}" x2="${X(r.haut).toFixed(1)}" y2="${y.toFixed(1)}" stroke="${c0}" stroke-width="${fr ? 13 : 10}" opacity=".3" stroke-linecap="round"><title>${name(r.c)} · fourchette plausible ${nf(r.bas, 2)} – ${nf(r.haut, 2)} (rendement actuel ${nf(r.rdt, 2)} ± 0,5 pt/match) · extrêmes théoriques ${nf(r.min, 2)} – ${nf(r.max, 2)}</title></line>`;
+      s += `<line x1="${X(r.bas).toFixed(1)}" y1="${y.toFixed(1)}" x2="${X(r.haut).toFixed(1)}" y2="${y.toFixed(1)}" stroke="${c0}" stroke-width="${fr ? 13 : 10}" opacity=".3" stroke-linecap="round"><title>${name(r.c)} · ${horizon === 'ligue'
+        ? `fourchette plausible ${nf(r.bas, 2)} – ${nf(r.haut, 2)} (rendement actuel ${nf(r.rdt, 2)} ± 0,5 pt/match) · extrêmes théoriques ${nf(r.min, 2)} – ${nf(r.max, 2)}`
+        : `8 tirages sur 10 entre ${nf(r.bas, 2)} et ${nf(r.haut, 2)} · médiane ${nf(r.cen, 2)} · 98 % entre ${nf(r.min, 2)} et ${nf(r.max, 2)}`}</title></line>`;
       s += `<line x1="${X(r.bas).toFixed(1)}" y1="${(y - 8).toFixed(1)}" x2="${X(r.bas).toFixed(1)}" y2="${(y + 8).toFixed(1)}" stroke="${c0}" stroke-width="1.6" opacity=".7"/>`;
       s += `<line x1="${X(r.haut).toFixed(1)}" y1="${(y - 8).toFixed(1)}" x2="${X(r.haut).toFixed(1)}" y2="${(y + 8).toFixed(1)}" stroke="${c0}" stroke-width="1.6" opacity=".7"/>`;
-      s += `<circle cx="${X(r.cen).toFixed(1)}" cy="${y.toFixed(1)}" r="${fr ? 6 : 5}" fill="${c0}" stroke="var(--surface)" stroke-width="1.5"><title>${name(r.c)} · ${nf(r.cen, 2)} si le rythme actuel se prolonge</title></circle>`;
+      s += `<circle cx="${X(r.cen).toFixed(1)}" cy="${y.toFixed(1)}" r="${fr ? 6 : 5}" fill="${c0}" stroke="var(--surface)" stroke-width="1.5"><title>${name(r.c)} · ${horizon === 'ligue' ? `${nf(r.cen, 2)} si le rythme actuel se prolonge` : `médiane ${nf(r.cen, 2)}`}</title></circle>`;
       s += `<text x="${(X(r.haut) + 10).toFixed(1)}" y="${(y + 4).toFixed(1)}" font-size="11.5" font-weight="${fr ? 700 : 500}" font-family="IBM Plex Mono, monospace" fill="${fr ? 'var(--fr)' : 'var(--ink-3)'}">${nf(r.bas, 1)}–${nf(r.haut, 1)}</text>`;
       /* nombre de matchs restants : c'est lui qui explique la largeur de la
          fourchette, et il diffère beaucoup d'une nation à l'autre. */
-      s += `<text x="${(W - 6).toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="10.5" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)" opacity=".85">${r.r} m.</text>`;
+      s += `<text x="${(W - 6).toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="10.5" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)" opacity=".85">${horizon === 'ligue' ? `${r.r} m.` : `${nf(BY[r.c].t - r.acq + r.cen, 1)}`}</text>`;
       /* repère : le coefficient déjà acquis, qu'aucun scénario ne peut reprendre */
       s += `<line x1="${X(r.acq).toFixed(1)}" y1="${(y - 11).toFixed(1)}" x2="${X(r.acq).toFixed(1)}" y2="${(y + 11).toFixed(1)}" stroke="${c0}" stroke-width="2" opacity=".8"><title>${name(r.c)} · ${nf(r.acq, 3)} déjà acquis</title></line>`;
     });
     document.getElementById('chartPrj').outerHTML = (s + '</svg>').replace('<svg', '<svg id="chartPrj"');
     const fr = rows.find(r => r.c === 'FRA');
+    if (horizon === 'saison') { capSaison(rows, fr); return; }
     document.getElementById('capPrj').innerHTML =
       `<p style="margin:0 0 8px">
          <span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px"><i style="width:3px;height:13px;background:var(--ink-3);display:inline-block"></i>déjà acquis, et le minimum garanti d'ici janvier</span>
@@ -2275,6 +2415,49 @@ function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM();
             + (dessous.length ? `${dessous.map(r => name(r.c)).join(', ')} ne peu${dessous.length > 1 ? 'vent' : 't'} plus la rattraper sur cette phase. ` : '');
         })() : '')
       + `<b>Ce qui n'est pas simulé :</b> la phase finale, dont on ignore les qualifiés et qui pèse lourd. La fourchette ci-dessus s'arrête à la fin janvier.`;
+
+    function capSaison(rows, fr){
+      const S = simule();
+      const rang = (() => {                       // rang à 5 ans avec la médiane de chacun
+        const proj = N.filter(n => S.tir && S.tir[n.c]).map(n => ({ c: n.c, v: n.t - n.y[4] + quant(S.tir[n.c], .50) }));
+        proj.sort((a, b) => b.v - a.v);
+        const i = proj.findIndex(p => p.c === 'FRA');
+        return i < 0 ? null : { r: i + 1, v: proj[i].v, dessus: proj[i-1], dessous: proj[i+1] };
+      })();
+      /* Probabilité que X finisse la saison devant la France : on compare les
+         tirages deux à deux, dans le même tirage — c'est ce qui rend la mesure
+         honnête, puisque les deux nations partagent les mêmes aléas de terrain. */
+      const devant = c => { const a = S.tir[c], b = S.tir.FRA; if (!a || !b) return null;
+        let n = 0; for (let i = 0; i < a.length; i++) if (a[i] > b[i]) n++; return n / a.length; };
+      const menaces = rows.filter(r => r.c !== 'FRA').map(r => ({ c: r.c, p: devant(r.c) }))
+        .filter(x => x.p != null && x.p > 0.05 && x.p < 0.95).sort((a, b) => b.p - a.p);
+      document.getElementById('capPrj').innerHTML =
+        `<p style="margin:0 0 8px">
+           <span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px"><i style="width:3px;height:13px;background:var(--ink-3);display:inline-block"></i>déjà acquis</span>
+           <span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px"><i style="width:18px;height:7px;border-radius:4px;background:var(--ink-3);opacity:.35;display:inline-block"></i>8 tirages sur 10</span>
+           <span style="display:inline-flex;align-items:center;gap:5px"><i style="width:9px;height:9px;border-radius:50%;background:var(--ink-3);display:inline-block"></i>médiane · colonne de droite : total à 5 ans projeté</span></p>`
+        + `<b>Un modèle, donc des hypothèses.</b> ${NSIM} saisons complètes sont rejouées — phase de ligue restante, classement final, barrages, huitièmes, quarts, demies, finale — avec le barème 2024/25 : 2 points par victoire, 1 par nul, 6 points d'entrée en C1, le bonus de classement de phase de ligue (jusqu'à 6 points pour la 1<sup>re</sup> place en C1 et en C3, 4 en C4) et 1,5 / 1 / 0,5 point par tour de phase finale atteint selon la compétition. `
+        + `<b>La seule variable explicative est la force du championnat</b> : chaque club reçoit la force de son pays, mesurée par le logarithme du coefficient à cinq ans de l'association. Tous les clubs anglais ont donc la même valeur — faux club par club, à peu près juste en moyenne, et c'est ce qui rend le modèle tenable sans données de club. Trois paramètres seulement, choisis à vue et pas ajustés : sensibilité du rendement de poule à l'écart de force, sensibilité d'un duel de phase finale, et un taux de nul de ${nf(PNUL*100, 0)} % pour tout le monde. `
+        + (fr ? `<b>La France :</b> médiane à <b>${nf(fr.cen, 2)}</b>, huit tirages sur dix entre ${nf(fr.bas, 2)} et ${nf(fr.haut, 2)}` : '')
+        + (rang ? `, ce qui la placerait <b>${rang.r}<sup>${rang.r === 1 ? 're' : 'e'}</sup></b> au classement à cinq ans avec ${nf(rang.v, 1)} points`
+            + (rang.dessous ? `, devant ${leNom(rang.dessous.c)} (${nf(rang.dessous.v, 1)})` : '')
+            + (rang.dessus ? ` et derrière ${leNom(rang.dessus.c)} (${nf(rang.dessus.v, 1)})` : '') + `. ` : '. ')
+        + (menaces.length
+            ? `<b>Ce qui se joue vraiment :</b> ${menaces.map(m => `${name(m.c)} finit devant la France dans ${Math.round(m.p*100)} % des tirages`).join(', ')}. Le reste du groupe est décidé dans plus de 19 tirages sur 20. `
+            : `Aucune nation du groupe ne bascule d'un côté ou de l'autre dans plus d'un tirage sur vingt : à ce modèle, l'ordre est déjà écrit. `)
+        + `<b>Ce que ça ne vaut pas.</b> Les tirages au sort sont aléatoires alors qu'ils sont têtes de série ; aucune force propre au club, donc ni blessure, ni forme, ni le fait qu'un club anglais moyen ne vaut pas Arsenal ; et les trois paramètres n'ont été calés sur aucun historique. `
+        + `C'est une première pierre : brancher un classement de puissance par club à la place de la force nationale ne changerait qu'une ligne du calcul. `
+        + (S.ecarts && S.ecarts.length
+            ? `<b style="color:var(--s2)">Contrôle en échec :</b> ${S.ecarts.join(' · ')}.`
+            : `<b>Contrôles passés :</b> sur les trois compétitions, la simulation distribue exactement 90 points de phase finale, 30 participations à un tour et 75 / 75 / 42 points de bonus de classement — ni plus, ni moins.`);
+    }
+    }
+    const bL = document.getElementById('h-ligue'), bS = document.getElementById('h-saison');
+    const syncH = () => { bL.setAttribute('aria-pressed', horizon === 'ligue');
+      bS.setAttribute('aria-pressed', horizon === 'saison'); dessine(); };
+    bL.onclick = () => { horizon = 'ligue';  syncH(); };
+    bS.onclick = () => { horizon = 'saison'; syncH(); };
+    dessine();
   })();
 
 })();
