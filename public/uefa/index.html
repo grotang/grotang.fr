@@ -285,7 +285,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "mer. 23 sept. 2026 23h52";</script>
+<script>window.PUBLIE = "jeu. 24 sept. 2026 07h17";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -874,7 +874,16 @@ function drawCal(){
   /* KO et KOLAB sont définis plus haut, avec CAL : le tampon d'en-tête compte les
      jours jusqu'au prochain match, et ce match peut être un tour à élimination
      directe. Une seule table de dates pour toute la page. */
-  const t0 = dOf(calQual ? q0 : all[0]).getTime(), t1 = dOf('2027-06-05').getTime();
+  /* L'axe démarre au PREMIER JOUR DU MOIS du premier match, pas au premier match.
+     Avant, il démarrait au 8 septembre : le repère « sept. » était donc ancré au
+     bord gauche faute de place, et la pastille J1 de C1 tombait pile dessus. On
+     lisait « J1 = 1er septembre » alors qu'elle s'est jouée les 8, 9 et 10.
+     En calant l'origine sur le 1er du mois, chaque nom de mois retrouve sa
+     graduation exacte et chaque match sa vraie position dans le mois. Le prix est
+     une poignée de jours vides à gauche ; ça vaut mieux qu'une date fausse. */
+  const debut = dOf(calQual ? q0 : all[0]);
+  const t0 = new Date(debut.getFullYear(), debut.getMonth(), 1).getTime();
+  const t1 = dOf('2027-06-05').getTime();
   const tLeague = dOf(all[all.length-1]).getTime();
   const W = 1000, mL = 46, mR = 30, mT = 62, LANE = 36, H = mT + 3*LANE + 44;
   const span = (t1 - t0) || 1;
@@ -882,25 +891,17 @@ function drawCal(){
 
   /* repères de mois : le lecteur situe une journée sans lire une date */
   const months = [];
-  { const d = new Date(t0); d.setDate(1);
-    while (d.getTime() <= t1) {
-      if (d.getTime() >= t0) months.push(new Date(d));
-      d.setMonth(d.getMonth() + 1);
-    } }
-  /* le premier mois commence avant la première journée : son repère tomberait
-     hors cadre, on l'ancre au bord gauche pour ne pas laisser la zone anonyme. */
-  const firstMonth = new Date(t0);
+  { const d = new Date(t0);
+    while (d.getTime() <= t1) { months.push(new Date(d)); d.setMonth(d.getMonth() + 1); } }
   const MN = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
 
   let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">`;
   /* Les mois portent tout le repérage : c'est par eux qu'on situe une journée
      sans lire une date. Ils étaient en gris clair et maigre ; les voilà en
      --ink-2 et demi-gras, la graduation qui les accompagne un cran plus nette. */
-  const moisTxt = (x, m, ancre) => `<text x="${x.toFixed(1)}" y="${mT-28}" text-anchor="${ancre}" font-size="11.5" font-weight="600" fill="var(--ink-2)">${MN[m]}</text>`;
-  s += moisTxt(mL, firstMonth.getMonth(), 'start');
   months.forEach(d => { const x = mL + (W-mL-mR)*(d.getTime()-t0)/span;
     s += `<line x1="${x.toFixed(1)}" y1="${mT-22}" x2="${x.toFixed(1)}" y2="${mT+3*LANE-6}" stroke="var(--rule)" stroke-width="1" opacity=".75"/>`
-      +  moisTxt(x+5, d.getMonth(), 'start'); });
+      +  `<text x="${(x+5).toFixed(1)}" y="${mT-28}" font-size="11.5" font-weight="600" fill="var(--ink-2)">${MN[d.getMonth()]}</text>`; });
 
   /* la ligne d'aujourd'hui : la seule information vraiment datée du bloc */
   const now = TODAY.getTime();
