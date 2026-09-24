@@ -355,7 +355,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "jeu. 24 sept. 2026 15h25";</script>
+<script>window.PUBLIE = "jeu. 24 sept. 2026 15h36";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -2398,16 +2398,21 @@ const legende = segs => segs.map(s =>
     function dessine(){
     const rows = lignes(horizon === 'ligue' ? 'ligue' : 'tir');
     if (!rows.length) return;
-    const W = 1000, rowH = 36, mT = 44, mB = 34, mL = 96, mR = 176;
+    /* Deux libellés au-dessus du graphe, sur deux lignes distinctes : le titre
+       d'axe et « portée de la France » se chevauchaient dès que la bande bleue
+       remontait vers la gauche, ce qui arrive selon l'horizon choisi. */
+    const W = 1000, rowH = 36, mT = 56, mB = 34, mL = 96, mR = 176;
     const H = mT + rows.length * rowH + mB;
-    const loV = Math.min(...rows.map(r => Math.min(r.acq, r.p05))) * 0.94;
+    /* L'axe n'a plus à contenir le repère d'acquis : il se cale sur la seule
+       distribution, et le graphe cesse de traîner une moitié gauche vide. */
+    const loV = Math.min(...rows.map(r => r.p05)) * 0.94;
     const hiV = Math.max(...rows.map(r => r.p95)) * 1.03;
     const sc = niceScale(loV, hiV, 9)   /* 9 intervalles : à 6, le pas tombait sur 5 et l'axe courait jusqu'à 25 pour un maximum de 21 */;
     const X = v => mL + (W - mL - mR) * ((v - sc.lo) / (sc.hi - sc.lo));
     let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
     sc.ticks.forEach(v => s += `<line x1="${X(v).toFixed(1)}" y1="${mT - 8}" x2="${X(v).toFixed(1)}" y2="${H - mB + 4}" stroke="var(--rule-soft)"/>`
       + `<text x="${X(v).toFixed(1)}" y="${H - mB + 20}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${nf(v, sc.dec)}</text>`);
-    s += `<text x="${mL}" y="${mT - 18}" font-size="11" font-weight="600" fill="var(--ink-3)">coefficient de saison ${horizon === 'ligue'
+    s += `<text x="${mL}" y="${mT - 32}" font-size="11" font-weight="600" fill="var(--ink-3)">coefficient de saison ${horizon === 'ligue'
       ? 'à la fin de la phase de ligue' : 'en fin de saison, phase finale comprise'}</text>`;
     /* La question n'est pas « où finit la France » mais « qui peut encore la
        doubler ». La bande verticale matérialise son intervalle à 60 % : toute
@@ -2416,17 +2421,14 @@ const legende = segs => segs.map(s =>
     if (FR) {
       s += `<rect x="${X(FR.p20).toFixed(1)}" y="${(mT - 6).toFixed(1)}" width="${(X(FR.p80) - X(FR.p20)).toFixed(1)}" height="${(H - mB - mT + 10).toFixed(1)}" fill="var(--fr)" opacity=".07"/>`;
       [FR.p20, FR.p80].forEach(v => s += `<line x1="${X(v).toFixed(1)}" y1="${(mT - 6).toFixed(1)}" x2="${X(v).toFixed(1)}" y2="${(H - mB + 4).toFixed(1)}" stroke="var(--fr)" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>`);
-      s += `<text x="${((X(FR.p20) + X(FR.p80)) / 2).toFixed(1)}" y="${(mT - 18).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--fr)">portée de la France</text>`;
+      s += `<text x="${((X(FR.p20) + X(FR.p80)) / 2).toFixed(1)}" y="${(mT - 16).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--fr)">portée de la France</text>`;
     }
     rows.forEach((r, i) => {
       const y = mT + i * rowH + rowH / 2, fr = r.c === 'FRA';
       const c0 = col(r.c);
       const tt = `${name(r.c)} · médiane ${nf(r.cen, 2)} · 3 tirages sur 5 entre ${nf(r.p20, 2)} et ${nf(r.p80, 2)}`
-        + ` · 9 sur 10 entre ${nf(r.p05, 2)} et ${nf(r.p95, 2)} · acquis ${nf(r.acq, 3)}`;
+        + ` · 9 sur 10 entre ${nf(r.p05, 2)} et ${nf(r.p95, 2)} · ${nf(r.acq, 3)} déjà acquis`;
       s += `<text x="${mL - 10}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="12.5" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${name(r.c)}</text>`;
-      /* trait fin entre l'acquis et le premier quantile : sans lui, le repère
-         d'acquis flotte tout seul à gauche et ressemble à un bug d'affichage. */
-      s += `<line x1="${X(r.acq).toFixed(1)}" y1="${y.toFixed(1)}" x2="${X(r.p05).toFixed(1)}" y2="${y.toFixed(1)}" stroke="${c0}" stroke-width="1.5" opacity=".3" stroke-dasharray="2 3"/>`;
       /* Éventail à cinq repères, du plus large au plus étroit : le trait fin va
          du 5e au 95e centile, la barre épaisse du 20e au 80e, le disque est la
          médiane. Une seule famille de repères, une seule lecture. */
@@ -2437,8 +2439,6 @@ const legende = segs => segs.map(s =>
       s += `<circle cx="${X(r.cen).toFixed(1)}" cy="${y.toFixed(1)}" r="${fr ? 6 : 5}" fill="${c0}" stroke="var(--surface)" stroke-width="1.5"><title>${tt}</title></circle>`;
       s += `<text x="${(X(r.p95) + 10).toFixed(1)}" y="${(y + 4).toFixed(1)}" font-size="11.5" font-weight="${fr ? 700 : 500}" font-family="IBM Plex Mono, monospace" fill="${fr ? 'var(--fr)' : 'var(--ink-3)'}">${nf(r.cen, 1)}</text>`;
       s += `<text x="${(W - 6).toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="10.5" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)" opacity=".85">${horizon === 'ligue' ? `${r.r} m.` : `${nf(BY[r.c].t - r.acq + r.cen, 1)}`}</text>`;
-      /* repère : le coefficient déjà acquis, qu'aucun scénario ne peut reprendre */
-      s += `<line x1="${X(r.acq).toFixed(1)}" y1="${(y - 11).toFixed(1)}" x2="${X(r.acq).toFixed(1)}" y2="${(y + 11).toFixed(1)}" stroke="${c0}" stroke-width="2" opacity=".8"><title>${name(r.c)} · ${nf(r.acq, 3)} déjà acquis, plancher garanti</title></line>`;
     });
     document.getElementById('chartPrj').outerHTML = (s + '</svg>').replace('<svg', '<svg id="chartPrj"');
     const fr = rows.find(r => r.c === 'FRA');
@@ -2448,7 +2448,6 @@ const legende = segs => segs.map(s =>
     /* Une seule légende pour les deux horizons : les repères sont les mêmes. */
     const jeton = (w, h, o, rd) => `<i style="width:${w}px;height:${h}px;${rd ? 'border-radius:' + rd + ';' : ''}background:var(--ink-3);opacity:${o};display:inline-block"></i>`;
     const leg = `<p style="margin:0 0 8px">`
-      + `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">${jeton(3,13,.9)}acquis — plancher garanti</span>`
       + `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">${jeton(22,5,.22,'3px')}9 tirages sur 10 &nbsp;(5<sup>e</sup>–95<sup>e</sup> centile)</span>`
       + `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">${jeton(22,11,.34,'5px')}3 tirages sur 5 &nbsp;(20<sup>e</sup>–80<sup>e</sup>)</span>`
       + `<span style="display:inline-flex;align-items:center;gap:5px">${jeton(9,9,1,'50%')}médiane`
@@ -2470,8 +2469,8 @@ const legende = segs => segs.map(s =>
     document.getElementById('capPrj').innerHTML = leg
       + `<b>Cinq repères, tous tirés de la même simulation</b> : le 5<sup>e</sup> et le 95<sup>e</sup> centile aux extrémités du trait fin, le 20<sup>e</sup> et le 80<sup>e</sup> aux bouts de la barre épaisse, la médiane au disque. `
       + `Lecture : une nation a une chance sur vingt de finir sous son trait fin gauche, une sur vingt de finir au-dessus du droit, et trois chances sur cinq d'atterrir dans la barre épaisse. `
-      + `Le trait vertical isolé, à gauche, n'est pas un quantile : c'est le coefficient <b>déjà acquis</b>, que plus aucun résultat ne peut reprendre. `
       + `Cet horizon s'arrête à la fin de la phase de ligue, bonus de classement compris — il est acquis à ce moment-là. `
+      + `Le coefficient déjà acquis n'est plus dessiné : posé tout à gauche, loin de la distribution, il étirait l'axe pour un repère que personne ne lisait. Il reste au survol. `
       + poids
       + (fr ? `<b>La France</b>, qui a ${fr.r} matchs de phase de ligue à jouer : médiane <b>${nf(fr.cen, 2)}</b>, trois tirages sur cinq entre ${nf(fr.p20, 2)} et ${nf(fr.p80, 2)}, neuf sur dix entre ${nf(fr.p05, 2)} et ${nf(fr.p95, 2)}. ` : '')
       + (fr ? `<b>Ce qu'il faut y lire :</b> la bande bleue est la portée de la France, son intervalle à 60 %. `
