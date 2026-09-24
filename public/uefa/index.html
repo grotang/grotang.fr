@@ -358,7 +358,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "jeu. 24 sept. 2026 15h46";</script>
+<script>window.PUBLIE = "jeu. 24 sept. 2026 16h12";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -2432,7 +2432,7 @@ const legende = segs => segs.map(s =>
     if (FR) {
       s += `<rect x="${X(FR.p05).toFixed(1)}" y="${(mT - 6).toFixed(1)}" width="${(X(FR.p95) - X(FR.p05)).toFixed(1)}" height="${(H - mB - mT + 10).toFixed(1)}" fill="var(--fr)" opacity=".07"/>`;
       [FR.p05, FR.p95].forEach(v => s += `<line x1="${X(v).toFixed(1)}" y1="${(mT - 6).toFixed(1)}" x2="${X(v).toFixed(1)}" y2="${(H - mB + 4).toFixed(1)}" stroke="var(--fr)" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>`);
-      s += `<text x="${((X(FR.p05) + X(FR.p95)) / 2).toFixed(1)}" y="${(mT - 16).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--fr)">portée de la France · 9 tirages sur 10</text>`;
+      s += `<text x="${((X(FR.p05) + X(FR.p95)) / 2).toFixed(1)}" y="${(mT - 16).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--fr)">Portée de la France à 90 %</text>`;
     }
     rows.forEach((r, i) => {
       const y = mT + i * rowH + rowH / 2, fr = r.c === 'FRA';
@@ -2459,8 +2459,8 @@ const legende = segs => segs.map(s =>
     /* Une seule légende pour les deux horizons : les repères sont les mêmes. */
     const jeton = (w, h, o, rd) => `<i style="width:${w}px;height:${h}px;${rd ? 'border-radius:' + rd + ';' : ''}background:var(--ink-3);opacity:${o};display:inline-block"></i>`;
     const leg = `<p style="margin:0 0 8px">`
-      + `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">${jeton(22,5,.22,'3px')}9 tirages sur 10 &nbsp;(5<sup>e</sup>–95<sup>e</sup> centile)</span>`
-      + `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">${jeton(22,11,.34,'5px')}3 tirages sur 5 &nbsp;(20<sup>e</sup>–80<sup>e</sup>)</span>`
+      + `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">${jeton(22,5,.22,'3px')}9 fois sur 10 &nbsp;(5<sup>e</sup>–95<sup>e</sup> centile)</span>`
+      + `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">${jeton(22,11,.34,'5px')}3 fois sur 5 &nbsp;(20<sup>e</sup>–80<sup>e</sup>)</span>`
       + `<span style="display:inline-flex;align-items:center;gap:5px">${jeton(9,9,1,'50%')}médiane`
       + (horizon === 'saison' ? ` · colonne de droite : total à 5 ans projeté` : ` · colonne de droite : matchs restants`) + `</span></p>`;
 
