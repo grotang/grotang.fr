@@ -388,7 +388,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "ven. 25 sept. 2026 19h31";</script>
+<script>window.PUBLIE = "ven. 25 sept. 2026 19h42";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -680,6 +680,13 @@ function dlong(v){
 }
 const nf = (v,d=3)=> v==null||Number.isNaN(v) ? "—" : v.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d});
 const nf1 = v => v.toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1});
+/* Précision à chiffres significatifs à peu près constants : entier au-dessus de
+   30, une décimale entre 5 et 30, deux en dessous. Trois décimales sur 103,796
+   comme sur 4,071 gaspillent la place sur le gros et affament le petit ; cette
+   règle donne le même poids visuel à toutes les lignes.
+   Réservée aux chiffres NATIFS du graphique. Les infobulles et les tableaux
+   gardent le millième de la source — c'est là qu'on vérifie. */
+const nfx = v => nf(v, v >= 30 ? 0 : v >= 5 ? 1 : 2);
 
 /* Sigles de clubs. Une barre ou un disque qui porte « PSG » ou « RMA » se lit sans
    survol ; le nom complet reste dans l'infobulle. La table est écrite à la main —
@@ -1306,7 +1313,7 @@ function pastilles(n){
    boîte de contenu, et les deux auraient divergé. */
 const larg = pc => `calc((100% - var(--res)) * ${(pc / 100).toFixed(4)})`;
 const totBout = (c, v, max) =>
-  `<span class="tot" style="left:${larg(v / max * 100)}">${nf1(v)}</span>`;
+  `<span class="tot" style="left:${larg(v / max * 100)}">${nfx(v)}</span>`;
 /* La réserve vaut le plus long libellé rendu, plus une respiration. Mesurée une
    fois après le dessin : les libellés sont en chasse fixe, mais leur longueur
    change avec la fenêtre choisie (« 103,8 » contre « 34,0 »). */
@@ -1392,13 +1399,14 @@ function drawBars(){
       <div class="val num">${nf(val(c))}</div>
       <div class="split num" title="${name(c)} · ${nf(val(c))} au millième">${isS
         ? `${enVie(n)} en lice sur ${engages(n)} engagés`
-        /* L'acquis est déduit du total et de la saison en cours, tous deux
-           arrondis : les trois nombres affichés tombent alors juste quand on les
-           additionne. Arrondir l'acquis pour lui-même donnerait « 40,9 + 4,4 »
-           en face d'un total de 45,2, et c'est le genre de détail qui fait
-           douter de tout le reste. Les valeurs exactes sont au survol. */
-        : (() => { const t = Math.round(val(c) * 10) / 10, w = Math.round(n.y[4] * 10) / 10;
-            return `${nf1(t - w)} acquis + ${nf1(w)} en cours`; })()}</div>
+        /* Un point, pas un plus. La précision variable interdit de promettre une
+           addition : arrondir 98,52 à l'entier et 5,277 au dixième donne « 99 »
+           et « 5,3 », dont la somme affichée vaut 104,3 en face d'un total de
+           104. Sur la fenêtre à cinq saisons, les huit lignes tombaient à côté,
+           jusqu'à 0,8 d'écart pour la Belgique. Le « + » promettait une
+           vérification que l'arrondi ne peut pas tenir ; le point présente deux
+           faits côte à côte. Les valeurs exactes restent au survol. */
+        : `${nfx(val(c) - n.y[4])} acquis · ${nfx(n.y[4])} en cours`}</div>
     </div>`;}).join('');
   const nR = rows.length;
   majReserve();
