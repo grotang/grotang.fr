@@ -214,7 +214,16 @@ section > .panel + .panel{margin-top:14px}
 .pips{display:flex; gap:2px; justify-content:flex-end; align-items:center}
 .pips i{width:6px; height:12px; border-radius:1.5px; display:block; flex:none}
 .pips i.out{box-shadow:inset 0 0 0 1px var(--ink-3); opacity:.45}
-.barrow .track{height:20px; background:var(--surface-2); border-radius:2px; overflow:hidden; display:flex}
+.barrow .track{height:20px; background:var(--surface-2); border-radius:2px; overflow:hidden; display:flex;
+  position:relative}
+/* Total posé au bout de la barre. La colonne de droite garde la valeur exacte au
+   millième ; celle-ci est un repère de lecture, arrondi et discret, pour ne pas
+   avoir à traverser six cents pixels de vide quand on descend dans le classement.
+   overflow:hidden sur la piste garantit qu'il ne déborde jamais dans la colonne. */
+.barrow .tot{position:absolute; top:50%; transform:translateY(-50%); pointer-events:none;
+  font:600 10.5px/1 "IBM Plex Mono",monospace; white-space:nowrap; letter-spacing:.01em}
+.barrow .tot.out{color:var(--ink-3); padding-left:7px}
+.barrow .tot.in{padding-right:7px}
 .barrow .fill{height:100%; background:var(--ink-3);
   display:flex; align-items:center; justify-content:flex-end; overflow:hidden}
 .barrow .fill span{font:700 9.5px/1 "IBM Plex Mono",monospace; letter-spacing:.02em;
@@ -361,7 +370,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "jeu. 24 sept. 2026 18h24";</script>
+<script>window.PUBLIE = "ven. 25 sept. 2026 09h55";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -1257,6 +1266,23 @@ function pastilles(n){
     + `</span>`;
 }
 
+/* Le total, au bout de la barre. Deux positions : dehors quand la barre laisse
+   la place, dedans en encre contrastée quand elle touche le bord — l'Angleterre
+   occupe 100 % de la piste, un libellé posé après elle serait rogné.
+   Pas trois décimales : la valeur exacte est déjà dans la colonne de droite, et
+   « 103,8 » se lit d'un coup d'œil là où « 103,796 » demande un arrêt.
+   La précision suit l'échelle. Une décimale quand le maximum dépasse 20 — sur
+   une barre de 104 points, le centième n'apporte rien. Deux en dessous : la vue
+   « saison en cours » plafonne à 5,5, et à une décimale l'Azerbaïdjan (5,125) et
+   la Turquie (5,100) afficheraient le même « 5,1 » à deux rangs d'écart. */
+const totBout = (c, v, max, isS) => {
+  const pc = v / max * 100, txt = nf(v, max >= 20 ? 1 : 2);
+  if (pc <= 92) return `<span class="tot out" style="left:${pc.toFixed(1)}%">${txt}</span>`;
+  const base = toRGB(cssHex(teinteB(c)));
+  const fond = isS ? base : base;                       // le segment de bout est toujours en pleine couleur
+  return `<span class="tot in" style="right:${(100 - pc).toFixed(1)}%;color:${encre(fond, base)}">${txt}</span>`;
+};
+
 let period='five';
 let porteeB='top';
 /* Le périmètre par défaut reste les huit premières : c'est le sujet de la page,
@@ -1277,7 +1303,7 @@ function drawBars(){
     return `<div class="barrow${c==='FRA'?' me':''}">
       <div class="nm"><span class="rk">${i+1}.</span><b>${name(c)}</b></div>
       <div class="cnt">${pastilles(n)}</div>
-      <div class="track" data-nat="${c}">${isS
+      <div class="track" data-nat="${c}">${totBout(c, val(c), max, isS)}${isS
         ? (() => {
             /* Vue « saison en cours » : tout est vivant, donc tout est en pleine
                couleur — exactement la teinte du segment de saison en cours de
