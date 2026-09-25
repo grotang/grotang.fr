@@ -214,20 +214,23 @@ section > .panel + .panel{margin-top:14px}
    hiérarchie est portée par la barre, pas par la graisse d'un nombre. */
 #bars .barrow{grid-template-columns:minmax(88px,132px) 74px minmax(0,1fr) minmax(158px,max-content)}
 #bars .barrow .val{display:none}
-#bars .barrow .split{font-size:12.5px; color:var(--ink-2)}
+/* La colonne passe au second plan : c'est le détail, plus le titre. */
+#bars .barrow .split{font-size:11.5px; color:var(--ink-3)}
 .pips{display:flex; gap:2px; justify-content:flex-end; align-items:center}
 .pips i{width:6px; height:12px; border-radius:1.5px; display:block; flex:none}
 .pips i.out{box-shadow:inset 0 0 0 1px var(--ink-3); opacity:.45}
 .barrow .track{height:20px; background:var(--surface-2); border-radius:2px; overflow:hidden; display:flex;
   position:relative}
-/* Total posé au bout de la barre. La colonne de droite garde la valeur exacte au
-   millième ; celle-ci est un repère de lecture, arrondi et discret, pour ne pas
-   avoir à traverser six cents pixels de vide quand on descend dans le classement.
-   overflow:hidden sur la piste garantit qu'il ne déborde jamais dans la colonne. */
+/* Le total est posé au bout de la barre, et c'est LUI le chiffre de la ligne :
+   la colonne de droite ne porte plus que ses deux composantes, en petit.
+   La piste réserve la largeur du plus long libellé (--res, mesurée après rendu) :
+   toutes les barres sont tracées sur (100 % - --res), y compris celle du premier.
+   Sans cette réserve, l'Angleterre occupait 100 % de la piste et son total n'avait
+   nulle part où aller — le seul cas où le graphe se taisait était le plus lu. */
+#bars{--res:46px}
 .barrow .tot{position:absolute; top:50%; transform:translateY(-50%); pointer-events:none;
-  font:600 10.5px/1 "IBM Plex Mono",monospace; white-space:nowrap; letter-spacing:.01em}
-.barrow .tot.out{color:var(--ink-3); padding-left:7px}
-.barrow .tot[hidden]{display:none}
+  font:700 12.5px/1 "IBM Plex Mono",monospace; white-space:nowrap; letter-spacing:.01em;
+  color:var(--ink); padding-left:8px}
 .barrow .fill{height:100%; background:var(--ink-3);
   display:flex; align-items:center; justify-content:flex-end; overflow:hidden}
 .barrow .fill span{font:700 9.5px/1 "IBM Plex Mono",monospace; letter-spacing:.02em;
@@ -1254,19 +1257,21 @@ function pastilles(n){
    L'AFFICHAGE seulement : le classement, les largeurs de barre et le recoupement
    avec kassiesa travaillent sur la valeur exacte au millième, jamais sur
    l'arrondi. Un rang ne se décide pas sur un chiffre rond. */
-const totBout = (c, v, max, isS) => {
-  const pc = v / max * 100, txt = nf1(v);
-  return `<span class="tot out" style="left:${pc.toFixed(1)}%">${txt}</span>`;
-};
-/* Mesure après coup : un libellé dont le bord droit dépasse la piste est retiré,
-   pas rogné. Quatre lignes qui tiennent à toutes les largeurs, là où un seuil en
-   pourcentage choisi à la main tombe juste sur un écran et faux sur les autres. */
-const elagueTot = () => {
-  document.querySelectorAll('#bars .barrow .track').forEach(tr => {
-    const t = tr.querySelector('.tot'); if (!t) return;
-    t.hidden = false;
-    if (t.offsetLeft + t.offsetWidth > tr.clientWidth - 2) t.hidden = true;
-  });
+/* Largeurs et position du libellé se calculent sur la même base — la piste moins
+   la réserve — donc en calc(), pas en pourcentage brut : le pourcentage d'un
+   élément positionné se rapporte à la boîte entière, celui d'un enfant flex à la
+   boîte de contenu, et les deux auraient divergé. */
+const larg = pc => `calc((100% - var(--res)) * ${(pc / 100).toFixed(4)})`;
+const totBout = (c, v, max) =>
+  `<span class="tot" style="left:${larg(v / max * 100)}">${nf1(v)}</span>`;
+/* La réserve vaut le plus long libellé rendu, plus une respiration. Mesurée une
+   fois après le dessin : les libellés sont en chasse fixe, mais leur longueur
+   change avec la fenêtre choisie (« 103,8 » contre « 34,0 »). */
+const majReserve = () => {
+  const bars = document.getElementById('bars'); if (!bars) return;
+  let w = 0;
+  bars.querySelectorAll('.tot').forEach(t => { w = Math.max(w, t.offsetWidth); });
+  if (w) bars.style.setProperty('--res', Math.ceil(w + 4) + 'px');
 };
 
 /* La fenêtre n'est pas un filtre, c'est une projection.
@@ -1310,7 +1315,7 @@ function drawBars(){
           return d === 0 ? '' : `<span class="dlt ${d > 0 ? 'up' : 'down'}" title="${d > 0 ? '+' : ''}${d} place${Math.abs(d) > 1 ? 's' : ''} par rapport au classement à cinq ans">${d > 0 ? '▲' : '▼'}${Math.abs(d)}</span>`;
         })() : ''}</div>
       <div class="cnt">${pastilles(n)}</div>
-      <div class="track" data-nat="${c}">${totBout(c, val(c), max, isS)}${isS
+      <div class="track" data-nat="${c}">${totBout(c, val(c), max)}${isS
         ? (() => {
             /* Vue « saison en cours » : tout est vivant, donc tout est en pleine
                couleur — exactement la teinte du segment de saison en cours de
@@ -1319,7 +1324,7 @@ function drawBars(){
                Pas de libellé dans la barre : le nombre de clubs est déjà en clair
                dans la colonne de droite, l'écrire deux fois n'apprend rien. */
             const base = toRGB(cssHex(teinteB(c)));
-            return `<div class="fill" style="width:${(val(c)/max*100).toFixed(1)}%;background:${toHex(base)}"></div>`;
+            return `<div class="fill" style="width:${larg(val(c)/max*100)};background:${toHex(base)}"></div>`;
           })()
         : n.y.map((v, yi) => { const wip = yi === 4;
             if (yi < dep) return '';                     // saison hors fenêtre
@@ -1338,16 +1343,22 @@ function drawBars(){
                  On n'écrit rien plutôt que de rogner ; l'infobulle prend le relais. */
             const lab = (!wip && pc >= 5.6)
               ? `<span style="color:${encre(fond, base)}">${SEASONS[yi].slice(2)}</span>` : '';
-            return `<div class="yseg${wip ? ' wip' : ''}" data-y="${yi}" style="width:${pc.toFixed(1)}%;`
+            return `<div class="yseg${wip ? ' wip' : ''}" data-y="${yi}" style="width:${larg(pc)};`
               + `background:${toHex(fond)}">${lab}</div>`;
           }).join('')}</div>
       <div class="val num">${nf(val(c))}</div>
       <div class="split num" title="${name(c)} · ${nf(val(c))} au millième">${isS
-        ? `${nf1(val(c))} · ${enVie(n)} en lice sur ${engages(n)}`
-        : `${nf1(val(c))} · ${nf1(n.y[4])} en cours`}</div>
+        ? `${enVie(n)} en lice sur ${engages(n)} engagés`
+        /* L'acquis est déduit du total et de la saison en cours, tous deux
+           arrondis : les trois nombres affichés tombent alors juste quand on les
+           additionne. Arrondir l'acquis pour lui-même donnerait « 40,9 + 4,4 »
+           en face d'un total de 45,2, et c'est le genre de détail qui fait
+           douter de tout le reste. Les valeurs exactes sont au survol. */
+        : (() => { const t = Math.round(val(c) * 10) / 10, w = Math.round(n.y[4] * 10) / 10;
+            return `${nf1(t - w)} acquis + ${nf1(w)} en cours`; })()}</div>
     </div>`;}).join('');
   const nR = rows.length;
-  elagueTot();
+  majReserve();
   const posS=[...rows].sort((x,y)=>seasonNow(y)-seasonNow(x)).indexOf('FRA')+1;
   const leg = isS ? '' :
     `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px">`
