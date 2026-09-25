@@ -140,6 +140,11 @@ section{margin-top:clamp(30px,4.5vw,52px)}
   background:var(--surface); border:1px solid var(--rule); border-radius:2px;
   padding:4px 26px 4px 10px; line-height:1.5; cursor:pointer}
 .sel select:hover{border-color:var(--ink-3)}
+/* Un menu déroulant qui fait office de second bouton d'un groupe : quand il
+   commande la vue, il prend l'aspect d'un bouton enfoncé. Sans ça, rien ne dit
+   laquelle des deux commandes est active. */
+.sel select[data-on="true"]{background:var(--ink); border-color:var(--ink); color:var(--surface)}
+.sel:has(select[data-on="true"])::after{border-color:var(--surface)}
 .sel select:focus-visible{outline:2px solid var(--fr); outline-offset:-2px}
 .sel::after{content:""; position:absolute; right:9px; width:7px; height:7px; pointer-events:none;
   border-right:1.6px solid var(--ink-3); border-bottom:1.6px solid var(--ink-3);
@@ -196,6 +201,9 @@ section > .panel + .panel{margin-top:14px}
 .barrow .nm{font-size:14px; font-weight:600; display:flex; align-items:baseline; gap:6px; min-width:0}
 .barrow .nm b{font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .barrow .rk{font-size:10.5px; color:var(--ink-3); font-weight:600; flex:none}
+.barrow .dlt{font-size:9.5px; font-weight:700; flex:none; letter-spacing:-.02em;
+  font-family:"IBM Plex Mono",monospace; margin-left:1px}
+.barrow .dlt.up{color:var(--good)} .barrow .dlt.down{color:var(--bad)}
 .barrow .cnt{font-size:11.5px; color:var(--ink-3); text-align:right; letter-spacing:.02em}
 /* Effectif en une rangée de pastilles : une par club engagé, à la couleur de sa
    compétition tant qu'il est en lice, en creux une fois éliminé. Le diviseur du
@@ -399,7 +407,8 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
 
   <div class="panel">
     <div class="ptitle"><span class="no">1</span><h3>Le classement</h3>
-      <span class="sub"><span class="ctl"><span class="lb">Période</span><span class="seg" role="group" aria-label="Période"><button type="button" id="p-season" aria-pressed="true">Saison en cours</button><button type="button" id="p-five" aria-pressed="false">5 dernières saisons</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
+      <span class="sub"><span class="ctl"><span class="lb">Période</span><span class="seg" role="group" aria-label="Période"><button type="button" id="p-season" aria-pressed="true">Saison en cours</button></span><span class="sel"><select id="p-win" aria-label="Fenêtre de saisons">
+        <option value="5">5 dernières saisons</option><option value="4">4 dernières saisons</option><option value="3">3 dernières saisons</option><option value="2">2 dernières saisons</option></select></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
         <button type="button" id="b-top" aria-pressed="true">Les 8 premières</button><button type="button" id="b-all" aria-pressed="false">Toutes</button></span></span></span></div>
     <div class="barswrap"><div class="bscroll" id="bscroll"><div class="bars" id="bars"></div></div><div class="tip" id="tipY" hidden></div></div>
     <p class="figc" id="barNote"></p>
@@ -1260,7 +1269,21 @@ const elagueTot = () => {
   });
 };
 
-let period='five';
+/* La fenêtre n'est pas un filtre, c'est une projection.
+   Le classement officiel additionne CINQ saisons. Chaque été, la plus ancienne
+   sort. Regarder les quatre dernières, c'est donc regarder le socle qui survivra
+   au prochain retrait — celui de l'été 2027 — et ainsi de suite. Ce ne sont pas
+   des classements alternatifs : ce sont les classements à venir, amputés de la
+   saison qui n'a pas encore été jouée.
+   Les totaux et les rangs de chaque fenêtre sont ceux que l'extracteur publie
+   (champ p), calculés sur les 55 associations et contrôlés à la source. On ne
+   les recalcule pas ici sur le sous-ensemble affiché, qui donnerait des rangs
+   faux dès qu'on filtre. */
+const FEN = { 5: { n: 5, rang: n => n.r,       tot: n => n.t },
+              4: { n: 4, rang: n => n.p[0],    tot: n => n.p[1] },
+              3: { n: 3, rang: n => n.p[2],    tot: n => n.p[3] },
+              2: { n: 2, rang: n => n.p[4],    tot: n => n.p[5] } };
+let period = 5;                  // 'season', ou le nombre de saisons de la fenêtre
 let porteeB='top';
 /* Le périmètre par défaut reste les huit premières : c'est le sujet de la page,
    et ouvrir sur 55 lignes noierait la question. « Toutes » est là pour situer le
@@ -1271,14 +1294,21 @@ const jeuB = () => porteeB === 'top' ? TOP8 : ENGAGEES.map(n => n.c);
 const teinteB = c => SLOT[c] || '--ink-2';
 function drawBars(){
   const isS = period==='season';
-  const val = c => isS ? seasonNow(c) : BY[c].t;
+  const F = isS ? FEN[5] : FEN[period];
+  const dep = 5 - F.n;                                   // 1re saison affichée
+  const val = c => isS ? seasonNow(c) : F.tot(BY[c]);
   const rows=[...jeuB()].sort((x,y)=>val(y)-val(x));
   const max=Math.max(...rows.map(val));
   document.getElementById('bscroll').classList.toggle('large', porteeB !== 'top');
   document.getElementById('bars').innerHTML = rows.map((c,i)=>{
     const n=BY[c];
     return `<div class="barrow${c==='FRA'?' me':''}">
-      <div class="nm"><span class="rk">${i+1}.</span><b>${name(c)}</b></div>
+      <div class="nm"><span class="rk">${isS ? i+1 : F.rang(n)}.</span><b>${name(c)}</b>${
+        (!isS && F.n < 5) ? (() => { const d = n.r - F.rang(n);
+          /* Le gain ou la perte de places par rapport au classement officiel :
+             c'est la seule chose que cette vue apporte et que l'autre ne dit pas. */
+          return d === 0 ? '' : `<span class="dlt ${d > 0 ? 'up' : 'down'}" title="${d > 0 ? '+' : ''}${d} place${Math.abs(d) > 1 ? 's' : ''} par rapport au classement à cinq ans">${d > 0 ? '▲' : '▼'}${Math.abs(d)}</span>`;
+        })() : ''}</div>
       <div class="cnt">${pastilles(n)}</div>
       <div class="track" data-nat="${c}">${totBout(c, val(c), max, isS)}${isS
         ? (() => {
@@ -1292,6 +1322,7 @@ function drawBars(){
             return `<div class="fill" style="width:${(val(c)/max*100).toFixed(1)}%;background:${toHex(base)}"></div>`;
           })()
         : n.y.map((v, yi) => { const wip = yi === 4;
+            if (yi < dep) return '';                     // saison hors fenêtre
             const base = toRGB(cssHex(teinteB(c)));
             const fond = wip ? base : melange(base, toRGB(cssHex('--surface-2')), .38);
             const pc = v / max * 100;
@@ -1313,7 +1344,7 @@ function drawBars(){
       <div class="val num">${nf(val(c))}</div>
       <div class="split num" title="${name(c)} · ${nf(val(c))} au millième">${isS
         ? `${nf1(val(c))} · ${enVie(n)} en lice sur ${engages(n)}`
-        : `${nf1(n.t)} · ${nf1(n.y[4])} en cours`}</div>
+        : `${nf1(val(c))} · ${nf1(n.y[4])} en cours`}</div>
     </div>`;}).join('');
   const nR = rows.length;
   elagueTot();
@@ -1321,7 +1352,7 @@ function drawBars(){
   const leg = isS ? '' :
     `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px">`
     + `<i style="width:26px;height:10px;border-radius:2px;display:inline-block;`
-    + `background:color-mix(in srgb,var(--ink-3) 38%,var(--surface-2))"></i>quatre saisons closes</span>`
+    + `background:color-mix(in srgb,var(--ink-3) 38%,var(--surface-2))"></i>${F.n - 1} saison${F.n > 2 ? 's' : ''} close${F.n > 2 ? 's' : ''}</span>`
     + `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px">`
     + `<i style="width:12px;height:10px;border-radius:2px;display:inline-block;background:var(--ink-3)"></i>saison ${D.meta.season}, en cours</span>`
     + `<span style="color:var(--ink-3)">— survolez une barre pour le détail saison par saison</span><br>`;
@@ -1334,7 +1365,35 @@ function drawBars(){
   })();
   document.getElementById('barNote').innerHTML = leg + (isS
     ? survie + `<br>Coefficient acquis depuis le 1<sup>er</sup> juillet. La France est ${posS}<sup>e</sup> sur ${nR} — mais à ce stade ce classement dépend surtout du nombre de clubs déjà entrés en lice, colonne « C1·C3·C4 » : les nations dont les clubs ont disputé les qualifications de juillet ont plusieurs semaines d'avance sur celles qui n'entrent qu'en phase de ligue.`
-    : survie + `<br>Somme des cinq dernières saisons — <b>c'est ce total qui fixe les places européennes</b>, et c'est pourquoi la page s'ouvre dessus. Les quatre segments pâles sont acquis : des saisons closes que plus aucun résultat ne changera. Le segment vif, en bout de barre, est la saison en cours — seule à bouger encore, et pour l'instant seulement ${nf(BY.FRA.y[4]/BY.FRA.t*100,1)} % du total français. Le rang du jour se lit ici ; la saison en cours, elle, se regarde dans l'autre onglet et dans les blocs suivants. Chaque barre se lit aussi saison par saison au survol.`);
+    : survie + '<br>' + (F.n === 5
+        ? `Somme des cinq dernières saisons — <b>c'est ce total qui fixe les places européennes</b>, et c'est pourquoi la page s'ouvre dessus. Les quatre segments pâles sont acquis : des saisons closes que plus aucun résultat ne changera. Le segment vif, en bout de barre, est la saison en cours — seule à bouger encore, et pour l'instant seulement ${nf(BY.FRA.y[4]/BY.FRA.t*100,1)} % du total français. `
+          + `<b>Le menu déroulant raccourcit la fenêtre</b>, et ce n'est pas un filtre : chaque été la saison la plus ancienne sort du calcul, donc les quatre dernières saisons sont le socle qui survivra au retrait de l'été 2027, les trois dernières à celui de 2028, et ainsi de suite. On y lit qui monte et qui descend quand le passé s'efface. `
+        : (() => {
+            /* Ce que la fenêtre raconte : le classement d'après les retraits. On
+               nomme les saisons qui sortent, sinon « 3 dernières saisons » ne
+               veut rien dire de précis. */
+            const sorties = SEASONS.slice(0, 5 - F.n);
+            /* « 2022/23 et 2023/24 et 2024/25 » : une énumération se ponctue. */
+            const liste = a => a.length < 2 ? a[0] : a.slice(0, -1).join(', ') + ' et ' + a[a.length - 1];
+            const plur = sorties.length > 1;
+            const ete = 2027 + (5 - F.n) - 1;
+            const bouge = rows.map(c => ({ c, d: BY[c].r - F.rang(BY[c]) })).filter(x => x.d !== 0);
+            const monte = bouge.filter(x => x.d > 0), baisse = bouge.filter(x => x.d < 0);
+            const fr = BY.FRA, dFR = fr.r - F.rang(fr);
+            return `<b>Ce n'est pas un filtre, c'est le classement d'après.</b> Chaque été, la saison la plus ancienne sort du calcul. `
+              + `Retirer ${plur ? 'les saisons' : 'la saison'} ${liste(sorties)} donne le socle que chaque nation emportera à l'été ${ete}`
+              + `${plur ? ` (après ${sorties.length} retraits successifs)` : ''} — <b>amputé ${plur ? 'des saisons qui restent' : 'de la saison qui reste'} à jouer d'ici là</b>, donc un socle, pas une prédiction. `
+              + `Les triangles donnent le mouvement par rapport au classement officiel à cinq ans, calculé sur les 55 associations. `
+              + (bouge.length
+                  ? `Dans le groupe affiché : ${monte.length ? monte.map(x => `${name(x.c)} +${x.d}`).join(', ') : 'personne ne monte'}`
+                    + `${baisse.length ? `, ${baisse.map(x => `${name(x.c)} ${x.d}`).join(', ')}` : ''}. `
+                  : `Aucun mouvement dans le groupe affiché. `)
+              + (dFR === 0
+                  ? `<b>La France garde son ${fr.r}<sup>e</sup> rang</b> sur cette fenêtre. `
+                  : `<b>La France ${dFR > 0 ? 'gagne' : 'perd'} ${Math.abs(dFR)} place${Math.abs(dFR) > 1 ? 's' : ''}</b>, ${fr.r}<sup>e</sup> aujourd'hui, ${F.rang(fr)}<sup>e</sup> sur cette fenêtre. `)
+              + `Le segment vif reste la saison en cours, la seule qui bouge encore. `;
+          })())
+        + `Chaque barre se lit aussi saison par saison au survol.`);
 }
 /* Infobulle saison par saison, calquée sur celle du bloc 2a : même repérage du
    segment survolé, même mise en avant par filtre, même positionnement. Une seule
@@ -1377,10 +1436,16 @@ function drawBars(){
 /* Les couleurs sont résolues au dessin : un changement de thème doit relancer le
    calcul, sinon les encres restent celles du thème précédent. */
 document.addEventListener('grotang:theme', () => drawBars());
-document.getElementById('p-season').onclick=()=>{period='season';syncP();};
-document.getElementById('p-five').onclick  =()=>{period='five';  syncP();};
-function syncP(){ document.getElementById('p-season').setAttribute('aria-pressed',period==='season');
-  document.getElementById('p-five').setAttribute('aria-pressed',period==='five'); drawBars(); }
+const winSel = document.getElementById('p-win');
+document.getElementById('p-season').onclick = () => { period = 'season'; syncP(); };
+winSel.onchange = () => { period = +winSel.value; syncP(); };
+function syncP(){
+  const isS = period === 'season';
+  document.getElementById('p-season').setAttribute('aria-pressed', isS);
+  winSel.dataset.on = String(!isS);
+  drawBars();
+}
+winSel.dataset.on = 'true';
 document.getElementById('b-top').onclick=()=>{porteeB='top';syncB();};
 document.getElementById('b-all').onclick=()=>{porteeB='all';syncB();};
 function syncB(){ document.getElementById('b-top').setAttribute('aria-pressed',porteeB==='top');
