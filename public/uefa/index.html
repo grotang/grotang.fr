@@ -210,7 +210,11 @@ section > .panel + .panel{margin-top:14px}
    coefficient se lit alors d'un coup d'œil — c'est le nombre de pastilles, pleines
    ET creuses — et le poids mort aussi. Un chiffre « 5 » ne montrait ni l'un ni
    l'autre. La colonne s'élargit en conséquence : neuf clubs pour l'Angleterre. */
-#bars .barrow{grid-template-columns:minmax(88px,132px) 74px minmax(0,1fr) 62px minmax(132px,max-content)}
+/* Une seule colonne à droite au lieu de deux. Le gras a sauté avec elle : la
+   hiérarchie est portée par la barre, pas par la graisse d'un nombre. */
+#bars .barrow{grid-template-columns:minmax(88px,132px) 74px minmax(0,1fr) minmax(158px,max-content)}
+#bars .barrow .val{display:none}
+#bars .barrow .split{font-size:12.5px; color:var(--ink-2)}
 .pips{display:flex; gap:2px; justify-content:flex-end; align-items:center}
 .pips i{width:6px; height:12px; border-radius:1.5px; display:block; flex:none}
 .pips i.out{box-shadow:inset 0 0 0 1px var(--ink-3); opacity:.45}
@@ -223,7 +227,7 @@ section > .panel + .panel{margin-top:14px}
 .barrow .tot{position:absolute; top:50%; transform:translateY(-50%); pointer-events:none;
   font:600 10.5px/1 "IBM Plex Mono",monospace; white-space:nowrap; letter-spacing:.01em}
 .barrow .tot.out{color:var(--ink-3); padding-left:7px}
-.barrow .tot.in{padding-right:7px}
+.barrow .tot[hidden]{display:none}
 .barrow .fill{height:100%; background:var(--ink-3);
   display:flex; align-items:center; justify-content:flex-end; overflow:hidden}
 .barrow .fill span{font:700 9.5px/1 "IBM Plex Mono",monospace; letter-spacing:.02em;
@@ -274,7 +278,10 @@ section > .panel + .panel{margin-top:14px}
 /* Le sélecteur #bars .barrow ci-dessus est plus spécifique que .barrow : sans le
    rappeler ici, la grille à cinq colonnes du bureau s'imposait au téléphone et
    la page débordait de 37 px. */
-@media (max-width:680px){ .barrow, #bars .barrow{grid-template-columns:1fr 62px; gap:3px 10px}
+/* Au téléphone, le bloc 1 n'a plus de colonne « valeur » à loger : elle a
+   fusionné avec le split. Sans ce rappel, la grille gardait 62 px de vide. */
+@media (max-width:680px){ .barrow{grid-template-columns:1fr 62px; gap:3px 10px}
+  #bars .barrow{grid-template-columns:1fr; gap:3px 10px}
   .barrow .cnt{display:none} .barrow .track{grid-column:1/-1; order:3} .barrow .split{grid-column:1/-1; order:4; text-align:left} }
 
 /* ---------- effectifs : une case par club engagé ---------- */
@@ -370,7 +377,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "ven. 25 sept. 2026 09h55";</script>
+<script>window.PUBLIE = "ven. 25 sept. 2026 10h51";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -1266,21 +1273,34 @@ function pastilles(n){
     + `</span>`;
 }
 
-/* Le total, au bout de la barre. Deux positions : dehors quand la barre laisse
-   la place, dedans en encre contrastée quand elle touche le bord — l'Angleterre
-   occupe 100 % de la piste, un libellé posé après elle serait rogné.
+/* Le total, au bout de la barre. TOUJOURS dehors : posé dedans, sur le segment
+   de saison en cours, il se collait au bord et donnait un pavé illisible pour
+   l'Angleterre, qui occupe 100 % de la piste. Quand il n'y a pas la place, on ne
+   l'écrit pas — la colonne de droite porte déjà la valeur, et rien vaut mieux
+   qu'un chiffre rogné. Le tri se fait après le rendu, en mesurant la piste :
+   c'est la seule façon d'être juste à toutes les largeurs d'écran.
    Pas trois décimales : la valeur exacte est déjà dans la colonne de droite, et
    « 103,8 » se lit d'un coup d'œil là où « 103,796 » demande un arrêt.
-   La précision suit l'échelle. Une décimale quand le maximum dépasse 20 — sur
-   une barre de 104 points, le centième n'apporte rien. Deux en dessous : la vue
-   « saison en cours » plafonne à 5,5, et à une décimale l'Azerbaïdjan (5,125) et
-   la Turquie (5,100) afficheraient le même « 5,1 » à deux rangs d'écart. */
+   UNE décimale partout à l'affichage, quelle que soit l'échelle : c'est ce qui
+   rend la colonne régulière d'une vue à l'autre. Le prix est connu et assumé —
+   sur la vue « saison en cours », l'Azerbaïdjan (5,125) et la Turquie (5,100)
+   affichent tous deux « 5,1 » à deux rangs d'écart.
+   L'AFFICHAGE seulement : le classement, les largeurs de barre et le recoupement
+   avec kassiesa travaillent sur la valeur exacte au millième, jamais sur
+   l'arrondi. Un rang ne se décide pas sur un chiffre rond. */
 const totBout = (c, v, max, isS) => {
-  const pc = v / max * 100, txt = nf(v, max >= 20 ? 1 : 2);
-  if (pc <= 92) return `<span class="tot out" style="left:${pc.toFixed(1)}%">${txt}</span>`;
-  const base = toRGB(cssHex(teinteB(c)));
-  const fond = isS ? base : base;                       // le segment de bout est toujours en pleine couleur
-  return `<span class="tot in" style="right:${(100 - pc).toFixed(1)}%;color:${encre(fond, base)}">${txt}</span>`;
+  const pc = v / max * 100, txt = nf1(v);
+  return `<span class="tot out" style="left:${pc.toFixed(1)}%">${txt}</span>`;
+};
+/* Mesure après coup : un libellé dont le bord droit dépasse la piste est retiré,
+   pas rogné. Quatre lignes qui tiennent à toutes les largeurs, là où un seuil en
+   pourcentage choisi à la main tombe juste sur un écran et faux sur les autres. */
+const elagueTot = () => {
+  document.querySelectorAll('#bars .barrow .track').forEach(tr => {
+    const t = tr.querySelector('.tot'); if (!t) return;
+    t.hidden = false;
+    if (t.offsetLeft + t.offsetWidth > tr.clientWidth - 2) t.hidden = true;
+  });
 };
 
 let period='five';
@@ -1334,11 +1354,12 @@ function drawBars(){
               + `background:${toHex(fond)}">${lab}</div>`;
           }).join('')}</div>
       <div class="val num">${nf(val(c))}</div>
-      <div class="split num">${isS
-        ? `${enVie(n)} en lice sur ${engages(n)} engagés`
-        : `${nf(n.t-n.y[4],2)} acquis + ${nf(n.y[4],2)} en cours`}</div>
+      <div class="split num" title="${name(c)} · ${nf(val(c))} au millième">${isS
+        ? `${nf1(val(c))} · ${enVie(n)} en lice sur ${engages(n)}`
+        : `${nf1(n.t)} · ${nf1(n.y[4])} en cours`}</div>
     </div>`;}).join('');
   const nR = rows.length;
+  elagueTot();
   const posS=[...rows].sort((x,y)=>seasonNow(y)-seasonNow(x)).indexOf('FRA')+1;
   const leg = isS ? '' :
     `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px">`
