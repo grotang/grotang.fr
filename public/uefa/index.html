@@ -224,6 +224,10 @@ section > .panel + .panel{margin-top:14px}
 #bars .barrow .val{display:none}
 /* La colonne passe au second plan : c'est le détail, plus le titre. */
 #bars .barrow .split{font-size:11.5px; color:var(--ink-3)}
+/* Le 2b n'a pas d'effectif a annoncer : la colonne gauche du 2a (4-2-1 clubs)
+   n'a pas d'equivalent ici, et y remettre la part du bonus repetait mot pour mot
+   le libelle du premier segment. Colonne supprimee, grille resserree. */
+#dbars .barrow{grid-template-columns:minmax(88px,132px) minmax(0,1fr) 62px minmax(132px,max-content)}
 .pips{display:flex; gap:2px; justify-content:flex-end; align-items:center}
 .pips i{width:6px; height:12px; border-radius:1.5px; display:block; flex:none}
 .pips i.out{box-shadow:inset 0 0 0 1px var(--ink-3); opacity:.45}
@@ -293,6 +297,7 @@ section > .panel + .panel{margin-top:14px}
    fusionné avec le split. Sans ce rappel, la grille gardait 62 px de vide. */
 @media (max-width:680px){ .barrow{grid-template-columns:1fr 62px; gap:3px 10px}
   #bars .barrow{grid-template-columns:1fr; gap:3px 10px}
+  #dbars .barrow{grid-template-columns:1fr 62px; gap:3px 10px}
   .barrow .cnt{display:none} .barrow .track{grid-column:1/-1; order:3} .barrow .split{grid-column:1/-1; order:4; text-align:left} }
 
 /* ---------- effectifs : une case par club engagé ---------- */
@@ -388,7 +393,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "ven. 25 sept. 2026 20h05";</script>
+<script>window.PUBLIE = "ven. 25 sept. 2026 20h26";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -2247,7 +2252,6 @@ const legende = segs => segs.map(s =>
       const split = r.d.map((v, i) => `<u>${v > 0 ? (dMode === 'abs' ? nfx(v) : Math.round(v / tot * 100) + ' %') : '·'}</u>`).join('');
       return `<div class="barrow${r.c === 'FRA' ? ' me' : ''}">
         <div class="nm"><b>${name(r.c)}</b></div>
-        <div class="cnt num">${Math.round(100 * r.d[0] / tot)} %</div>
         <div class="track" data-nat="${r.c}">${segs}</div>
         <div class="val num">${dMode === 'abs' ? nfx(r.tot) : '100 %'}</div>
         <div class="split num">${split}</div>
@@ -2262,7 +2266,6 @@ const legende = segs => segs.map(s =>
       + `<b>Le bonus d'entrée</b> vaut 6 points par club qualifié pour la phase de ligue de C1, divisés par le nombre de clubs engagés : il est acquis avant le premier ballon et récompense le rang de la saison passée. `
       + `<b>Les qualifications</b> ne sont ouvertes qu'aux nations dont les clubs entrent tôt — une nation dont tous les clubs sont directement qualifiés ne peut structurellement rien y marquer. `
       + `<b>Seul le terrain</b> met tout le monde sur le même plan, et c'est lui qu'isolent les blocs 6a et 6b. `
-      + `La colonne de gauche donne la part du bonus dans le total. `
       + (isCur()
           ? `${LeNom(leader.c)} mène la saison avec ${nfx(leader.tot)}, dont ${nfx(leader.d[0])} acquis d'avance (${pct(leader)} %) ; la France est à ${nfx(fr.tot)}, dont ${nfx(fr.d[0])} (${pct(fr)} %). `
             + `<b>À ce stade la lecture est faussée</b> : la phase de ligue vient de commencer, le bonus pèse donc mécaniquement une part énorme du total. Le sélecteur de saison montre à quoi ressemble une répartition complète.`
