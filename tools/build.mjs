@@ -58,7 +58,7 @@ function buildUefa() {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Coefficient UEFA des associations suivi étape par étape sur la saison ${meta.season} : classement, origine des points par compétition, clubs engagés, projections.">
+<meta name="description" content="Le coefficient UEFA des 55 associations, décortiqué étape par étape et mis à jour chaque matin : d'où viennent les points, qui les marque, et où la saison ${meta.season} peut finir.">
 ${FAVICON}
 ${THEME_BOOT}
 ${head}
