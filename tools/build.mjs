@@ -166,6 +166,28 @@ Allow: /
 Sitemap: https://grotang.fr/sitemap.xml
 `;
 
+/* Le site est publie par GitHub Pages, qui ne sait pas rediriger cote serveur :
+   pas de 301 possible sur `/`. Sans fichier a la racine, l'apex repondait 404.
+   Cette page minuscule est donc la redirection : `location.replace` part avant
+   le premier rendu et n'empile rien dans l'historique — le bouton Retour ramene
+   d'ou l'on venait, pas dans une boucle. Le `meta refresh` prend le relais si le
+   script ne tourne pas, le lien si rien ne tourne. Le `canonical` dit aux moteurs
+   que l'adresse qui compte est /uefa/, pour que l'autorite du domaine y aille.
+   Genere par le build : `public/` est efface a chaque passage, un fichier depose
+   a la main disparaitrait au rafraichissement du matin. */
+const ACCUEIL = `<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>grotang.fr</title>
+<link rel="canonical" href="https://grotang.fr/uefa/">
+<meta http-equiv="refresh" content="0; url=/uefa/">
+<script>location.replace('/uefa/');</script>
+</head>
+<body><p><a href="/uefa/">L'observatoire du coefficient UEFA</a></p></body>
+</html>
+`;
+
 const sitemap = d => `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://grotang.fr/uefa/</loc><lastmod>${d}</lastmod></url>
@@ -196,6 +218,7 @@ const sizes = {
   'uefa/index.html': write('uefa/index.html', uefa.html),
   'tennis/index.html': write('tennis/index.html', tennis.html),
   '404.html': write('404.html', NOTFOUND),
+  'index.html': write('index.html', ACCUEIL),
   'robots.txt': write('robots.txt', ROBOTS),
   'sitemap.xml': write('sitemap.xml', sitemap(today)),
 };
