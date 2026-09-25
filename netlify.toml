@@ -22,10 +22,18 @@
   status = 301
   force = true
 
-# Anciennes adresses : la page tennis vivait à la racine avant septembre 2026.
+# Plus de page d'accueil : le site, c'est le coefficient UEFA. L'apex y mène
+# directement, en 301 pour que l'autorité du domaine aille sur la page.
+[[redirects]]
+  from = "/"
+  to = "/uefa/"
+  status = 301
+
+# Anciennes adresses : la page tennis vivait à la racine avant septembre 2026,
+# et l'accueil a existé jusqu'à cette date.
 [[redirects]]
   from = "/index.html"
-  to = "/"
+  to = "/uefa/"
   status = 301
 
 [[headers]]

@@ -15,7 +15,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { nav, navCSS, FAVICON, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS } from './chrome.mjs';
-import { buildIndex } from './index.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
@@ -169,7 +168,8 @@ Sitemap: https://grotang.fr/sitemap.xml
 
 const sitemap = d => `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${['/', '/uefa/', '/tennis/'].map(u => `  <url><loc>https://grotang.fr${u}</loc><lastmod>${d}</lastmod></url>`).join('\n')}
+  <url><loc>https://grotang.fr/uefa/</loc><lastmod>${d}</lastmod></url>
+  <url><loc>https://grotang.fr/tennis/</loc><lastmod>${d}</lastmod></url>
 </urlset>
 `;
 
@@ -184,7 +184,7 @@ background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,'Segoe
 h1{font-size:56px;margin:0;font-weight:700;letter-spacing:-.03em}
 p{margin:0;color:var(--ink3)}
 a{color:var(--hi);font-weight:600;margin-top:14px;display:inline-block}</style>
-</head><body><h1>404</h1><p>Cette page n'existe pas.</p><a href="/">Retour à l'accueil</a></body></html>`;
+</head><body><h1>404</h1><p>Cette page n'existe pas.</p><a href="/uefa/">Coefficient UEFA</a></body></html>`;
 
 /* ---------- exécution ---------- */
 fs.rmSync(OUT, { recursive: true, force: true });
@@ -193,7 +193,6 @@ const tennis = buildTennis();
 const today = new Date().toISOString().slice(0, 10);
 
 const sizes = {
-  'index.html': write('index.html', buildIndex({ uefa: uefaStats(uefa.meta), tennis: tennis.stats })),
   'uefa/index.html': write('uefa/index.html', uefa.html),
   'tennis/index.html': write('tennis/index.html', tennis.html),
   '404.html': write('404.html', NOTFOUND),

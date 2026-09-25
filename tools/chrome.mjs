@@ -134,7 +134,9 @@ export const PAGES = [
 export function nav(current) {
   const links = PAGES.map(p =>
     `<a href="${p.href}"${p.key === current ? ' aria-current="page"' : ''}>${p.label}</a>`).join('');
-  return `<div class="gnav"><a class="gn-mark" href="/">GROTANG<span>.FR</span></a>`
+  /* Le logo menait a une page d'accueil qui n'existe plus : le site, c'est le
+     coefficient UEFA. Il y mene donc directement, sans passer par une redirection. */
+  return `<div class="gnav"><a class="gn-mark" href="/uefa/">GROTANG<span>.FR</span></a>`
     + `<nav>${links}</nav>`
     + `<button type="button" class="gn-theme" id="gn-theme" aria-pressed="false" title="Basculer clair / sombre">`
     + `<span class="gn-theme-i" aria-hidden="true"></span><span class="gn-theme-t">Sombre</span></button></div>`;
