@@ -19,6 +19,12 @@
   --fr:#2a78d6; --fr-soft:#E4EDFA;
   --good:#0F7040; --bad:#B02C2C;
   --n1:#2a78d6; --n2:#eb6834; --n3:#1baf7a; --n4:#eda100; --n5:#e87ba4; --n6:#008300; --n7:#4a3aa7; --n8:#e34948;
+  /* Les quatre postes du 2b. Teintes et encres de libelle validees ensemble
+     (separation daltonisme et vision normale sur toutes les paires, contraste
+     du libelle dans son segment). L'encre suit le fond, elle n'est pas blanche
+     par principe : blanc sur ambre tombait a 2,2:1, illisible. */
+  --d1:#3F4956; --d2:#eda100; --d3:#2a78d6; --d4:#e87ba4;
+  --d1i:#FBFCFE; --d2i:#0F141D; --d3i:#FBFCFE; --d4i:#0F141D;
   --band:#F0F2F6;
 }
 /* Le clair est le thème par défaut, quel que soit le réglage du système.
@@ -32,6 +38,8 @@
   --fr:#5D9BF0; --fr-soft:#16233A;
   --good:#43BE83; --bad:#EE7A76;
   --n1:#3987e5; --n2:#d95926; --n3:#199e70; --n4:#c98500; --n5:#d55181; --n6:#008300; --n7:#9085e9; --n8:#e66767;
+  --d1:#C2C8D0; --d2:#c98500; --d3:#5D9BF0; --d4:#d55181;
+  --d1i:#0F141D; --d2i:#0F141D; --d3i:#0F141D; --d4i:#0F141D;
   --band:#111823;
 }
 
@@ -393,7 +401,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "ven. 25 sept. 2026 20h40";</script>
+<script>window.PUBLIE = "ven. 25 sept. 2026 20h55";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -476,7 +484,7 @@ body{margin:0}</style>
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">2b</span><h3>D'où viennent les points — bonus, qualifications, épreuve principale</h3>
+    <div class="ptitle"><span class="no">2b</span><h3>D'où viennent les points — bonus, qualifications, phase de ligue, phase finale</h3>
       <span class="sub"><span class="ctl"><span class="lb">Échelle</span><span class="seg" role="group" aria-label="Échelle"><button type="button" id="d-abs" aria-pressed="true">Points</button><button type="button" id="d-pct" aria-pressed="false">Part</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelD" aria-label="Saison"></select></span></span></span></div>
     <div class="klegend" id="dleg"></div>
     <div class="barswrap"><div class="bars" id="dbars"></div><div class="tip" id="tipDec" hidden></div></div>
@@ -2098,11 +2106,17 @@ const legende = segs => segs.map(s =>
      nations, il vaut exactement 6 × (clubs en C1) ÷ (clubs engagés).
      Les gains q[1..7] sont les qualifications, les gains m[*] la phase de ligue. */
   const part = c => {
-    const q = SER[c].q, m = SER[c].m;
+    const q = SER[c].q, m = SER[c].m, k = SER[c].k;
     const bonus  = q[0][1];
     const qualif = q.slice(1).reduce((a, s) => a + s[1], 0);
     const ligue  = m.reduce((a, s) => a + s[1], 0);
-    return { bonus, qualif, ligue, tot: bonus + qualif + ligue };
+    /* La source ne publie la phase finale qu'à partir des barrages des 8es, en
+       février. Tant qu'elle n'a rien à donner le poste vaut zéro et le segment
+       n'est pas dessiné — la légende le signale « à venir » plutôt que de faire
+       croire à une composante nulle. Le jour où l'extracteur ajoutera un tableau
+       `k`, il sera lu ici sans autre changement. */
+    const finale = Array.isArray(k) ? k.reduce((a, s) => a + s[1], 0) : 0;
+    return { bonus, qualif, ligue, finale, tot: bonus + qualif + ligue + finale };
   };
 
   /* --- journées de phase de ligue présentes DANS LES DONNÉES, par compétition ---
@@ -2206,34 +2220,41 @@ const legende = segs => segs.map(s =>
      quand cinq blocs racontent la même saison. */
 
   /* La décomposition d'une saison close se lit dans HIST, qui donne le cumul
-     étape par étape : l'étape 0 porte le bonus d'entrée et rien d'autre, les
-     étapes suivantes jusqu'à J1 sont les qualifications, le reste est l'epreuve principale.
-     Contrôlé sur les cinq saisons archivées et quatre nations : aucune composante
-     négative, et le total retrouve à chaque fois le coefficient publié. */
+     étape par étape. Quatre bornes, valables aussi bien sur le format actuel que
+     sur l'ancien : l'étape 0 porte le bonus d'entrée et rien d'autre ; jusqu'à la
+     veille de J1 ce sont les qualifications ; jusqu'à la veille du premier tour à
+     élimination directe c'est la phase de ligue, bonus de classement compris ; le
+     reste est la phase finale. Sur les saisons d'avant 2024/25 les étapes 11 à 13
+     sont plates — l'ancien format n'avait que six journées et pas de bonus de
+     classement — donc la borne tombe au bon endroit sans traitement particulier.
+     Contrôlé sur les cinq saisons archivées : aucune composante négative, et le
+     total retrouve à chaque fois le coefficient publié. */
   const decomp = c => {
-    if (isCur()) { const d = part(c); return [d.bonus, d.qualif, d.ligue]; }
+    if (isCur()) { const d = part(c); return [d.bonus, d.qualif, d.ligue, d.finale]; }
     const a = HIST[selY] && HIST[selY][c]; if (!a) return null;
     const p = pad18(a), fin = p[p.length - 1];
-    return [p[0], p[G_J1 - 1] - p[0], fin - p[G_J1 - 1]];
+    return [p[0], p[G_J1 - 1] - p[0], p[G_KO - 1] - p[G_J1 - 1], fin - p[G_KO - 1]];
   };
-  /* Le troisième poste ne veut pas dire la même chose selon l'année. Sur la
-     saison en cours il n'y a que la phase de ligue ; sur une saison close il
-     contient aussi la phase finale, et avant 2024/25 c'était une phase de
-     groupes. Le libellé suit, sinon le graphe ment sur ce qu'il montre. */
-  const labEpreuve = () => isCur() ? 'Phase de ligue'
-    : (+selY >= 2024 ? 'Phase de ligue et phase finale' : 'Phase de groupes et phase finale');
+  /* Le troisième poste a changé de nom en 2024/25 : phase de groupes à six
+     journées avant, phase de ligue à huit depuis. Le libellé suit, sinon le
+     graphe ment sur ce qu'il montre. */
+  const labLigue = () => (isCur() || +selY >= 2024) ? 'Phase de ligue' : 'Phase de groupes';
 
   let dMode = 'abs';
   drawDec = function(){
     const rows = GRP.filter(c => decomp(c)).map(c => { const d = decomp(c);
-      return { c, d, tot: d[0] + d[1] + d[2] }; }).sort((a, b) => b.tot - a.tot);
+      return { c, d, tot: d.reduce((a, v) => a + v, 0) }; }).sort((a, b) => b.tot - a.tot);
     const seg = [
-      { lab: "Bonus d'entrée (C1)", col: 'var(--ink-3)' },
-      { lab: 'Qualifications',      col: 'var(--n4)'    },
-      { lab: labEpreuve(),          col: 'var(--fr)'    },
+      { lab: "Bonus d'entrée (C1)", col: 'var(--d1)', ink: 'var(--d1i)' },
+      { lab: 'Qualifications',      col: 'var(--d2)', ink: 'var(--d2i)' },
+      { lab: labLigue(),            col: 'var(--d3)', ink: 'var(--d3i)' },
+      { lab: 'Phase finale',        col: 'var(--d4)', ink: 'var(--d4i)' },
     ];
-    document.getElementById('dleg').innerHTML =
-      seg.map(x => `<span><i style="background:${x.col}"></i>${x.lab}</span>`).join('');
+    /* Un poste que personne n'a encore ouvert reste dans la légende, en grisé :
+       l'absence de rose sur les barres est alors une information, pas un oubli. */
+    const vide = i => rows.every(r => r.d[i] <= 0);
+    document.getElementById('dleg').innerHTML = seg.map((x, i) =>
+      `<span${vide(i) ? ' style="opacity:.45"' : ''}><i style="background:${x.col}"></i>${x.lab}${vide(i) ? ' · à venir' : ''}</span>`).join('');
     if (!rows.length) { document.getElementById('dbars').innerHTML = ''; return; }
     const max = Math.max(...rows.map(r => r.tot));
 
@@ -2246,7 +2267,7 @@ const legende = segs => segs.map(s =>
            dans un segment dont la largeur est un pourcentage était un contresens.
            Même règle qu'au 2a pour le reste : un libellé qui ne tient pas dans
            son segment part à l'infobulle plutôt que d'être rogné. */
-        const lab = pc >= 7 ? `<span>${dMode === 'abs' ? nfx(v) : Math.round(pc) + ' %'}</span>` : '';
+        const lab = pc >= 7 ? `<span style="color:${seg[i].ink}">${dMode === 'abs' ? nfx(v) : Math.round(pc) + ' %'}</span>` : '';
         return `<div class="cseg" data-c="${r.c}" data-i="${i}" style="width:${pc.toFixed(3)}%;background:${seg[i].col}">${lab}</div>`;
       })()).join('');
       const split = r.d.map((v, i) => `<u>${v > 0 ? (dMode === 'abs' ? nfx(v) : Math.round(v / tot * 100) + ' %') : '·'}</u>`).join('');
@@ -2258,22 +2279,30 @@ const legende = segs => segs.map(s =>
       </div>`;
     }).join('');
 
+    /* Le seuil en pourcentage ne suffit pas : 7 % d'une piste étroite, ce sont
+       trente pixels, et « 12,6 » n'y tient pas. On mesure donc après rendu et on
+       retire les libellés qui débordent — le chiffre reste dans l'infobulle et
+       dans la colonne de droite, il n'est jamais perdu, seulement pas répété. */
+    document.querySelectorAll('#dbars .cseg > span').forEach(sp => {
+      if (sp.scrollWidth > sp.parentElement.clientWidth - 2) sp.remove(); });
+
     const lab = SEAS.find(x => x[0] === selY)[1];
     const fr = rows.find(r => r.c === 'FRA'), leader = rows[0];
     const pct = r => Math.round(100 * r.d[0] / (r.tot || 1));
     document.getElementById('capDec').innerHTML =
-      `Trois composantes de natures différentes, que le classement additionne sans le dire. `
+      `Quatre composantes de natures différentes, que le classement additionne sans le dire. `
       + `<b>Le bonus d'entrée</b> vaut 6 points par club qualifié pour la phase de ligue de C1, divisés par le nombre de clubs engagés : il est acquis avant le premier ballon et récompense le rang de la saison passée. `
       + `<b>Les qualifications</b> ne sont ouvertes qu'aux nations dont les clubs entrent tôt — une nation dont tous les clubs sont directement qualifiés ne peut structurellement rien y marquer. `
-      + `<b>Seule l'épreuve principale</b> met tout le monde sur le même plan, et c'est elle qu'isolent les blocs 6a et 6b. `
+      + `<b>${labLigue()}</b> est le seul poste que toutes les nations présentes jouent dans les mêmes conditions, et c'est lui qu'isolent les blocs 6a et 6b ; il porte aussi le bonus de classement de fin de phase. `
+      + `<b>La phase finale</b> n'est ouverte qu'à ceux qui ont passé la phase de ligue : c'est le poste le plus inégalitaire, et celui qui fait les écarts de haut de tableau. `
       + (isCur()
           ? `${LeNom(leader.c)} mène la saison avec ${nfx(leader.tot)}, dont ${nfx(leader.d[0])} acquis d'avance (${pct(leader)} %) ; la France est à ${nfx(fr.tot)}, dont ${nfx(fr.d[0])} (${pct(fr)} %). `
-            + `<b>À ce stade la lecture est faussée</b> : la phase de ligue vient de commencer, le bonus pèse donc mécaniquement une part énorme du total. Le sélecteur de saison montre à quoi ressemble une répartition complète.`
-          : `Saison <b>${lab}</b>, terminée. ${LeNom(leader.c)} termine en tête avec ${nfx(leader.tot)}, dont ${pct(leader)} % de bonus d'entrée ; la France ${nfx(fr.tot)}, dont ${pct(fr)} %. `
-            + `<b>Décomposition reconstruite</b> à partir du relevé étape par étape archivé, pas d'un champ publié tel quel : l'étape d'entrée porte le bonus, les étapes suivantes jusqu'à la 1<sup>re</sup> journée sont les qualifications, le reste est l'épreuve principale. `
+            + `<b>À ce stade la lecture est faussée</b> : la phase de ligue vient de commencer et la phase finale n'existe pas encore, le bonus pèse donc mécaniquement une part énorme du total. Le sélecteur de saison montre à quoi ressemble une répartition complète.`
+          : `Saison <b>${lab}</b>, terminée. ${LeNom(leader.c)} termine en tête avec ${nfx(leader.tot)}, dont ${nfx(leader.d[3])} de phase finale (${Math.round(100 * leader.d[3] / (leader.tot || 1))} %) ; la France ${nfx(fr.tot)}, dont ${nfx(fr.d[3])} (${Math.round(100 * fr.d[3] / (fr.tot || 1))} %). `
+            + `<b>Décomposition reconstruite</b> à partir du relevé étape par étape archivé, pas d'un champ publié tel quel : l'étape d'entrée porte le bonus, les étapes suivantes jusqu'à la 1<sup>re</sup> journée sont les qualifications, la suite jusqu'au premier tour à élimination directe est la phase de ligue, le reste la phase finale. `
             + (+selY >= 2024
-                ? `Le troisième poste contient donc aussi la phase finale.`
-                : `Avant 2024/25 le format était différent — phase de groupes à six journées, barème d'entrée à 4 points par club de C1 — et le troisième poste contient la phase de groupes et la phase finale. La comparaison avec les saisons récentes se fait en proportion, pas en valeur.`));
+                ? `Les barrages des 8<sup>es</sup> sont comptés dans la phase finale : ils se jouent après la phase de ligue, même s'ils ne rapportent aucun bonus de tour.`
+                : `Avant 2024/25 le format était différent — phase de groupes à six journées, barème d'entrée à 4 points par club de C1, pas de bonus de classement ni de barrages des 8<sup>es</sup>. La comparaison avec les saisons récentes se fait en proportion, pas en valeur.`));
   };
 
   /* survol : mêmes mécaniques que le 2a */
@@ -2281,7 +2310,8 @@ const legende = segs => segs.map(s =>
     const wrap = document.getElementById('dbars'), tip = document.getElementById('tipDec');
     if (!wrap || !tip) return;
     let last = null;
-    const NOMS = ["Bonus d'entrée", 'Qualifications', 'Épreuve principale'];
+    const NOMS = ["Bonus d'entrée", 'Qualifications', null, 'Phase finale'];
+    const TEINTE = ['var(--d1)', 'var(--d2)', 'var(--d3)', 'var(--d4)'];
     const hide = () => { tip.hidden = true; if (last) { last.classList.remove('on'); last = null; } };
     wrap.addEventListener('mouseleave', hide);
     wrap.addEventListener('mousemove', ev => {
@@ -2289,11 +2319,11 @@ const legende = segs => segs.map(s =>
       if (!s) { hide(); return; }
       if (s !== last) { if (last) last.classList.remove('on'); s.classList.add('on'); last = s; }
       const c = s.closest('.track').dataset.nat, d = decomp(c); if (!d) return;
-      const tot = d[0] + d[1] + d[2], chaud = +s.dataset.i;
+      const tot = d.reduce((a, v) => a + v, 0), chaud = +s.dataset.i;
       tip.innerHTML = `<div class="th">${name(c)} · ${nf(tot, 3)} au millième</div>`
         + d.map((v, i) => `<div class="tr" style="${i === chaud ? '' : 'opacity:.55'}">`
-            + `<i style="background:${['var(--ink-3)','var(--n4)','var(--fr)'][i]}"></i>`
-            + `<span class="nm"${i === chaud ? ' style="color:var(--ink);font-weight:600"' : ''}>${i === 2 ? labEpreuve() : NOMS[i]}</span>`
+            + `<i style="background:${TEINTE[i]}"></i>`
+            + `<span class="nm"${i === chaud ? ' style="color:var(--ink);font-weight:600"' : ''}>${NOMS[i] || labLigue()}</span>`
             + `<b>${nf(v, 3)}</b><s style="color:var(--ink-3)">${nf(v / (tot || 1) * 100, 1)} %</s></div>`).join('');
       tip.hidden = false;
       const br = (tip.offsetParent || wrap).getBoundingClientRect();
