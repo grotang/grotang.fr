@@ -112,29 +112,6 @@ section{margin-top:clamp(30px,4.5vw,52px)}
 .shead h2{font-size:clamp(20px,2.5vw,27px); font-weight:600}
 .shead p{margin:0; color:var(--ink-2); font-size:13.5px; max-width:82ch}
 
-/* ---------- position strip ---------- */
-.strip{display:grid; grid-template-columns:1fr auto 1.35fr auto 1fr; align-items:stretch;
-       background:var(--surface); border:1px solid var(--rule); border-radius:3px; overflow:hidden}
-.pos{padding:16px 18px; display:grid; gap:2px; align-content:center}
-.pos.me{background:var(--fr-soft); border-inline:1px solid var(--rule)}
-.pos .rk{font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); font-weight:600}
-.pos .nm{font-size:clamp(16px,2.1vw,21px); font-weight:700; font-variation-settings:"wdth" 88; line-height:1.15}
-.pos.me .nm{color:var(--fr)}
-.pos .co{font-size:clamp(20px,3vw,30px); font-weight:700; line-height:1.1}
-.gapcell{display:grid; align-content:center; justify-items:center; gap:2px; padding:12px 14px;
-         background:var(--surface-2); border-inline:1px solid var(--rule-soft); min-width:96px}
-.gapcell .g{font-size:15px; font-weight:600}
-.gapcell .l{font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); text-align:center; line-height:1.3}
-@media (max-width:720px){ .strip{grid-template-columns:1fr} .pos.me{border-inline:0; border-block:1px solid var(--rule)}
-  .gapcell{border-inline:0; border-block:1px solid var(--rule-soft); flex-direction:row} }
-
-.facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:1px; margin-top:1px;
-       background:var(--rule); border:1px solid var(--rule); border-top:0; border-radius:0 0 3px 3px; overflow:hidden}
-.fact{background:var(--surface); padding:13px 16px; display:grid; gap:3px}
-.fact .k{font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3); font-weight:600}
-.fact .v{font-size:19px; font-weight:700}
-.fact .n{font-size:12.5px; color:var(--ink-2); line-height:1.4}
-
 /* ---------- charts ---------- */
 .panel{background:var(--surface); border:1px solid var(--rule); border-radius:3px; padding:clamp(14px,2.2vw,22px)}
 .ctl{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:14px}
@@ -235,7 +212,8 @@ section > .panel + .panel{margin-top:14px}
 /* Le 2b n'a pas d'effectif a annoncer : la colonne gauche du 2a (4-2-1 clubs)
    n'a pas d'equivalent ici, et y remettre la part du bonus repetait mot pour mot
    le libelle du premier segment. Colonne supprimee, grille resserree. */
-#dbars .barrow{grid-template-columns:minmax(88px,132px) minmax(0,1fr) 62px minmax(132px,max-content)}
+#dbars .barrow,
+#eqbars .barrow{grid-template-columns:minmax(88px,132px) minmax(0,1fr) 62px minmax(132px,max-content)}
 .pips{display:flex; gap:2px; justify-content:flex-end; align-items:center}
 .pips i{width:6px; height:12px; border-radius:1.5px; display:block; flex:none}
 .pips i.out{box-shadow:inset 0 0 0 1px var(--ink-3); opacity:.45}
@@ -305,7 +283,8 @@ section > .panel + .panel{margin-top:14px}
    fusionné avec le split. Sans ce rappel, la grille gardait 62 px de vide. */
 @media (max-width:680px){ .barrow{grid-template-columns:1fr 62px; gap:3px 10px}
   #bars .barrow{grid-template-columns:1fr; gap:3px 10px}
-  #dbars .barrow{grid-template-columns:1fr 62px; gap:3px 10px}
+  #dbars .barrow,
+  #eqbars .barrow{grid-template-columns:1fr 62px; gap:3px 10px}
   .barrow .cnt{display:none} .barrow .track{grid-column:1/-1; order:3} .barrow .split{grid-column:1/-1; order:4; text-align:left} }
 
 /* ---------- effectifs : une case par club engagé ---------- */
@@ -350,7 +329,8 @@ section > .panel + .panel{margin-top:14px}
 .klegend i{width:12px; height:12px; border-radius:2px; display:inline-block; flex:none}
 
 /* ---------- clubs ---------- */
-.cl8{margin-top:18px; padding-top:14px; border-top:1px solid var(--rule-soft)}
+.cl8{margin-top:18px; padding-top:14px; border-top:1px solid var(--rule-soft); overflow-x:auto}
+.cl8 svg{display:block; width:auto; height:auto; max-width:none}
 .clrow{background:var(--surface); padding:10px 14px; display:grid; grid-template-columns:minmax(96px,142px) 1fr; gap:12px; align-items:center}
 .clrow.me{background:var(--fr-soft)}
 .clrow .who{font-size:13px; font-weight:600}
@@ -401,7 +381,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "ven. 25 sept. 2026 23h26";</script>
+<script>window.PUBLIE = "ven. 25 sept. 2026 23h52";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -514,24 +494,14 @@ body{margin:0}</style>
 
 <section>
   <div class="shead">
-    <h2>La France dans le classement à 5 ans</h2>
-    <p>C'est ce classement — et non celui de la saison — qui fixe le nombre de places européennes attribuées à chaque pays.</p>
-  </div>
-  <div class="strip" id="strip"></div>
-  <div class="facts" id="facts"></div>
-</section>
-
-<section>
-  <div class="shead">
     <h2>La course à la 5<sup>e</sup> place</h2>
     <p>Le rang bouge une fois par an ; l'écart, lui, bouge à chaque journée. Mais on ne compare que ce qui se compare : ces deux lectures ne retiennent que la <b>phase de ligue</b>, la seule fenêtre où les huit nations partent le même jour, du même zéro, avec le même nombre de journées devant elles.</p>
   </div>
   <div class="panel">
-    <div class="ptitle"><span class="no">6a</span><h3>À armes égales — la phase de ligue seule</h3></div>
-    <figure>
-      <div class="chartbox" id="boxEq"><svg id="chartEq" role="img" aria-label="Coefficient acquis en phase de ligue, par nation"></svg><div class="tip" id="tipEq" hidden></div></div>
-      <figcaption id="capEq"></figcaption>
-    </figure>
+    <div class="ptitle"><span class="no">6a</span><h3>À armes égales — la phase de ligue seule</h3>
+      <span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint" id="hintEq"></span></span></span></div>
+    <div class="barswrap"><div class="bars" id="eqbars"></div><div class="tip" id="tipEq" hidden></div></div>
+    <p class="figc" id="capEq"></p>
   </div>
 
   <div class="panel">
@@ -748,7 +718,6 @@ function shortClub(n){
 const sg = (v,d=3)=> (v>0?"+":v<0?"−":"") + Math.abs(v).toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d});
 const el = (t,a={},...k)=>{const n=document.createElement(t);for(const[p,v]of Object.entries(a)){if(p==="class")n.className=v;else if(p==="html")n.innerHTML=v;else n.setAttribute(p,v);}k.flat().forEach(c=>n.appendChild(typeof c==="string"?document.createTextNode(c):c));return n;};
 const SEASONS = ["2022/23","2023/24","2024/25","2025/26","2026/27"];
-const NEXTSEASON = (()=>{const y=+D.meta.season.slice(0,4)+1; return y+"/"+String(y+1).slice(2);})();
 const FRNAME = {ENG:"Angleterre",ITA:"Italie",ESP:"Espagne",GER:"Allemagne",FRA:"France",POR:"Portugal",BEL:"Belgique",NED:"Pays-Bas",TUR:"Turquie",POL:"Pologne",CZE:"Tchéquie",GRE:"Grèce",NOR:"Norvège",DEN:"Danemark",CYP:"Chypre",SUI:"Suisse",AUT:"Autriche",HUN:"Hongrie",SCO:"Écosse",SWE:"Suède",CRO:"Croatie",ROU:"Roumanie",UKR:"Ukraine",ISR:"Israël",AZE:"Azerbaïdjan",SVN:"Slovénie",SVK:"Slovaquie",BUL:"Bulgarie",SRB:"Serbie",RUS:"Russie",ISL:"Islande",IRL:"Irlande",ARM:"Arménie",KOS:"Kosovo",BIH:"Bosnie-Herzégovine",LVA:"Lettonie",FIN:"Finlande",KAZ:"Kazakhstan",LIE:"Liechtenstein",MDA:"Moldavie",FRO:"Îles Féroé",ALB:"Albanie",MKD:"Macédoine du Nord",BLR:"Biélorussie",LTU:"Lituanie",AND:"Andorre",MLT:"Malte",GIB:"Gibraltar",EST:"Estonie",NIR:"Irlande du Nord",GEO:"Géorgie",LUX:"Luxembourg",MNE:"Monténégro",WAL:"Pays de Galles",SMR:"Saint-Marin"};
 const name = c => FRNAME[c] || c;
 
@@ -888,35 +857,12 @@ const lendemain = iso => { const d = dOf(iso); d.setDate(d.getDate() + 1); retur
 const clubsLigue = (c, k) => { const a = survAt(c, lendemain(CAL[k][0][0])); return a ? a[k] : BY[c].a[k]; };
 
 /* rang sur le coefficient de la saison */
-const seasonRank = (()=>{ const s=[...N].sort((a,b)=>b.y[4]-a.y[4]); return Object.fromEntries(s.map((n,i)=>[n.c,i+1])); })();
 
 /* ---------- masthead ---------- */
 document.getElementById('eyebrow').textContent = "Saison " + D.meta.season + " · liste d'accès " + D.meta.allocationSeason;
 document.getElementById('foot').textContent =
   "Données relevées directement sur 5-jahres-wertung.de, site privé de Ralf Biniasz sans lien avec l'UEFA · instantané du "
   + dmy(D.meta.lastUpdated) + " · page reconstruite automatiquement à 23 h 38 et 7 h 12.";
-
-/* ---------- bandeau position ---------- */
-(function(){
-  const fr = BY.FRA, above = N.find(n=>n.r===fr.r-1), below = N.find(n=>n.r===fr.r+1);
-  const cell = (n,me)=>`<div class="pos${me?' me':''}">
-      <div class="rk">${n.r}<sup>${n.r===1?'er':'e'}</sup></div>
-      <div class="nm">${name(n.c)}</div>
-      <div class="co num">${nf(n.t)}</div></div>`;
-  const gap = (v,dir)=>`<div class="gapcell">
-      <div class="g num">${nf(v)}</div>
-      <div class="l">${dir}</div></div>`;
-  document.getElementById('strip').innerHTML =
-    cell(above) + gap(above.t-fr.t,'de retard') + cell(fr,true) + gap(fr.t-below.t,"d'avance") + cell(below);
-
-  const div = divisor(fr);
-  const f = (k,v,n)=>`<div class="fact"><div class="k">${k}</div><div class="v num">${v}</div><div class="n">${n}</div></div>`;
-  document.getElementById('facts').innerHTML =
-    f("Coefficient de la saison", nf(fr.y[4]), `${nf1(fr.tp)} points marqués ÷ ${div} clubs engagés — ${seasonRank.FRA}<sup>e</sup> rang de la saison sur 55`) +
-    f("Acquis depuis le 1<sup>er</sup> juillet", sg(seasonAt('FRA',lastPlayed)), "sur les " + played.length + " étapes déjà disputées") +
-    f("Clubs encore en lice", `${fr.a[0]} · ${fr.a[1]} · ${fr.a[2]}`, "en C1 · C3 · C4, sur " + div + " engagés") +
-    f("Socle emporté en " + NEXTSEASON, nf(fr.p[1]), `projeté ${fr.p[0]}<sup>e</sup> une fois ${SEASONS[0]} sortie du calcul`);
-})();
 
 /* ================= LA SAISON ================= */
 const TOP8  = N.slice(0,8).map(n=>n.c);
@@ -1678,14 +1624,25 @@ function drawClubs(){
   const R = 27, GAP = 7, EMPTY = 5;
   const rad = p => p > 0 ? Math.max(4, R * Math.sqrt(p / pMax)) : EMPTY;
 
-  const W = 1000, mL = 128, mR = 74, LANE = 2*R + 20, mT = 26;
+  /* La largeur du viewBox est celle du conteneur EN PIXELS, pas un 1000 fixe
+     etire ensuite : une unite SVG vaut donc un pixel, et la typographie ne
+     depend plus de la fenetre. Avec l'ancien 1000, le nom d'une nation valait
+     17 px sur un grand ecran et 9 px a 800 — a cote d'un 2a fige a 14 px juste
+     au-dessus. Les tailles ci-dessous sont celles des lignes du 2a, a l'unite. */
+  /* Plancher a 560 : en dessous, les disques ne tiennent pas cote a cote. On
+     laisse alors le graphe deborder et le conteneur defiler horizontalement —
+     un texte a 14 px qu'on fait glisser vaut mieux qu'un texte a 8 px qui tient
+     dans l'ecran. */
+  const W = Math.max(560, Math.round(document.getElementById('cl8').clientWidth || 1000));
+  const mL = Math.min(142, Math.max(96, Math.round(W * 0.13)));
+  const mR = 74, LANE = 2*R + 20, mT = 26;
   const H = mT + ALL.length * LANE + 12;
-  let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">`;
-  s += `<text x="${mL}" y="16" font-size="11" fill="var(--ink-3)">aire du disque = points d'équipe rapportés · sigle du club au centre · anneau vide = engagé, rien rapporté</text>`;
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`;
+  s += `<text x="${mL}" y="16" font-size="12.5" fill="var(--ink-3)">aire du disque = points d'équipe rapportés · sigle du club au centre · anneau vide = engagé, rien rapporté</text>`;
 
   ALL.forEach((row, i) => {
     const y = mT + i*LANE + LANE/2, isFR = row.c === 'FRA';
-    s += `<text x="${mL-14}" y="${y+4}" text-anchor="end" font-size="13" font-weight="${isFR?'700':'600'}" fill="${isFR?'var(--fr)':'var(--ink)'}">${name(row.c)}</text>`;
+    s += `<text x="${mL-14}" y="${y+5}" text-anchor="end" font-size="14" font-weight="${isFR?'700':'600'}" fill="${isFR?'var(--fr)':'var(--ink)'}">${name(row.c)}</text>`;
     let x = mL;
     row.cl.forEach(cb => {
       const r = rad(cb.p); x += r;
@@ -1710,8 +1667,8 @@ function drawClubs(){
       x += r + GAP;
     });
     const tot = kCoefS(row.c).reduce((a,b)=>a+b,0);
-    s += `<text x="${W-mR+52}" y="${y+4}" text-anchor="end" font-size="13" font-weight="700" font-family="IBM Plex Mono, monospace" fill="${isFR?'var(--fr)':'var(--ink)'}">${nf(tot)}</text>`
-      +  `<text x="${W-mR+52}" y="${y+17}" text-anchor="end" font-size="10.5" fill="var(--ink-3)">${kDiv(row.c)} engagés</text>`;
+    s += `<text x="${W-8}" y="${y+2}" text-anchor="end" font-size="13.5" font-weight="700" font-family="IBM Plex Mono, monospace" fill="${isFR?'var(--fr)':'var(--ink)'}">${nf(tot)}</text>`
+      +  `<text x="${W-8}" y="${y+16}" text-anchor="end" font-size="11.5" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${kDiv(row.c)} engagés</text>`;
   });
   s += `</svg>`;
   document.getElementById('cl8').innerHTML = s;
@@ -2026,6 +1983,20 @@ function drawM(){
 syncP(); syncK(); drawClubs(); drawL(); drawZ(); drawM();
 function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM(); }
 
+/* Le graphe des clubs mesure desormais son conteneur au lieu de s'etirer : il
+   doit donc etre redessine quand la largeur change, sinon il reste a la taille
+   du chargement. Amorti a 150 ms — un glisser de fenetre emet des dizaines
+   d'evenements, et un seul redessin a la fin suffit. On ne reagit qu'a la
+   largeur : sur mobile, deplier la barre d'adresse change la hauteur en
+   permanence et redessinerait sans raison. */
+(function(){ let t = null, lw = window.innerWidth;
+  addEventListener('resize', () => {
+    if (window.innerWidth === lw) return;
+    lw = window.innerWidth;
+    clearTimeout(t); t = setTimeout(drawClubs, 150);
+  });
+})();
+
 /* ================= bloc 5 · quatre lectures de la course =================
  *
  * Le graphe 5 ci-dessus mesure ce que chaque nation a gagné SUR LE TERRAIN
@@ -2048,44 +2019,6 @@ const ART = { ESP:"l'", ITA:"l'", ALL:"l'", GER:"l'", AUT:"l'", ANG:"l'", ENG:"l
 const leNom = c => (ART[c] || 'le ') + name(c);
 const LeNom = c => { const s = leNom(c); return s[0].toUpperCase() + s.slice(1); };
 
-/* ---------- outil commun : barres horizontales classées ----------
-   Hissé au niveau global : le bloc 6a et le bloc 7b s'en servent tous les deux,
-   et deux copies d'un même dessin finissent toujours par diverger.
-   `muet` supprime la valeur écrite DANS la barre : quand il n'y a qu'un segment,
-   elle répète mot pour mot l'étiquette de droite. Un segment peut aussi se taire
-   seul, avec `seg[k].muet` — utile quand ce segment est un reliquat dont la
-   valeur isolée n'apprend rien, seul le total comptant. */
-function barres({ svgId, rows, max, seg, droite, titre, muet }) {
-  const W = 1000, rowH = 34, mT = 30, mB = 34, mL = 96, mR = 150;
-  const H = mT + rows.length * rowH + mB;
-  const X = v => mL + (W - mL - mR) * (v / max);
-  let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
-  const ticks = niceScale(0, max, 5);
-  ticks.ticks.forEach(v => {
-    if (v < 0 || v > max) return;
-    s += `<line x1="${X(v).toFixed(1)}" y1="${mT - 6}" x2="${X(v).toFixed(1)}" y2="${H - mB + 4}" stroke="var(--rule-soft)"/>`
-      + `<text x="${X(v).toFixed(1)}" y="${H - mB + 20}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${nf(v, ticks.dec)}</text>`;
-  });
-  if (titre) s += `<text x="${mL}" y="${mT - 14}" font-size="11" font-weight="600" fill="var(--ink-3)">${titre}</text>`;
-  rows.forEach((r, i) => {
-    const y = mT + i * rowH, h = 19, yb = y + (rowH - h) / 2;
-    const fr = r.c === 'FRA';
-    s += `<text x="${mL - 10}" y="${(yb + 14).toFixed(1)}" text-anchor="end" font-size="12.5" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${name(r.c)}</text>`;
-    let x = mL;
-    r.seg.forEach((v, k) => {
-      if (v <= 0) return;
-      const w = X(v) - mL;
-      s += `<rect x="${x.toFixed(1)}" y="${yb}" width="${Math.max(0.6, w).toFixed(1)}" height="${h}" fill="${seg[k].col}" opacity="${seg[k].op || 1}"><title>${name(r.c)} · ${seg[k].lab} : ${nf(v, 3)}</title></rect>`;
-      if (w > 34 && !muet && !seg[k].muet) s += `<text x="${(x + w / 2).toFixed(1)}" y="${(yb + 13.5).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="600" font-family="IBM Plex Mono, monospace" fill="${seg[k].fg || '#fff'}">${nf(v, 2)}</text>`;
-      x += w;
-    });
-    if (fr) s += `<rect x="${mL - 3}" y="${yb - 3}" width="${(x - mL + 6).toFixed(1)}" height="${h + 6}" fill="none" stroke="var(--fr)" stroke-width="1.5" rx="2"/>`;
-    s += `<text x="${(x + 10).toFixed(1)}" y="${(yb + 14).toFixed(1)}" font-size="12" font-weight="${fr ? 700 : 600}" font-family="IBM Plex Mono, monospace" fill="${fr ? 'var(--fr)' : 'var(--ink)'}">${droite(r)}</text>`;
-  });
-  /* outerHTML détruit l'élément : le SVG reconstruit doit porter l'id lui-même,
-     sinon plus rien ne le retrouve (et le bloc disparaît silencieusement). */
-  document.getElementById(svgId).outerHTML = (s + '</svg>').replace('<svg', `<svg id="${svgId}"`);
-}
 
 const legende = segs => segs.map(s =>
   `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">
@@ -2349,12 +2282,29 @@ const legende = segs => segs.map(s =>
      et un classement en barres y répond d'un coup d'œil.
      La temporalité a sa place, mais dans les blocs 3 et 4, qui sont faits pour ça. */
   (function(){
+    /* Passe du SVG aux memes lignes HTML que le 2a. Le SVG portait un viewBox
+       fixe de 1000 unites etire a la largeur du panneau : son texte valait
+       17 px sur un grand ecran, 9 px a 800 — a cote d'un 2a fige a 14 px. En
+       HTML la typographie ne depend plus de la largeur, et les deux blocs se
+       lisent comme un seul document. */
     const rows = GRP.map(c => ({ c, v: part(c).ligue })).sort((a, b) => b.v - a.v);
     const max = Math.max(0.001, ...rows.map(r => r.v)) * 1.12;
-    const seg = [{ lab: 'Phase de ligue', col: 'var(--fr)', fg: '#fff' }];
-    barres({ svgId: 'chartEq', rows: rows.map(r => ({ ...r, seg: [r.v] })), max, seg,
-             titre: `coefficient acquis en phase de ligue · ${jTot} journée${jTot > 1 ? 's' : ''} disputée${jTot > 1 ? 's' : ''}`,
-             muet: true, droite: r => nf(r.v, 3) });
+
+    document.getElementById('hintEq').textContent =
+      `coefficient acquis en phase de ligue · ${jTot} journée${jTot > 1 ? 's' : ''} disputée${jTot > 1 ? 's' : ''}`;
+
+    document.getElementById('eqbars').innerHTML = rows.map(r => {
+      const pc = r.v / max * 100;
+      /* Un seul segment : ecrire la valeur DEDANS la repeterait mot pour mot a
+         deux centimetres de la, dans la colonne de droite. La barre porte la
+         comparaison, le chiffre porte la precision. */
+      return `<div class="barrow${r.c === 'FRA' ? ' me' : ''}">
+        <div class="nm"><b>${name(r.c)}</b></div>
+        <div class="track" data-nat="${r.c}"><div class="cseg" data-c="${r.c}" style="width:${pc.toFixed(3)}%;background-color:var(--d3)"></div></div>
+        <div class="val num">${nfx(r.v)}</div>
+        <div class="split num">${nf(r.v, 3)} au millième</div>
+      </div>`; }).join('');
+
     const fr = rows.findIndex(r => r.c === 'FRA');
     const notyet = [0, 1, 2].filter(k => jouees(k) === 0);
     document.getElementById('capEq').innerHTML =
