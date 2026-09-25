@@ -433,7 +433,7 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">2b</span><h3>D'où viennent les points — bonus, qualifications, terrain</h3>
+    <div class="ptitle"><span class="no">2b</span><h3>D'où viennent les points — bonus, qualifications, épreuve principale</h3>
       <span class="sub"><span class="ctl"><span class="lb">Échelle</span><span class="seg" role="group" aria-label="Échelle"><button type="button" id="d-abs" aria-pressed="true">Points</button><button type="button" id="d-pct" aria-pressed="false">Part</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelD" aria-label="Saison"></select></span></span></span></div>
     <div class="klegend" id="dleg"></div>
     <div class="barswrap"><div class="bars" id="dbars"></div><div class="tip" id="tipDec" hidden></div></div>
@@ -2164,7 +2164,7 @@ const legende = segs => segs.map(s =>
 
   /* La décomposition d'une saison close se lit dans HIST, qui donne le cumul
      étape par étape : l'étape 0 porte le bonus d'entrée et rien d'autre, les
-     étapes suivantes jusqu'à J1 sont les qualifications, le reste est du terrain.
+     étapes suivantes jusqu'à J1 sont les qualifications, le reste est l'epreuve principale.
      Contrôlé sur les cinq saisons archivées et quatre nations : aucune composante
      négative, et le total retrouve à chaque fois le coefficient publié. */
   const decomp = c => {
@@ -2177,7 +2177,7 @@ const legende = segs => segs.map(s =>
      saison en cours il n'y a que la phase de ligue ; sur une saison close il
      contient aussi la phase finale, et avant 2024/25 c'était une phase de
      groupes. Le libellé suit, sinon le graphe ment sur ce qu'il montre. */
-  const labTerrain = () => isCur() ? 'Phase de ligue'
+  const labEpreuve = () => isCur() ? 'Phase de ligue'
     : (+selY >= 2024 ? 'Phase de ligue et phase finale' : 'Phase de groupes et phase finale');
 
   let dMode = 'abs';
@@ -2187,7 +2187,7 @@ const legende = segs => segs.map(s =>
     const seg = [
       { lab: "Bonus d'entrée (C1)", col: 'var(--ink-3)' },
       { lab: 'Qualifications',      col: 'var(--n4)'    },
-      { lab: labTerrain(),          col: 'var(--fr)'    },
+      { lab: labEpreuve(),          col: 'var(--fr)'    },
     ];
     document.getElementById('dleg').innerHTML =
       seg.map(x => `<span><i style="background:${x.col}"></i>${x.lab}</span>`).join('');
@@ -2222,12 +2222,12 @@ const legende = segs => segs.map(s =>
       `Trois composantes de natures différentes, que le classement additionne sans le dire. `
       + `<b>Le bonus d'entrée</b> vaut 6 points par club qualifié pour la phase de ligue de C1, divisés par le nombre de clubs engagés : il est acquis avant le premier ballon et récompense le rang de la saison passée. `
       + `<b>Les qualifications</b> ne sont ouvertes qu'aux nations dont les clubs entrent tôt — une nation dont tous les clubs sont directement qualifiés ne peut structurellement rien y marquer. `
-      + `<b>Seul le terrain</b> met tout le monde sur le même plan, et c'est lui qu'isolent les blocs 6a et 6b. `
+      + `<b>Seule l'épreuve principale</b> met tout le monde sur le même plan, et c'est elle qu'isolent les blocs 6a et 6b. `
       + (isCur()
           ? `${LeNom(leader.c)} mène la saison avec ${nfx(leader.tot)}, dont ${nfx(leader.d[0])} acquis d'avance (${pct(leader)} %) ; la France est à ${nfx(fr.tot)}, dont ${nfx(fr.d[0])} (${pct(fr)} %). `
             + `<b>À ce stade la lecture est faussée</b> : la phase de ligue vient de commencer, le bonus pèse donc mécaniquement une part énorme du total. Le sélecteur de saison montre à quoi ressemble une répartition complète.`
           : `Saison <b>${lab}</b>, terminée. ${LeNom(leader.c)} termine en tête avec ${nfx(leader.tot)}, dont ${pct(leader)} % de bonus d'entrée ; la France ${nfx(fr.tot)}, dont ${pct(fr)} %. `
-            + `<b>Décomposition reconstruite</b> à partir du relevé étape par étape archivé, pas d'un champ publié tel quel : l'étape d'entrée porte le bonus, les étapes suivantes jusqu'à la 1<sup>re</sup> journée sont les qualifications, le reste est du terrain. `
+            + `<b>Décomposition reconstruite</b> à partir du relevé étape par étape archivé, pas d'un champ publié tel quel : l'étape d'entrée porte le bonus, les étapes suivantes jusqu'à la 1<sup>re</sup> journée sont les qualifications, le reste est l'épreuve principale. `
             + (+selY >= 2024
                 ? `Le troisième poste contient donc aussi la phase finale.`
                 : `Avant 2024/25 le format était différent — phase de groupes à six journées, barème d'entrée à 4 points par club de C1 — et le troisième poste contient la phase de groupes et la phase finale. La comparaison avec les saisons récentes se fait en proportion, pas en valeur.`));
@@ -2238,7 +2238,7 @@ const legende = segs => segs.map(s =>
     const wrap = document.getElementById('dbars'), tip = document.getElementById('tipDec');
     if (!wrap || !tip) return;
     let last = null;
-    const NOMS = ["Bonus d'entrée", 'Qualifications', 'Terrain'];
+    const NOMS = ["Bonus d'entrée", 'Qualifications', 'Épreuve principale'];
     const hide = () => { tip.hidden = true; if (last) { last.classList.remove('on'); last = null; } };
     wrap.addEventListener('mouseleave', hide);
     wrap.addEventListener('mousemove', ev => {
@@ -2250,7 +2250,7 @@ const legende = segs => segs.map(s =>
       tip.innerHTML = `<div class="th">${name(c)} · ${nf(tot, 3)} au millième</div>`
         + d.map((v, i) => `<div class="tr" style="${i === chaud ? '' : 'opacity:.55'}">`
             + `<i style="background:${['var(--ink-3)','var(--n4)','var(--fr)'][i]}"></i>`
-            + `<span class="nm"${i === chaud ? ' style="color:var(--ink);font-weight:600"' : ''}>${i === 2 ? labTerrain() : NOMS[i]}</span>`
+            + `<span class="nm"${i === chaud ? ' style="color:var(--ink);font-weight:600"' : ''}>${i === 2 ? labEpreuve() : NOMS[i]}</span>`
             + `<b>${nf(v, 3)}</b><s style="color:var(--ink-3)">${nf(v / (tot || 1) * 100, 1)} %</s></div>`).join('');
       tip.hidden = false;
       const br = (tip.offsetParent || wrap).getBoundingClientRect();
