@@ -381,7 +381,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "sam. 26 sept. 2026 14h14";</script>
+<script>window.PUBLIE = "sam. 26 sept. 2026 14h35";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -1709,7 +1709,15 @@ const GROUPS = (()=>{ const g=[{lab:'Entrée en lice',short:'Ini.',steps:[],bonu
   return g; })();
 const nG = GROUPS.length;
 const G_J1 = GROUPS.findIndex(g=>g.short==='J1'), G_KO = GROUPS.findIndex(g=>g.lab==='Barrages 8es');
-const bonusCoef = c => (BY[c].b||0)/divisor(BY[c]);          // 6 pts par club directement qualifié en C1
+/* Le bonus d'ENTRÉE, et lui seul : 6 points par club présent en phase de ligue
+   de C1, divisés par les engagés. Il lisait auparavant le champ `b` de la
+   source, qui est le bonus TOTAL — tout ce qui n'est pas un point de match.
+   Les deux coïncident aujourd'hui parce que rien d'autre n'a encore été
+   distribué, mais dès le bonus de classement de décembre, puis les bonus de
+   tour de février, `b` se met à gonfler et ce repère se serait mis à mentir
+   sans rien signaler. L'effectif est celui du lendemain de la 1re journée,
+   figé : les éliminations ultérieures ne retirent pas un bonus déjà acquis. */
+const bonusCoef = c => 6 * clubsLigue(c, 0) / divisor(BY[c]);
 const gHas   = gi => GROUPS[gi].bonus || GROUPS[gi].steps.length>0;
 const gFuture= gi => { const G=GROUPS[gi]; if(G.bonus) return false;
                        return G.date ? !passe(G.date[0]) : G.steps.length===0; };
