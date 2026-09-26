@@ -18,7 +18,7 @@ P <- list(
   NSIM    = 4000,   # saisons simulees. 4000 suffit pour la mediane ; monter a
                     # 20000 si on veut lire le 99.75e centile sans bruit.
 
-  SIGMA   = 0.20,   # CHOC DE FORME NATIONALE. Tire une fois par nation et par
+  SIGMA   = 0.14,   # CHOC DE FORME NATIONALE. Tire une fois par nation et par
                     # saison simulee, ajoute a la force de TOUS ses clubs.
                     # C'est le parametre qui ouvre les queues : le coefficient
                     # divise par les clubs engages, donc avec des tirages
@@ -26,7 +26,7 @@ P <- list(
                     # la racine du nombre de clubs. SIGMA = 0 redonne le modele
                     # d'origine, tres conservateur.
 
-  DELTA   = 0.16,   # ECART DE RANG DANS LE CONTINGENT. Deux clubs voisins de la
+  DELTA   = 0.11,   # ECART DE RANG DANS LE CONTINGENT. Deux clubs voisins de la
                     # meme nation different de DELTA en force. L'ordre est C1,
                     # puis C3, puis C4 : le meilleur proxy du rang domestique
                     # dont on dispose. Centre, donc la force moyenne de la

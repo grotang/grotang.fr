@@ -2435,7 +2435,13 @@ const legende = segs => segs.map(s =>
      contingent, donc il ne deplace pas la force moyenne de la nation. L'ordre
      est C1 puis C3 puis C4, le meilleur proxy du rang domestique dont on
      dispose. */
-  const SIGMA = 0.20, DELTA = 0.16;
+  /* Cales sur l'archive plutot qu'a vue : pour chacune des 16 nations suivies
+     depuis 2021, on mesure la variation de son coefficient de saison d'une
+     annee sur l'autre, rapportee a la moyenne des nations de l'annee (ce qui
+     neutralise le changement de format de 2024/25). Mediane observee : 0,22.
+     On compare au coefficient de variation que le modele produit, et on retient
+     le couple qui minimise l'ecart. */
+  const SIGMA = 0.14, DELTA = 0.11;
   /* Poids de la saison en cours dans la force d'un club.
      Première version : zéro. La force valait le coefficient à cinq ans, point,
      et ce que le pays faisait CETTE saison n'entrait nulle part — une nation qui
