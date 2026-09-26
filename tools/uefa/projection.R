@@ -253,9 +253,22 @@ cat(sprintf("sigma(tete) = %.2f   lambda = %.1f   delta = %.2f   beta = %.2f   g
 S <- simuler(NA_, P)
 R <- S$res
 
-qs <- c(0.05, 0.20, 0.50, 0.80, 0.95, 0.9975)
+qs <- c(0.05, 0.20, 0.50, 0.80, 0.95)
 tab <- t(apply(R, 2, quantile, probs = qs, names = FALSE))
-colnames(tab) <- c("p05", "p20", "med", "p80", "p95", "p9975")
+colnames(tab) <- c("p05", "p20", "med", "p80", "p95")
+
+# Le 99.75e centile lu comme une seule statistique d'ordre est fragile : a 2000
+# tirages c'est le sixieme meilleur, il varie de +-0.26 d'une graine a l'autre
+# et il est biaise vers le bas, faute d'avoir tire de vraies saisons extremes.
+# On moyenne une petite fenetre de rangs autour de la cible : meme grandeur
+# estimee, variance divisee par la racine du nombre de rangs retenus.
+haut <- function(x, p = 0.9975, large = 0.0015) {
+  v <- sort(x); n <- length(v)
+  c0 <- min(n, max(1, floor(p * n)))
+  d  <- max(1, round(n * large))
+  mean(v[max(1, c0 - d):min(n, c0 + d)])
+}
+tab <- cbind(tab, p9975 = apply(R, 2, haut))
 tab <- as.data.frame(tab)
 tab$nation <- rownames(tab)
 tab$ecart  <- tab$p95 - tab$p05

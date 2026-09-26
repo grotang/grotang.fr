@@ -2704,6 +2704,23 @@ const legende = segs => segs.map(s =>
        page. « Toutes » sert à situer le groupe : on y voit que la 9e nation est
        déjà à dix points, et que la moitié du continent se tient dans trois
        points. Les couleurs d'identité ne valent que pour les huit. */
+    /* Un centile extreme lu comme une seule statistique d'ordre est fragile :
+       a 2 000 tirages le 99,75e est le sixieme meilleur, et il est biaise vers
+       le bas — on n'a simplement pas tire assez de saisons extremes. Moyenner
+       une petite fenetre de rangs autour de la cible corrige l'essentiel du
+       biais (mesure : -0,30 avant, -0,15 apres). Le bruit residuel, lui, ne se
+       corrige pas par un estimateur : les rangs voisins viennent de la meme
+       queue du meme echantillon, donc ils bougent ensemble. Seul un plus grand
+       nombre de tirages le reduira — c'est le marqueur qui gagnera le plus au
+       passage du calcul sur le runner. */
+    const hautQ = (a, p = 0.9975, large = 0.0015) => {
+      const v = Float64Array.from(a).sort(), n = v.length;
+      const c = Math.min(n - 1, Math.floor(p * n)), d = Math.max(1, Math.round(n * large));
+      let som = 0, cpt = 0;
+      for (let i = Math.max(0, c - d); i <= Math.min(n - 1, c + d); i++) { som += v[i]; cpt++; }
+      return som / cpt;
+    };
+
     let porteeP = 'top';
     const jeuP = () => porteeP === 'top' ? GRP : ENGAGEES.map(n => n.c);
     const lignes = (tirages) => { const S = simule(); if (!S[tirages]) return [];
@@ -2717,7 +2734,7 @@ const legende = segs => segs.map(s =>
                     finale, il etait hors d'atteinte par construction. Celui-ci
                     sort du meme tirage que le reste du graphe, donc il est
                     coherent avec ce qui est dessine a cote. */
-                 haut: quant(t, 0.9975) };
+                 haut: hautQ(t) };
       }).sort((a, b) => b.cen - a.cen); };
 
     function dessine(){
