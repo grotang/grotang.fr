@@ -2422,7 +2422,15 @@ const legende = segs => segs.map(s =>
      qu'on puisse les contester. */
   const JTOT = [8, 8, 6];                    // journées de phase de ligue par compétition
   const KOBON = [1.5, 1, 0.5];               // bonus par tour de phase finale atteint
-  const BETA = 1.15, GAMMA = 1.10, PNUL = 0.24, NSIM = 1200;
+  /* 8 000 saisons, pas 1 200. A 1 200 l'erreur d'echantillonnage sur la mediane
+     valait environ 0,12 point : la France s'affichait a 18,07 quand la valeur
+     vers laquelle la simulation converge est 18,2. Un dixieme invente par le
+     tirage, sur un chiffre publie, ce n'est pas acceptable. Mesure du couple
+     precision / attente : 1 200 -> 18,07 en 0,7 s · 4 000 -> 18,25 en 1,3 s ·
+     8 000 -> 18,21 en 1,8 s · 16 000 -> 18,25 en 2,9 s. A 8 000 l'erreur passe
+     sous 0,05 et le chiffre affiche au dixieme ne bouge plus. La reutilisation
+     des tampons dans la boucle a paye le surcout. */
+  const BETA = 1.15, GAMMA = 1.10, PNUL = 0.24, NSIM = 8000;
   /* SIGMA — choc de forme nationale. Tire UNE fois par nation et par saison
      simulee, ajoute a la force de TOUS ses clubs. C'est ce qui manquait : le
      coefficient divise par les clubs engages, et avec des tirages independants
@@ -2560,22 +2568,28 @@ const legende = segs => segs.map(s =>
     const CHW = CH.map(cl => cl.map(c => WPO[c]));
     const CHO = CH.map(cl => cl.map(c => OBS[c]));
 
-    const rendement = (Fz) => {
-      const PW = [];
+    /* Tampons alloues une fois. Le coeur de la boucle ne creait que des tableaux
+       jetables — un par competition et par tirage — et le ramasse-miettes y
+       passait le plus clair du temps. En les reutilisant, le meme nombre de
+       saisons coute trois fois moins, ce qui permet d'en tirer beaucoup plus
+       pour la meme attente. */
+    const FZ = [0,1,2].map(k => new Float64Array(CH[k].length));
+    const EB = [0,1,2].map(k => new Float64Array(CH[k].length));
+    const PB = [0,1,2].map(k => new Float64Array(CH[k].length));
+    const rendement = () => {
       for (let k = 0; k < 3; k++) {
-        const f = Fz[k], nC = f.length, w = CHW[k], o = CHO[k];
+        const f = FZ[k], nC = f.length, w = CHW[k], o = CHO[k], e = EB[k], pw = PB[k];
         let fb = 0; for (let i = 0; i < nC; i++) fb += f[i]; fb /= nC;
-        const e = new Float64Array(nC); let som = 0;
+        let som = 0;
         for (let i = 0; i < nC; i++) {
           const a = 2 * sig(BETA * (f[i] - fb));
           e[i] = w[i] ? (1 - w[i]) * a + w[i] * o[i] : a;
           som += e[i];
         }
-        const moy = som / nC, pw = new Float64Array(nC);
+        const moy = som / nC;
         for (let i = 0; i < nC; i++) pw[i] = Math.max(0, (e[i] / moy - PNUL) / 2);
-        PW.push(pw);
       }
-      return { PW };
+      return { PW: PB };
     };
 
     /* Loi normale par Box-Muller, a partir du meme generateur : la graine reste
@@ -2601,10 +2615,11 @@ const legende = segs => segs.map(s =>
          qui fait qu'une bonne année française est une bonne année pour les sept
          clubs à la fois, et donc qui ouvre la queue de la distribution. */
       const Z = {}; for (const n of N) Z[n.c] = sigmaNat[n.c] * gauss();
-      const Fz = CH.map((cl, k) => F[k].map((x, i) => x + Z[cl[i]]));
-      const { PW: PWz } = rendement(Fz);
+      for (let k = 0; k < 3; k++) { const cl = CH[k], src = F[k], dst = FZ[k];
+        for (let i = 0; i < cl.length; i++) dst[i] = src[i] + Z[cl[i]]; }
+      const { PW: PWz } = rendement();
       for (let k = 0; k < 3; k++) {
-        const cl = CH[k], f = Fz[k], pw = PWz[k], nj = JTOT[k], reste = nj - jouees(k);
+        const cl = CH[k], f = FZ[k], pw = PWz[k], nj = JTOT[k], reste = nj - jouees(k);
         const add  = (i, v) => { gain[cl[i]] = (gain[cl[i]] || 0) + v; };
         const addL = (i, v) => { addL0(i, v); add(i, v); };
         const addL0 = (i, v) => { gainL[cl[i]] = (gainL[cl[i]] || 0) + v; };
@@ -2730,8 +2745,8 @@ const legende = segs => segs.map(s =>
     rows.forEach((r, i) => {
       const y = mT + i * rowH + rowH / 2, fr = r.c === 'FRA';
       const c0 = col(r.c);
-      const tt = `${name(r.c)} · médiane ${nf(r.cen, 2)} · 3 tirages sur 5 entre ${nf(r.p20, 2)} et ${nf(r.p80, 2)}`
-        + ` · 9 sur 10 entre ${nf(r.p05, 2)} et ${nf(r.p95, 2)} · ${nf(r.acq, 3)} déjà acquis`;
+      const tt = `${name(r.c)} · médiane ${nf(r.cen, 1)} · 3 tirages sur 5 entre ${nf(r.p20, 1)} et ${nf(r.p80, 1)}`
+        + ` · 9 sur 10 entre ${nf(r.p05, 1)} et ${nf(r.p95, 1)} · ${nf(r.acq, 3)} déjà acquis`;
       s += `<text x="${mL - 10}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="12.5" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${name(r.c)}</text>`;
       /* Éventail à cinq repères, du plus large au plus étroit : le trait fin va
          du 5e au 95e centile, la barre épaisse du 20e au 80e, le disque est la
@@ -2752,7 +2767,7 @@ const legende = segs => segs.map(s =>
         const mx = r.haut;
         const hors = mx > sc.hi;
         const xm = X(Math.min(mx, sc.hi)) - (hors ? 9 : 0), b2 = 5;
-        const ttm = `Meilleur scénario de la France · ${nf(mx, 2)} — le 99,75\u1d49 centile, un tirage sur 400`;
+        const ttm = `Meilleur scénario de la France · ${nf(mx, 1)} — le 99,75\u1d49 centile, un tirage sur 400`;
         s += `<g opacity=".62"><title>${ttm}</title>`
           + `<line x1="${(xm-b2).toFixed(1)}" y1="${(y-b2).toFixed(1)}" x2="${(xm+b2).toFixed(1)}" y2="${(y+b2).toFixed(1)}" stroke="var(--fr)" stroke-width="1.6" stroke-linecap="round"/>`
           + `<line x1="${(xm-b2).toFixed(1)}" y1="${(y+b2).toFixed(1)}" x2="${(xm+b2).toFixed(1)}" y2="${(y-b2).toFixed(1)}" stroke="var(--fr)" stroke-width="1.6" stroke-linecap="round"/>`
@@ -2796,9 +2811,9 @@ const legende = segs => segs.map(s =>
     const dessus  = fr ? rows.filter(r => r.p05 > fr.p95) : [];
     const dessous = fr ? rows.filter(r => r.p95 < fr.p05) : [];
     document.getElementById('capPrj').innerHTML = leg
-      + `<b>${NSIM} saisons rejouées</b>, arrêtées à la fin de la phase de ligue, bonus de classement compris. `
+      + `<b>${nf(NSIM,0)} saisons rejouées</b>, arrêtées à la fin de la phase de ligue, bonus de classement compris. `
       + `Les cinq repères sont les centiles 5, 20, 50, 80 et 95 de ces tirages : une nation a une chance sur vingt de finir sous son trait fin gauche, une sur vingt au-dessus du droit, trois sur cinq dans la barre épaisse. `
-      + (fr ? `<b>La France</b>, ${fr.r} matchs de phase de ligue à jouer : médiane <b>${nf(fr.cen, 2)}</b>, neuf tirages sur dix entre ${nf(fr.p05, 2)} et ${nf(fr.p95, 2)}. ` : '')
+      + (fr ? `<b>La France</b>, ${fr.r} matchs de phase de ligue à jouer : médiane <b>${nf(fr.cen, 1)}</b>, neuf tirages sur dix entre ${nf(fr.p05, 1)} et ${nf(fr.p95, 1)}. ` : '')
       + (fr ? `La bande bleue est sa portée à 90 %. `
             + (croise.length ? `${croise.length} nation${croise.length > 1 ? 's' : ''} la recoupe${croise.length > 1 ? 'nt' : ''} — ${croise.map(r => name(r.c)).join(', ')} — l'ordre n'est pas décidé. ` : `Aucune nation du groupe ne la recoupe. `)
             + (dessus.length ? `${dessus.map(r => name(r.c)).join(', ')} ${dessus.length > 1 ? 'restent hors' : 'reste hors'} d'atteinte d'ici janvier. ` : '')
@@ -2820,9 +2835,9 @@ const legende = segs => segs.map(s =>
       const menaces = rows.filter(r => r.c !== 'FRA').map(r => ({ c: r.c, p: devant(r.c) }))
         .filter(x => x.p != null && x.p > 0.05 && x.p < 0.95).sort((a, b) => b.p - a.p);
       document.getElementById('capPrj').innerHTML = leg
-        + `<b>${NSIM} saisons complètes rejouées</b> — phase de ligue restante, classement final, barrages, huitièmes, quarts, demies, finale — avec le barème 2024/25. `
+        + `<b>${nf(NSIM,0)} saisons complètes rejouées</b> — phase de ligue restante, classement final, barrages, huitièmes, quarts, demies, finale — avec le barème 2024/25. `
         + `Les cinq repères sont les centiles 5, 20, 50, 80 et 95 de ces tirages. `
-        + (fr ? `<b>La France :</b> médiane <b>${nf(fr.cen, 2)}</b>, trois tirages sur cinq entre ${nf(fr.p20, 2)} et ${nf(fr.p80, 2)}, neuf sur dix entre ${nf(fr.p05, 2)} et ${nf(fr.p95, 2)}` : '')
+        + (fr ? `<b>La France :</b> médiane <b>${nf(fr.cen, 1)}</b>, trois tirages sur cinq entre ${nf(fr.p20, 1)} et ${nf(fr.p80, 1)}, neuf sur dix entre ${nf(fr.p05, 1)} et ${nf(fr.p95, 1)}` : '')
         + (rang ? `, ce qui la placerait <b>${rang.r}<sup>${rang.r === 1 ? 're' : 'e'}</sup></b> au classement à cinq ans avec ${nf(rang.v, 1)} points`
             + (rang.dessous ? `, devant ${leNom(rang.dessous.c)} (${nf(rang.dessous.v, 1)})` : '')
             + (rang.dessus ? ` et derrière ${leNom(rang.dessus.c)} (${nf(rang.dessus.v, 1)})` : '') + `. ` : '. ')

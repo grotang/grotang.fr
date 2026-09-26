@@ -48,10 +48,21 @@ P <- list(
   KPSEUDO = 56,     # la saison en cours pese w = m/(m+KPSEUDO) dans la force.
                     # Cale pour valoir la moitie en fin de phase de ligue.
 
-  GRAINE  = 20260917,          # reproductibilite
-  FICHIER = "nations.json",    # sortie de l'extracteur. Cherche tout seul (voir
-                               # trouver_fichier) ; mettre un chemin complet ici
-                               # pour couper court.
+  GRAINE  = NA,                # NA : une graine differente a chaque lancer, donc
+                               # une vraie nouvelle simulation a chaque fois.
+                               # La graine tiree est affichee, donc un resultat
+                               # qui intrigue reste reproductible : recopie-la
+                               # ici a la place de NA.
+                               # Ce script est un bac a sable, il DOIT varier.
+                               # Le site, lui, est fige sur la date des donnees :
+                               # deux visiteurs du meme jour doivent voir les
+                               # memes chiffres. Les deux regles sont opposees,
+                               # et c'est normal - ce sont deux usages opposes.
+  # Chemin du fichier de donnees, sorti par l'extracteur. C'est un fichier
+  # LOCAL, sur ce PC : rien n'est telecharge, rien ne va chercher sur GitHub.
+  # Si tu deplaces le depot, c'est la seule ligne a changer.
+  # (Barres obliques normales, pas d'antislash : R les prefere sous Windows.)
+  FICHIER = "C:/Users/tangu/Documents/Claude/2026.09 grotang.fr/grotang.fr/tools/uefa/nations.json",
   JOUEES  = c(1, 1, 0),        # journees de phase de ligue deja disputees, C1/C3/C4
   SORTIE  = "projection_uefa.csv",
   FOCUS   = c("ENG","ESP","ITA","GER","FRA","POR","NED","BEL","DEN")
@@ -70,11 +81,8 @@ if (length(arg) >= 2) for (i in seq(1, length(arg) - 1, by = 2)) {
 # Lecteur JSON minimal : jsonlite n'est pas garanti present, et le fichier a
 # une forme connue et stable. On extrait ce dont on a besoin, rien de plus.
 
-# Le fichier est cherche a plusieurs endroits : tel quel, a cote du script quand
-# il est lance par Rscript ou source(), puis en remontant l'arborescence depuis
-# le repertoire courant. Colle ligne a ligne dans la console, les deux premieres
-# pistes ne donnent rien - c'est la remontee qui sauve, et elle marche depuis
-# n'importe ou dans le depot.
+# Filet de secours, au cas ou le chemin ci-dessus ne serait plus bon : on
+# regarde a cote du script, puis dans le repertoire de travail. Tout est local.
 trouver_fichier <- function(nom) {
   if (file.exists(nom)) return(normalizePath(nom, winslash = "/"))
   pistes <- nom
@@ -96,12 +104,10 @@ trouver_fichier <- function(nom) {
   for (pp in pistes) if (file.exists(pp)) return(normalizePath(pp, winslash = "/"))
 
   stop(paste0(
-    "\n  '", basename(nom), "' introuvable.",
-    "\n  Repertoire courant : ", getwd(),
-    "\n  Cherche sans succes dans :\n    ", paste(pistes, collapse = "\n    "),
-    "\n\n  Deux facons de s'en sortir :",
-    "\n    setwd(\"<...>/grotang.fr/tools/uefa\")  puis relancer",
-    "\n    ou mettre le chemin complet dans P$FICHIER, en tete de ce script.\n"),
+    "\n  Fichier de donnees introuvable : ", nom,
+    "\n\n  Corrige la ligne FICHIER en tete de ce script : mets-y le chemin",
+    "\n  complet de nations.json sur ce PC, avec des barres obliques normales.",
+    "\n  Exemple : C:/Users/.../grotang.fr/tools/uefa/nations.json\n"),
     call. = FALSE)
 }
 
@@ -147,7 +153,9 @@ bonus_rang <- function(k, r) {
 }
 
 simuler <- function(NA_, P) {
-  set.seed(P$GRAINE)
+  gr <- if (is.na(P$GRAINE)) sample.int(.Machine$integer.max, 1) else P$GRAINE
+  cat(sprintf("graine %d\n", gr))
+  set.seed(gr)
   code <- sapply(NA_, `[[`, "c")
   tt   <- sapply(NA_, `[[`, "t")
   tp   <- sapply(NA_, `[[`, "tp")
@@ -238,7 +246,7 @@ simuler <- function(NA_, P) {
 # -------------------------------- SORTIE ------------------------------------
 
 NA_ <- lire_nations(P$FICHIER)
-cat(sprintf("%d associations lues dans %s\n", length(NA_), P$FICHIER))
+cat(sprintf("%d associations lues\n", length(NA_)))
 cat(sprintf("sigma(tete) = %.2f   lambda = %.1f   delta = %.2f   beta = %.2f   gamma = %.2f   p(nul) = %.2f   %d saisons\n\n",
             P$SIGMA, P$LAMBDA, P$DELTA, P$BETA, P$GAMMA, P$PNUL, P$NSIM))
 
