@@ -49,7 +49,9 @@ P <- list(
                     # Cale pour valoir la moitie en fin de phase de ligue.
 
   GRAINE  = 20260917,          # reproductibilite
-  FICHIER = "nations.json",    # sortie de l'extracteur
+  FICHIER = "nations.json",    # sortie de l'extracteur. Cherche tout seul (voir
+                               # trouver_fichier) ; mettre un chemin complet ici
+                               # pour couper court.
   JOUEES  = c(1, 1, 0),        # journees de phase de ligue deja disputees, C1/C3/C4
   SORTIE  = "projection_uefa.csv",
   FOCUS   = c("ENG","ESP","ITA","GER","FRA","POR","NED","BEL","DEN")
@@ -68,7 +70,44 @@ if (length(arg) >= 2) for (i in seq(1, length(arg) - 1, by = 2)) {
 # Lecteur JSON minimal : jsonlite n'est pas garanti present, et le fichier a
 # une forme connue et stable. On extrait ce dont on a besoin, rien de plus.
 
+# Le fichier est cherche a plusieurs endroits : tel quel, a cote du script quand
+# il est lance par Rscript ou source(), puis en remontant l'arborescence depuis
+# le repertoire courant. Colle ligne a ligne dans la console, les deux premieres
+# pistes ne donnent rien - c'est la remontee qui sauve, et elle marche depuis
+# n'importe ou dans le depot.
+trouver_fichier <- function(nom) {
+  if (file.exists(nom)) return(normalizePath(nom, winslash = "/"))
+  pistes <- nom
+
+  a <- commandArgs(FALSE)                       # lance par Rscript
+  f <- a[grep("^--file=", a)]
+  if (length(f)) pistes <- c(pistes, file.path(dirname(sub("^--file=", "", f[1])), basename(nom)))
+  of <- tryCatch(sys.frames()[[1]]$ofile, error = function(e) NULL)   # source()
+  if (!is.null(of)) pistes <- c(pistes, file.path(dirname(normalizePath(of)), basename(nom)))
+
+  d <- normalizePath(getwd(), winslash = "/")   # remontee depuis le courant
+  for (i in 1:8) {
+    pistes <- c(pistes, file.path(d, basename(nom)),
+                        file.path(d, "tools", "uefa", basename(nom)))
+    parent <- dirname(d); if (parent == d) break; d <- parent
+  }
+
+  pistes <- unique(pistes)
+  for (pp in pistes) if (file.exists(pp)) return(normalizePath(pp, winslash = "/"))
+
+  stop(paste0(
+    "\n  '", basename(nom), "' introuvable.",
+    "\n  Repertoire courant : ", getwd(),
+    "\n  Cherche sans succes dans :\n    ", paste(pistes, collapse = "\n    "),
+    "\n\n  Deux facons de s'en sortir :",
+    "\n    setwd(\"<...>/grotang.fr/tools/uefa\")  puis relancer",
+    "\n    ou mettre le chemin complet dans P$FICHIER, en tete de ce script.\n"),
+    call. = FALSE)
+}
+
 lire_nations <- function(chemin) {
+  chemin <- trouver_fichier(chemin)
+  cat(sprintf("lecture de %s\n", chemin))
   txt <- paste(readLines(chemin, warn = FALSE), collapse = "")
   blocs <- regmatches(txt, gregexpr("\\{[^{}]*\\}", txt))[[1]]
   champ_n <- function(b, nom) {
@@ -240,5 +279,8 @@ verif("points de phase finale distribues", S$ctrl["ko"],   270)
 verif("participations a un tour a bonus",  S$ctrl["part"],  90)
 verif("bonus de classement distribues",    S$ctrl["rang"], 192)
 
-write.csv(tab, P$SORTIE, row.names = FALSE)
-cat(sprintf("\n%d lignes ecrites dans %s\n", nrow(tab), P$SORTIE))
+# La sortie va a cote de nations.json, pas dans le repertoire courant : lance
+# depuis la console, celui-ci peut etre n'importe ou.
+sortie <- file.path(dirname(trouver_fichier(P$FICHIER)), P$SORTIE)
+write.csv(tab, sortie, row.names = FALSE)
+cat(sprintf("\n%d lignes ecrites dans %s\n", nrow(tab), sortie))
