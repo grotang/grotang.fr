@@ -381,7 +381,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "sam. 26 sept. 2026 13h45";</script>
+<script>window.PUBLIE = "sam. 26 sept. 2026 14h02";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -2465,15 +2465,22 @@ const legende = segs => segs.map(s =>
      qu'on puisse les contester. */
   const JTOT = [8, 8, 6];                    // journées de phase de ligue par compétition
   const KOBON = [1.5, 1, 0.5];               // bonus par tour de phase finale atteint
-  /* 8 000 saisons, pas 1 200. A 1 200 l'erreur d'echantillonnage sur la mediane
-     valait environ 0,12 point : la France s'affichait a 18,07 quand la valeur
-     vers laquelle la simulation converge est 18,2. Un dixieme invente par le
-     tirage, sur un chiffre publie, ce n'est pas acceptable. Mesure du couple
-     precision / attente : 1 200 -> 18,07 en 0,7 s · 4 000 -> 18,25 en 1,3 s ·
-     8 000 -> 18,21 en 1,8 s · 16 000 -> 18,25 en 2,9 s. A 8 000 l'erreur passe
-     sous 0,05 et le chiffre affiche au dixieme ne bouge plus. La reutilisation
-     des tampons dans la boucle a paye le surcout. */
-  const BETA = 1.15, GAMMA = 1.10, PNUL = 0.24, NSIM = 8000;
+  /* 2 000 saisons, et c'est un compromis assume, pas un optimum.
+     La simulation tourne dans le navigateur du VISITEUR, a chaque ouverture :
+     ce qui coute 1,8 s sur un processeur de bureau en coute cinq a neuf sur un
+     telephone de milieu de gamme. Precision et attente s'opposent donc
+     directement. Mesure sur poste fixe : 1 200 -> mediane France 18,07 en
+     0,7 s · 2 000 -> 1,0 s · 4 000 -> 18,25 en 1,3 s · 8 000 -> 18,21 en 1,8 s ·
+     16 000 -> 18,25 en 2,9 s. La valeur vers laquelle ca converge est 18,2 ;
+     a 1 200 l'erreur d'echantillonnage valait 0,12 point, soit un dixieme
+     invente par le tirage sur un chiffre publie.
+     La vraie sortie n'est pas ici : il faut simuler sur le runner, une fois par
+     rafraichissement, avec deux cent mille tirages, et n'incruster dans la page
+     que les quantiles. Le visiteur recevrait des nombres au lieu d'un calcul.
+     Tant que ce chantier n'est pas fait, 2 000 tient les deux bouts : erreur
+     autour de 0,09 et une seconde d'attente sur poste fixe. Les quantiles sont
+     affiches au dixieme, ce qui est exactement la precision dont on dispose. */
+  const BETA = 1.15, GAMMA = 1.10, PNUL = 0.24, NSIM = 2000;
   /* SIGMA — choc de forme nationale. Tire UNE fois par nation et par saison
      simulee, ajoute a la force de TOUS ses clubs. C'est ce qui manquait : le
      coefficient divise par les clubs engages, et avec des tirages independants
