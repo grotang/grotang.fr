@@ -2423,6 +2423,19 @@ const legende = segs => segs.map(s =>
   const JTOT = [8, 8, 6];                    // journées de phase de ligue par compétition
   const KOBON = [1.5, 1, 0.5];               // bonus par tour de phase finale atteint
   const BETA = 1.15, GAMMA = 1.10, PNUL = 0.24, NSIM = 1200;
+  /* SIGMA — choc de forme nationale. Tire UNE fois par nation et par saison
+     simulee, ajoute a la force de TOUS ses clubs. C'est ce qui manquait : le
+     coefficient divise par les clubs engages, et avec des tirages independants
+     la variance de cette moyenne est divisee par la racine du nombre de clubs.
+     Il fallait donc que les sept clubs francais sur-performent chacun de leur
+     cote le meme soir — ce qui n'arrive jamais. Or une bonne annee est correlee :
+     meme championnat, meme generation. SIGMA = 0 redonne l'ancien modele.
+     DELTA — ecart de force entre deux clubs voisins du contingent d'une meme
+     nation. Sans lui, Paris et Strasbourg sont le meme club. Centre sur le
+     contingent, donc il ne deplace pas la force moyenne de la nation. L'ordre
+     est C1 puis C3 puis C4, le meilleur proxy du rang domestique dont on
+     dispose. */
+  const SIGMA = 0.20, DELTA = 0.16;
   /* Poids de la saison en cours dans la force d'un club.
      Première version : zéro. La force valait le coefficient à cinq ans, point,
      et ce que le pays faisait CETTE saison n'entrait nulle part — une nation qui
@@ -2447,8 +2460,23 @@ const legende = segs => segs.map(s =>
      chiffres, et un écart d'un jour à l'autre doit venir des résultats, jamais du
      hasard de la simulation. La graine est la date des données. */
   function tirages(){
-    let g = 0; for (const ch of String(D.meta.lastUpdated)) g = (g * 31 + ch.charCodeAt(0)) & 0x7fffffff;
-    return () => { g = (g * 1103515245 + 12345) & 0x7fffffff; return g / 0x7fffffff; };
+    let g = 0; for (const ch of String(D.meta.lastUpdated)) g = (Math.imul(g, 31) + ch.charCodeAt(0)) | 0;
+    /* mulberry32. L'ancien generateur etait un LCG ecrit en arithmetique
+       flottante : g * 1103515245 depasse 2^53 des le premier tour, les bits de
+       poids faible sont perdus avant le masque, et la suite retombe sur
+       elle-meme au bout de 10 466 valeurs. Or une saison simulee consomme des
+       centaines de tirages et la projection en fait des millions : le modele
+       rejouait donc en boucle le meme petit paquet de hasards. Les queues de
+       distribution s'en trouvaient ecrasees — les centiles extremes tombaient
+       tous sur la meme poignee de valeurs. Celui-ci reste deterministe et
+       ensemence par la date des donnees, mais il a une periode de 2^32 et
+       travaille en entiers 32 bits exacts, via Math.imul. */
+    return () => {
+      g = (g + 0x6D2B79F5) | 0;
+      let t = Math.imul(g ^ (g >>> 15), 1 | g);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
   }
 
   /* Le champ de chaque compétition se reconstruit à partir des effectifs publiés :
@@ -2459,7 +2487,21 @@ const legende = segs => segs.map(s =>
     const rnd = tirages();
     const CH = [0,1,2].map(k => N.flatMap(n => Array.from({length: n.a[k] || 0}, () => n.c)));
     if (CH.some(cl => cl.length !== 36)) { SIMS = {}; return SIMS; }   // champ incomplet : on ne projette pas
-    const F  = CH.map(cl => cl.map(force));
+    /* Force de base, club par club : celle de l'association, plus un ecart de
+       rang a l'interieur de son contingent. Le contingent est ordonne C1, puis
+       C3, puis C4 — la meilleure approximation du rang domestique disponible.
+       L'ecart est centre, la force moyenne de la nation ne bouge donc pas. */
+    const rangNat = {};
+    const F = CH.map(() => []);
+    for (const n of N) {
+      const tot = (n.a[0]||0) + (n.a[1]||0) + (n.a[2]||0);
+      rangNat[n.c] = { tot, j: 0 };
+    }
+    for (let k = 0; k < 3; k++) for (let i = 0; i < CH[k].length; i++) {
+      const c = CH[k][i], r = rangNat[c];
+      F[k][i] = force(c) + DELTA * ((r.tot - 1) / 2 - r.j);
+      r.j++;
+    }
     /* Rendement attendu par match : logistique sur l'écart de force, puis
        renormalisé à une moyenne de 1. Ce n'est pas cosmétique — un match distribue
        toujours exactement deux points, donc la moyenne par club EST 1, et sans
@@ -2472,18 +2514,43 @@ const legende = segs => segs.map(s =>
        Puis renormalisation à une moyenne de 1 : un match distribue toujours
        exactement deux points, donc la moyenne par club EST 1. Sans cette
        contrainte le modèle inventerait ou perdrait des points à chaque journée. */
-    const E = CH.map((cl, k) => {
-      const f = F[k], fb = f.reduce((a,b)=>a+b,0) / f.length;
-      const e = f.map((x, i) => {
-        const apriori = 2 * sig(BETA * (x - fb));
-        const c = cl[i], m = matchs(c);
-        if (!m) return apriori;
-        const obs = part(c).ligue * divisor(BY[c]) / m;     // points par match, observés
-        const w = m / (m + KPSEUDO);
-        return (1 - w) * apriori + w * obs;
-      });
-      const s = e.reduce((a,b)=>a+b,0) / e.length; return e.map(x => x / s); });
-    const PW = E.map(e => e.map(x => Math.max(0, (x - PNUL) / 2)));
+    /* Le rendement attendu ne peut plus etre calcule une fois pour toutes : la
+       force depend du choc de la saison tiree. On le recalcule donc par tirage,
+       a partir des forces perturbees. Le cout est negligeable devant les matchs
+       eux-memes — une centaine d'exponentielles par saison simulee. */
+    /* Ce qui ne depend PAS du choc est calcule une fois : le rendement observe
+       de chaque nation et son poids. Les laisser dans la boucle rappelait part()
+       quelque cent mille fois et faisait passer le chargement de la page a plus
+       de quatre secondes. */
+    const OBS = {}, WPO = {};
+    for (const n of N) { const m = matchs(n.c);
+      OBS[n.c] = m ? part(n.c).ligue * divisor(n) / m : 0;
+      WPO[n.c] = m ? m / (m + KPSEUDO) : 0; }
+    const CHW = CH.map(cl => cl.map(c => WPO[c]));
+    const CHO = CH.map(cl => cl.map(c => OBS[c]));
+
+    const rendement = (Fz) => {
+      const PW = [];
+      for (let k = 0; k < 3; k++) {
+        const f = Fz[k], nC = f.length, w = CHW[k], o = CHO[k];
+        let fb = 0; for (let i = 0; i < nC; i++) fb += f[i]; fb /= nC;
+        const e = new Float64Array(nC); let som = 0;
+        for (let i = 0; i < nC; i++) {
+          const a = 2 * sig(BETA * (f[i] - fb));
+          e[i] = w[i] ? (1 - w[i]) * a + w[i] * o[i] : a;
+          som += e[i];
+        }
+        const moy = som / nC, pw = new Float64Array(nC);
+        for (let i = 0; i < nC; i++) pw[i] = Math.max(0, (e[i] / moy - PNUL) / 2);
+        PW.push(pw);
+      }
+      return { PW };
+    };
+
+    /* Loi normale par Box-Muller, a partir du meme generateur : la graine reste
+       la date des donnees, donc deux visiteurs du meme jour voient les memes
+       chiffres. */
+    const gauss = () => Math.sqrt(-2 * Math.log(1 - rnd())) * Math.cos(2 * Math.PI * rnd());
 
     const codes = N.filter(n => engages(n) > 0).map(n => n.c);
     const tir   = Object.fromEntries(codes.map(c => [c, new Float64Array(NSIM)]));
@@ -2498,8 +2565,15 @@ const legende = segs => segs.map(s =>
 
     for (let s = 0; s < NSIM; s++) {
       const gain = {}, gainL = {};              // tout / arrêté à la fin de la phase de ligue
+      /* Le choc de la saison : un tirage par NATION, partage par tous ses clubs
+         et par les trois compétitions. C'est le partage qui compte — c'est lui
+         qui fait qu'une bonne année française est une bonne année pour les sept
+         clubs à la fois, et donc qui ouvre la queue de la distribution. */
+      const Z = {}; for (const n of N) Z[n.c] = SIGMA * gauss();
+      const Fz = CH.map((cl, k) => F[k].map((x, i) => x + Z[cl[i]]));
+      const { PW: PWz } = rendement(Fz);
       for (let k = 0; k < 3; k++) {
-        const cl = CH[k], f = F[k], pw = PW[k], nj = JTOT[k], reste = nj - jouees(k);
+        const cl = CH[k], f = Fz[k], pw = PWz[k], nj = JTOT[k], reste = nj - jouees(k);
         const add  = (i, v) => { gain[cl[i]] = (gain[cl[i]] || 0) + v; };
         const addL = (i, v) => { addL0(i, v); add(i, v); };
         const addL0 = (i, v) => { gainL[cl[i]] = (gainL[cl[i]] || 0) + v; };
@@ -2673,16 +2747,17 @@ const legende = segs => segs.map(s =>
          qui ne survole pas. La valeur y figure, puisque la croix est souvent
          calée hors échelle et ne donne donc pas son abscisse. */
       + `<span style="display:inline-flex;align-items:center;gap:5px;margin-left:14px;color:var(--fr)">`
-      + `<svg width="11" height="11" viewBox="0 0 11 11" aria-hidden="true" style="flex:none"><path d="M2 2l7 7M9 2l-7 7" stroke="var(--fr)" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>`
+      + `<i style="width:11px;height:11px;flex:none;position:relative;display:inline-block">`
+      + `<i style="position:absolute;left:0;top:5px;width:11px;height:1.6px;background:var(--fr);border-radius:1px;transform:rotate(45deg)"></i>`
+      + `<i style="position:absolute;left:0;top:5px;width:11px;height:1.6px;background:var(--fr);border-radius:1px;transform:rotate(-45deg)"></i></i>`
       + `meilleur scénario de la France : ${nf((rows.find(r => r.c === 'FRA') || {}).haut || 0, 1)} &nbsp;(1 tirage sur 400)</span></p>`;
 
     /* Le poids réellement donné à la saison en cours, écrit en clair : c'est la
        première question qu'on se pose devant une projection, et la réponse bouge
        à chaque journée. */
-    const poids = `<b>Ce qui nourrit le modèle.</b> La force d'un club est pour l'instant celle de son championnat — le logarithme du coefficient à cinq ans de son association — corrigée par ce que la nation fait réellement cette saison en phase de ligue. `
-      + `Le poids de la saison en cours n'est pas fixé à l'avance : il suit l'échantillon, w = m / (m + ${KPSEUDO}) où m est le nombre de matchs de phase de ligue déjà joués par la nation. `
-      + `Pour la France, ${S.mFRA} match${S.mFRA > 1 ? 's' : ''} joué${S.mFRA > 1 ? 's' : ''} : la saison en cours pèse <b>${Math.round((S.wFRA||0)*100)} %</b>, l'historique ${100 - Math.round((S.wFRA||0)*100)} %. `
-      + `En fin de phase de ligue ce sera moitié-moitié. Un poids fixe serait faux aux deux bouts. `;
+    /* La cuisine du modele reste interne : on dit ce qui a ete simule et ce que
+       ca ne vaut pas, pas comment c'est calcule. */
+    const poids = '';
 
     if (horizon === 'saison') { capSaison(rows, fr, leg, poids, S); return; }
 
@@ -2690,17 +2765,14 @@ const legende = segs => segs.map(s =>
     const dessus  = fr ? rows.filter(r => r.p05 > fr.p95) : [];
     const dessous = fr ? rows.filter(r => r.p95 < fr.p05) : [];
     document.getElementById('capPrj').innerHTML = leg
-      + `<b>Cinq repères, tous tirés de la même simulation</b> : le 5<sup>e</sup> et le 95<sup>e</sup> centile aux extrémités du trait fin, le 20<sup>e</sup> et le 80<sup>e</sup> aux bouts de la barre épaisse, la médiane au disque. `
-      + `Lecture : une nation a une chance sur vingt de finir sous son trait fin gauche, une sur vingt de finir au-dessus du droit, et trois chances sur cinq d'atterrir dans la barre épaisse. `
-      + `Cet horizon s'arrête à la fin de la phase de ligue, bonus de classement compris — il est acquis à ce moment-là. `
-      + `Le coefficient déjà acquis n'est plus dessiné : posé tout à gauche, loin de la distribution, il étirait l'axe pour un repère que personne ne lisait. Il reste au survol. `
-      + poids
-      + (fr ? `<b>La France</b>, qui a ${fr.r} matchs de phase de ligue à jouer : médiane <b>${nf(fr.cen, 2)}</b>, trois tirages sur cinq entre ${nf(fr.p20, 2)} et ${nf(fr.p80, 2)}, neuf sur dix entre ${nf(fr.p05, 2)} et ${nf(fr.p95, 2)}. ` : '')
-      + (fr ? `<b>Ce qu'il faut y lire :</b> la bande bleue est la portée de la France, son intervalle à 90 %. `
-            + (croise.length ? `${croise.length} nation${croise.length > 1 ? 's' : ''} la recoupe${croise.length > 1 ? 'nt' : ''} — ${croise.map(r => name(r.c)).join(', ')} — l'ordre entre elles et nous n'est pas décidé. ` : `Aucune nation du groupe ne la recoupe. `)
+      + `<b>${NSIM} saisons rejouées</b>, arrêtées à la fin de la phase de ligue, bonus de classement compris. `
+      + `Les cinq repères sont les centiles 5, 20, 50, 80 et 95 de ces tirages : une nation a une chance sur vingt de finir sous son trait fin gauche, une sur vingt au-dessus du droit, trois sur cinq dans la barre épaisse. `
+      + (fr ? `<b>La France</b>, ${fr.r} matchs de phase de ligue à jouer : médiane <b>${nf(fr.cen, 2)}</b>, neuf tirages sur dix entre ${nf(fr.p05, 2)} et ${nf(fr.p95, 2)}. ` : '')
+      + (fr ? `La bande bleue est sa portée à 90 %. `
+            + (croise.length ? `${croise.length} nation${croise.length > 1 ? 's' : ''} la recoupe${croise.length > 1 ? 'nt' : ''} — ${croise.map(r => name(r.c)).join(', ')} — l'ordre n'est pas décidé. ` : `Aucune nation du groupe ne la recoupe. `)
             + (dessus.length ? `${dessus.map(r => name(r.c)).join(', ')} ${dessus.length > 1 ? 'restent hors' : 'reste hors'} d'atteinte d'ici janvier. ` : '')
             + (dessous.length ? `${dessous.map(r => name(r.c)).join(', ')} ne peu${dessous.length > 1 ? 'vent' : 't'} plus la rattraper sur cette phase. ` : '') : '')
-      + `<b>Ce qui n'est pas compté ici :</b> la phase finale, qui pèse lourd. Bascule sur « fin de saison » pour l'inclure.`;
+      + `<b>La phase finale n'est pas comptée ici</b>, et elle pèse lourd. Bascule sur « saison pleine » pour l'inclure.`;
 
     function capSaison(rows, fr, leg, poids, S){
       const rang = (() => {                       // rang à 5 ans avec la médiane de chacun
@@ -2717,10 +2789,8 @@ const legende = segs => segs.map(s =>
       const menaces = rows.filter(r => r.c !== 'FRA').map(r => ({ c: r.c, p: devant(r.c) }))
         .filter(x => x.p != null && x.p > 0.05 && x.p < 0.95).sort((a, b) => b.p - a.p);
       document.getElementById('capPrj').innerHTML = leg
-        + `<b>${NSIM} saisons complètes rejouées</b> — phase de ligue restante, classement final, barrages, huitièmes, quarts, demies, finale — avec le barème 2024/25 : 2 points par victoire, 1 par nul, 6 points d'entrée en C1, le bonus de classement de phase de ligue (jusqu'à 6 points pour la 1<sup>re</sup> place en C1 et en C3, 4 en C4) et 1,5 / 1 / 0,5 point par tour de phase finale atteint. `
-        + `Les cinq repères sont les centiles 5, 20, 50, 80 et 95 de ces ${NSIM} tirages. `
-        + poids
-        + `Le reste du modèle tient en trois paramètres, choisis à vue et jamais ajustés : sensibilité du rendement de poule à l'écart de force, sensibilité d'un duel de phase finale, et un taux de nul de ${nf(PNUL*100, 0)} % pour tout le monde. `
+        + `<b>${NSIM} saisons complètes rejouées</b> — phase de ligue restante, classement final, barrages, huitièmes, quarts, demies, finale — avec le barème 2024/25. `
+        + `Les cinq repères sont les centiles 5, 20, 50, 80 et 95 de ces tirages. `
         + (fr ? `<b>La France :</b> médiane <b>${nf(fr.cen, 2)}</b>, trois tirages sur cinq entre ${nf(fr.p20, 2)} et ${nf(fr.p80, 2)}, neuf sur dix entre ${nf(fr.p05, 2)} et ${nf(fr.p95, 2)}` : '')
         + (rang ? `, ce qui la placerait <b>${rang.r}<sup>${rang.r === 1 ? 're' : 'e'}</sup></b> au classement à cinq ans avec ${nf(rang.v, 1)} points`
             + (rang.dessous ? `, devant ${leNom(rang.dessous.c)} (${nf(rang.dessous.v, 1)})` : '')
@@ -2728,8 +2798,7 @@ const legende = segs => segs.map(s =>
         + (menaces.length
             ? `<b>Ce qui se joue vraiment :</b> ${menaces.map(m => `${name(m.c)} finit devant la France dans ${Math.round(m.p*100)} % des tirages`).join(', ')}. Le reste du groupe est décidé dans plus de 19 tirages sur 20. `
             : `Aucune nation du groupe ne bascule d'un côté ou de l'autre dans plus d'un tirage sur vingt. `)
-        + `<b>Ce que ça ne vaut pas.</b> Les tirages au sort sont aléatoires alors qu'ils sont têtes de série ; aucune force propre au club, donc ni blessure, ni forme, ni le fait qu'un club anglais moyen ne vaut pas Arsenal ; et les paramètres n'ont été calés sur aucun historique. `
-        + `Brancher un classement de puissance par club à la place de la force nationale ne changerait qu'une ligne du calcul. `
+        + `<b>Ce que ça ne vaut pas.</b> Les tirages au sort y sont purement aléatoires alors qu'ils sont têtes de série, et les paramètres du modèle n'ont été calés sur aucun historique. C'est une projection, pas une prévision. `
         + (S.ecarts && S.ecarts.length
             ? `<b style="color:var(--s2)">Contrôle en échec :</b> ${S.ecarts.join(' · ')}.`
             : `<b>Contrôles passés :</b> sur les trois compétitions, la simulation distribue exactement 90 points de phase finale, 30 participations à un tour et 75 / 75 / 42 points de bonus de classement — ni plus, ni moins.`);
