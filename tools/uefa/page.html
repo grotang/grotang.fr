@@ -2574,6 +2574,28 @@ const legende = segs => segs.map(s =>
        page. « Toutes » sert à situer le groupe : on y voit que la 9e nation est
        déjà à dix points, et que la moitié du continent se tient dans trois
        points. Les couleurs d'identité ne valent que pour les huit. */
+    /* Le plafond absolu de la France : plus un seul match perdu ni nul d'ici la
+       fin. Ce n'est pas une projection, c'est une borne — le modèle ne la tire
+       jamais, elle sert à dire de combien la médiane est loin du parfait.
+       Composition, par compétition : deux points par victoire sur les journées
+       restantes ; le bonus de classement des n premières places, puisque les
+       clubs français les occuperaient toutes ; et pour l'horizon saison, quatre
+       tours de phase finale — leur bonus plus les sept matchs gagnés (deux
+       manches par tour, une pour la finale).
+       Réserve assumée : deux clubs français d'une même compétition finiraient
+       par se rencontrer, donc ce plafond est légèrement au-dessus du possible.
+       C'est une borne supérieure, elle a le droit d'être lâche. */
+    const MAXFR = (() => {
+      const n = clubsK('FRA'); let pl = 0, pr = 0, pk = 0;
+      for (let k = 0; k < 3; k++) {
+        pl += 2 * n[k] * (JTOT[k] - jouees(k));
+        for (let i = 1; i <= n[k]; i++) pr += rankBonus(k, i);
+        pk += n[k] * (4 * KOBON[k] + 14);
+      }
+      const div = engages(BY.FRA), tp = BY.FRA.tp;
+      return { ligue: (tp + pl + pr) / div, tir: (tp + pl + pr + pk) / div };
+    })();
+
     let porteeP = 'top';
     const jeuP = () => porteeP === 'top' ? GRP : ENGAGEES.map(n => n.c);
     const lignes = (tirages) => { const S = simule(); if (!S[tirages]) return [];
@@ -2600,8 +2622,8 @@ const legende = segs => segs.map(s =>
     let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
     sc.ticks.forEach(v => s += `<line x1="${X(v).toFixed(1)}" y1="${mT - 8}" x2="${X(v).toFixed(1)}" y2="${H - mB + 4}" stroke="var(--rule-soft)"/>`
       + `<text x="${X(v).toFixed(1)}" y="${H - mB + 20}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${nf(v, sc.dec)}</text>`);
-    s += `<text x="${mL}" y="${mT - 32}" font-size="11" font-weight="600" fill="var(--ink-3)">coefficient de saison ${horizon === 'ligue'
-      ? 'à la fin de la phase de ligue' : 'en fin de saison, phase finale comprise'}</text>`;
+    s += `<text x="${mL}" y="${mT - 32}" font-size="11" font-weight="600" fill="var(--ink-3)">coefficient ${horizon === 'ligue' ? 'de saison ' : 'saison '}${horizon === 'ligue'
+      ? 'à la fin de la phase de ligue' : 'pleine'}</text>`;
     /* La question n'est pas « où finit la France » mais « qui peut encore la
        doubler ». La bande couvre son intervalle à 90 %, du 5e au 95e centile :
        à 60 % elle excluait des nations qui la doublent une fois sur sept, ce qui
@@ -2627,6 +2649,22 @@ const legende = segs => segs.map(s =>
       [[r.p20, 9], [r.p80, 9]].forEach(([v, h]) => s += `<line x1="${X(v).toFixed(1)}" y1="${(y - h).toFixed(1)}" x2="${X(v).toFixed(1)}" y2="${(y + h).toFixed(1)}" stroke="${c0}" stroke-width="1.8" opacity=".85"/>`);
       s += `<circle cx="${X(r.cen).toFixed(1)}" cy="${y.toFixed(1)}" r="${fr ? 6 : 5}" fill="${c0}" stroke="var(--surface)" stroke-width="1.5"><title>${tt}</title></circle>`;
       s += `<text x="${(X(r.p95) + 10).toFixed(1)}" y="${(y + 4).toFixed(1)}" font-size="11.5" font-weight="${fr ? 700 : 500}" font-family="IBM Plex Mono, monospace" fill="${fr ? 'var(--fr)' : 'var(--ink-3)'}">${nf(r.cen, 1)}</text>`;
+      /* La croix du plafond, France seule. Elle se pose à sa vraie abscisse tant
+         qu'elle tient dans l'axe ; au-delà elle se cale sur la dernière
+         graduation et prend un chevron, pour ne pas étirer l'échelle de tout le
+         monde à cause d'une borne que personne n'atteindra. La valeur exacte est
+         dans l'infobulle et dans la note, elle n'est donc jamais perdue. */
+      if (fr) {
+        const mx = horizon === 'ligue' ? MAXFR.ligue : MAXFR.tir;
+        const hors = mx > sc.hi;
+        const xm = X(Math.min(mx, sc.hi)) - (hors ? 9 : 0), b2 = 5;
+        const ttm = `Plafond de la France · ${nf(mx, 2)} — plus un seul match perdu ni nul d'ici la fin`;
+        s += `<g opacity=".62"><title>${ttm}</title>`
+          + `<line x1="${(xm-b2).toFixed(1)}" y1="${(y-b2).toFixed(1)}" x2="${(xm+b2).toFixed(1)}" y2="${(y+b2).toFixed(1)}" stroke="var(--fr)" stroke-width="1.6" stroke-linecap="round"/>`
+          + `<line x1="${(xm-b2).toFixed(1)}" y1="${(y+b2).toFixed(1)}" x2="${(xm+b2).toFixed(1)}" y2="${(y-b2).toFixed(1)}" stroke="var(--fr)" stroke-width="1.6" stroke-linecap="round"/>`
+          + (hors ? `<path d="M${(xm+8).toFixed(1)} ${(y-4).toFixed(1)} l4 4 l-4 4" fill="none" stroke="var(--fr)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>` : '')
+          + `</g>`;
+      }
       s += `<text x="${(W - 6).toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="10.5" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)" opacity=".85">${horizon === 'ligue' ? `${r.r} m.` : `${nf(BY[r.c].t - r.acq + r.cen, 1)}`}</text>`;
     });
     document.getElementById('chartPrj').outerHTML = (s + '</svg>').replace('<svg', '<svg id="chartPrj"');
@@ -2640,7 +2678,14 @@ const legende = segs => segs.map(s =>
       + `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">${jeton(22,5,.22,'3px')}9 fois sur 10 &nbsp;(5<sup>e</sup>–95<sup>e</sup> centile)</span>`
       + `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">${jeton(22,11,.34,'5px')}3 fois sur 5 &nbsp;(20<sup>e</sup>–80<sup>e</sup>)</span>`
       + `<span style="display:inline-flex;align-items:center;gap:5px">${jeton(9,9,1,'50%')}médiane`
-      + (horizon === 'saison' ? ` · colonne de droite : total à 5 ans projeté` : ` · colonne de droite : matchs restants`) + `</span></p>`;
+      + (horizon === 'saison' ? ` · colonne de droite : total à 5 ans projeté` : ` · colonne de droite : matchs restants`) + `</span>`
+      /* La croix n'est explicite que si on la nomme : sans cette mention, un
+         signe bleu isolé à droite de l'axe ne veut rien dire pour un lecteur
+         qui ne survole pas. La valeur y figure, puisque la croix est souvent
+         calée hors échelle et ne donne donc pas son abscisse. */
+      + `<span style="display:inline-flex;align-items:center;gap:5px;margin-left:14px;color:var(--fr)">`
+      + `<svg width="11" height="11" viewBox="0 0 11 11" aria-hidden="true" style="flex:none"><path d="M2 2l7 7M9 2l-7 7" stroke="var(--fr)" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>`
+      + `plafond de la France : ${nf(horizon === 'ligue' ? MAXFR.ligue : MAXFR.tir, 1)}</span></p>`;
 
     /* Le poids réellement donné à la saison en cours, écrit en clair : c'est la
        première question qu'on se pose devant une projection, et la réponse bouge
