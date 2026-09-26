@@ -2441,7 +2441,32 @@ const legende = segs => segs.map(s =>
      neutralise le changement de format de 2024/25). Mediane observee : 0,22.
      On compare au coefficient de variation que le modele produit, et on retient
      le couple qui minimise l'ecart. */
-  const SIGMA = 0.14, DELTA = 0.11;
+  const SIGMA = 0.12, LAMBDA = 1.0, SCAP = 0.45, DELTA = 0.11;
+  /* Le choc n'a pas la meme ampleur partout, et l'archive est formelle :
+     l'Espagne varie de 8 % d'une saison a l'autre, l'Angleterre de 12 %, mais
+     la Grece de 44 % et Chypre de 42 %. Un sigma unique ne peut pas tenir les
+     deux bouts. Il est donc indexe sur le niveau, avec la nation de tete pour
+     pivot :
+
+         sigma(n) = SIGMA x (coefficient de la tete / coefficient de n) ^ LAMBDA
+
+     SIGMA est donc le choc de la NATION DE TETE, et il vaut 0,12 pour une
+     variabilite observee de 0,124 chez elle — l'ancrage tombe juste. LAMBDA = 1
+     rend le choc inversement proportionnel au coefficient : moitie moins fort,
+     deux fois plus volatil. L'histoire derriere est simple — le contingent d'un
+     petit pays tient sur un ou deux clubs, dont la saison emporte toute la
+     moyenne.
+     LAMBDA a ete choisi sur la grille, pas au minimum d'erreur : celui-ci est a
+     LAMBDA = 2, mais il s'y appuie sur le plafond, qui sature alors pour huit
+     nations sur seize. A LAMBDA = 1 le plafond ne mord nulle part, il ne sert
+     que de garde-fou pour les micro-nations.
+     SEPTIEME ET DERNIER PARAMETRE. Seize nations sur cinq saisons ne calent pas
+     davantage sans surajustement. */
+  const sigmaNat = (() => {
+    const tete = Math.max(...N.filter(n => engages(n) > 0).map(n => n.t));
+    const m = {}; for (const n of N) m[n.c] = Math.min(SCAP, SIGMA * Math.pow(tete / Math.max(1, n.t), LAMBDA));
+    return m;
+  })();
   /* Poids de la saison en cours dans la force d'un club.
      Première version : zéro. La force valait le coefficient à cinq ans, point,
      et ce que le pays faisait CETTE saison n'entrait nulle part — une nation qui
@@ -2575,7 +2600,7 @@ const legende = segs => segs.map(s =>
          et par les trois compétitions. C'est le partage qui compte — c'est lui
          qui fait qu'une bonne année française est une bonne année pour les sept
          clubs à la fois, et donc qui ouvre la queue de la distribution. */
-      const Z = {}; for (const n of N) Z[n.c] = SIGMA * gauss();
+      const Z = {}; for (const n of N) Z[n.c] = sigmaNat[n.c] * gauss();
       const Fz = CH.map((cl, k) => F[k].map((x, i) => x + Z[cl[i]]));
       const { PW: PWz } = rendement(Fz);
       for (let k = 0; k < 3; k++) {

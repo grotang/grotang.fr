@@ -18,13 +18,22 @@ P <- list(
   NSIM    = 4000,   # saisons simulees. 4000 suffit pour la mediane ; monter a
                     # 20000 si on veut lire le 99.75e centile sans bruit.
 
-  SIGMA   = 0.14,   # CHOC DE FORME NATIONALE. Tire une fois par nation et par
-                    # saison simulee, ajoute a la force de TOUS ses clubs.
-                    # C'est le parametre qui ouvre les queues : le coefficient
+  SIGMA   = 0.12,   # CHOC DE FORME DE LA NATION DE TETE. Tire une fois par
+                    # nation et par saison simulee, ajoute a la force de TOUS
+                    # ses clubs. C'est ce qui ouvre les queues : le coefficient
                     # divise par les clubs engages, donc avec des tirages
                     # independants la variance de cette moyenne est divisee par
-                    # la racine du nombre de clubs. SIGMA = 0 redonne le modele
-                    # d'origine, tres conservateur.
+                    # la racine du nombre de clubs. SIGMA = 0 : modele d'origine.
+
+  LAMBDA  = 1.0,    # Le choc n'est pas le meme pour tous. Observe sur l'archive :
+                    # Espagne 0.08 de variation d'une saison a l'autre, Angleterre
+                    # 0.12, mais Grece 0.44 et Chypre 0.42.
+                    #    sigma(n) = SIGMA * (coef de la tete / coef de n) ^ LAMBDA
+                    # LAMBDA = 1 : inversement proportionnel au coefficient.
+                    # LAMBDA = 0 : un choc unique pour tous.
+
+  SCAP    = 0.45,   # plafond du choc. Garde-fou pour les micro-nations ; a
+                    # LAMBDA = 1 il ne mord pour aucune des 16 nations calibrees.
 
   DELTA   = 0.11,   # ECART DE RANG DANS LE CONTINGENT. Deux clubs voisins de la
                     # meme nation different de DELTA en force. L'ordre est C1,
@@ -130,12 +139,16 @@ simuler <- function(NA_, P) {
   OBS <- lapply(1:3, function(k) obs_n[CH[[k]]])
   WPO <- lapply(1:3, function(k) w_nat[CH[[k]]])
 
+  # choc propre a chaque nation, indexe sur son niveau
+  sigma_n <- pmin(P$SCAP, P$SIGMA * (max(tt[!is.na(dv)]) / pmax(1, tt)) ^ P$LAMBDA)
+  names(sigma_n) <- code
+
   vivants <- code[!is.na(dv)]
   res <- matrix(0, nrow = P$NSIM, ncol = length(vivants), dimnames = list(NULL, vivants))
   ctrl <- c(ko = 0, part = 0, rang = 0)
 
   for (s in seq_len(P$NSIM)) {
-    z <- setNames(P$SIGMA * rnorm(length(code)), code)
+    z <- setNames(sigma_n * rnorm(length(code)), code)
     gain <- setNames(rep(0, length(code)), code)
 
     for (k in 1:3) {
@@ -187,8 +200,8 @@ simuler <- function(NA_, P) {
 
 NA_ <- lire_nations(P$FICHIER)
 cat(sprintf("%d associations lues dans %s\n", length(NA_), P$FICHIER))
-cat(sprintf("sigma = %.2f   delta = %.2f   beta = %.2f   gamma = %.2f   p(nul) = %.2f   %d saisons\n\n",
-            P$SIGMA, P$DELTA, P$BETA, P$GAMMA, P$PNUL, P$NSIM))
+cat(sprintf("sigma(tete) = %.2f   lambda = %.1f   delta = %.2f   beta = %.2f   gamma = %.2f   p(nul) = %.2f   %d saisons\n\n",
+            P$SIGMA, P$LAMBDA, P$DELTA, P$BETA, P$GAMMA, P$PNUL, P$NSIM))
 
 S <- simuler(NA_, P)
 R <- S$res
