@@ -381,7 +381,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "sam. 26 sept. 2026 14h35";</script>
+<script>window.PUBLIE = "dim. 27 sept. 2026 11h48";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -1464,6 +1464,17 @@ function syncP(){
   const isS = period === 'season';
   document.getElementById('p-season').setAttribute('aria-pressed', isS);
   winSel.dataset.on = String(!isS);
+  /* La liste doit refléter l'état, sinon elle ment ET elle se bloque : en mode
+     « saison en cours » elle continuait d'afficher « 5 dernières saisons », et
+     re-choisir cette même option n'émet aucun événement de changement — on ne
+     pouvait plus jamais revenir à la fenêtre de 5 saisons. Elle se vide donc
+     quand la saison en cours prend la main, et toute sélection redevient un
+     vrai changement. */
+  if (isS) winSel.selectedIndex = -1;
+  else {
+    const i = [...winSel.options].findIndex(o => +o.value === period);
+    if (i >= 0) winSel.selectedIndex = i;
+  }
   drawBars();
 }
 winSel.dataset.on = 'true';
