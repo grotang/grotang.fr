@@ -397,7 +397,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "dim. 27 sept. 2026 22h15";</script>
+<script>window.PUBLIE = "dim. 27 sept. 2026 22h50";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -612,7 +612,7 @@ body{margin:0}</style>
     <p><b>Pourquoi diviser par le nombre de clubs engagés.</b> Le diviseur est fixé en début de saison et ne bouge pas : un club éliminé continue de peser dans la division. Un pays qui engage beaucoup de clubs a donc besoin de plus de résultats pour le même coefficient. La France divise par 7 cette saison.</p>
     <p><b>Le classement de la saison n'est pas le classement à 5 ans.</b> En début de saison, le coefficient de la saison favorise mécaniquement les pays dont les clubs disputent de nombreux tours de qualification en juillet-août. Un rang de saison médiocre à ce stade ne dit pas grand-chose ; il devient lisible à partir de la phase de ligue.</p>
     <p><b>Source.</b> <a href="https://eurocoeff.com/" target="_blank" rel="noopener">eurocoeff.com</a>, jeu de données public sous licence CC BY 4.0, lui-même construit à partir de <a href="https://www.5-jahres-wertung.de/" target="_blank" rel="noopener">5-jahres-wertung.de</a>. Ces chiffres sont non officiels : l'UEFA fait foi. Chaque publication de cette page rejoue le calcul complet depuis la source ; une seule série fait exception, l'archive des effectifs décrite ci-dessous.</p>
-    <p><b>Clubs engagés, clubs encore en lice.</b> Ce sont deux nombres distincts et la page les tient séparés. Le diviseur du coefficient compte les clubs <b>engagés</b> au 1<sup>er</sup> juillet : il est figé pour la saison, éliminés compris. La source publie en parallèle l'effectif <b>encore en lice</b>, qui ne fait que décroître. La section « Les clubs encore en vie » ne repose que sur ces deux nombres, tels que publiés — rien n'y est estimé. À ce stade de la saison, « éliminé » signifie « n'a pas atteint sa phase de ligue » ; à partir de février s'y ajouteront les sorties de la phase finale.</p>
+    <p><b>Clubs engagés, clubs encore en lice.</b> Ce sont deux nombres distincts et la page les tient séparés. Le diviseur du coefficient compte les clubs <b>engagés</b> au 1<sup>er</sup> juillet : il est figé pour la saison, éliminés compris. La source publie en parallèle l'effectif <b>encore en lice</b>, qui ne fait que décroître. La section « Les clubs encore en vie » repose sur ces deux nombres, tels que publiés. <b>La date de sortie de chaque club</b>, elle, ne vient pas de la source, qui ne la publie pas : elle est relevée une fois pour la saison dans les tableaux de confrontations des trois compétitions, puis recoupée association par association — <i>engagés moins éliminés doit retrouver l'effectif encore en lice</i>. C'est ce relevé qui a rendu au Monténégro ses quatre clubs engagés : faute de coefficient de saison, la source ne pouvait pas en déduire son diviseur, et l'association manquait au décompte. À ce stade de la saison, « éliminé » signifie « n'a pas atteint sa phase de ligue » ; à partir de février s'y ajouteront les sorties de la phase finale.</p>
     <p><b>La seule série que la page conserve.</b> La source publie l'effectif du jour, jamais son historique : sans archive, la courbe de survie n'existerait pas. La page enregistre donc l'effectif à chaque rafraîchissement, et n'ajoute une ligne que lorsqu'un nombre change ; aucune ligne passée n'est réécrite. Les éliminations antérieures au premier relevé archivé ne sont pas datées club par club — elles se sont toutes produites pendant les qualifications, et la courbe les regroupe au dernier soir de barrages, en pointillé, plutôt que d'inventer des dates.</p>
     <p><b>Contrôles passés à la publication.</b> Somme des cinq saisons égale au total pour les 55 associations ; rangs strictement ordonnés ; écart au rang précédent recalculé ; dernier cumul de la série égal au total ; continuité entre qualifications et phase de ligue ; pour douze pays, somme des points clubs égale au total national déclaré. Aucun écart.</p>
     <p><b>Ce que la page ne dit pas.</b> Le nombre exact de places attribuées par rang dépend du règlement d'accès de la saison concernée et des vainqueurs de coupes ; il n'est pas déduit ici. Les arrondis sont ceux de la source, au millième, ce qui peut produire quelques millièmes d'écart entre la somme des étapes et le total publié.</p>
@@ -628,6 +628,13 @@ body{margin:0}</style>
    effectif change. C'est la seule série de cette page qui s'accumule au lieu
    d'être recalculée — la source ne publie que l'état du jour, jamais son
    histoire, et sans archive la courbe de survie n'existerait pas. */
+/*QUAL_START*/const QUALS = {"ENG":{"e":9,"s":[9,9,9,9]},"ITA":{"e":7,"s":[7,7,7,7]},"ESP":{"e":8,"s":[8,8,8,8]},"GER":{"e":7,"s":[7,7,7,7]},"FRA":{"e":7,"s":[7,7,7,7]},"POR":{"e":5,"s":[5,5,5,5]},"BEL":{"e":5,"s":[5,5,5,5]},"NED":{"e":6,"s":[6,6,6,6]},"TUR":{"e":5,"s":[5,4,4,4]},"CZE":{"e":5,"s":[5,5,5,4]},"POL":{"e":5,"s":[5,5,4,2]},"GRE":{"e":5,"s":[5,5,5,4]},"NOR":{"e":5,"s":[5,5,5,4]},"DEN":{"e":4,"s":[4,4,4,4]},"CYP":{"e":4,"s":[4,3,2,2]},"SUI":{"e":4,"s":[4,4,4,2]},"AUT":{"e":5,"s":[5,5,5,3]},"HUN":{"e":4,"s":[4,3,1,1]},"SCO":{"e":5,"s":[5,5,5,2]},"CRO":{"e":4,"s":[4,3,3,2]},"SWE":{"e":4,"s":[4,3,1,1]},"ROU":{"e":4,"s":[4,2,1,1]},"UKR":{"e":4,"s":[4,2,1,1]},"ISR":{"e":4,"s":[4,4,3,1]},"AZE":{"e":4,"s":[4,2,2,1]},"SVN":{"e":4,"s":[4,1,1,1]},"SVK":{"e":4,"s":[4,2,1,1]},"BUL":{"e":4,"s":[4,3,2,2]},"SRB":{"e":4,"s":[4,2,2,1]},"ISL":{"e":4,"s":[4,2,1,0]},"IRL":{"e":4,"s":[4,3,1,0]},"ARM":{"e":4,"s":[4,2,1,1]},"KOS":{"e":4,"s":[4,1,1,0]},"BIH":{"e":4,"s":[3,1,1,1]},"LVA":{"e":4,"s":[4,3,1,1]},"FIN":{"e":4,"s":[4,4,2,1]},"KAZ":{"e":4,"s":[2,2,1,1]},"LIE":{"e":1,"s":[1,1,0,0]},"MDA":{"e":4,"s":[3,1,0,0]},"FRO":{"e":4,"s":[3,2,1,0]},"ALB":{"e":4,"s":[2,2,2,1]},"MKD":{"e":3,"s":[2,1,0,0]},"BLR":{"e":3,"s":[3,2,0,0]},"LTU":{"e":4,"s":[3,2,1,1]},"AND":{"e":3,"s":[3,1,1,1]},"MLT":{"e":4,"s":[2,0,0,0]},"GIB":{"e":3,"s":[1,1,1,1]},"EST":{"e":4,"s":[4,2,0,0]},"NIR":{"e":4,"s":[2,1,1,0]},"GEO":{"e":4,"s":[3,1,1,1]},"LUX":{"e":4,"s":[2,0,0,0]},"MNE":{"e":4,"s":[1,0,0,0]},"WAL":{"e":4,"s":[1,0,0,0]},"SMR":{"e":3,"s":[1,1,0,0]}};/*QUAL_END*/
+/* Clubs encore en lice apres chacun des quatre tours de qualification, par
+   association. Releve une fois pour la saison depuis les tableaux de
+   confrontations de Wikipedia (voir tools/uefa/parse-wiki.py et survie.py),
+   puis recoupe : engages - elimines doit retrouver l'effectif publie par la
+   source, pour les 53. Fige jusqu'en fevrier — les qualifications sont
+   terminees, il n'y a plus rien a rafraichir ici. */
 /*SURVIE_START*/const SURVIE = {"rel":[["2026-09-17",{"ENG":[5,3,1,9],"ITA":[4,2,1,7],"ESP":[5,2,1,8],"GER":[4,2,1,7],"FRA":[3,3,1,7],"POR":[2,2,1,5],"BEL":[1,2,2,5],"NED":[2,2,2,6],"TUR":[2,1,1,4],"CZE":[1,2,1,4],"POL":[0,2,0,2],"GRE":[1,2,1,4],"NOR":[2,1,1,4],"DEN":[0,0,4,4],"CYP":[0,1,1,2],"SUI":[0,0,2,2],"AUT":[1,2,0,3],"HUN":[0,1,0,1],"SCO":[0,1,1,2],"CRO":[0,1,1,2],"SWE":[0,0,1,1],"ROU":[0,0,1,1],"UKR":[1,0,0,1],"ISR":[0,1,0,1],"AZE":[1,0,0,1],"SVN":[0,1,0,1],"SVK":[1,0,0,1],"BUL":[0,1,1,2],"SRB":[0,0,1,1],"RUS":[0,0,0,0],"ISL":[0,0,0,0],"IRL":[0,0,0,0],"ARM":[0,1,0,1],"KOS":[0,0,0,0],"BIH":[0,0,1,1],"LVA":[0,0,1,1],"FIN":[0,0,1,1],"KAZ":[0,0,1,1],"LIE":[0,0,0,0],"MDA":[0,0,0,0],"FRO":[0,0,0,0],"ALB":[0,0,1,1],"MKD":[0,0,0,0],"BLR":[0,0,0,0],"LTU":[0,0,1,1],"AND":[0,0,1,1],"MLT":[0,0,0,0],"GIB":[0,0,1,1],"EST":[0,0,0,0],"NIR":[0,0,0,0],"GEO":[0,0,1,1],"LUX":[0,0,0,0],"MNE":[0,0,0,0],"WAL":[0,0,0,0],"SMR":[0,0,0,0]}]]};/*SURVIE_END*/
 /*XCHK_START*/const XCHK = {"at":"2026-09-16","src":"kassiesa.net","srcUrl":"https://kassiesa.net/uefa/data/method5/crank2027.html","srcAt":"Thu, 10 Sep 2026 22:58:37 CET","nousAt":"10/09/2026 - 22:57","pays":55,"valeurs":385,"lignes":[["ENG",1,103.13,[23,17.375,29.464,28.68,4.611]],["ITA",2,88.303,[22.357,21,21.875,19,4.071]],["ESP",3,83.243,[16.571,16.062,23.892,22.093,4.625]],["GER",4,81.259,[17.125,19.357,18.421,21.785,4.571]],["FRA",5,68.724,[12.583,16.25,17.928,18.321,3.642]],["POR",6,64.95,[12.5,11,16.25,20.5,4.7]],["BEL",7,59.05,[14.2,14.4,15.65,11.4,3.4]],["NED",8,52.562,[13.5,10,15.25,9.979,3.833]],["TUR",9,49.875,[11.8,12,10.3,11.075,4.7]],["POL",10,45.125,[7.75,6.875,11.75,15.75,3]],["CZE",11,44.725,[6.75,13.5,10.55,11.025,2.9]],["GRE",12,44.212,[2.125,11.4,12.687,14.2,3.8]],["NOR",13,38.612,[5.75,8,11.812,8.05,5]],["DEN",14,38.306,[5.9,8.5,7.656,12.25,4]],["CYP",15,34.193,[5.1,3.75,10.562,12.156,2.625]],["SUI",16,30.2,[8.5,5.2,7.05,6.2,3.25]],["AUT",17,27.65,[4.9,4.8,9.65,4.1,4.2]],["HUN",18,27.312,[5.875,4.5,6.625,7.437,2.875]],["SCO",19,26.25,[3.5,6.4,9.25,5,2.1]],["SWE",20,25.75,[6.25,1.875,11.375,5,1.25]],["CRO",21,25.656,[3.375,5.875,5.875,7.031,3.5]],["ROU",22,24.875,[6.25,3.25,7.75,5.75,1.875]],["UKR",23,24.337,[5.7,4.1,3.6,8.312,2.625]],["ISR",24,23.875,[6.25,8.75,2.875,2.875,3.125]],["AZE",25,23.687,[4,5.875,2.875,5.812,5.125]],["SVN",26,22.843,[2.125,3.875,9.093,6.375,1.375]],["SVK",27,22.375,[6,5,4.625,2.625,4.125]],["BUL",28,20.562,[4.5,4.375,3.625,5.187,2.875]],["SRB",29,18.25,[5.375,1.4,3.725,5.75,2]],["RUS",30,17.332,[4.333,4.333,4.333,4.333,0]],["ISL",31,17.02,[3,3.833,4.562,3.625,2]],["IRL",32,16.343,[3.375,1.5,5.343,4.25,1.875]],["ARM",33,15.812,[2.375,2.25,4.375,4.187,2.625]],["KOS",34,14.031,[2.875,3,2,3.781,2.375]],["BIH",35,13.968,[2,2.25,4.531,3.312,1.875]],["LVA",36,13.875,[2.75,1.625,3.875,2,3.625]],["FIN",37,13.625,[2.625,1.75,2.25,3.625,3.375]],["KAZ",38,12.375,[1.125,3.125,3,3.625,1.5]],["LIE",39,11,[6.5,0.5,0.5,1,2.5]],["MDA",40,10.25,[3.75,2,2.125,1.5,0.875]],["FRO",41,9.875,[2.25,2.75,1.5,1.75,1.625]],["ALB",42,9,[0.875,2.125,1.25,2.25,2.5]],["MKD",43,8.967,[1.625,1.5,0.666,3.343,1.833]],["BLR",44,8.708,[0.625,1.75,1.875,2.125,2.333]],["LTU",45,8.125,[2.375,1.125,1.375,1.125,2.125]],["AND",46,7.832,[0.666,1.666,1,2,2.5]],["MLT",47,7.625,[2.625,1.5,1,2,0.5]],["GIB",48,7.207,[0.875,0.166,1.5,3.333,1.333]],["EST",49,7.041,[1.166,0.125,1.625,1.625,2.5]],["NIR",50,6.625,[1.25,1.125,1.5,1.75,1]],["GEO",51,6.5,[1.125,1.25,1.25,1.125,1.75]],["LUX",52,6.25,[1.125,2.25,1.25,0.75,0.875]],["MNE",53,5.833,[1,1.333,2.5,1,0]],["WAL",54,4.499,[1.166,0.625,2,0.333,0.375]],["SMR",55,2.998,[0.833,0.333,0.666,0.833,0.333]]],"ecarts":[],"absents":[],"verdict":"ok"};/*XCHK_END*/
 /*HIST_START*/const HIST = {"2021":{"ENG":[2.286,2.286,2.286,2.286,2.429,3.857,5,6.714,8.286,10,14.143,14.143,14.143,14.143,14.714,17.286,19.857,21],"ITA":[2.286,2.286,2.286,2.286,2.571,3.429,4.714,5.714,7.143,8.429,11.714,11.714,11.714,11.714,12.714,14.286,14.857,15.429,15.714],"ESP":[2.857,2.857,2.857,2.857,2.857,4,4.857,6.286,7.286,8.286,12.143,12.143,12.143,12.143,13.857,16.429,17.714,18.143,18.429],"GER":[2.286,2.286,2.286,2.286,2.5,3.643,5.214,5.929,7.214,8.5,11.786,11.786,11.786,11.786,12.5,13.786,15.071,16.071,16.214],"FRA":[1.333,1.333,1.333,1.667,2.083,3.417,4.75,6.417,7.917,9.083,14.417,14.417,14.417,14.417,15.083,17.25,18.25,18.417],"POR":[2,2,2.333,3.167,3.75,4.083,4.75,5.75,6.583,7.083,9.583,9.583,9.583,9.583,10.75,12.417,12.917],"BEL":[0.8,0.8,1,1.7,2.2,3.2,4,4.6,5,5.4,6.6,6.6],"NED":[0.8,0.8,1.5,2.6,3.4,4.8,6.4,8,9.4,10.8,14.4,14.4,14.4,14.4,15.4,17.4,18.4,19.2],"TUR":[0.8,0.8,1.2,2,2.7,3.3,3.5,4.1,4.7,5.1,6.5,6.5,6.5,6.5,6.5,6.7],"POL":[0,1,2.25,3,3.625,4.125,4.625,4.625],"CZE":[0,0,0.8,1.2,1.9,2.9,3.3,3.5,4.1,4.5,5.3,5.3,5.3,5.3,6.1,6.5,6.7],"GRE":[0,0,1,1.5,2.25,3.25,4,4.5,4.5,5.25,6.5,6.5,6.5,6.5,7,8],"NOR":[0,0,1.5,2.5,2.875,3.375,3.625,4.125,4.375,4.875,5.375,5.375,5.375,5.375,6.375,7.125,7.625],"DEN":[0,0,0.8,1.1,1.6,2.6,3.2,3.6,4.8,6,7.2,7.2,7.2,7.2,7.6,7.8],"CYP":[0,0,0.625,1.25,1.875,2.125,2.125,2.375,2.875,3.625,4.125,4.125],"SUI":[1,1,2.125,3,3.75,4.5,5,5.5,5.75,6.5,7.75,7.75]},"2022":{"ENG":[2.286,2.286,2.286,2.286,2.571,3.714,5.286,7.143,9,10.429,16.571,16.571,16.571,16.571,17.143,19.857,21.143,22.429,23],"ITA":[2.286,2.286,2.286,2.286,2.5,3.357,4.5,5.786,6.786,8.5,11.929,11.929,11.929,11.929,13.929,17.643,20.357,22.214,22.357],"ESP":[2.286,2.286,2.286,2.286,2.571,4.286,5.571,6.714,8,9.143,12.429,12.429,12.429,12.429,13,14.429,15.714,16.429,16.571],"GER":[2.5,2.5,2.5,2.5,2.625,3.5,4.75,6.125,7.25,8.875,13.75,13.75,13.75,13.75,14.625,16.375,17,17.125],"FRA":[1.333,1.333,1.333,1.417,1.583,3.083,3.75,5.25,6.083,7.417,10.917,10.917,10.917,10.917,11.75,12.417,12.583],"POR":[2,2,2.25,3,3.333,4.333,5.333,5.833,6.5,7.333,10,10,10,10,10.667,12.167,12.5],"BEL":[0.8,0.8,1.1,2.1,2.4,3.8,5.2,6,6.4,7.2,10.6,10.6,10.6,10.6,11.4,13.4,14.2],"NED":[0.8,0.8,1.2,2.1,2.7,3.7,4.5,5.5,6.1,6.9,10.3,10.3,10.3,10.3,10.9,12.5,13.5],"TUR":[0,0,0.8,1.6,2.4,3.4,4.8,5.4,7,7.6,10.8,10.8,10.8,10.8,11.2,11.8],"POL":[0,1,2.125,2.875,3.5,3.5,4,4.25,4.5,4.75,5.5,5.5,5.5,5.5,6.25,7.25,7.75],"CZE":[1,1,2.125,3.125,4.25,4.75,5.25,5.25,5.75,6.25,6.75,6.75],"GRE":[0,0,0.75,1.375,1.625,1.625,1.625,1.625,1.875,2.125,2.125],"NOR":[0,0.25,1.875,2.75,3.5,4,4.5,5,5.5,5.5,5.5,5.5,5.5,5.5,5.75],"DEN":[0.8,0.8,1.7,2.3,2.7,2.7,3.3,3.9,4.7,4.7,5.7,5.7,5.7,5.7,5.9],"CYP":[0,0,0.7,1.5,2.7,2.9,3.3,3.3,3.7,3.9,4.5,4.5,4.5,4.5,5.1],"SUI":[0,0,1,2.25,3.25,3.75,4.25,4.25,4.5,5.25,6,6,6,6,6.5,7,8,8.5]},"2023":{"ENG":[2,2,2,2,2.25,3.375,4.75,6.25,7.5,9.25,13.625,13.625,13.625,13.625,13.625,16.25,17.375],"ITA":[2.286,2.286,2.286,2.286,2.429,3.857,5.286,6.571,8.143,9.143,14,14,14,14,14.857,17.714,19.429,20.714,21],"ESP":[2.5,2.5,2.5,2.5,2.563,3.438,5.063,6.313,7.563,8.688,12.688,12.688,12.688,12.688,12.813,14.438,15.313,15.813,16.063],"GER":[2.286,2.286,2.286,2.286,2.5,3.929,4.643,6.357,8.214,9.357,13.643,13.643,13.643,13.643,14.357,16.357,17.929,19.357],"FRA":[1.333,1.333,1.333,1.5,1.75,3.25,4.25,5.75,6.917,8.25,11.583,11.583,11.583,11.583,12.917,14.75,16.083,16.25],"POR":[2,2,2.167,2.667,3,3.667,4,4.5,5.167,5.667,7.833,7.833,7.833,7.833,9.5,10.667,11],"BEL":[0.8,0.8,1.6,2.3,4,4.8,6,7.4,8.4,9.4,11.6,11.6,11.6,11.6,12.4,13.2,14.2,14.4],"NED":[1.6,1.6,1.9,3.1,3.8,4.4,5.2,5.8,6.2,7,8.6,8.6,8.6,8.6,9.6,10],"TUR":[1,1,2.75,4.5,6.25,7.25,8.25,8.75,8.75,9,10.5,10.5,10.5,10.5,11,11.5,12],"POL":[0,0.5,2.25,3.5,3.875,4.375,4.375,5.125,5.625,6.125,6.875,6.875],"CZE":[0,0,0.375,1.5,2.5,4,5,5.75,6.75,8.25,12,12,12,12,12.75,13.25,13.5],"GRE":[0,0,0.9,2.2,3,4.2,5.2,6,6.2,6.6,7.8,7.8,7.8,7.8,8.6,9.4,10,11,11.4],"NOR":[0,0,1.125,2.375,3,3.25,3.25,4.25,5.25,6,6.25,6.25,6.25,6.25,7.5,8],"DEN":[1,1,2,2.875,4,4.25,4.75,5.25,6,6.75,8.5,8.5],"CYP":[0,0,1.875,2.75,3,3,3.5,3.5,3.5,3.75,3.75],"SUI":[0.8,0.8,1.5,1.7,2,2.2,2.8,3,3.4,4,4,4,4,4,4.8,5.2]},"2024":{"ENG":[3.429,3.429,3.429,3.429,3.571,5.143,7,8.857,9.714,11.286,12.857,14,15.429,20.893,20.893,24.25,26.821,28.893,29.464],"ITA":[3.75,3.75,3.75,3.75,3.875,5.125,6.375,7.5,9,10.375,11.625,13,13.75,17.313,18.188,19.938,21.188,21.875],"ESP":[3.429,3.429,3.429,3.429,3.714,4.571,5.286,7,7.857,9.286,11,11.857,13.143,17.179,19.036,21.679,23.25,23.893],"GER":[3.75,3.75,3.75,3.75,4,5.25,6.625,7.5,8.375,9.375,10.375,11.125,12.125,14.672,16.047,17.922,18.422],"FRA":[3.429,3.429,3.429,3.643,3.929,5.214,6.214,7.071,8.071,8.643,9.786,10.5,11.357,13.929,14.857,16.214,16.857,17.643,17.929],"POR":[2.4,2.4,3.2,3.9,4.6,6.2,7.4,8.6,9.4,10.8,11.6,11.6,13,14.75,16.05,16.25],"BEL":[1.2,1.2,1.9,2.4,3.4,4.2,5.6,6.6,7.8,9.4,10.8,11.4,11.4,13.15,15.25,15.65],"NED":[2,2,2.417,2.667,3,3.833,4.667,5.5,6.667,7.333,8,9.333,10.333,11.917,14.75,15.25],"TUR":[0,0,1.2,1.7,2.5,3.3,3.7,4.9,5.9,6.9,7.3,8.1,8.3,8.9,9.9,10.3],"POL":[0,0.5,1.75,2.625,3.375,4.375,5.375,6.375,7.125,7.125,7.375,7.375,7.375,8.625,9.75,11,11.75],"CZE":[1.2,1.2,2.4,4,5.3,6.3,6.9,7.1,7.9,8.7,8.7,9.1,9.3,9.75,10.35,10.55],"GRE":[0,0,1.5,2.125,2.875,3.125,3.625,4.375,5.125,6.375,7.625,8.625,9.125,11.063,11.688,12.688],"NOR":[0,0,1.625,2.875,3.625,4.625,4.875,5.375,5.375,5.625,6.625,7.125,7.375,8.438,9.813,11.063,11.813],"DEN":[0,0,1.625,2.5,3,3.25,4,4.75,5.25,5.75,5.75,6.25,6.5,7.032,7.657],"CYP":[0,0,1.125,2,2.75,4,4,5,5.5,7,7.75,7.75,7.75,8.69,10.065,10.565],"SUI":[1.2,1.2,1.9,2.5,3.4,3.8,4.2,4.6,5.2,5.6,6,6,6,6.65,6.65,7.05]},"2025":{"ENG":[4,4,4,4,4.167,5.611,6.722,8.389,9.944,11.056,12.611,13.944,15.611,20.959,22.292,24.792,26.57,28.126,28.681],"ITA":[3.429,3.429,3.429,3.429,3.714,4.714,6.143,6.857,8.143,9.857,11,11.857,12.714,15.5,17.357,18.714,19],"ESP":[3.75,3.75,3.75,3.75,4,4.875,6.125,7.5,8.375,9.5,10.625,11.75,12.375,15.531,17.406,20.281,21.406,22.094],"GER":[3.429,3.429,3.429,3.429,3.571,5.286,6.429,7.571,8.857,10,11.429,12,12.857,16.214,17.571,19.429,21.214,21.786],"FRA":[2.571,2.571,2.571,2.571,2.786,3.929,5.357,6.357,6.929,8.5,9.786,10.357,11.214,13.75,14.964,16.393,17.536,18.179,18.321],"POR":[2.4,2.4,2.9,4,4.8,6,6.8,7.6,8,9.4,10.6,11.6,13,16.6,16.6,18.9,20.1,20.5],"BEL":[2.4,2.4,2.7,3.4,4.1,5.3,5.3,5.5,6.1,6.9,6.9,7.7,8.9,10,11,11.4],"NED":[2,2,2.5,3.333,3.917,3.917,4.75,5.75,6.417,7.083,7.583,8.25,8.417,8.647,9.063,9.813,9.98],"TUR":[1.2,1.2,1.6,2.5,2.8,3.2,4.4,5.6,6.4,6.6,7,7.2,7.4,8.276,10.276,11.076],"POL":[0,0.5,2.375,3.375,4.875,6.375,7.375,7.875,9.375,10.125,11.875,11.875,11.875,13.625,15.25,15.75],"CZE":[1.2,1.2,1.7,2.6,2.8,3.6,4.2,5.4,6.4,7.2,7.8,8,8.4,9.726,10.826,11.026],"GRE":[1.2,1.2,1.7,2.5,3.3,4.1,4.5,5.1,6.5,7.5,8.7,9.7,10.3,12.1,12.9,13.8,14.2],"NOR":[1.2,1.2,2.1,2.7,3.6,3.8,4.4,4.8,5,5.2,5.4,6,6.4,6.55,7.65,8.05],"DEN":[1.5,1.5,3.125,4.375,5.375,6.125,6.625,7.125,7.625,8.125,9.125,9.625,10.125,11.75,11.75,12.25],"CYP":[1.5,1.75,3.5,4.875,5.5,6.25,7,7.75,9,10,10.5,10.5,11,11.908,11.908,12.158],"SUI":[0,0,0.5,1.1,2,2.4,3.6,4.2,4.6,4.8,5.6,5.6,5.6,6,6.2]}};/*HIST_END*/
@@ -831,7 +838,13 @@ const anomalous = played.filter(i => i > firstMain && !played.includes(i-1));
    coefficient de saison, avec échec de publication si le rapport n'est pas entier).
    On le lit plutôt que de le recalculer ; le calcul reste en secours pour les
    captures antérieures à ce champ. */
-const divisor = n => n.divisor ?? (n.y[4] > 0 ? Math.round(n.tp / n.y[4]) : null);
+/* Le diviseur, dans l'ordre : le champ publie ; a defaut l'effectif releve
+   dans les tableaux de qualification (bloc QUAL) ; a defaut la division du
+   total de saison par le coefficient. La source ne publie pas le champ pour
+   une association qui n'a marque aucun point — sa propre deduction bute sur
+   une division par zero. Le Montenegro et ses quatre clubs disparaissaient
+   ainsi de la page : ni dans les 233 engages, ni dans la liste des pays. */
+const divisor = n => n.divisor ?? (QUALS[n.c] ? QUALS[n.c].e : (n.y[4] > 0 ? Math.round(n.tp / n.y[4]) : null));
 
 /* ---------- clubs engagés, clubs encore en vie ----------
    Deux nombres différents, et c'est tout l'objet de la section « Les clubs encore
@@ -3105,6 +3118,12 @@ const legende = segs => segs.map(s =>
   const engV = c => c === EUR ? totEng / nEng : engages(BY[c]);
   const vieV = c => c === EUR ? ENGAGEES.reduce((a, n) => a + enVie(n), 0) / nEng : enVie(BY[c]);
   const fmtV = v => Number.isInteger(v) ? String(v) : nf(v, 1);
+  /* Effectif apres chacun des quatre tours. Plus une pente qui traverse les
+     colonnes faute de savoir : le bloc QUAL donne la vraie marche, tour par
+     tour, et elle tombe exactement sur sa colonne. */
+  const serieV = c => c === EUR
+    ? [0,1,2,3].map(i => ENGAGEES.reduce((a, n) => a + (QUALS[n.c] ? QUALS[n.c].s[i] : enVie(n)), 0) / nEng)
+    : (QUALS[c] ? QUALS[c].s : null);
 
   function cadre(hi, H){
     const W = 1000, mT = 40, mB = 44, mL = 44, mR = 18;
@@ -3149,14 +3168,22 @@ const legende = segs => segs.map(s =>
 
   /* Etiquettes de fin de courbe : trois nations a 7 clubs se posent au meme pixel
      et deviennent une bouillie. On les ecarte verticalement du strict minimum, en
-     partant du haut, sans jamais toucher a la courbe elle-meme. */
-  function poseEtiquettes(items, hMin, bas){
+     partant du haut, sans jamais toucher a la courbe elle-meme.
+     La correction de depassement est LOCALE. Elle etait globale : quand le
+     paquet du bas debordait le plancher, on retranchait le depassement a TOUTES
+     les etiquettes, et celle d'en haut — qui avait cent pixels de libre autour
+     d'elle — se retrouvait decollee de sa courbe de quarante pixels. */
+  function poseEtiquettes(items, hMin, bas, haut){
     const o = items.slice().sort((a, b) => a.y - b.y);
     for (let i = 1; i < o.length; i++) if (o[i].y - o[i-1].y < hMin) o[i].y = o[i-1].y + hMin;
-    const trop = o.length ? o[o.length-1].y - bas : 0;
-    if (trop > 0) for (let i = o.length - 1; i >= 0; i--)
-      o[i].y = Math.min(o[i].y - trop, i ? o[i-1].y + 1e9 : o[i].y - trop);
-    for (let i = o.length - 2; i >= 0; i--) if (o[i+1].y - o[i].y < hMin) o[i].y = o[i+1].y - hMin;
+    if (o.length && o[o.length-1].y > bas) {            /* le bas deborde : on remonte */
+      o[o.length-1].y = bas;
+      for (let i = o.length-2; i >= 0; i--) o[i].y = Math.min(o[i].y, o[i+1].y - hMin);
+    }
+    if (o.length && haut != null && o[0].y < haut) {    /* et le haut, si besoin */
+      o[0].y = haut;
+      for (let i = 1; i < o.length; i++) o[i].y = Math.max(o[i].y, o[i-1].y + hMin);
+    }
     return o;
   }
 
@@ -3175,25 +3202,31 @@ const legende = segs => segs.map(s =>
        quelques centiemes de club — assez pour les distinguer, trop peu pour
        tromper la lecture, et la grille reste sur les entiers. */
     const dec = i => (i - (list.length - 1) / 2) * 0.075;
-    const xQ = f.xP(1), xn = xNow(f);
+    const xn = xNow(f);
     const etiq = [];
     list.forEach((c, i) => {
       const e = engV(c), v = vieV(c), o = dec(i);
       const col = `var(${PALV[c] || '--ink-3'})`, gras = c === 'FRA' || c === EUR;
       const w = c === 'FRA' ? 2.8 : (c === EUR ? 2.4 : 1.8);
       const yE = f.Y(e + o), yV = f.Y(v + o);
-      /* UN SEUL TRAIT PLEIN, du 1er juillet a aujourd'hui. Il descend sur toute
-         la phase qualificative puis reste plat : c'est exactement ce que dit la
-         source. Le pointille d'avant voulait signaler « date inconnue » et ne
-         disait qu'une chose au lecteur — que le graphe hesitait. La nuance est
-         desormais dans la legende, et le trait, lui, est net. */
-      g += `<path d="M${f.mL.toFixed(1)} ${yE.toFixed(1)} L${xQ.toFixed(1)} ${yV.toFixed(1)} L${xn.toFixed(1)} ${yV.toFixed(1)}"`
-        + ` fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"/>`;
-      g += `<circle cx="${f.mL.toFixed(1)}" cy="${yE.toFixed(1)}" r="${gras?3.4:2.6}" fill="none" stroke="${col}" stroke-width="${w}"/>`
-        + `<circle cx="${xQ.toFixed(1)}" cy="${yV.toFixed(1)}" r="${gras?3.4:2.6}" fill="${col}"/>`;
-      /* Pas de « -3 » pose sur la pente : deux pentes voisines collaient leurs
-         deux nombres l'un sur l'autre, et l'etiquette de droite (« 1/4 ») dit
-         deja combien il en reste sur combien. */
+      /* UN ESCALIER, plein, du 1er juillet a aujourd'hui. Chaque marche tombe
+         sur la colonne du tour ou elle s'est produite : c'est le grand livre
+         des qualifications qui la date, plus une interpolation. Puis le trait
+         reste plat — la phase de ligue n'elimine personne avant janvier. */
+      const ser = serieV(c) || [v, v, v, v];
+      let d = `M${f.mL.toFixed(1)} ${yE.toFixed(1)}`, prec = e;
+      for (let j = 0; j < 4; j++) {
+        const x = f.xC(0, j), y = f.Y(ser[j] + o);
+        d += ` L${x.toFixed(1)} ${f.Y(prec + o).toFixed(1)}`;
+        if (Math.abs(ser[j] - prec) > 1e-9) {
+          d += ` L${x.toFixed(1)} ${y.toFixed(1)}`;
+          g += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${gras?3.2:2.4}" fill="${col}"/>`;
+        }
+        prec = ser[j];
+      }
+      d += ` L${xn.toFixed(1)} ${yV.toFixed(1)}`;
+      g += `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"/>`;
+      g += `<circle cx="${f.mL.toFixed(1)}" cy="${yE.toFixed(1)}" r="${gras?3.4:2.6}" fill="none" stroke="${col}" stroke-width="${w}"/>`;
       const txt = `${nomV(c)} ${fmtV(v)}/${fmtV(e)}`;
       etiq.push({ y: yV + 4, yv: yV, col, fr: gras, txt,
                   x: Math.min(xn + 9, f.W - 6 - txt.length * 6.1) });
@@ -3201,7 +3234,7 @@ const legende = segs => segs.map(s =>
     /* Plancher : le bas du cadre. Y(0) tombe exactement sur l'axe ; un plancher
        plus haut poussait les etiquettes a zero vers le haut, et la cascade
        remontait jusqu'a sortir la premiere courbe du graphe. */
-    poseEtiquettes(etiq, 14, H - f.mB + 2).forEach(e => {
+    poseEtiquettes(etiq, 14, H - f.mB + 2, f.mT + 6).forEach(e => {
       if (Math.abs(e.y - 4 - e.yv) > 2)
         g += `<line x1="${(xn+3).toFixed(1)}" y1="${e.yv.toFixed(1)}" x2="${(e.x-2).toFixed(1)}" y2="${(e.y-4).toFixed(1)}" stroke="${e.col}" stroke-width="1" opacity=".5"/>`;
       g += `<text x="${e.x.toFixed(1)}" y="${e.y.toFixed(1)}" font-size="11.5" font-weight="${e.fr?700:600}" fill="${e.col}">${e.txt}</text>`;
@@ -3213,24 +3246,25 @@ const legende = segs => segs.map(s =>
   function legSurv(){}
 
   function capSurv(){
-    const n1 = SURV.length;
     const viv = ENGAGEES.reduce((a, n) => a + enVie(n), 0);
     const list = [...selV].filter(c => c === EUR || BY[c]);
     const nats = list.filter(c => c !== EUR);
     const plats = nats.filter(c => elimines(BY[c]) === 0);
+    const parTour = [0,1,2,3].map(i => ENGAGEES.reduce((a, n) => {
+      const q = QUALS[n.c]; if (!q) return a;
+      return a + ((i ? q.s[i-1] : q.e) - q.s[i]); }, 0));
     document.getElementById('capSurv').innerHTML =
       `Nombre de clubs encore en lice, du 1<sup>er</sup> juillet à la finale. `
-      + `<b>L'axe n'est pas le temps, ce sont les tours</b> : les trois phases occupent chacune un tiers de la largeur, quel que soit le nombre de semaines qu'elles pèsent au calendrier. Les quatre tours de l'été tenaient dans 8 % d'un axe chronologique — invisibles, alors que c'est là que tout s'est passé jusqu'ici. `
-      + `<b>Un seul trait, plein, du départ à aujourd'hui.</b> Il descend sur la phase qualificative, puis reste plat : la phase de ligue n'élimine personne, le tri s'y fait au classement et ne tombe qu'à la 8<sup>e</sup> journée. Rien n'est tracé au-delà d'aujourd'hui. `
-      + `<b>Ce que la pente ne dit pas</b>, faute de source : quel soir exactement chaque club est sorti. Aucun site ne publie la date d'élimination club par club — on connaît l'effectif au départ et l'effectif à l'entrée en phase de ligue, pas le détail Q1 / Q2 / Q3. La pente relie donc les deux points connus en traversant les quatre colonnes ; le nombre posé dessus est le total de clubs perdus dans l'été. `
-      + `Les colonnes, elles, sont exactes : ce sont les vrais tours, et elles montrent où l'écrémage reste à venir. `
-      + `<b>${totEng - viv} des ${totEng} clubs engagés sont déjà sortis</b>, tous pendant les qualifications ; la prochaine coupe est fin janvier, à la sortie de la phase de ligue, puis c'est un tour tous les quinze jours jusqu'en juin. `
-      + `L'effectif du jour vient de la source, archivé à chaque changement (${n1} relevé${n1>1?'s':''} depuis le ${frDate(SURV[0][0])}). `
-      + `<b>Huit courbes au maximum, tirées au sort</b> à l'arrivée sur la page : c'est le seul bloc où le classement ne dit rien — une association à trois clubs perd son effectif aussi vite qu'une autre à neuf, et les huit premières donnent huit traits plats. Le bouton rejoue le tirage. `
-      + `<b>« Moyenne des ${nEng} »</b> se choisit comme une nation : les ${totEng} clubs européens ramenés aux ${nEng} associations, soit un effectif moyen de ${nf(totEng/nEng, 1)}. C'est la seule courbe qui descende franchement. `
+      + `<b>L'axe n'est pas le temps, ce sont les tours</b> : les trois phases occupent chacune un tiers de la largeur, quel que soit le nombre de semaines qu'elles pèsent au calendrier. Les quatre tours de l'été tenaient dans 8 % d'un axe chronologique — invisibles, alors que c'est là que tout s'est joué jusqu'ici. `
+      + `<b>Chaque marche tombe sur le tour où elle s'est produite.</b> ${parTour[0]} clubs sont sortis d'Europe au 1<sup>er</sup> tour, ${parTour[1]} au 2<sup>e</sup>, ${parTour[2]} au 3<sup>e</sup> et ${parTour[3]} aux barrages — ${totEng - viv} sur ${totEng} engagés. `
+      + `<b>Sortir d'une compétition n'est pas sortir d'Europe</b> : un club éliminé de la C1 bascule en C3 ou en C4 et continue. Un club ne quitte le graphe qu'à sa dernière défaite, toutes compétitions confondues ; les clubs reversés directement en phase de ligue, sans autre match, restent comptés vivants. `
+      + `Puis le trait reste plat : la phase de ligue n'élimine personne, le tri s'y fait au classement et ne tombe qu'à la 8<sup>e</sup> journée. Rien n'est tracé au-delà d'aujourd'hui. `
+      + `<b>D'où viennent ces marches</b> : des tableaux de confrontations des trois compétitions, relevés une fois pour la saison. La source du site, elle, ne publie que l'effectif du jour — jamais la date de sortie. Le relevé est recoupé association par association : <b>engagés − éliminés = encore en lice</b>, et les ${nEng} égalités tombent juste. `
+      + `<b>Huit courbes au maximum, tirées au sort</b> à l'arrivée sur la page : c'est le seul bloc où le classement ne dit rien — une association à trois clubs perd son effectif aussi vite qu'une autre à neuf, et les huit premières donnent huit traits presque plats. Le bouton rejoue le tirage. `
+      + `<b>« Moyenne des ${nEng} »</b> se choisit comme une nation : les ${totEng} clubs européens ramenés aux ${nEng} associations, soit un effectif moyen de ${nf(totEng/nEng, 1)} au départ. `
       + (nats.length && plats.length === nats.length
           ? `Aucune des nations affichées n'a perdu un club cet été : leurs traits sont plats de bout en bout. `
-          : nats.length ? `${nats.length - plats.length} des ${nats.length} nations affichées ont déjà perdu des clubs pendant les qualifications. ` : '')
+          : nats.length ? `${nats.length - plats.length} des ${nats.length} nations affichées ont perdu des clubs pendant les qualifications. ` : '')
       + `Les courbes sont décalées de quelques centièmes de club pour rester distinctes : sans ça, deux nations au même effectif se superposeraient exactement.`;
   }
 

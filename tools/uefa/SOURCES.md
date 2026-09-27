@@ -72,3 +72,30 @@ automatique. Modifier le collecteur sans mettre à jour `expected.json` fait
 Pour renouveler la capture, ouvrir une des pages du site dans un navigateur et,
 depuis la console, récupérer les quatre pages en même origine puis les enregistrer
 en JSON `{jw, pkt, sptgQ, sptgG}`.
+
+## Dates de sortie des clubs, saison 2026/27
+
+`tools/uefa/wiki/` — une ligne par club et par tour de qualification.
+
+La source du classement publie l'effectif engagé et l'effectif encore en lice,
+jamais la date de sortie. Les tableaux de confrontations des trois compétitions
+la donnent : deux équipes, leur pays par le drapeau, le vainqueur en gras.
+
+Chaîne : trois pages enregistrées à la main depuis le navigateur (les
+qualifications de C1, C3 et C4) → `parse-wiki.py` → `qualifs-2026-27.json`
+(430 participations) → `survie.py` → `survie-2026-27.json` et le bloc `QUAL`
+de `page.html`.
+
+Deux règles que les tableaux ne disent pas, et qui sont dans `survie.py` :
+un club n'est éliminé qu'à sa **dernière** défaite toutes compétitions
+confondues (sortir de C1 en juillet, c'est basculer en C3) ; et trois défaites
+mènent directement à une phase de ligue, sans autre match — barrage de C1,
+troisième tour de C1 côté League Path, barrage de C3.
+
+Contrôle : `engagés − éliminés = encore en lice`, pour les 54 associations.
+Il passe. C'est lui qui a révélé que le Monténégro manquait au décompte des
+engagés, la source ne pouvant pas déduire son diviseur d'un coefficient de
+saison nul.
+
+Figé jusqu'en février : les qualifications sont terminées, il n'y a rien à
+rafraîchir. Les sorties de phase finale demanderont le même relevé.
