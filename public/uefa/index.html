@@ -391,7 +391,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "dim. 27 sept. 2026 21h48";</script>
+<script>window.PUBLIE = "dim. 27 sept. 2026 22h06";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -543,7 +543,7 @@ body{margin:0}</style>
 
   <div class="panel">
     <div class="ptitle"><span class="no">7b</span><h3>La courbe de survie</h3>
-      <span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">la saison entière · un repère par soir d'élimination</span></span></span></div>
+      <span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">tour par tour · trois phases à largeur égale</span></span></span></div>
     <div class="chips" id="vchips"></div>
     <figure>
       <div class="chartbox" id="boxSurv"><svg id="chartSurv" role="img" aria-label="Nombre de clubs encore en lice au fil de la saison"></svg></div>
@@ -3069,95 +3069,78 @@ const legende = segs => segs.map(s =>
     const libres = JETONS.filter(t => !pris.has(t));
     PALV = {}; let i = 0;
     for (const c of list) PALV[c] = c === EUR ? '--ink-2' : (SLOT[c] || libres[i++] || '--ink-3'); };
-  /* ---- l'echelle de temps : la saison entiere, et les soirs ou l'on ecreme ----
-     L'axe courait du 1er juillet au dernier releve plus trois semaines : il
-     montrait ou l'on en est, jamais ou l'on va. Il court maintenant du 1er
-     juillet a la derniere finale, avec un repere a chaque tour eliminatoire.
-     Les quatre cinquiemes de droite sont vides — c'est exactement le propos :
-     l'ecremage n'a pas commence, il est devant. */
-  const JUL = '2026-07-01';
+  /* ---- l'axe : TROIS PHASES DE MEME LARGEUR, et non le temps ----
+     L'axe chronologique ecrasait les quatre tours de l'ete dans 8 % de la
+     largeur et laissait cinq mois de vide a droite : illisible la ou tout se
+     joue, vide partout ailleurs. Chaque phase prend donc un tiers de l'axe,
+     quel que soit le nombre de semaines qu'elle occupe au calendrier. On ne lit
+     pas une chronologie ici, on lit un parcours d'elimination, tour par tour.
+     Le vocabulaire et le bandeau de phases sont ceux du calendrier du bloc 0 —
+     « Phase qualificative », « Phase de ligue », « Phase finale » — pour qu'on
+     parle de la meme chose d'un bloc a l'autre. */
   const t = iso => dOf(iso).getTime();
-  const tard = a => a.slice().sort().pop();
-  const tot = a => a.slice().sort()[0];
-  /* Fin de la phase qualificative : le dernier match de barrage des trois
-     competitions, pas seulement de la C1 — la C3 et la C4 jouent deux jours plus
-     tard, et c'est la derniere soiree qui clot les eliminations de l'ete. */
-  const finQual  = tard([0,1,2].map(k => QUAL[k][3][2]));
-  const debQual  = tot ([0,1,2].map(k => QUAL[k][0][1]));
-  const debLigue = tot ([0,1,2].map(k => CAL[k][0][0]));
-  const finLigue = tard([0,1,2].map(k => CAL[k][CAL[k].length-1][0]));
-  const debKO    = tot ([0,1,2].map(k => KO[k][0][1]));
-  const finKO    = i => tard([0,1,2].map(k => KO[k][i][KO[k][i].length - 1]));
-  /* Les dix soirs ou un club peut sortir. La date retenue est celle du DERNIER
-     match du tour, toutes competitions confondues : c'est la que la coupe est
-     consommee, pas au match aller. */
-  const ETAPES = [
-    { s:'Q1',           d: tard([0,1,2].map(k => QUAL[k][0][2])), l:'Fin du 1er tour de qualification' },
-    { s:'Q2',           d: tard([0,1,2].map(k => QUAL[k][1][2])), l:'Fin du 2e tour de qualification' },
-    { s:'Q3',           d: tard([0,1,2].map(k => QUAL[k][2][2])), l:'Fin du 3e tour de qualification' },
-    { s:'Bar.',         d: finQual,   l:"Fin des barrages d'accès" },
-    { s:'fin de ligue', d: finLigue,  l:'Fin de la phase de ligue — les non-qualifiés sortent' },
-    { s:'PO',           d: finKO(0),  l:'Barrages de phase finale' },
-    { s:'8es',          d: finKO(1),  l:'8es de finale' },
-    { s:'1/4',          d: finKO(2),  l:'Quarts de finale' },
-    { s:'1/2',          d: finKO(3),  l:'Demi-finales' },
-    { s:'F',            d: finKO(4),  l:'Finales' },
+  const TOURS = [
+    { ph:'Phase qualificative', teinte:'--n4', cols: QUAL[0].map(q => q[0]) },
+    { ph:'Phase de ligue',      teinte:'--fr', cols: Array.from({length: 8}, (_, i) => 'J' + (i+1)) },
+    { ph:'Phase finale',        teinte:'--n7', cols: KO[0].map(k => k[0]) },
   ];
-  const PHASES = [
-    { lab:'qualifications', a: debQual,  b: finQual  },
-    { lab:'phase de ligue', a: debLigue, b: finLigue },
-    { lab:'phase finale',   a: debKO,    b: finKO(4) },
-  ];
+  const jouees7 = k => CAL[k].filter(([iso]) => kickAt(iso) < TODAY).length;
+  const jFaites = Math.max(jouees7(0), jouees7(1), jouees7(2));
 
   /* ---- la moyenne europeenne, selectionnable comme une nation ----
      C'etait une VUE separee ("toute l'Europe"), donc un bouton de plus et une
      lecture qu'on ne pouvait pas comparer a la sienne. C'est maintenant une
-     entite du meme filtre : la somme des 233 clubs ramenee aux 53 associations,
-     soit un effectif moyen de 4,4 — la meme echelle que n'importe quelle
-     nation, et la seule courbe qui descende vraiment aujourd'hui. */
+     entite du meme filtre : les 233 clubs ramenes aux 53 associations, soit un
+     effectif moyen de 4,4 — la meme echelle que n'importe quelle nation. */
   const EUR = '__EUR';
   const nEng = ENGAGEES.length;
   const totEng = ENGAGEES.reduce((a, n) => a + engages(n), 0);
   const nomV = c => c === EUR ? `Moyenne des ${nEng}` : name(c);
   const engV = c => c === EUR ? totEng / nEng : engages(BY[c]);
   const vieV = c => c === EUR ? ENGAGEES.reduce((a, n) => a + enVie(n), 0) / nEng : enVie(BY[c]);
-  const relV = (c, m) => c === EUR
-    ? ENGAGEES.reduce((a, n) => a + (m[n.c] ? m[n.c][3] : 0), 0) / nEng
-    : (m[c] ? m[c][3] : null);
   const fmtV = v => Number.isInteger(v) ? String(v) : nf(v, 1);
 
   function cadre(hi, H){
-    const t0 = t(JUL), t1 = t(finKO(4)) + 6048e5;
-    const W = 1000, mT = 30, mB = 52, mL = 46, mR = 18;
-    const X = ms => mL + (W - mL - mR) * ((ms - t0) / (t1 - t0));
+    const W = 1000, mT = 40, mB = 44, mL = 44, mR = 18;
+    const L = (W - mL - mR) / 3;
+    const xP = i => mL + i * L;                                  /* debut de phase */
+    const xC = (ph, i) => mL + ph * L + L * (i + 1) / TOURS[ph].cols.length;   /* fin du tour i */
     const Y = v => mT + (H - mT - mB) * (1 - v / hi);
-    return { W, H, mT, mB, mL, mR, t0, t1, X, Y };
+    return { W, H, mT, mB, mL, mR, L, xP, xC, Y };
   }
+
   function grille(f){
     let g = '';
-    /* les trois grandes fenetres de la saison, en fond */
-    PHASES.forEach((ph, i) => {
-      const x0 = f.X(t(ph.a)), x1 = f.X(t(ph.b));
-      g += `<rect x="${x0.toFixed(1)}" y="${f.mT}" width="${(x1-x0).toFixed(1)}" height="${f.H-f.mB-f.mT}" fill="var(--n${i*2+2})" opacity=".06"/>`
-        + `<text x="${((x0+x1)/2).toFixed(1)}" y="${f.mT-9}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--ink-3)">${ph.lab}</text>`;
+    /* Bandeau de phases : meme dessin que le calendrier du bloc 0 — une pastille
+       nommee, et deux frontieres pleine hauteur, parce que ce sont de vrais
+       changements de regime et pas des decoupages decoratifs. */
+    TOURS.forEach((T, i) => {
+      const x1 = f.xP(i), x2 = f.xP(i + 1);
+      g += `<rect x="${(x1+1).toFixed(1)}" y="4" width="${(x2-x1-2).toFixed(1)}" height="19" rx="4" fill="var(${T.teinte})" opacity=".26"/>`
+        + `<line x1="${x1.toFixed(1)}" y1="4" x2="${x1.toFixed(1)}" y2="${f.H-f.mB}" stroke="var(--rule)" stroke-width="1"/>`
+        + `<line x1="${x2.toFixed(1)}" y1="4" x2="${x2.toFixed(1)}" y2="${f.H-f.mB}" stroke="var(--rule)" stroke-width="1"/>`
+        + `<text x="${((x1+x2)/2).toFixed(1)}" y="17.5" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing=".05em" fill="var(--ink-2)">${T.ph}</text>`;
     });
     for (let v = 0; v <= f.hiV + 1e-9; v += 1)
       g += `<line x1="${f.mL}" y1="${f.Y(v).toFixed(1)}" x2="${f.W-f.mR}" y2="${f.Y(v).toFixed(1)}" stroke="var(--rule-soft)"/>`
         + `<text x="${f.mL-8}" y="${(f.Y(v)+4).toFixed(1)}" text-anchor="end" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${v}</text>`;
-    /* un repere par soir d'elimination : c'est la grille qui porte le propos */
-    ETAPES.forEach(e => {
-      const x = f.X(t(e.d)), fut = !passe(e.d);
-      g += `<line x1="${x.toFixed(1)}" y1="${f.mT}" x2="${x.toFixed(1)}" y2="${f.H-f.mB}" stroke="var(--rule)" stroke-dasharray="3 3" opacity="${fut ? .45 : .9}"><title>${e.l} · ${frDate(e.d)}</title></line>`
-        + `<text x="${x.toFixed(1)}" y="${f.H-f.mB+16}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--ink-3)" opacity="${fut ? .65 : 1}">${e.s}</text>`;
-    });
-    /* Le reperage du jour va SOUS l'axe, sur une deuxieme ligne : en haut il
-       passait sous l'etiquette de la premiere courbe, en bas dans la grappe des
-       etiquettes de fin. Sous les tours, il n'a plus personne a bousculer. */
-    const xn = f.X(Math.min(TODAY.getTime(), f.t1));
+    /* une colonne par tour, et son nom sous l'axe */
+    TOURS.forEach((T, ph) => T.cols.forEach((lab, i) => {
+      const x = f.xC(ph, i), dernier = i === T.cols.length - 1;
+      if (!dernier) g += `<line x1="${x.toFixed(1)}" y1="${f.mT}" x2="${x.toFixed(1)}" y2="${f.H-f.mB}" stroke="var(--rule-soft)" stroke-dasharray="2 3"/>`;
+      g += `<text x="${x.toFixed(1)}" y="${f.H-f.mB+16}" text-anchor="middle" font-size="10.5" font-weight="${dernier?700:600}" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${lab}</text>`;
+    }));
+    g += `<text x="${f.mL.toFixed(1)}" y="${f.H-f.mB+16}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--ink-3)">1<tspan font-size="7" dy="-4">er</tspan><tspan dy="4"> juil.</tspan></text>`;
+    /* le present : la derniere journee disputee */
+    const xn = xNow(f);
     g += `<line x1="${xn.toFixed(1)}" y1="${f.mT}" x2="${xn.toFixed(1)}" y2="${f.H-f.mB+22}" stroke="var(--ink-2)" stroke-width="1.2"/>`
       + `<text x="${xn.toFixed(1)}" y="${(f.H-f.mB+34).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--ink-2)">aujourd'hui</text>`;
     return g;
   }
+  /* Ou en est-on sur cet axe : a la fin de la derniere journee disputee, sinon a
+     la frontiere des qualifications. */
+  const xNow = f => jFaites > 0 ? f.xC(1, jFaites - 1) : f.xP(1);
+
   /* Etiquettes de fin de courbe : trois nations a 7 clubs se posent au meme pixel
      et deviennent une bouillie. On les ecarte verticalement du strict minimum, en
      partant du haut, sans jamais toucher a la courbe elle-meme. */
@@ -3173,7 +3156,6 @@ const legende = segs => segs.map(s =>
 
   function drawSurv(){
     const svg = document.getElementById('chartSurv');
-    if (!SURV.length) return;
     const H = 320;
     majPal();
     const list = [...selV].filter(c => c === EUR || BY[c]);
@@ -3187,42 +3169,35 @@ const legende = segs => segs.map(s =>
        quelques centiemes de club — assez pour les distinguer, trop peu pour
        tromper la lecture, et la grille reste sur les entiers. */
     const dec = i => (i - (list.length - 1) / 2) * 0.075;
-    const tNow = Math.min(TODAY.getTime(), f.t1);
+    const xQ = f.xP(1), xn = xNow(f);
     const etiq = [];
     list.forEach((c, i) => {
-      const e = engV(c), col = `var(${PALV[c] || '--ink-3'})`, fr = c === 'FRA';
-      const o = dec(i), w = fr ? 2.8 : (c === EUR ? 2.4 : 1.7);
-      const pts = SURV.map(([d, m]) => [t(d), relV(c, m)]).filter(x => x[1] != null);
-      if (!pts.length) return;
-      pts.push([tNow, vieV(c)]);
-      /* La marche est posee a la FIN DES BARRAGES, pas au premier releve : c'est
-         la qu'elle s'est produite. La descendre au 17 septembre laisserait croire
-         que ces clubs sont sortis en pleine phase de ligue. Le trait reste en
-         pointille — la date exacte de chaque elimination, elle, reste inconnue. */
-      const yE = f.Y(e + o), y0 = f.Y(pts[0][1] + o), xq = f.X(t(finQual));
-      g += `<path d="M${f.X(f.t0).toFixed(1)} ${yE.toFixed(1)} L${xq.toFixed(1)} ${yE.toFixed(1)}`
-        + ` L${xq.toFixed(1)} ${y0.toFixed(1)} L${f.X(pts[0][0]).toFixed(1)} ${y0.toFixed(1)}"`
-        + ` fill="none" stroke="${col}" stroke-width="${w}" stroke-dasharray="4 4" opacity=".55"/>`;
-      let d = `M${f.X(pts[0][0]).toFixed(1)} ${y0.toFixed(1)}`;
-      for (let k = 1; k < pts.length; k++)
-        d += ` L${f.X(pts[k][0]).toFixed(1)} ${f.Y(pts[k-1][1]+o).toFixed(1)} L${f.X(pts[k][0]).toFixed(1)} ${f.Y(pts[k][1]+o).toFixed(1)}`;
-      g += `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round"/>`;
-      const vFin = pts[pts.length-1][1], yF = f.Y(vFin + o);
-      g += `<circle cx="${f.X(tNow).toFixed(1)}" cy="${yF.toFixed(1)}" r="${fr || c === EUR ? 3.4 : 2.6}" fill="${col}"/>`;
-      const txt = `${nomV(c)} ${fmtV(vFin)}/${fmtV(e)}`;
-      etiq.push({ y: yF + 4, yv: yF, col, fr: fr || c === EUR, txt,
-                  x: Math.min(f.X(tNow) + 9, f.W - 6 - txt.length * 6.1) });
+      const e = engV(c), v = vieV(c), o = dec(i);
+      const col = `var(${PALV[c] || '--ink-3'})`, gras = c === 'FRA' || c === EUR;
+      const w = c === 'FRA' ? 2.8 : (c === EUR ? 2.4 : 1.8);
+      const yE = f.Y(e + o), yV = f.Y(v + o);
+      /* UN SEUL TRAIT PLEIN, du 1er juillet a aujourd'hui. Il descend sur toute
+         la phase qualificative puis reste plat : c'est exactement ce que dit la
+         source. Le pointille d'avant voulait signaler « date inconnue » et ne
+         disait qu'une chose au lecteur — que le graphe hesitait. La nuance est
+         desormais dans la legende, et le trait, lui, est net. */
+      g += `<path d="M${f.mL.toFixed(1)} ${yE.toFixed(1)} L${xQ.toFixed(1)} ${yV.toFixed(1)} L${xn.toFixed(1)} ${yV.toFixed(1)}"`
+        + ` fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"/>`;
+      g += `<circle cx="${f.mL.toFixed(1)}" cy="${yE.toFixed(1)}" r="${gras?3.4:2.6}" fill="none" stroke="${col}" stroke-width="${w}"/>`
+        + `<circle cx="${xQ.toFixed(1)}" cy="${yV.toFixed(1)}" r="${gras?3.4:2.6}" fill="${col}"/>`;
+      /* Pas de « -3 » pose sur la pente : deux pentes voisines collaient leurs
+         deux nombres l'un sur l'autre, et l'etiquette de droite (« 1/4 ») dit
+         deja combien il en reste sur combien. */
+      const txt = `${nomV(c)} ${fmtV(v)}/${fmtV(e)}`;
+      etiq.push({ y: yV + 4, yv: yV, col, fr: gras, txt,
+                  x: Math.min(xn + 9, f.W - 6 - txt.length * 6.1) });
     });
-    /* Plancher : le bas du cadre, pas le bas du cadre moins huit. Y(0) tombe
-       exactement sur l'axe ; un plancher plus haut poussait les etiquettes a
-       zero vers le haut, et la cascade remontait jusqu'a sortir la premiere
-       courbe du graphe. */
+    /* Plancher : le bas du cadre. Y(0) tombe exactement sur l'axe ; un plancher
+       plus haut poussait les etiquettes a zero vers le haut, et la cascade
+       remontait jusqu'a sortir la premiere courbe du graphe. */
     poseEtiquettes(etiq, 14, H - f.mB + 2).forEach(e => {
-      /* un filet de rattachement quand l'etiquette a du s'ecarter de sa courbe :
-         six nations a un club sur quatre, c'est six etiquettes pour un seul
-         point, et sans le filet on ne sait plus laquelle appartient a quoi. */
       if (Math.abs(e.y - 4 - e.yv) > 2)
-        g += `<line x1="${(f.X(tNow)+3).toFixed(1)}" y1="${e.yv.toFixed(1)}" x2="${(e.x-2).toFixed(1)}" y2="${(e.y-4).toFixed(1)}" stroke="${e.col}" stroke-width="1" opacity=".5"/>`;
+        g += `<line x1="${(xn+3).toFixed(1)}" y1="${e.yv.toFixed(1)}" x2="${(e.x-2).toFixed(1)}" y2="${(e.y-4).toFixed(1)}" stroke="${e.col}" stroke-width="1" opacity=".5"/>`;
       g += `<text x="${e.x.toFixed(1)}" y="${e.y.toFixed(1)}" font-size="11.5" font-weight="${e.fr?700:600}" fill="${e.col}">${e.txt}</text>`;
     });
     svg.outerHTML = (g + '</svg>').replace('<svg', '<svg id="chartSurv"');
@@ -3238,15 +3213,17 @@ const legende = segs => segs.map(s =>
     const nats = list.filter(c => c !== EUR);
     const plats = nats.filter(c => elimines(BY[c]) === 0);
     document.getElementById('capSurv').innerHTML =
-      `Nombre de clubs encore en lice, <b>sur la saison entière</b> — du 1<sup>er</sup> juillet à la dernière finale, le 5 juin. `
-      + `Chaque trait vertical est un soir d'élimination : les quatre tours de l'été, la coupe de fin de phase de ligue en janvier, puis les cinq tours de la phase finale. `
-      + `<b>L'essentiel de l'écrémage est encore devant</b> : ${totEng - viv} des ${totEng} clubs engagés sont sortis, tous pendant les qualifications, et la prochaine vraie marche est fin janvier. C'est le sens du grand vide à droite. `
-      + `<b>Trait plein : des relevés réels</b> — la page archive l'effectif publié par la source chaque fois qu'il change (${n1} relevé${n1>1?'s':''} à ce jour, depuis le ${frDate(SURV[0][0])}), et le trait s'arrête à aujourd'hui : rien n'est extrapolé. `
-      + `<b>Pointillé : une descente non datée.</b> Aucune source ne publie la date d'élimination club par club. On sait que tous les clubs sortis avant le premier relevé l'ont été pendant les qualifications ; la marche est donc posée au dernier soir de barrages, le ${frDate(finQual)} — le seul point du calendrier où l'on est certain que ces éliminations étaient toutes consommées. `
+      `Nombre de clubs encore en lice, du 1<sup>er</sup> juillet à la finale. `
+      + `<b>L'axe n'est pas le temps, ce sont les tours</b> : les trois phases occupent chacune un tiers de la largeur, quel que soit le nombre de semaines qu'elles pèsent au calendrier. Les quatre tours de l'été tenaient dans 8 % d'un axe chronologique — invisibles, alors que c'est là que tout s'est passé jusqu'ici. `
+      + `<b>Un seul trait, plein, du départ à aujourd'hui.</b> Il descend sur la phase qualificative, puis reste plat : la phase de ligue n'élimine personne, le tri s'y fait au classement et ne tombe qu'à la 8<sup>e</sup> journée. Rien n'est tracé au-delà d'aujourd'hui. `
+      + `<b>Ce que la pente ne dit pas</b>, faute de source : quel soir exactement chaque club est sorti. Aucun site ne publie la date d'élimination club par club — on connaît l'effectif au départ et l'effectif à l'entrée en phase de ligue, pas le détail Q1 / Q2 / Q3. La pente relie donc les deux points connus en traversant les quatre colonnes ; le nombre posé dessus est le total de clubs perdus dans l'été. `
+      + `Les colonnes, elles, sont exactes : ce sont les vrais tours, et elles montrent où l'écrémage reste à venir. `
+      + `<b>${totEng - viv} des ${totEng} clubs engagés sont déjà sortis</b>, tous pendant les qualifications ; la prochaine coupe est fin janvier, à la sortie de la phase de ligue, puis c'est un tour tous les quinze jours jusqu'en juin. `
+      + `L'effectif du jour vient de la source, archivé à chaque changement (${n1} relevé${n1>1?'s':''} depuis le ${frDate(SURV[0][0])}). `
       + `<b>Huit courbes au maximum, tirées au sort</b> à l'arrivée sur la page : c'est le seul bloc où le classement ne dit rien — une association à trois clubs perd son effectif aussi vite qu'une autre à neuf, et les huit premières donnent huit traits plats. Le bouton rejoue le tirage. `
-      + `<b>« Moyenne des ${nEng} »</b> se choisit comme une nation : les ${totEng} clubs européens ramenés aux ${nEng} associations, soit un effectif moyen de ${nf(totEng/nEng, 1)}. C'est la seule courbe qui descende franchement aujourd'hui. `
+      + `<b>« Moyenne des ${nEng} »</b> se choisit comme une nation : les ${totEng} clubs européens ramenés aux ${nEng} associations, soit un effectif moyen de ${nf(totEng/nEng, 1)}. C'est la seule courbe qui descende franchement. `
       + (nats.length && plats.length === nats.length
-          ? `Aucune des nations affichées n'a encore perdu un club : tous leurs traits sont plats. `
+          ? `Aucune des nations affichées n'a perdu un club cet été : leurs traits sont plats de bout en bout. `
           : nats.length ? `${nats.length - plats.length} des ${nats.length} nations affichées ont déjà perdu des clubs pendant les qualifications. ` : '')
       + `Les courbes sont décalées de quelques centièmes de club pour rester distinctes : sans ça, deux nations au même effectif se superposeraient exactement.`;
   }
