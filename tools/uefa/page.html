@@ -353,6 +353,12 @@ section > .panel + .panel{margin-top:14px}
 .chips button:focus-visible{outline:2px solid var(--fr); outline-offset:1px}
 .chips .sep{width:1px; height:20px; background:var(--rule); margin:0 4px}
 .chips .lbl{font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3); font-weight:600}
+/* Retour a la ligne force. Les commandes (tirage, 8 premieres, France, menu
+   d'ajout) tiennent la premiere ligne et ne bougent JAMAIS ; les pastilles de
+   nations, dont la largeur change a chaque tirage, sont reportees dessous.
+   Avant, « Liechtenstein » decalait les boutons de 60 px et le clic suivant
+   tombait a cote. */
+.chips .brk{flex-basis:100%; height:0; margin:0}
 
 /* ---------- tables ---------- *//* ---------- tables ---------- */
 .tscroll{overflow-x:auto; border:1px solid var(--rule); border-radius:3px; background:var(--surface)}
@@ -3205,17 +3211,22 @@ const legende = segs => segs.map(s =>
       const sel = [...selV], plein = sel.length >= MAXV;
       const dispo = [EUR, ...ENGAGEES.map(n => n.c).sort((a, b) => name(a).localeCompare(name(b), 'fr'))]
         .filter(c => !selV.has(c));
+      /* Ordre : les commandes d'abord, les pastilles ensuite et sur leur propre
+         ligne. Elles seules changent de largeur d'un tirage a l'autre, et rien
+         ne se trouve plus a leur droite pour en subir le contrecoup. */
       host.innerHTML = `<span class="lbl">Nations</span>`
-        + sel.map(c => `<button type="button" class="tint" data-del="${c}" aria-pressed="true"`
-            + ` style="background:var(${PALV[c]});border-color:var(${PALV[c]})"`
-            + ` title="Retirer ${nomV(c)}">${nomV(c)} ×</button>`).join('')
+        + `<button type="button" data-rnd="1" title="Rejouer le tirage">Tirage au sort ↻</button>`
+        + `<button type="button" data-top="1">Les 8 premières</button>`
+        + `<button type="button" data-fr="1">France seule</button>`
+        + `<span class="sep"></span>`
         + `<span class="sel"><select id="vadd"${plein ? ' disabled' : ''} aria-label="Ajouter une nation">`
         + `<option value="">${plein ? `${MAXV} nations, c'est le maximum` : 'Ajouter une nation…'}</option>`
         + dispo.map(c => `<option value="${c}">${nomV(c)}</option>`).join('')
         + `</select></span>`
-        + `<span class="sep"></span><button type="button" data-rnd="1" title="Rejouer le tirage">Tirage au sort ↻</button>`
-        + `<button type="button" data-top="1">Les 8 premières</button>`
-        + `<button type="button" data-fr="1">France seule</button>`;
+        + `<span class="brk"></span>`
+        + sel.map(c => `<button type="button" class="tint" data-del="${c}" aria-pressed="true"`
+            + ` style="background:var(${PALV[c]});border-color:var(${PALV[c]})"`
+            + ` title="Retirer ${nomV(c)}">${nomV(c)} ×</button>`).join('');
       host.querySelector('#vadd').onchange = ev => {
         if (!ev.target.value) return;
         if (selV.size < MAXV) selV.add(ev.target.value);
