@@ -381,7 +381,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "dim. 27 sept. 2026 11h48";</script>
+<script>window.PUBLIE = "dim. 27 sept. 2026 11h55";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -447,7 +447,7 @@ body{margin:0}</style>
   <div class="panel">
     <div class="ptitle"><span class="no">1</span><h3>Le classement</h3>
       <span class="sub"><span class="ctl"><span class="lb">Période</span><span class="seg" role="group" aria-label="Période"><button type="button" id="p-season" aria-pressed="true">Saison en cours</button></span><span class="sel"><select id="p-win" aria-label="Fenêtre de saisons">
-        <option value="5">5 dernières saisons</option><option value="4">4 dernières saisons</option><option value="3">3 dernières saisons</option><option value="2">2 dernières saisons</option></select></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
+        <option value="" disabled hidden>X dernières saisons</option><option value="5">5 dernières saisons</option><option value="4">4 dernières saisons</option><option value="3">3 dernières saisons</option><option value="2">2 dernières saisons</option></select></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
         <button type="button" id="b-top" aria-pressed="true">Les 8 premières</button><button type="button" id="b-all" aria-pressed="false">Toutes</button></span></span></span></div>
     <div class="barswrap"><div class="bscroll" id="bscroll"><div class="bars" id="bars"></div></div><div class="tip" id="tipY" hidden></div></div>
     <p class="figc" id="barNote"></p>
@@ -1470,7 +1470,13 @@ function syncP(){
      pouvait plus jamais revenir à la fenêtre de 5 saisons. Elle se vide donc
      quand la saison en cours prend la main, et toute sélection redevient un
      vrai changement. */
-  if (isS) winSel.selectedIndex = -1;
+  /* En mode « saison en cours », la liste n'affiche pas du vide mais une
+     invitation — « X dernières saisons » — qui montre la forme de la réponse
+     attendue. L'option est `disabled hidden` : elle s'affiche comme valeur
+     courante sans encombrer le menu, et n'est pas re-selectionnable. Passer de
+     cette valeur vide a un nombre est bien un changement, donc l'evenement part
+     et le blocage n'existe plus. */
+  if (isS) winSel.value = '';
   else {
     const i = [...winSel.options].findIndex(o => +o.value === period);
     if (i >= 0) winSel.selectedIndex = i;
