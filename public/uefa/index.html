@@ -381,7 +381,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "dim. 27 sept. 2026 11h55";</script>
+<script>window.PUBLIE = "dim. 27 sept. 2026 15h00";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -948,7 +948,12 @@ document.getElementById('stamp').innerHTML =
     return;
   }
   const jours = Math.round((dOf(ISO_TODAY) - dOf(XCHK.at)) / 86400000);
-  const vieux = jours > 10;
+  /* Seuil a 30 jours et non 10 : le releve est MANUEL — l'instantane kassiesa
+     se prend au navigateur, il n'y a aucune automatisation derriere. Alerter au
+     bout de dix jours revenait a afficher « a refaire » en permanence, ce qui
+     est le meilleur moyen de ne plus le lire du tout. Un mois correspond a ce
+     que la procedure actuelle permet reellement de tenir. */
+  const vieux = jours > 30;
   const etat  = vieux ? 'vieux' : XCHK.verdict;
   const quand = jours <= 0 ? "aujourd'hui" : jours === 1 ? 'hier' : 'il y a ' + jours + ' jours';
   const mot = {
