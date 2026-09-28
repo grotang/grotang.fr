@@ -53,15 +53,61 @@ function buildUefa() {
     + `${part({ month: 'short' })} ${part({ year: 'numeric' })} `
     + part({ hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
 
+  /* ---------- référencement ----------
+     Le titre AFFICHÉ en tête de page reste « L'observatoire du coefficient
+     UEFA » : c'est le nom du site. Le titre que lisent les moteurs, lui, doit
+     répondre mot pour mot à la requête qu'on vise — « coefficient UEFA » — et
+     porter la saison, parce que c'est la première chose qu'un lecteur cherche
+     à vérifier. D'où deux titres différents, et celui-ci écrase celui de
+     page.html. La saison vient des données : elle se met à jour toute seule.
+
+     On ne battra jamais uefa.com sur le terme seul. Ce qui se gagne, c'est la
+     traîne : « coefficient UEFA France », « classement coefficient UEFA
+     2026/2027 », « course à la 5e place ». D'où une description qui les
+     contient sans les empiler. */
+  const seo = {
+    titre: `Coefficient UEFA ${meta.season} — classement des 55 associations`,
+    desc: `Coefficient UEFA ${meta.season} : classement des 55 associations, mis à jour chaque matin. D'où viennent les points, et où en est la France dans la course à la 5e place.`,
+    url: 'https://grotang.fr/uefa/',
+  };
+  /* dateModified au format ISO, à partir de « 17/09/2026 - 22:56 » */
+  const isoMaj = (() => { const m = /^(\d{2})\/(\d{2})\/(\d{4})/.exec(String(meta.lastUpdated).trim());
+    return m ? `${m[3]}-${m[2]}-${m[1]}` : new Date().toISOString().slice(0, 10); })();
+  /* Un Dataset, parce que c'en est un : Google Dataset Search sait lire ce
+     type, et il dit la vérité sur ce qu'est la page — des chiffres datés,
+     gratuits, en français, couvrant cinq saisons. */
+  const jsonld = JSON.stringify({
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: seo.titre, description: seo.desc, url: seo.url,
+    inLanguage: 'fr', isAccessibleForFree: true,
+    dateModified: isoMaj, temporalCoverage: '2022/2027',
+    creator: { '@type': 'Organization', name: 'grotang.fr', url: 'https://grotang.fr/' },
+    keywords: ['coefficient UEFA', 'classement des associations', 'indice UEFA',
+               'Ligue des champions', 'places européennes', 'France'],
+  });
+
   return { meta, html: `<!doctype html>
 <html lang="fr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Le coefficient UEFA des 55 associations, décortiqué étape par étape et mis à jour chaque matin : d'où viennent les points, qui les marque, et où la saison ${meta.season} peut finir.">
+<title>${seo.titre}</title>
+<meta name="description" content="${seo.desc}">
+<link rel="canonical" href="${seo.url}">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="grotang.fr">
+<meta property="og:title" content="${seo.titre}">
+<meta property="og:description" content="${seo.desc}">
+<meta property="og:url" content="${seo.url}">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="${seo.titre}">
+<meta name="twitter:description" content="${seo.desc}">
+<script type="application/ld+json">${jsonld}</script>
 ${FAVICON}
 ${THEME_BOOT}
-${head}
+${head.replace(/<title>[^<]*<\/title>\n?/, '')}
 <script>window.PUBLIE = ${JSON.stringify(publie)};</script>
 <style>${navCSS}
 .gnav{margin-bottom:0}
@@ -85,6 +131,15 @@ function buildTennis() {
   let out = src.replace('<meta name="viewport" content="width=device-width, initial-scale=1.0">',
     `<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Nombre de joueurs français au tableau principal de chaque Grand Chelem, simple messieurs, ère Open 1968-2026.">
+<link rel="canonical" href="https://grotang.fr/tennis/">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="grotang.fr">
+<meta property="og:title" content="Les Français en Grand Chelem, 1968-2026">
+<meta property="og:description" content="Nombre de joueurs français au tableau principal de chaque Grand Chelem, simple messieurs, ère Open 1968-2026.">
+<meta property="og:url" content="https://grotang.fr/tennis/">
+<meta name="twitter:card" content="summary">
 ${FAVICON}
 ${FONTS}
 ${THEME_BOOT}`);
