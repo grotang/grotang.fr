@@ -406,7 +406,7 @@ th[aria-sort]{color:var(--ink)}
 footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
-<script>window.PUBLIE = "mar. 29 sept. 2026 00h09";</script>
+<script>window.PUBLIE = "mar. 29 sept. 2026 00h16";</script>
 <style>
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
@@ -3061,7 +3061,13 @@ const legende = segs => segs.map(s =>
              libellé du bouton de tri juste au-dessus — et c'est le seul qui
              ajoute quelque chose au rapport : ces clubs pèsent encore dans la
              division sans plus jamais rapporter un point. */
-          ? `<s>— ${Math.round(pm*100)} % de poids mort</s>`
+          /* Aux deux bouts de l'echelle, le pourcentage ne sert plus a rien :
+             « 0 % » et « 100 % de poids mort » sont deux facons mathematiques
+             de dire « intact » et « il n'y a plus personne ». On nomme donc les
+             deux etats. Et pour le second on dit ce que ca coute plutot que de
+             constater la sortie : le coefficient de saison est arrete, il
+             pesera quand meme dans la moyenne europeenne jusqu'en juin. */
+          ? (enVie(n) === 0 ? `<s>— saison terminée</s>` : `<s>— ${Math.round(pm*100)} % de poids mort</s>`)
           : `<s>— effectif intact</s>`}</div>
       </div>`;
     }).join('');
