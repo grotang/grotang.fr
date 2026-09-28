@@ -7,3 +7,6 @@ public/favicon.svg
 
 # Scripts de capture/QA jetables (Playwright), generes au fil des sessions.
 *.tmp.mjs
+
+# Sortie du script de projection : regeneree a chaque lancer, pas une source.
+tools/uefa/projection_uefa.csv
