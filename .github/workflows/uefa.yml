@@ -97,9 +97,27 @@ jobs:
       # déjà publiés et sort sans rien écrire s'ils n'ont pas bougé. `--force` ne
       # sert qu'au lancement à la main, pour republier après une correction de
       # gabarit qui ne touche pas les données.
+      # Chromium sert deux fois : a la projection, puis au test.
+      - name: Navigateur
+        run: npx playwright install --with-deps chromium
+
       - name: Relire la source et reconstruire
         id: refresh
         run: node tools/uefa/refresh.mjs ${{ inputs.force && '--force' || '' }}
+
+      # LA PROJECTION. Elle tournait dans le navigateur de chaque visiteur, a
+      # chaque ouverture : 2 000 saisons simulees, une seconde sur un poste fixe
+      # et cinq a neuf sur un telephone, pour une erreur d'echantillonnage de un
+      # dixieme de point. Elle tourne maintenant ICI, une fois, avec 200 000
+      # saisons — trente-cinq secondes de runner, qui ne coutent rien — et la
+      # page ne recoit plus que six nombres par nation et par horizon.
+      #
+      # Le modele n'est pas recopie : le script ouvre la page deja construite et
+      # appelle son propre code de simulation. Une seule version du modele.
+      # La graine reste la date des donnees : a donnees egales, meme resultat,
+      # donc aucun commit parasite.
+      - name: Projection sur le runner
+        run: node tools/uefa/projette.mjs 200000
 
       # LE FILET. tools/uefa/test-page.mjs ouvre la page reconstruite dans un
       # vrai navigateur et vérifie une quinzaine de faits : pas d'erreur
@@ -112,9 +130,6 @@ jobs:
       # continue de servir la dernière version saine. Le pire scénario est un
       # site en retard — jamais un site cassé. L'horodatage en en-tête de page
       # le dit tout seul : il cesse d'avancer.
-      - name: Navigateur pour le test
-        run: npx playwright install --with-deps chromium
-
       - name: Test de non-régression
         run: node tools/uefa/test-page.mjs public/uefa/index.html
 

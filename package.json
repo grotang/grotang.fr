@@ -8,7 +8,8 @@
     "refresh": "node tools/uefa/refresh.mjs",
     "refresh:dry": "node tools/uefa/refresh.mjs --dry-run",
     "test:extract": "node tools/uefa/test-extract.mjs",
-    "test:page": "node tools/uefa/test-page.mjs"
+    "test:page": "node tools/uefa/test-page.mjs",
+    "projette": "node tools/uefa/projette.mjs"
   },
   "dependencies": {
     "linkedom": "^0.18.13"
