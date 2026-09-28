@@ -221,7 +221,6 @@ section > .panel + .panel{margin-top:14px}
    Trois colonnes suffisent — nom, barre, total — et la barre y gagne la place
    rendue, ce qui fait tenir les libelles des petits segments. */
 #dbars .barrow{grid-template-columns:minmax(88px,132px) minmax(0,1fr) 62px}
-#eqbars .barrow{grid-template-columns:minmax(88px,132px) minmax(0,1fr) 62px minmax(132px,max-content)}
 .pips{display:flex; gap:2px; justify-content:flex-end; align-items:center}
 .pips i{width:6px; height:12px; border-radius:1.5px; display:block; flex:none}
 .pips i.out{box-shadow:inset 0 0 0 1px var(--ink-3); opacity:.45}
@@ -292,7 +291,6 @@ section > .panel + .panel{margin-top:14px}
 @media (max-width:680px){ .barrow{grid-template-columns:1fr 62px; gap:3px 10px}
   #bars .barrow{grid-template-columns:1fr; gap:3px 10px}
   #dbars .barrow,
-  #eqbars .barrow{grid-template-columns:1fr 62px; gap:3px 10px}
   .barrow .cnt{display:none} .barrow .track{grid-column:1/-1; order:3} .barrow .split{grid-column:1/-1; order:4; text-align:left} }
 
 /* ---------- effectifs : une case par club engagé ---------- */
@@ -479,17 +477,11 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
 <section>
   <div class="shead">
     <h2>La course à la 5<sup>e</sup> place</h2>
-    <p>Le rang bouge une fois par an ; l'écart, lui, bouge à chaque journée. Mais on ne compare que ce qui se compare : ces deux lectures ne retiennent que la <b>phase de ligue</b>, la seule fenêtre où les huit nations partent le même jour, du même zéro, avec le même nombre de journées devant elles.</p>
-  </div>
-  <div class="panel">
-    <div class="ptitle"><span class="no">6a</span><h3>À armes égales — la phase de ligue seule</h3>
-      <span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint" id="hintEq"></span></span></span></div>
-    <div class="barswrap"><div class="bars" id="eqbars"></div><div class="tip" id="tipEq" hidden></div></div>
-    <p class="figc" id="capEq"></p>
+    <p>Une nation à neuf clubs marque plus qu'une nation à trois, et ça ne dit rien de sa valeur. Le coefficient divise par les clubs engagés ; cette lecture-ci divise par les <b>matchs joués</b>. Le nombre de clubs disparaît des deux côtés, et il ne reste que ce qui s'est passé sur le terrain.</p>
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">6b</span><h3>Le rendement — points par match</h3>
+    <div class="ptitle"><span class="no">6</span><h3>Le rendement — points par match</h3>
       <span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">aire du disque = points par match</span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
         <button type="button" id="r-top" aria-pressed="true">Les 8 premières</button><button type="button" id="r-all" aria-pressed="false">Toutes</button></span></span></span></div>
     <figure>
@@ -2302,51 +2294,7 @@ const legende = segs => segs.map(s =>
     document.getElementById('d-pct').setAttribute('aria-pressed', dMode === 'pct'); drawDec(); }
   drawDec();
 
-  /* ===================== 6a · à armes égales =====================
-     Retour à la version en barres. La lecture par journée avait l'air plus
-     savante, elle était surtout illisible : une seule journée de C1 disputée,
-     donc une colonne de points dans du vide, et un sélecteur de saison qui
-     changeait le sujet pour meubler. La question posée ici n'a rien de
-     temporel — « qui a marqué le plus là où tout le monde est comparable » —
-     et un classement en barres y répond d'un coup d'œil.
-     La temporalité a sa place, mais dans les blocs 3 et 4, qui sont faits pour ça. */
-  (function(){
-    /* Passe du SVG aux memes lignes HTML que le 2a. Le SVG portait un viewBox
-       fixe de 1000 unites etire a la largeur du panneau : son texte valait
-       17 px sur un grand ecran, 9 px a 800 — a cote d'un 2a fige a 14 px. En
-       HTML la typographie ne depend plus de la largeur, et les deux blocs se
-       lisent comme un seul document. */
-    const rows = GRP.map(c => ({ c, v: part(c).ligue })).sort((a, b) => b.v - a.v);
-    const max = Math.max(0.001, ...rows.map(r => r.v)) * 1.12;
-
-    document.getElementById('hintEq').textContent =
-      `coefficient acquis en phase de ligue · ${jTot} journée${jTot > 1 ? 's' : ''} disputée${jTot > 1 ? 's' : ''}`;
-
-    document.getElementById('eqbars').innerHTML = rows.map(r => {
-      const pc = r.v / max * 100;
-      /* Un seul segment : ecrire la valeur DEDANS la repeterait mot pour mot a
-         deux centimetres de la, dans la colonne de droite. La barre porte la
-         comparaison, le chiffre porte la precision. */
-      return `<div class="barrow${r.c === 'FRA' ? ' me' : ''}">
-        <div class="nm"><b>${name(r.c)}</b></div>
-        <div class="track" data-nat="${r.c}"><div class="cseg" data-c="${r.c}" style="width:${pc.toFixed(3)}%;background-color:var(--d3)"></div></div>
-        <div class="val num">${nfx(r.v)}</div>
-        <div class="split num">${nf(r.v, 3)} au millième</div>
-      </div>`; }).join('');
-
-    const fr = rows.findIndex(r => r.c === 'FRA');
-    const notyet = [0, 1, 2].filter(k => jouees(k) === 0);
-    document.getElementById('capEq').innerHTML =
-      `Ni bonus d'entrée, ni qualifications : uniquement ce qui a été marqué en phase de ligue, `
-      + `où les 36 clubs de C1 et de C3 jouent 8 journées et ceux de C4 en jouent 6. `
-      + `<b>C'est la seule fenêtre où les nations sont réellement comparables</b> : même jour de départ, même zéro, même nombre de journées devant elles. `
-      + `La France y est <b>${fr + 1}<sup>e</sup> sur ${rows.length}</b> du groupe avec ${nf(rows[fr].v, 3)}. `
-      + `<b>Réserve :</b> ${jTot} journée${jTot > 1 ? 's' : ''} disputée${jTot > 1 ? 's' : ''}`
-      + (notyet.length ? ` et ${notyet.map(k => KSHORT[k]).join(' et ')} n'${notyet.length > 1 ? 'ont' : 'a'} pas encore commencé` : '')
-      + ` — à ce stade l'échantillon est trop court pour conclure quoi que ce soit.`;
-  })();
-
-  /* ===================== 6b · rendement, en disques =====================
+  /* ===================== 6 · rendement, en disques =====================
      Une courbe sur une seule journée jouée n'est pas un graphique, c'est un
      point perdu dans du vide. Une grille de disques, elle, se lit dès la
      première journée et se remplit au fil de la saison : une colonne par
@@ -2450,7 +2398,16 @@ const legende = segs => segs.map(s =>
       + `Une nation à 5 clubs et une à 9 deviennent comparables. En phase de ligue une victoire vaut 2 points et un nul 1 : `
       + `<b>1,00 signifie « un nul par match »</b>, au-delà on gagne plus qu'on ne perd. Chaque disque mesure une journée, et la colonne de droite donne le cumul. `
       + `La France est <b>${rows.indexOf('FRA') + 1}<sup>e</sup> sur ${rows.length}</b> avec ${nf(rdtC('FRA', last) ?? 0, 2)} sur ${matchsA('FRA', last)} match${matchsA('FRA', last) > 1 ? 's' : ''}, contre ${nf(rdtC(best, last) ?? 0, 2)} pour ${leNom(best)}. `
-      + `<b>Deux réserves :</b> sur si peu de matchs un seul résultat retourne le classement ; et le rendement demande le nombre de clubs engagés par compétition, que la source ne publie que pour la saison en cours — d'où l'absence de sélecteur de saison ici.`;
+      /* « un seul résultat » était faux, et GT l'a relevé : un match fait passer
+         l'Angleterre de 2,00 à 1,88 et ne déloge personne. C'est une SOIRÉE qui
+         retourne le classement, parce que le cumul est une moyenne et qu'une
+         moyenne sur huit observations se déplace vite. On le montre en chiffres
+         plutôt qu'en adjectifs, et le garde-fou reste le nombre de matchs, déjà
+         affiché au bout de chaque ligne. */
+      + `<b>Deux réserves.</b> Le cumul est une moyenne, et sur ${nj} journée${nj > 1 ? 's' : ''} disputée${nj > 1 ? 's' : ''} elle se déplace vite : `
+      + `${leNom(best)} mène avec ${nf(rdtC(best, last) ?? 0, 2)} sur ${matchsA(best, last)} matchs — une soirée à 1,00, ce qui n'a rien d'une catastrophe, la ferait tomber à ${nf((brutA(best, last) + matchsA(best, last)) / (2 * matchsA(best, last)), 2)}. `
+      + `Le nombre de matchs au bout de chaque ligne est le vrai garde-fou : il grossit, et le cumul se fige. `
+      + `Seconde réserve : le rendement demande le nombre de clubs engagés par compétition, que la source ne publie que pour la saison en cours — d'où l'absence de sélecteur de saison ici.`;
   }
   const bRT = document.getElementById('r-top'), bRA = document.getElementById('r-all');
   const syncR = () => { bRT.setAttribute('aria-pressed', porteeR === 'top');
