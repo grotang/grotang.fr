@@ -3012,7 +3012,13 @@ const legende = segs => segs.map(s =>
         <div class="nm">${name(n.c)}</div>
         <div class="vgrid">${cases}</div>
         <div class="rd"><b>${enVie(n)}/${engages(n)}</b> ${pm > 0
-          ? `<s>— ${Math.round(pm*100)} % des clubs engagés au départ ne rapportent plus rien</s>`
+          /* « 20 % des clubs engagés au départ ne rapportent plus rien » disait
+             juste, en dix mots, ce que « 4/5 » dit déjà en trois caractères.
+             « Poids mort » est le mot que la page emploie déjà — c'est le
+             libellé du bouton de tri juste au-dessus — et c'est le seul qui
+             ajoute quelque chose au rapport : ces clubs pèsent encore dans la
+             division sans plus jamais rapporter un point. */
+          ? `<s>— ${Math.round(pm*100)} % de poids mort</s>`
           : `<s>— effectif intact</s>`}</div>
       </div>`;
     }).join('');
