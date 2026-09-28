@@ -101,6 +101,23 @@ jobs:
         id: refresh
         run: node tools/uefa/refresh.mjs ${{ inputs.force && '--force' || '' }}
 
+      # LE FILET. tools/uefa/test-page.mjs ouvre la page reconstruite dans un
+      # vrai navigateur et vérifie une quinzaine de faits : pas d'erreur
+      # JavaScript, tous les blocs remplis, aucun NaN affiché, et les égalités
+      # qui doivent tomber (total 5 ans = somme des saisons, engagés − éliminés
+      # = encore en lice).
+      #
+      # Placé ICI, entre la reconstruction et le dépôt : un échec bloquant
+      # arrête le workflow avant le commit. Rien n'est publié, et le site
+      # continue de servir la dernière version saine. Le pire scénario est un
+      # site en retard — jamais un site cassé. L'horodatage en en-tête de page
+      # le dit tout seul : il cesse d'avancer.
+      - name: Navigateur pour le test
+        run: npx playwright install --with-deps chromium
+
+      - name: Test de non-régression
+        run: node tools/uefa/test-page.mjs public/uefa/index.html
+
       - name: Déposer si quelque chose a changé
         id: depot
         run: |

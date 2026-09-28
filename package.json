@@ -7,10 +7,16 @@
     "build": "node tools/build.mjs",
     "refresh": "node tools/uefa/refresh.mjs",
     "refresh:dry": "node tools/uefa/refresh.mjs --dry-run",
-    "test:extract": "node tools/uefa/test-extract.mjs"
+    "test:extract": "node tools/uefa/test-extract.mjs",
+    "test:page": "node tools/uefa/test-page.mjs"
   },
   "dependencies": {
     "linkedom": "^0.18.13"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "playwright": "^1.48.0"
+  }
 }
