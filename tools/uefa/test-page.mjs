@@ -65,7 +65,14 @@ if (D && QUALS) {
      association. C'est le contrôle qui a trouvé le trou du Monténégro. */
   const BY = Object.fromEntries(D.nations.map(n => [n.c, n]));
   const ecarts = Object.entries(QUALS).filter(([c, q]) => BY[c] && q.s[3] !== BY[c].a[3]);
-  bloquant('engagés − éliminés = encore en lice', ecarts.length === 0, ecarts.map(([c]) => c).join(' '));
+  /* SIGNALANT, et non bloquant, malgre son importance. En fevrier la phase
+     finale recommencera a eliminer des clubs : la source verra l'effectif
+     baisser, le grand livre des qualifications restera fige sur l'ete, et
+     l'egalite tombera pour de bonnes raisons. Bloquer la publication ce
+     jour-la geleraient le site entier pour une incoherence de deux blocs.
+     Le releve de fevrier la remettra d'aplomb ; d'ici la, on le dit sans
+     retenir la page. */
+  signalant('engagés − éliminés = encore en lice', ecarts.length === 0, ecarts.map(([c]) => c).join(' '));
   /* Une série de survie ne remonte jamais. */
   const remonte = Object.entries(QUALS).filter(([, q]) => q.s.some((v, i) => v > (i ? q.s[i-1] : q.e)));
   bloquant('la survie ne remonte jamais', remonte.length === 0, remonte.map(([c]) => c).join(' '));
