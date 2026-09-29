@@ -73,6 +73,13 @@ export const TOKENS = `
    s'affiche une fraction de seconde en clair à chaque navigation. Le stockage
    peut être indisponible (navigation privée) — on retombe alors sur le clair
    sans rien casser. */
+/* Jeton de validation Google Search Console. Ce n'est pas un secret : il est
+   visible dans le code source de chaque page, et c'est precisement a ca qu'il
+   sert — Google le lit pour savoir que le proprietaire du site est bien celui
+   qui a cree la propriete. Il est pose sur TOUTES les pages, y compris la
+   racine, parce que c'est la racine que Google va chercher pour valider. */
+export const VERIF = `<meta name="google-site-verification" content="BK3GerBr4zYq2lOucYbs99PLCkK4zzwYzuTYNaqtfZI">`;
+
 export const THEME_BOOT = `<script>(function(){try{if(localStorage.getItem('grotang-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>`;
 
 /* Le bouton vit dans la barre de navigation, donc sur les trois pages, au même

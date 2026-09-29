@@ -14,7 +14,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { nav, navCSS, FAVICON, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS } from './chrome.mjs';
+import { nav, navCSS, FAVICON, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF } from './chrome.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
@@ -91,6 +91,7 @@ function buildUefa() {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+${VERIF}
 <title>${seo.titre}</title>
 <meta name="description" content="${seo.desc}">
 <link rel="canonical" href="${seo.url}">
@@ -131,6 +132,7 @@ function buildTennis() {
   let out = src.replace('<meta name="viewport" content="width=device-width, initial-scale=1.0">',
     `<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Nombre de joueurs français au tableau principal de chaque Grand Chelem, simple messieurs, ère Open 1968-2026.">
+${VERIF}
 <link rel="canonical" href="https://grotang.fr/tennis/">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta property="og:type" content="website">
@@ -234,6 +236,7 @@ const ACCUEIL = `<!doctype html>
 <html lang="fr">
 <head>
 <meta charset="utf-8">
+${VERIF}
 <title>grotang.fr</title>
 <link rel="canonical" href="https://grotang.fr/uefa/">
 <meta http-equiv="refresh" content="0; url=/uefa/">
