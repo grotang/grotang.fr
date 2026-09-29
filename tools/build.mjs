@@ -23,6 +23,34 @@ const OUT = path.join(ROOT, 'public');
 const read = p => fs.readFileSync(path.join(ROOT, p), 'utf8');
 const write = (p, s) => { const f = path.join(OUT, p); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, s); return s.length; };
 
+/* Écriture STABLE : si la page ne diffère de celle déjà publiée que par son
+   horodatage de fabrication, on garde l'ancien horodatage et le fichier ne
+   bouge pas d'un octet.
+
+   Sans ça, l'heure de fabrication changeait à chaque passage, donc le fichier
+   changeait toujours, donc le robot commitait toujours — cinq fois par jour,
+   avec pour seul contenu « il est maintenant 4 h 16 ». C'est exactement ce que
+   l'en-tête du workflow dit vouloir éviter : « une republication quotidienne à
+   vide a été essayée puis retirée : elle ne changeait qu'un horodatage et
+   noyait l'historique ».
+
+   Et cette ligne était aussi la seule source de conflits git : elle diffère
+   toujours entre deux fabrications, donc entre le dépôt d'une correction et la
+   republication du robot. Stabilisée, elle ne se dispute plus avec personne.
+
+   L'horodatage garde tout son sens : il dit quand la page a change pour la
+   derniere fois, ce qui est plus utile que l'heure du dernier passage a vide. */
+const PUB_RE = /window\.PUBLIE = "[^"]*"/;
+/* `avant` est passé en argument et non relu ici : public/ est entièrement
+   effacé au début de la fabrication, donc à l'instant où l'on écrit il n'y a
+   plus rien à comparer sur le disque. C'est ce détail qui avait fait échouer
+   la première version, silencieusement. */
+const writeStable = (p, s, avant) => {
+  if (avant && PUB_RE.test(avant) && PUB_RE.test(s)
+      && avant.replace(PUB_RE, '') === s.replace(PUB_RE, '')) s = avant;
+  return write(p, s);
+};
+
 /* ---------- 1 · page UEFA ---------- */
 /* page.html est écrite pour l'hébergement d'artefact Claude, qui fournit lui-même
    <!doctype>/<head>/<body>. Ici on doit produire un document complet : on scinde
@@ -267,13 +295,17 @@ a{color:var(--hi);font-weight:600;margin-top:14px;display:inline-block}</style>
 </head><body><h1>404</h1><p>Cette page n'existe pas.</p><a href="/uefa/">Coefficient UEFA</a></body></html>`;
 
 /* ---------- exécution ---------- */
+/* La page precedente, relevee AVANT le grand menage, sert uniquement a savoir
+   si la nouvelle ne differe que par son horodatage. */
+const PRECEDENT = (() => { try { return fs.readFileSync(path.join(OUT, 'uefa/index.html'), 'utf8'); }
+                           catch { return null; } })();
 fs.rmSync(OUT, { recursive: true, force: true });
 const uefa = buildUefa();
 const tennis = buildTennis();
 const today = new Date().toISOString().slice(0, 10);
 
 const sizes = {
-  'uefa/index.html': write('uefa/index.html', uefa.html),
+  'uefa/index.html': writeStable('uefa/index.html', uefa.html, PRECEDENT),
   'tennis/index.html': write('tennis/index.html', tennis.html),
   '404.html': write('404.html', NOTFOUND),
   'index.html': write('index.html', ACCUEIL),
