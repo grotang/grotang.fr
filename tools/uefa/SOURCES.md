@@ -122,11 +122,40 @@ chaque club a joué — c'est la liste des matchs qui le dit.
 
 `lire-archive.py` produit `decomp-AAAA.json` et refuse d'écrire si la somme
 des quatre postes ne retrouve pas le coefficient publié, association par
-association. Sur 2025/26 : 54 associations, 961 matchs, contrôle passé.
+association. Une ligne par association, quatre valeurs déjà divisées par
+l'effectif engagé : `[bonus d'entrée, qualifications, phase de groupes ou de
+ligue, phase finale]`.
 
-RÉSERVE CONNUE. Comparée au relevé étape par étape constitué à la main pour
-les seize nations suivies, cette reconstruction donne exactement les mêmes
-deux premiers postes (bonus d'entrée, qualifications) et le même total, mais
-déplace environ un dixième de point de la phase de ligue vers la phase finale.
-L'écart vient de l'endroit où la source place les bonus de tour dans sa propre
-table par étapes. À trancher avec cinq saisons sous les yeux plutôt qu'une.
+    python3 tools/uefa/archive/lire-archive.py <dossier> <annee> [prefixe]
+    python3 tools/uefa/archive/lire-archive.py "GT for Claude" 2021 "2021 "
+
+Cinq saisons relevées, toutes au vert :
+
+    2021/22   55 associations   816 matchs
+    2022/23   54 associations   804 matchs
+    2023/24   54 associations   806 matchs
+    2024/25   54 associations   957 matchs
+    2025/26   54 associations   961 matchs
+
+DEUX BARÈMES. Jusqu'à 2023/24 : phase de groupes, bonus d'entrée de 4 points
+par club de C1, et aucun bonus de classement — tout bonus qui n'est pas le
+bonus d'entrée est un bonus de tour, donc de la phase finale, sans rien à
+deviner. À partir de 2024/25 : phase de ligue, bonus d'entrée de 6 points, et
+un bonus de classement qu'il faut séparer des bonus de tour ; les bonus de
+tour se déduisent des tours effectivement joués (1,5 en C1, 1 en C3, 0,5 en
+C4, à partir des huitièmes), le reste est le classement.
+
+DEUX PIÈGES DE LA SOURCE, tous deux écartés :
+- les byes, inscrits comme une rencontre contre « Freilos » (pays « Leer ») ;
+- les rencontres jamais disputées, laissées à 0:0 et annotées — Leipzig
+  - Spartak, huitièmes de C3 2021/22, exclusion de la Russie. Un forfait, lui,
+  porte un score attribué (0:3) et compte normalement : Tottenham - Rennes en
+  2021/22 et Dnipro - Puskás en 2024/25 sont bien gardés.
+
+RÉSERVE LEVÉE. Le relevé étape par étape fait à la main pour les seize nations
+suivies (`HIST`) rangeait les bonus de tour avec la phase de ligue ; la saison
+en cours, elle, les compte en phase finale. La reconstruction ci-dessus suit la
+convention de la saison en cours — c'est ce qui permet de comparer une saison
+close et la saison courante dans le même bloc. Les totaux et les deux premiers
+postes sont identiques dans les deux méthodes, sur les cinq saisons. `HIST`
+reste la source du bloc 1, qui trace le cumul et n'a pas ce découpage à faire.
