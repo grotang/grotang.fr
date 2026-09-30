@@ -274,10 +274,21 @@ ${VERIF}
 </html>
 `;
 
-const sitemap = d => `<?xml version="1.0" encoding="UTF-8"?>
+/* Une date PAR PAGE, et la vraie : celle du jour où cette page a changé pour la
+   dernière fois, pas celle du dernier passage du robot.
+
+   Avant, les deux lignes portaient « aujourd'hui ». Le fichier changeait donc à
+   chaque minuit, le robot le commitait, et on retombait sur la republication à
+   vide qu'on venait de supprimer de la page — même bug, deuxième fichier.
+
+   Au passage c'est aussi plus honnête vis-à-vis des moteurs : `lastmod` est
+   censé dire quand le contenu a bougé. Annoncer une modification quotidienne
+   d'une page qui n'a pas bougé depuis une semaine, c'est le genre de signal
+   qu'ils apprennent vite à ignorer. */
+const sitemap = (dUefa, dTennis) => `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://grotang.fr/uefa/</loc><lastmod>${d}</lastmod></url>
-  <url><loc>https://grotang.fr/tennis/</loc><lastmod>${d}</lastmod></url>
+  <url><loc>https://grotang.fr/uefa/</loc><lastmod>${dUefa}</lastmod></url>
+  <url><loc>https://grotang.fr/tennis/</loc><lastmod>${dTennis}</lastmod></url>
 </urlset>
 `;
 
@@ -295,14 +306,30 @@ a{color:var(--hi);font-weight:600;margin-top:14px;display:inline-block}</style>
 </head><body><h1>404</h1><p>Cette page n'existe pas.</p><a href="/uefa/">Coefficient UEFA</a></body></html>`;
 
 /* ---------- exécution ---------- */
-/* La page precedente, relevee AVANT le grand menage, sert uniquement a savoir
-   si la nouvelle ne differe que par son horodatage. */
-const PRECEDENT = (() => { try { return fs.readFileSync(path.join(OUT, 'uefa/index.html'), 'utf8'); }
-                           catch { return null; } })();
+/* L'etat precedent, releve AVANT le grand menage : les deux pages, pour savoir
+   si elles ont reellement change, et le sitemap, pour en reprendre les dates
+   quand elles n'ont pas bouge. */
+const lire = f => { try { return fs.readFileSync(path.join(OUT, f), 'utf8'); } catch { return null; } };
+const PRECEDENT = lire('uefa/index.html');
+const PREC_TENNIS = lire('tennis/index.html');
+const PREC_SITEMAP = lire('sitemap.xml');
 fs.rmSync(OUT, { recursive: true, force: true });
 const uefa = buildUefa();
 const tennis = buildTennis();
 const today = new Date().toISOString().slice(0, 10);
+
+/* `lastmod` d'une page : la date du jour si son contenu a change, sinon celle
+   deja inscrite dans le sitemap precedent. La comparaison de la page UEFA
+   ignore son horodatage de fabrication, comme writeStable. */
+const dateSitemap = (bal, avant, apres, sansHorodatage) => {
+  const memeContenu = avant && (sansHorodatage
+    ? avant.replace(PUB_RE, '') === apres.replace(PUB_RE, '')
+    : avant === apres);
+  const m = PREC_SITEMAP && PREC_SITEMAP.match(new RegExp(bal + '[^]*?<lastmod>([\\d-]{10})</lastmod>'));
+  return memeContenu && m ? m[1] : today;
+};
+const majUefa   = dateSitemap('/uefa/',   PRECEDENT,   uefa.html,   true);
+const majTennis = dateSitemap('/tennis/', PREC_TENNIS, tennis.html, false);
 
 const sizes = {
   'uefa/index.html': writeStable('uefa/index.html', uefa.html, PRECEDENT),
@@ -310,7 +337,7 @@ const sizes = {
   '404.html': write('404.html', NOTFOUND),
   'index.html': write('index.html', ACCUEIL),
   'robots.txt': write('robots.txt', ROBOTS),
-  'sitemap.xml': write('sitemap.xml', sitemap(today)),
+  'sitemap.xml': write('sitemap.xml', sitemap(majUefa, majTennis)),
 };
 
 for (const [f, n] of Object.entries(sizes)) console.log(String(n).padStart(7), f);
