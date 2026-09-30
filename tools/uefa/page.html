@@ -2255,7 +2255,17 @@ const legende = segs => segs.map(s =>
 
     const lab = SEAS.find(x => x[0] === selY)[1];
     const fr = rows.find(r => r.c === 'FRA'), leader = rows[0];
-    const perim = porteeD === 'top' ? '' : `<b>${rows.length} associations</b> affichées. `;
+    /* Sur une saison passee, « Toutes » ne donne que 16 lignes, et le silence
+       faisait croire a un bug. C'en est un, mais de donnees : la decomposition
+       en quatre postes se reconstruit depuis le releve etape par etape, et cet
+       archive n'a ete constitue que pour les nations suivies. Le dire est la
+       moitie du travail ; l'autre moitie est de relever les pages archivees de
+       la source pour les 55. */
+    const manque = !isCur() && porteeD === 'all' && rows.length < ENGAGEES.length;
+    const perim = porteeD === 'top' ? ''
+      : manque
+        ? `<b>${rows.length} associations</b> affichées, et non les 55 : la décomposition se reconstruit depuis le relevé étape par étape, et notre archive de cette saison ne couvre que les nations suivies. Les autres n'ont pas de découpage disponible — elles sont absentes plutôt qu'approximées. `
+        : `<b>${rows.length} associations</b> affichées. `;
     const pct = r => Math.round(100 * r.d[0] / (r.tot || 1));
     document.getElementById('capDec').innerHTML =
       perim + `Quatre composantes de natures différentes, que le classement additionne sans le dire. `
