@@ -108,6 +108,10 @@ function buildUefa() {
     '@context': 'https://schema.org', '@type': 'Dataset',
     name: seo.titre, description: seo.desc, url: seo.url,
     inLanguage: 'fr', isAccessibleForFree: true,
+    /* CC BY 4.0 : reprise libre des calculs et des graphes, à condition de
+       citer grotang.fr. Les résultats de match sont des faits et ne sont à
+       personne ; la licence ne couvre que le travail fait dessus. */
+    license: 'https://creativecommons.org/licenses/by/4.0/',
     dateModified: isoMaj, temporalCoverage: '2022/2027',
     creator: { '@type': 'Organization', name: 'grotang.fr', url: 'https://grotang.fr/' },
     keywords: ['coefficient UEFA', 'classement des associations', 'indice UEFA',

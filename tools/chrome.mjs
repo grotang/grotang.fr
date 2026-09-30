@@ -143,7 +143,11 @@ export function nav(current) {
     `<a href="${p.href}"${p.key === current ? ' aria-current="page"' : ''}>${p.label}</a>`).join('');
   /* Le logo menait a une page d'accueil qui n'existe plus : le site, c'est le
      coefficient UEFA. Il y mene donc directement, sans passer par une redirection. */
-  return `<div class="gnav"><a class="gn-mark" href="/uefa/">GROTANG<span>.FR</span></a>`
+  /* data-nosnippet : Google n'a pas le droit de piocher dans ce bandeau pour
+     construire l'extrait sous le titre. Sans lui, une recherche contenant
+     « grotang » donnait « GROTANG.FR Coefficient UEFAFrançais en Grand Chelem
+     Sombre » — le logo, les onglets collés et le libellé du bouton de thème. */
+  return `<div class="gnav" data-nosnippet><a class="gn-mark" href="/uefa/">GROTANG<span>.FR</span></a>`
     + `<nav>${links}</nav>`
     + `<button type="button" class="gn-theme" id="gn-theme" aria-pressed="false" title="Basculer clair / sombre">`
     + `<span class="gn-theme-i" aria-hidden="true"></span><span class="gn-theme-t">Sombre</span></button></div>`;
