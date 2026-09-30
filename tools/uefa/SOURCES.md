@@ -99,3 +99,34 @@ saison nul.
 
 Figé jusqu'en février : les qualifications sont terminées, il n'y a rien à
 rafraîchir. Les sorties de phase finale demanderont le même relevé.
+
+## Archive des saisons passées, 55 associations
+
+`tools/uefa/archive/` — décomposition en quatre postes d'une saison close,
+pour toutes les associations et non plus seulement les seize suivies.
+
+Deux pages de la source, enregistrées à la main depuis le navigateur. Elles
+vivent dans `/Memberbereich/DB/`, que le `robots.txt` du site déclare privé :
+aucun robot n'ira les chercher, ni le nôtre ni moi.
+
+    .../Memberbereich/DB/PktjeNat.php?parm1=AAAA   effectif, coefficient,
+                                                   et par club : Q/H, bonus, total
+    .../Memberbereich/DB/AvSpiele.php?parm1=AAAA   tous les matchs, tour par tour
+
+`parm1` est l'année de DÉPART : 2025 = saison 2025/26.
+
+Les deux sont nécessaires. « Pkt je Nat » ne découpe qu'en trois
+(qualifications, Hauptrunde, bonus) ; séparer la phase de ligue de la phase
+finale, et isoler le bonus d'entrée du reste, demande de savoir quel tour
+chaque club a joué — c'est la liste des matchs qui le dit.
+
+`lire-archive.py` produit `decomp-AAAA.json` et refuse d'écrire si la somme
+des quatre postes ne retrouve pas le coefficient publié, association par
+association. Sur 2025/26 : 54 associations, 961 matchs, contrôle passé.
+
+RÉSERVE CONNUE. Comparée au relevé étape par étape constitué à la main pour
+les seize nations suivies, cette reconstruction donne exactement les mêmes
+deux premiers postes (bonus d'entrée, qualifications) et le même total, mais
+déplace environ un dixième de point de la phase de ligue vers la phase finale.
+L'écart vient de l'endroit où la source place les bonus de tour dans sa propre
+table par étapes. À trancher avec cinq saisons sous les yeux plutôt qu'une.
