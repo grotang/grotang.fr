@@ -447,9 +447,10 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
 
   <div class="panel">
     <div class="ptitle"><span class="no">2b</span><h3>D'où viennent les points — bonus, qualifications, phase de ligue, phase finale</h3>
-      <span class="sub"><span class="ctl"><span class="lb">Échelle</span><span class="seg" role="group" aria-label="Échelle"><button type="button" id="d-abs" aria-pressed="true">Points</button><button type="button" id="d-pct" aria-pressed="false">Part</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelD" aria-label="Saison"></select></span></span></span></div>
+      <span class="sub"><span class="ctl"><span class="lb">Échelle</span><span class="seg" role="group" aria-label="Échelle"><button type="button" id="d-abs" aria-pressed="true">Points</button><button type="button" id="d-pct" aria-pressed="false">Part</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
+        <button type="button" id="dn-top" aria-pressed="true">Les 8 premières</button><button type="button" id="dn-all" aria-pressed="false">Toutes</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelD" aria-label="Saison"></select></span></span></span></div>
     <div class="klegend" id="dleg"></div>
-    <div class="barswrap"><div class="bars" id="dbars"></div><div class="tip" id="tipDec" hidden></div></div>
+    <div class="barswrap"><div class="bscroll" id="dscroll"><div class="bars" id="dbars"></div></div><div class="tip" id="tipDec" hidden></div></div>
     <p class="figc" id="capDec"></p>
   </div>
 
@@ -2198,8 +2199,18 @@ const legende = segs => segs.map(s =>
   const labLigue = () => (isCur() || +selY >= 2024) ? 'Phase de ligue' : 'Phase de groupes';
 
   let dMode = 'abs';
+  /* Meme filtre qu'aux blocs 1 et 6, et meme parti pris : les huit premieres
+     par defaut, parce que c'est le sujet de la page. « Toutes » sert a situer
+     le groupe — on y voit que la decomposition d'une petite association n'a
+     souvent qu'un seul poste, les qualifications, et que le bonus d'entree est
+     un privilege de quelques-uns.
+     Sur une saison passee, l'archive ne couvre que les nations suivies : les
+     autres n'ont pas de decomposition et sont simplement absentes, filtrees
+     par `decomp` qui rend null. */
+  let porteeD = 'top';
+  const jeuD = () => porteeD === 'top' ? GRP : ENGAGEES.map(n => n.c);
   drawDec = function(){
-    const rows = GRP.filter(c => decomp(c)).map(c => { const d = decomp(c);
+    const rows = jeuD().filter(c => decomp(c)).map(c => { const d = decomp(c);
       return { c, d, tot: d.reduce((a, v) => a + v, 0) }; }).sort((a, b) => b.tot - a.tot);
     const seg = [
       { lab: "Bonus d'entrée (C1)", col: 'var(--d1)', ink: 'var(--d1i)' },
@@ -2212,6 +2223,7 @@ const legende = segs => segs.map(s =>
     const vide = i => rows.every(r => r.d[i] <= 0);
     document.getElementById('dleg').innerHTML = seg.map((x, i) =>
       `<span${vide(i) ? ' style="opacity:.45"' : ''}><i style="background:${x.col}"></i>${x.lab}${vide(i) ? ' · à venir' : ''}</span>`).join('');
+    document.getElementById('dscroll').classList.toggle('large', porteeD !== 'top');
     if (!rows.length) { document.getElementById('dbars').innerHTML = ''; return; }
     const max = Math.max(...rows.map(r => r.tot));
 
@@ -2243,12 +2255,13 @@ const legende = segs => segs.map(s =>
 
     const lab = SEAS.find(x => x[0] === selY)[1];
     const fr = rows.find(r => r.c === 'FRA'), leader = rows[0];
+    const perim = porteeD === 'top' ? '' : `<b>${rows.length} associations</b> affichées. `;
     const pct = r => Math.round(100 * r.d[0] / (r.tot || 1));
     document.getElementById('capDec').innerHTML =
-      `Quatre composantes de natures différentes, que le classement additionne sans le dire. `
+      perim + `Quatre composantes de natures différentes, que le classement additionne sans le dire. `
       + `<b>Le bonus d'entrée</b> vaut 6 points par club qualifié pour la phase de ligue de C1, divisés par le nombre de clubs engagés : il est acquis avant le premier ballon et récompense le rang de la saison passée. `
       + `<b>Les qualifications</b> ne sont ouvertes qu'aux nations dont les clubs entrent tôt — une nation dont tous les clubs sont directement qualifiés ne peut structurellement rien y marquer. `
-      + `<b>${labLigue()}</b> est le seul poste que toutes les nations présentes jouent dans les mêmes conditions, et c'est lui qu'isolent les blocs 6a et 6b ; il porte aussi le bonus de classement de fin de phase. `
+      + `<b>${labLigue()}</b> est le seul poste que toutes les nations présentes jouent dans les mêmes conditions, et c'est lui qu'isole le bloc 6 ; il porte aussi le bonus de classement de fin de phase. `
       + `<b>La phase finale</b> n'est ouverte qu'à ceux qui ont passé la phase de ligue : c'est le poste le plus inégalitaire, et celui qui fait les écarts de haut de tableau. `
       + (isCur()
           ? `${LeNom(leader.c)} mène la saison avec ${nfx(leader.tot)}, dont ${nfx(leader.d[0])} acquis d'avance (${pct(leader)} %) ; la France est à ${nfx(fr.tot)}, dont ${nfx(fr.d[0])} (${pct(fr)} %). `
@@ -2291,6 +2304,10 @@ const legende = segs => segs.map(s =>
 
   document.getElementById('d-abs').onclick = () => { dMode = 'abs'; syncD(); };
   document.getElementById('d-pct').onclick = () => { dMode = 'pct'; syncD(); };
+  document.getElementById('dn-top').onclick = () => { porteeD = 'top'; syncDN(); };
+  document.getElementById('dn-all').onclick = () => { porteeD = 'all'; syncDN(); };
+  function syncDN(){ document.getElementById('dn-top').setAttribute('aria-pressed', porteeD === 'top');
+    document.getElementById('dn-all').setAttribute('aria-pressed', porteeD === 'all'); drawDec(); }
   function syncD(){ document.getElementById('d-abs').setAttribute('aria-pressed', dMode === 'abs');
     document.getElementById('d-pct').setAttribute('aria-pressed', dMode === 'pct'); drawDec(); }
   drawDec();
