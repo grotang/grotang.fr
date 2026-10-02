@@ -134,9 +134,14 @@ ${VERIF}
 <meta property="og:title" content="${seo.titre}">
 <meta property="og:description" content="${seo.desc}">
 <meta property="og:url" content="${seo.url}">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://grotang.fr/uefa/carte.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Où chaque nation peut finir la saison : projection du coefficient UEFA des huit premières nations">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${seo.titre}">
 <meta name="twitter:description" content="${seo.desc}">
+<meta name="twitter:image" content="https://grotang.fr/uefa/carte.png">
 <script type="application/ld+json">${jsonld}</script>
 ${FAVICON}
 ${THEME_BOOT}
@@ -317,6 +322,12 @@ const lire = f => { try { return fs.readFileSync(path.join(OUT, f), 'utf8'); } c
 const PRECEDENT = lire('uefa/index.html');
 const PREC_TENNIS = lire('tennis/index.html');
 const PREC_SITEMAP = lire('sitemap.xml');
+/* La carte de partage n'est pas fabriquee ici mais par tools/uefa/carte.mjs,
+   apres la projection. Le grand menage l'effacerait a chaque construction :
+   on la met de cote et on la repose telle quelle, avec sa signature. C'est ce
+   qui permet a carte.mjs de ne la refaire que si son contenu a change. */
+const CARTE = ['uefa/carte.png', 'uefa/carte.sig'].map(f => {
+  try { return [f, fs.readFileSync(path.join(OUT, f))]; } catch { return null; } }).filter(Boolean);
 fs.rmSync(OUT, { recursive: true, force: true });
 const uefa = buildUefa();
 const tennis = buildTennis();
@@ -332,6 +343,7 @@ const dateSitemap = (bal, avant, apres, sansHorodatage) => {
   const m = PREC_SITEMAP && PREC_SITEMAP.match(new RegExp(bal + '[^]*?<lastmod>([\\d-]{10})</lastmod>'));
   return memeContenu && m ? m[1] : today;
 };
+for (const [f, buf] of CARTE) { fs.mkdirSync(path.dirname(path.join(OUT, f)), { recursive: true }); fs.writeFileSync(path.join(OUT, f), buf); }
 const majUefa   = dateSitemap('/uefa/',   PRECEDENT,   uefa.html,   true);
 const majTennis = dateSitemap('/tennis/', PREC_TENNIS, tennis.html, false);
 

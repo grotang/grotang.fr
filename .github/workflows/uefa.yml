@@ -119,6 +119,13 @@ jobs:
       - name: Projection sur le runner
         run: node tools/uefa/projette.mjs 200000
 
+      # La carte de partage : l'image qui s'affiche quand on colle le lien dans
+      # WhatsApp, LinkedIn, Slack. Fabriquee depuis la page qu'on vient de
+      # construire, donc avec les chiffres du jour. Refaite seulement si son
+      # dessin a change : sinon l'ancienne est gardee a l'octet pres.
+      - name: Carte de partage
+        run: node tools/uefa/carte.mjs
+
       # LE FILET. tools/uefa/test-page.mjs ouvre la page reconstruite dans un
       # vrai navigateur et vérifie une quinzaine de faits : pas d'erreur
       # JavaScript, tous les blocs remplis, aucun NaN affiché, et les égalités
