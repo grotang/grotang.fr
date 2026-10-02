@@ -14,7 +14,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { nav, navCSS, FAVICON, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF } from './chrome.mjs';
+import { nav, navCSS, FAVICON, FAVICON_SVG, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF } from './chrome.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
@@ -275,6 +275,7 @@ const ACCUEIL = `<!doctype html>
 <meta charset="utf-8">
 ${VERIF}
 <title>grotang.fr</title>
+${FAVICON}
 <link rel="canonical" href="https://grotang.fr/uefa/">
 <meta http-equiv="refresh" content="0; url=/uefa/">
 <script>location.replace('/uefa/');</script>
@@ -353,6 +354,7 @@ const sizes = {
   '404.html': write('404.html', NOTFOUND),
   'index.html': write('index.html', ACCUEIL),
   'robots.txt': write('robots.txt', ROBOTS),
+  'favicon.svg': write('favicon.svg', FAVICON_SVG),
   'sitemap.xml': write('sitemap.xml', sitemap(majUefa, majTennis)),
 };
 

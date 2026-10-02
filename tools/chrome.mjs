@@ -153,7 +153,12 @@ export function nav(current) {
     + `<span class="gn-theme-i" aria-hidden="true"></span><span class="gn-theme-t">Sombre</span></button></div>`;
 }
 
-/* L'icône est incrustée dans chaque page plutôt que servie comme fichier : elle
-   pèse 367 octets, et un fichier .svg qui transite par le pont vers le PC se voit
-   greffer un manifeste de provenance C2PA qui le fait grossir à 8 Ko. */
-export const FAVICON = `<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"%3E%3Crect width="32" height="32" rx="7" fill="%230F141D"/%3E%3Cpath d="M6 22V10h4.4c2.9 0 4.6 1.5 4.6 4 0 1.8-.9 3-2.5 3.6L15.4 22h-3l-2.3-4h-1.2v4H6zm2.9-6.3h1.3c1.2 0 1.9-.6 1.9-1.6s-.7-1.6-1.9-1.6H8.9v3.2z" fill="%23FBFCFE"/%3E%3Ccircle cx="22.5" cy="19" r="4.2" fill="none" stroke="%235D9BF0" stroke-width="2"/%3E%3C/svg%3E">`;
+/* L'icône. Elle était incrustée dans chaque page en data:URI, mais l'attribut
+   href s'arrêtait au premier guillemet du SVG (xmlns="…") : l'icône était
+   cassée, et les navigateurs comme Google affichaient le globe par défaut.
+   C'est désormais un vrai fichier, /favicon.svg, écrit par le build : c'est
+   aussi la seule forme que Google accepte pour l'icône de ses résultats.
+   Le dessin : « gt. », lettres blanches sur le carré sombre, le point en bleu
+   comme le « .FR » du bandeau. */
+export const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#0F141D"/><g fill="none" stroke="#FBFCFE" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.6" cy="13.4" r="3.9"/><path d="M13.5 9.4 V20.3 a3.9 3.9 0 0 1 -3.9 3.9 H7.2"/><path d="M19.2 6.6 V15 a2.6 2.6 0 0 0 2.6 2.6 H22.6"/><path d="M16.6 10.2 H22.4"/></g><circle cx="26.4" cy="16.4" r="2.1" fill="#5D9BF0"/></svg>`;
+export const FAVICON = `<link rel="icon" type="image/svg+xml" href="/favicon.svg">`;

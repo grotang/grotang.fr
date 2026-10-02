@@ -2,9 +2,6 @@
 node_modules/
 *.log
 
-# Reliquat : l'icône est désormais incrustée dans les pages, plus servie en fichier.
-public/favicon.svg
-
 # Scripts de capture/QA jetables (Playwright), generes au fil des sessions.
 *.tmp.mjs
 
