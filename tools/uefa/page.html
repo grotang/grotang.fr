@@ -176,6 +176,17 @@ svg{display:block; width:100%; height:auto}
 .ptitle .sub{font-size:12.5px; color:var(--ink-3); margin-left:auto; text-align:right; min-width:0}
 @media (max-width:700px){ .ptitle .sub{margin-left:0; text-align:left; flex-basis:100%} .seg button{padding:5px 9px; font-size:12px} }
 section > .panel + .panel{margin-top:14px}
+/* Le bloc 2 est une famille : trois sous-blocs qui posent la même question —
+   d'où viennent les points — selon trois axes. Un en-tête commun, et des
+   panneaux plus serrés entre eux qu'avec le reste de la page, pour qu'on lise
+   le groupe avant de lire les parties. */
+.famille{margin-top:22px}
+section > .famille + .panel{margin-top:22px}
+.famille .panel + .panel{margin-top:6px}
+.fhead{display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; margin:0 0 10px 2px}
+.fhead .no{font-size:11px; font-weight:700; letter-spacing:.06em; color:var(--surface); background:var(--ink); padding:2px 7px; border-radius:2px}
+.fhead h3{font-size:19px; font-weight:600; letter-spacing:-.01em}
+.fhead p{margin:0; color:var(--ink-2); font-size:13.5px; max-width:82ch}
 
 /* ---------- bandeau calendrier ---------- */
 .cal{margin-bottom:4px}
@@ -340,7 +351,7 @@ section > .panel + .panel{margin-top:14px}
 .klegend i{width:12px; height:12px; border-radius:2px; display:inline-block; flex:none}
 
 /* ---------- clubs ---------- */
-.cl8{margin-top:18px; padding-top:14px; border-top:1px solid var(--rule-soft); overflow-x:auto}
+.cl8{overflow-x:auto}
 .cl8 svg{display:block; width:auto; height:auto; max-width:none}
 .clrow{background:var(--surface); padding:10px 14px; display:grid; grid-template-columns:minmax(96px,142px) 1fr; gap:12px; align-items:center}
 .clrow.me{background:var(--fr-soft)}
@@ -435,24 +446,35 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
     <p class="figc" id="barNote"></p>
   </div>
 
+  <div class="famille">
+  <div class="fhead"><span class="no">2</span><h3>D'où viennent les points</h3>
+    <p>Le même total, découpé selon trois axes : la compétition, le club, la nature du point.</p></div>
+
   <div class="panel">
-    <div class="ptitle"><span class="no">2a</span><h3>D'où viennent les points — par compétition</h3>
+    <div class="ptitle"><span class="no">2a</span><h3>Par compétition</h3>
       <span class="sub"><span class="ctl"><span class="lb">Échelle</span><span class="seg" role="group" aria-label="Échelle"><button type="button" id="k-abs" aria-pressed="true">Points</button><button type="button" id="k-pct" aria-pressed="false">Part</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelK" aria-label="Saison"></select></span></span></span></div>
     <div class="klegend" id="kleg"></div>
     <div class="barswrap"><div class="bars" id="kbars"></div><div class="tip" id="tipK" hidden></div></div>
     <p class="figc" id="kNote"></p>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle"><span class="no">2b</span><h3>Par club</h3>
+      <span class="sub"><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelC" aria-label="Saison"></select></span></span></span></div>
+    <div class="klegend" id="cleg"></div>
     <div class="cl8" id="cl8"></div>
     <p class="figc" id="clNote"></p>
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">2b</span><h3>D'où viennent les points — bonus, qualifications, phase de ligue, phase finale</h3>
+    <div class="ptitle"><span class="no">2c</span><h3>Par type de point</h3>
       <span class="sub"><span class="ctl"><span class="lb">Échelle</span><span class="seg" role="group" aria-label="Échelle"><button type="button" id="d-abs" aria-pressed="true">Points</button><button type="button" id="d-pct" aria-pressed="false">Part</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
         <button type="button" id="dn-top" aria-pressed="true">Les 8 premières</button><button type="button" id="dn-all" aria-pressed="false">Toutes</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelD" aria-label="Saison"></select></span></span></span></div>
     <div class="klegend" id="dleg"></div>
     <div class="barswrap"><div class="bscroll" id="dscroll"><div class="bars" id="dbars"></div></div><div class="tip" id="tipDec" hidden></div></div>
     <p class="figc" id="capDec"></p>
   </div>
+  </div><!-- /famille 2 -->
 
   <div class="panel">
     <div class="ptitle"><span class="no">3</span><h3>Journée par journée</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="seg" role="group" aria-label="Lecture"><button type="button" id="l-cum" aria-pressed="true">Cumul</button><button type="button" id="l-gap" aria-pressed="false">Écart au leader</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSel" aria-label="Saison"></select></span></span></span></div>
@@ -1518,7 +1540,10 @@ const kCount = c => { if(isCur()) return [BY[c].a[0], BY[c].a[1], BY[c].a[2]];
   const t=[0,0,0]; kClubs(c).forEach(x => t[x.k]++); return t; };
 
 let kMode='abs';
-document.getElementById('kleg').innerHTML = KNAME.map((n,i)=>`<span><i style="background:var(${KVAR[i]})"></i>${n}</span>`).join('');
+/* Même légende en 2a et en 2b : maintenant que la vue par club a son propre
+   panneau, elle doit dire elle-même ce que veulent dire ses couleurs. */
+['kleg', 'cleg'].forEach(id => { document.getElementById(id).innerHTML =
+  KNAME.map((n,i)=>`<span><i style="background:var(${KVAR[i]})"></i>${n}</span>`).join(''); });
 function drawK(){
   const rows=[...TOP8].filter(hasSeason).sort((x,y)=>kSeasonCoef(y)-kSeasonCoef(x));
   if(!rows.length) return;
@@ -1822,7 +1847,7 @@ function mkSeasonCtl(id){
 let drawDec = () => {};
 
 function syncSeason(){
-  ['seasonSel','seasonSelZ','seasonSelM','seasonSelK','seasonSelD'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=selY; });
+  ['seasonSel','seasonSelZ','seasonSelM','seasonSelK','seasonSelC','seasonSelD'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=selY; });
   drawK(); drawClubs(); drawDec(); drawL(); drawZ(); drawM();
 }
 
@@ -2005,7 +2030,7 @@ function drawM(){
 }
 
 /* Les trois listes de saison, une fois tous les dessins définis. */
-['seasonSel','seasonSelZ','seasonSelM','seasonSelK','seasonSelD'].forEach(mkSeasonCtl);
+['seasonSel','seasonSelZ','seasonSelM','seasonSelK','seasonSelC','seasonSelD'].forEach(mkSeasonCtl);
 syncP(); syncK(); drawClubs(); drawL(); drawZ(); drawM();
 function drawAll(){ drawBars(); drawK(); drawClubs(); drawL(); drawZ(); drawM(); }
 
