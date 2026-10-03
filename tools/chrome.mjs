@@ -158,7 +158,8 @@ export function nav(current) {
    cassée, et les navigateurs comme Google affichaient le globe par défaut.
    C'est désormais un vrai fichier, /favicon.svg, écrit par le build : c'est
    aussi la seule forme que Google accepte pour l'icône de ses résultats.
-   Le dessin : « gt. », lettres blanches sur le carré sombre, le point en bleu
-   comme le « .FR » du bandeau. */
-export const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#0F141D"/><g fill="none" stroke="#FBFCFE" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.6" cy="13.4" r="3.9"/><path d="M13.5 9.4 V20.3 a3.9 3.9 0 0 1 -3.9 3.9 H7.2"/><path d="M19.2 6.6 V15 a2.6 2.6 0 0 0 2.6 2.6 H22.6"/><path d="M16.6 10.2 H22.4"/></g><circle cx="26.4" cy="16.4" r="2.1" fill="#5D9BF0"/></svg>`;
+   Le dessin : « gt. » noir sur jaune canari (#FFD400, liseré #E5BC00 pour
+   ne pas se dissoudre sur un onglet blanc), le point en bleu France. Le bloc
+   de lettres est centré et le point posé sur la ligne de base. */
+export const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x=".5" y=".5" width="31" height="31" rx="7" fill="#FFD400" stroke="#E5BC00"/><g transform="translate(0 .6)"><g fill="none" stroke="#0F141D" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.6" cy="13.4" r="3.9"/><path d="M13.5 9.4 V20.3 a3.9 3.9 0 0 1 -3.9 3.9 H7.2"/><path d="M19.2 6.6 V15 a2.6 2.6 0 0 0 2.6 2.6 H22.6"/><path d="M16.6 10.2 H22.4"/></g><circle cx="26.4" cy="16.65" r="2.4" fill="#1F5FD1"/></g></svg>`;
 export const FAVICON = `<link rel="icon" type="image/svg+xml" href="/favicon.svg">`;
