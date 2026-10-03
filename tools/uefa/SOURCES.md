@@ -173,3 +173,9 @@ L'effectif club par club des 55 nations (nom, compétition, éliminé, points de
 saison) vient du rafraîchissement quotidien : `extract.mjs` le lit dans la page
 publique PktNat et le publie dans `D.eff`. Un club absent de POW n'a joué aucun
 match européen sur la période : il s'affiche « — ».
+
+Tour de sortie club par club (infobulle du bloc 7a) : `wiki/sorties-2026-27.json`,
+produit par `sorties-clubs.py`, qui rapproche les noms du grand livre (Wikipédia)
+de ceux de la source, nation par nation, parmi les seuls clubs éliminés. Contrôle :
+129 sorties sur 129, et pour chaque nation le nombre de sorties par tour retrouve
+exactement celui du bloc QUAL.
