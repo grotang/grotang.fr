@@ -159,3 +159,17 @@ convention de la saison en cours — c'est ce qui permet de comparer une saison
 close et la saison courante dans le même bloc. Les totaux et les deux premiers
 postes sont identiques dans les deux méthodes, sur les cinq saisons. `HIST`
 reste la source du bloc 1, qui trace le cumul et n'a pas ce découpage à faire.
+
+## Puissance des clubs (infobulles « clubs » des blocs 1 et 7a)
+
+`archive/puissance-clubs-brut.json` : pour chaque nation, les points d'équipe de
+chaque club cumulés sur les cinq saisons archivées (2021/22 → 2025/26), lus dans
+les pages « AV Pkt je Nat » enregistrées à la main. C'est la mesure que l'UEFA
+retient pour classer ses clubs (sans le plancher de 20 % du coefficient
+national). Injecté dans la page entre `/*POW_START*/` et `/*POW_END*/`, noms
+passés par `club-aliases.json` pour coller aux noms du rafraîchissement.
+
+L'effectif club par club des 55 nations (nom, compétition, éliminé, points de la
+saison) vient du rafraîchissement quotidien : `extract.mjs` le lit dans la page
+publique PktNat et le publie dans `D.eff`. Un club absent de POW n'a joué aucun
+match européen sur la période : il s'affiche « — ».

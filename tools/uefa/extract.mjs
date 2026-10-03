@@ -119,6 +119,7 @@ function parseClubs(doc, legend) {
       const [name, sa, sb, sq, uq, nq, sh, uh, nh, bonus, pkt, npkt] = c;
       cur.teams.push({
         name, sa: num(sa), sb: num(sb), k: bandOf(legend, num(sa), num(sb)),
+        out: legend.get(num(sa)) === -1,
         qW: num(sq), qD: num(uq), qL: num(nq), mW: num(sh), mD: num(uh), mL: num(nh),
         bonus: num(bonus), points: num(pkt), nationPoints: num(npkt),
       });
@@ -254,6 +255,12 @@ export function extract(parse, html, { names = {}, clubAliases = {}, topN = 8 } 
   const clubs = nations.filter(n => top.includes(n.c)).flatMap(n =>
     n._block.teams.map(t => ({ n: clean(t.name), cc: n.c, k: t.k, p: t.points })));
 
+  /* L'effectif complet des 55, club par club : [nom, compétition, éliminé, points
+     d'équipe]. Il nourrit les infobulles « clubs » des blocs 1 et 7a, qui doivent
+     marcher pour toutes les nations et pas seulement pour les huit premières. */
+  const eff = {};
+  for (const n of nations) eff[n.c] = n._block.teams.map(t => [clean(t.name), t.k, t.out ? 1 : 0, t.points]);
+
   const frBlock = (nations.find(n => n.c === 'FRA') || fail('France absente')) ._block;
   const fra = {
     teams: frBlock.teams.map(t => ({
@@ -267,5 +274,5 @@ export function extract(parse, html, { names = {}, clubAliases = {}, topN = 8 } 
   for (const n of nations) series[n.c] = { q: q[n.c], m: m[n.c] };
 
   for (const n of nations) delete n._block;
-  return { meta, nations, series, clubs, fra };
+  return { meta, nations, series, clubs, fra, eff };
 }

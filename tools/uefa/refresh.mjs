@@ -133,6 +133,7 @@ function digest(d) {
     n: d.nations.map(n => [n.c, n.r, n.t, n.tp, n.b, n.y, n.k, n.a]),
     s: d.nations.map(n => d.series[n.c]),
     c: d.clubs.map(c => [c.n, c.k, c.p]),
+    e: d.eff || null,
   });
 }
 
