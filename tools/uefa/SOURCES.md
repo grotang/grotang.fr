@@ -180,7 +180,7 @@ de ceux de la source, nation par nation, parmi les seuls clubs éliminés. Contr
 129 sorties sur 129, et pour chaque nation le nombre de sorties par tour retrouve
 exactement celui du bloc QUAL.
 
-## De juillet à la finale (bloc 7c)
+## Évolution de la saison en Sankey (bloc 7c)
 
 Chaque club engagé est suivi sur 11 étapes : 1er, 2e, 3e tour, barrages,
 phase de groupes ou de ligue, barrages à élimination directe, 8es, quarts,
