@@ -3550,22 +3550,25 @@ const legende = segs => segs.map(s =>
     const B = baseV(), km = kMax(), et = ETAPES(), cur = isCur();
     const list = [...selB].filter(c => B[c]);
     const W = Math.max(760, Math.round(box.clientWidth || 1000)), H = 400, mT = 40, mB = 30, mL = 34, mR = 26;
-    const X = k => mL + (W - mL - mR) * k / NK;
+    /* Un point = les clubs qui JOUENT ce tour, au centre de sa colonne (même lecture
+       que le bloc 7c). La pente vers le point suivant = les clubs éliminés à ce tour. */
+    const COLS = ['Q1', 'Q2', 'Q3', 'Bar.', ancienV() ? 'Groupes' : 'Ligue', 'Barr. KO', '8es', '1/4', '1/2', 'Finale', 'Vainqueur'];
+    const cw = (W - mL - mR) / COLS.length, E = a => mL + cw * a, X = k => E(k + .5);
     const hi = Math.max(1, ...list.map(c => B[c].length)) + 0.7;
     const Y = v => mT + (H - mT - mB) * (1 - v / hi);
     const halo = `stroke="var(--surface)" stroke-width="3.5" stroke-linejoin="round" paint-order="stroke"`;
     let g = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`;
-    [['Phase qualificative', '--n4', 0, 4], [ancienV() ? 'Phase de groupes' : 'Phase de ligue', '--fr', 4, 5], ['Phase finale', '--n7', 5, NK]].forEach(([ph, t, a, b]) => {
-      const x1 = X(a), x2 = X(b);
+    [['Phase qualificative', '--n4', 0, 4], [ancienV() ? 'Phase de groupes' : 'Phase de ligue', '--fr', 4, 5], ['Phase finale', '--n7', 5, COLS.length]].forEach(([ph, t, a, b]) => {
+      const x1 = E(a), x2 = E(b);
       g += `<rect x="${(x1 + 1).toFixed(1)}" y="4" width="${(x2 - x1 - 2).toFixed(1)}" height="19" rx="4" fill="var(${t})" opacity=".26"/>`
         + `<text x="${((x1 + x2) / 2).toFixed(1)}" y="17.5" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing="${b - a > 1 ? '.05em' : '0'}" fill="var(--ink-2)">${ph}</text>`
         + (a ? `<line x1="${x1.toFixed(1)}" y1="4" x2="${x1.toFixed(1)}" y2="${H - mB}" stroke="var(--rule)"/>` : '');
     });
     for (let v = 0; v <= Math.floor(hi); v++)
-      g += `<line x1="${mL}" y1="${Math.round(Y(v))}" x2="${X(NK)}" y2="${Math.round(Y(v))}" stroke="var(--rule-soft)"/>`
+      g += `<line x1="${mL}" y1="${Math.round(Y(v))}" x2="${E(COLS.length)}" y2="${Math.round(Y(v))}" stroke="var(--rule-soft)"/>`
         + `<text x="${mL - 8}" y="${Math.round(Y(v)) + 4}" text-anchor="end" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${v}</text>`;
-    et.forEach((lab, k) => g += `<text x="${X(k).toFixed(1)}" y="${H - mB + 18}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--ink-3)" opacity="${cur && k > km ? .5 : 1}">${k ? lab : '1er juil.'}</text>`);
-    const xFin = cur ? X(km + 0.5) : X(km);
+    COLS.forEach((lab, k) => g += `<text x="${X(k).toFixed(1)}" y="${H - mB + 18}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--ink-3)" opacity="${cur && k > km ? .5 : 1}">${lab}</text>`);
+    const xFin = X(km);
     if (cur) g += `<line x1="${xFin.toFixed(1)}" y1="${mT}" x2="${xFin.toFixed(1)}" y2="${H - mB + 4}" stroke="var(--ink-2)" stroke-width="1.2"/>`
       + `<text x="${(xFin + 6).toFixed(1)}" y="${mT + 10}" font-size="10" font-weight="700" fill="var(--ink-2)">aujourd'hui</text>`;
 
@@ -3628,7 +3631,7 @@ const legende = segs => segs.map(s =>
     const B = baseV(), km = kMax(), lab = SEAS.find(x => x[0] === selY)[1];
     const list = [...selB].filter(c => B[c]), abs = [...selB].filter(c => !B[c]);
     document.getElementById('capCs').innerHTML =
-      `<b>${lab}</b> · clubs encore en lice après chaque tour ; un club reversé de compétition continue. En gris, les clubs perdus. `
+      `<b>${lab}</b> · chaque point compte les clubs qui jouent ce tour ; la pente qui suit, en gris, nomme ceux qui y sont éliminés. Un club reversé de compétition continue. `
       + (abs.length ? `Absente${abs.length > 1 ? 's' : ''} cette saison : ${abs.map(name).join(', ')}.` : '');
   }
   const courbe = () => { drawCs(); capCs(); };
