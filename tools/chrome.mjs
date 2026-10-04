@@ -112,7 +112,11 @@ export const navCSS = `
   -webkit-font-smoothing:antialiased}
 .gnav a{color:inherit;text-decoration:none}
 .gnav .gn-mark{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--ink);
-  font-family:'IBM Plex Mono',ui-monospace,monospace;white-space:nowrap}
+  font-family:'IBM Plex Mono',ui-monospace,monospace;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:9px}
+/* L'icône du site devant le nom : la même que l'onglet, pour qu'on relie l'un à
+   l'autre. 26 px dans un bandeau de 46 : bien visible, sans écraser le texte. */
+.gnav .gn-mark svg{width:26px;height:26px;flex:none;display:block}
 .gnav .gn-mark span{color:var(--ink-3);font-weight:500}
 .gnav nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
 .gnav nav a{font-size:12.5px;font-weight:600;color:var(--ink-3);
@@ -147,7 +151,8 @@ export function nav(current) {
      construire l'extrait sous le titre. Sans lui, une recherche contenant
      « grotang » donnait « GROTANG.FR Coefficient UEFAFrançais en Grand Chelem
      Sombre » — le logo, les onglets collés et le libellé du bouton de thème. */
-  return `<div class="gnav" data-nosnippet><a class="gn-mark" href="/uefa/">GROTANG<span>.FR</span></a>`
+  const icone = FAVICON_SVG.replace('<svg ', '<svg aria-hidden="true" focusable="false" ');
+  return `<div class="gnav" data-nosnippet><a class="gn-mark" href="/uefa/">${icone}<b style="font-weight:inherit">GROTANG<span>.FR</span></b></a>`
     + `<nav>${links}</nav>`
     + `<button type="button" class="gn-theme" id="gn-theme" aria-pressed="false" title="Basculer clair / sombre">`
     + `<span class="gn-theme-i" aria-hidden="true"></span><span class="gn-theme-t">Sombre</span></button></div>`;

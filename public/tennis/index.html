@@ -123,7 +123,11 @@ td.tc { font-size:.7rem; font-weight:700; background:var(--surface-2) !important
   -webkit-font-smoothing:antialiased}
 .gnav a{color:inherit;text-decoration:none}
 .gnav .gn-mark{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--ink);
-  font-family:'IBM Plex Mono',ui-monospace,monospace;white-space:nowrap}
+  font-family:'IBM Plex Mono',ui-monospace,monospace;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:9px}
+/* L'icône du site devant le nom : la même que l'onglet, pour qu'on relie l'un à
+   l'autre. 26 px dans un bandeau de 46 : bien visible, sans écraser le texte. */
+.gnav .gn-mark svg{width:26px;height:26px;flex:none;display:block}
 .gnav .gn-mark span{color:var(--ink-3);font-weight:500}
 .gnav nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
 .gnav nav a{font-size:12.5px;font-weight:600;color:var(--ink-3);
@@ -148,7 +152,7 @@ body{padding-top:0}
 </style>
 </head>
 <body>
-<div class="gnav" data-nosnippet><a class="gn-mark" href="/uefa/">GROTANG<span>.FR</span></a><nav><a href="/uefa/">Coefficient UEFA</a><a href="/tennis/" aria-current="page">Français en Grand Chelem</a></nav><button type="button" class="gn-theme" id="gn-theme" aria-pressed="false" title="Basculer clair / sombre"><span class="gn-theme-i" aria-hidden="true"></span><span class="gn-theme-t">Sombre</span></button></div>
+<div class="gnav" data-nosnippet><a class="gn-mark" href="/uefa/"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x=".5" y=".5" width="31" height="31" rx="7" fill="#FFD400" stroke="#E5BC00"/><g transform="translate(0 .6)"><g fill="none" stroke="#0F141D" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.6" cy="13.4" r="3.9"/><path d="M13.5 9.4 V20.3 a3.9 3.9 0 0 1 -3.9 3.9 H7.2"/><path d="M19.2 6.6 V15 a2.6 2.6 0 0 0 2.6 2.6 H22.6"/><path d="M16.6 10.2 H22.4"/></g><circle cx="26.4" cy="16.65" r="2.4" fill="#1F5FD1"/></g></svg><b style="font-weight:inherit">GROTANG<span>.FR</span></b></a><nav><a href="/uefa/">Coefficient UEFA</a><a href="/tennis/" aria-current="page">Français en Grand Chelem</a></nav><button type="button" class="gn-theme" id="gn-theme" aria-pressed="false" title="Basculer clair / sombre"><span class="gn-theme-i" aria-hidden="true"></span><span class="gn-theme-t">Sombre</span></button></div>
 
 <h1>🇫🇷 Français au tableau principal — Simple Messieurs · Ère Open (1968–2026)</h1>
 <p class="subtitle">Nombre de joueurs français au 1er tour (tableau principal) par Grand Chelem · Sources : fr.wikipedia.org + en.wikipedia.org</p>
