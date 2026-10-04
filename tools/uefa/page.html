@@ -523,7 +523,7 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
 <section>
   <div class="shead">
     <h2>La course à la 5<sup>e</sup> place</h2>
-    <p>Une nation à neuf clubs marque plus qu'une nation à trois, et ça ne dit rien de sa valeur. Le coefficient divise par les clubs engagés ; cette lecture-ci divise par les <b>matchs joués</b>. Le nombre de clubs disparaît des deux côtés, et il ne reste que ce qui s'est passé sur le terrain.</p>
+    <p>Le coefficient divise par les clubs engagés ; le rendement divise par les <b>matchs joués</b>. Il ne reste que le terrain.</p>
   </div>
 
   <div class="panel">
@@ -540,7 +540,7 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
 <section>
   <div class="shead">
     <h2>Les clubs encore en vie</h2>
-    <p>Le coefficient divise par les clubs <b>engagés</b> au 1<sup>er</sup> juillet, jamais par ceux qui jouent encore : le diviseur est figé pour la saison. Un club éliminé continue donc de peser dans la division sans plus jamais rapporter un point. C'est le paramètre le moins lu du classement, et souvent celui qui explique un écart.</p>
+    <p>Le diviseur est figé au 1<sup>er</sup> juillet : un club éliminé continue de peser, sans plus rapporter de point.</p>
   </div>
 
   <div class="panel">
@@ -585,7 +585,7 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
 <section>
   <div class="shead">
     <h2>Où ça peut finir</h2>
-    <p>Le classement du jour ne dit pas où l'on atterrit. Voici, pour chaque nation du groupe, l'intervalle dans lequel son coefficient de saison peut encore se déplacer d'ici la fin de la phase de ligue — et ce qui est déjà hors d'atteinte.</p>
+    <p>Où le coefficient de chaque nation peut encore aller.</p>
   </div>
   <div class="panel">
     <div class="ptitle"><span class="no">8</span><h3>La projection</h3>
@@ -629,18 +629,11 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
     <h3>Méthode, source et limites</h3>
     <div id="anomaly"></div>
     <div id="xchkNote"></div>
-    <p><b>Comment le coefficient se construit.</b> Chaque club marque des points ; le coefficient du pays pour la saison est le total de ces points divisé par le nombre de clubs que le pays a engagés. Barème lisible dans les données de cette saison : tour de qualification, victoire 1 point, nul 0,5 ; phase de ligue, victoire 2 points, nul 1. S'y ajoute un bonus de participation de 6 points par club qualifié pour la phase de ligue de C1. Le classement à 5 ans additionne les cinq derniers coefficients de saison.</p>
-    <p><b>La première étape n'est pas un match.</b> La source impute le bonus de participation des clubs directement qualifiés à la première ligne de son tableau, celle du premier tour de qualification. Contrôle effectué à chaque publication : pour les huit premières associations, le coefficient de cette étape vaut exactement 6 × (clubs en C1) ÷ (clubs engagés) — 18 ÷ 7 = 2,571 pour la France. La page isole donc ce bonus dans une colonne « entrée en lice » placée avant Q1, et retranche sa valeur du Q1 affiché, qui ne contient plus que des résultats de terrain. Contrôle : aucune des 55 associations ne ressort avec un Q1 net négatif. Le bonus des clubs qui rejoignent la phase de ligue par les qualifications est crédité plus tard, à l'étape où ils se qualifient.</p>
-    <p><b>Répartition par compétition.</b> Les points d'un club sont rattachés à la compétition où il se trouve actuellement, et non à celle par laquelle il est entré : un club reversé de C1 en C3 compte en C3 — c'est la convention des sites de référence. Contrôle : pour les 55 associations, le nombre de clubs ainsi classés par compétition coïncide avec les effectifs publiés par la source, et la somme des points par compétition égale le total national.</p>
-    <p><b>Le calendrier commande la lecture.</b> Les trois phases de ligue ne commencent pas en même temps : C1 le 8 septembre, C3 le 16 septembre, C4 le 15 octobre 2026. Tant qu'une compétition n'a pas démarré, ses clubs n'ont ni match ni bonus de participation, et la répartition par compétition est donc structurellement déséquilibrée en faveur de la C1. Elle ne devient comparable d'une nation à l'autre qu'à partir de la mi-octobre. Le calendrier affiché en tête de page est celui des rencontres publié par football-coefficient.eu ; il est figé pour la saison et n'est pas rechargé chaque matin.</p>
-    <p><b>Ce que la projection est, et n'est pas.</b> Elle rejoue la saison un grand nombre de fois et lit la distribution des résultats : les intervalles disent où le coefficient atterrit le plus souvent, pas où il atterrira. Deux réserves qui lui sont propres. Les tirages au sort y sont supposés purement aléatoires, alors que les vrais sont organisés par chapeaux — ce qui resserre un peu les écarts au premier tour à élimination directe. Et ses paramètres sont calés sur la variabilité observée depuis 2021, pas encore éprouvés en rejouant les saisons passées : c'est le prochain chantier.</p>
-    <p><b>Pourquoi diviser par le nombre de clubs engagés.</b> Le diviseur est fixé en début de saison et ne bouge pas : un club éliminé continue de peser dans la division. Un pays qui engage beaucoup de clubs a donc besoin de plus de résultats pour le même coefficient. La France divise par 7 cette saison.</p>
-    <p><b>Le classement de la saison n'est pas le classement à 5 ans.</b> En début de saison, le coefficient de la saison favorise mécaniquement les pays dont les clubs disputent de nombreux tours de qualification en juillet-août. Un rang de saison médiocre à ce stade ne dit pas grand-chose ; il devient lisible à partir de la phase de ligue.</p>
-    <p><b>Source.</b> <a href="https://eurocoeff.com/" target="_blank" rel="noopener">eurocoeff.com</a>, jeu de données public sous licence CC BY 4.0, lui-même construit à partir de <a href="https://www.5-jahres-wertung.de/" target="_blank" rel="noopener">5-jahres-wertung.de</a>. Ces chiffres sont non officiels : l'UEFA fait foi. Chaque publication de cette page rejoue le calcul complet depuis la source ; une seule série fait exception, l'archive des effectifs décrite ci-dessous.</p>
-    <p><b>Clubs engagés, clubs encore en lice.</b> Ce sont deux nombres distincts et la page les tient séparés. Le diviseur du coefficient compte les clubs <b>engagés</b> au 1<sup>er</sup> juillet : il est figé pour la saison, éliminés compris. La source publie en parallèle l'effectif <b>encore en lice</b>, qui ne fait que décroître. La section « Les clubs encore en vie » repose sur ces deux nombres, tels que publiés. <b>La date de sortie de chaque club</b>, elle, ne vient pas de la source, qui ne la publie pas : elle est relevée une fois pour la saison dans les tableaux de confrontations des trois compétitions, puis recoupée association par association — <i>engagés moins éliminés doit retrouver l'effectif encore en lice</i>. C'est ce relevé qui a rendu au Monténégro ses quatre clubs engagés : faute de coefficient de saison, la source ne pouvait pas en déduire son diviseur, et l'association manquait au décompte. À ce stade de la saison, « éliminé » signifie « n'a pas atteint sa phase de ligue » ; à partir de février s'y ajouteront les sorties de la phase finale.</p>
-    <p><b>La seule série que la page conserve.</b> La source publie l'effectif du jour, jamais son historique : sans archive, la courbe de survie n'existerait pas. La page enregistre donc l'effectif à chaque rafraîchissement, et n'ajoute une ligne que lorsqu'un nombre change ; aucune ligne passée n'est réécrite. Les éliminations antérieures au premier relevé archivé ne sont pas datées club par club — elles se sont toutes produites pendant les qualifications, et la courbe les regroupe au dernier soir de barrages, en pointillé, plutôt que d'inventer des dates.</p>
-    <p><b>Contrôles passés à la publication.</b> Somme des cinq saisons égale au total pour les 55 associations ; rangs strictement ordonnés ; écart au rang précédent recalculé ; dernier cumul de la série égal au total ; continuité entre qualifications et phase de ligue ; pour douze pays, somme des points clubs égale au total national déclaré. Aucun écart.</p>
-    <p><b>Ce que la page ne dit pas.</b> Le nombre exact de places attribuées par rang dépend du règlement d'accès de la saison concernée et des vainqueurs de coupes ; il n'est pas déduit ici. Les arrondis sont ceux de la source, au millième, ce qui peut produire quelques millièmes d'écart entre la somme des étapes et le total publié.</p>
+    <p><b>Le calcul.</b> Coefficient de saison = points des clubs ÷ clubs engagés. Classement = somme des cinq dernières saisons. Qualifications : victoire 1, nul 0,5. Phase de ligue : victoire 2, nul 1. Bonus : participation (6 points par club de C1), classement de la phase de ligue, tours de la phase finale.</p>
+    <p><b>Les conventions.</b> Les points d'un club comptent dans sa compétition actuelle (reversé de C1 en C3 : il compte en C3). Un club n'est éliminé qu'à sa dernière défaite, toutes compétitions confondues.</p>
+    <p><b>La projection.</b> La saison est rejouée des milliers de fois. Les tirages au sort y sont supposés libres, sans chapeaux, et le modèle n'est pas encore validé sur les saisons passées.</p>
+    <p><b>Les sources.</b> <a href="https://eurocoeff.com/" target="_blank" rel="noopener">eurocoeff.com</a> (licence CC BY 4.0), construit à partir de <a href="https://www.5-jahres-wertung.de/" target="_blank" rel="noopener">5-jahres-wertung.de</a> ; parcours club par club relevés dans les tableaux de confrontations. Chiffres non officiels : l'UEFA fait foi. Chaque publication est vérifiée et bloquée au moindre écart.</p>
+    <p><b>Les limites.</b> Le nombre de places par rang n'est pas déduit. Arrondis au millième, comme la source.</p>
   </div>
 </section>
 
@@ -1042,14 +1035,8 @@ document.getElementById('stamp').innerHTML =
   const lignes = XCHK.ecarts.map(e =>
     '<tr class="' + (e.gros ? 'gros' : '') + '"><td>' + (FRNAME[e.p] || e.p) + '</td><td>' + e.quoi
     + '</td><td>' + nf(e.moi) + '</td><td>' + nf(e.lui) + '</td><td>' + (e.d > 0 ? '+' : '') + nf(e.d) + '</td></tr>').join('');
-  note.innerHTML = '<p><b>Recoupement avec un second calcul.</b> Les contrôles ci-dessous portent tous sur '
-    + 'la cohérence interne d\'une seule source : ils ne peuvent pas voir une erreur cohérente avec elle-même. '
-    + 'Le classement est donc confronté chaque semaine à '
-    + '<a href="' + XCHK.srcUrl + '" target="_blank" rel="noopener">' + XCHK.src + '</a>, '
-    + 'qui recalcule les mêmes coefficients séparément, à partir des mêmes résultats UEFA. '
-    + 'Ce n\'est pas une seconde observation du réel — une erreur de l\'UEFA passerait des deux côtés — '
-    + 'mais un second calcul : il attrape une faute de saisie, une règle mal appliquée, ou une erreur de notre '
-    + 'propre reconstruction. Un désaccord ne retire jamais la page&nbsp;: il s\'affiche. '
+  note.innerHTML = '<p><b>Le recoupement.</b> Chaque semaine, le classement est comparé au calcul indépendant de '
+    + '<a href="' + XCHK.srcUrl + '" target="_blank" rel="noopener">' + XCHK.src + '</a>. '
     + 'Dernier recoupement : ' + (dlong(XCHK.at).txt || dmy(XCHK.at)) + ' — <b>' + XCHK.pays + ' pays, ' + XCHK.valeurs
     + ' valeurs comparées</b> (rang, cinq saisons, total), '
     + (XCHK.ecarts.length === 0 ? '<b>aucun écart</b>.' : '<b>' + XCHK.ecarts.length + ' écart(s)</b> :')
@@ -1254,14 +1241,8 @@ function drawCal(){
          : `<b>${KSHORT[k]}</b> en est à ${done}/${CAL[k].length}, prochaine le ${frDate(CAL[k][done][0])}`; };
   const notyet = [0,1,2].filter(k => !passe(CAL[k][0][0]));
   document.getElementById('calmeta').innerHTML =
-    `Toute la saison à l'échelle du temps : les journées de phase de ligue en pastilles, puis chaque tour à élimination directe en aller-retour reliés, et la finale en losange — ${[0,1,2].map(k=>`${KSHORT[k]} le ${frDate(KO[k][KO[k].length-1][1])}`).join(', ')}. `
-    + st(0) + ' · ' + st(1) + ' · ' + st(2) + '. '
-    + (notyet.length
-       ? `Tant qu'une compétition n'a pas démarré, ses clubs pèsent zéro — et le bloc suivant paraît dominé par la C1 pour cette seule raison. Tout devient comparable le ${frDate(CAL[notyet[notyet.length-1]][0][0])}.`
-       : `Les trois compétitions tournent : les comparaisons entre nations redeviennent honnêtes.`)
-    + (calQual
-       ? ` <b>Phase qualificative dépliée</b> : les quatre tours de juillet-août, aller et retour reliés comme en phase finale. C'est là que se joue l'essentiel de l'écart entre nations — une association mal classée y engage ses clubs dès le 7 juillet quand les grandes attendent septembre.`
-       : ``);
+    st(0) + ' · ' + st(1) + ' · ' + st(2) + '. '
+    + `Finales : ${[0,1,2].map(k=>`${KSHORT[k]} le ${frDate(KO[k][KO[k].length-1][1])}`).join(', ')}.`;
 }
 document.getElementById('cal-qual').onclick = function(){
   calQual = !calQual;
@@ -1513,44 +1494,18 @@ function drawBars(){
     + `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px">`
     + `<i style="width:12px;height:10px;border-radius:2px;display:inline-block;background:var(--ink-3)"></i>saison ${D.meta.season}, en cours</span>`
     + `<span style="color:var(--ink-3)">— survolez une barre pour le détail saison par saison</span><br>`;
-  const survie = (() => {
-    const morts = rows.filter(c => elimines(BY[c]) > 0);
-    const pips = `La colonne de gauche donne l'effectif : <b>une pastille par club engagé</b>, à la couleur de sa compétition tant qu'il est en lice, <b>en creux une fois éliminé</b>. C'est le diviseur du coefficient, rendu visible — un club éliminé continue de diviser sans plus jamais rapporter. `;
-    return pips + (morts.length
-      ? `${morts.length === 1 ? 'Une nation affichée a' : morts.length + ' nations affichées ont'} déjà perdu des clubs${morts.length <= 10 ? ' : ' + morts.map(c => `${name(c)} ${enVie(BY[c])}/${engages(BY[c])}`).join(', ') : ''}. Le détail est dans la section « Les clubs encore en vie ».`
-      : `Aucune n'a encore perdu un club : toutes les pastilles sont pleines. C'est une information, pas un vide — plus bas au classement, la Pologne n'en a gardé que 2 sur 5. Le détail est dans la section « Les clubs encore en vie ».`);
-  })();
-  document.getElementById('barNote').innerHTML = leg + (isS
-    ? survie + `<br>Coefficient acquis depuis le 1<sup>er</sup> juillet. La France est ${posS}<sup>e</sup> sur ${nR} — mais à ce stade ce classement dépend surtout du nombre de clubs déjà entrés en lice, colonne « C1·C3·C4 » : les nations dont les clubs ont disputé les qualifications de juillet ont plusieurs semaines d'avance sur celles qui n'entrent qu'en phase de ligue.`
-    : survie + '<br>' + (F.n === 5
-        ? `Somme des cinq dernières saisons — <b>c'est ce total qui fixe les places européennes</b>, et c'est pourquoi la page s'ouvre dessus. Les quatre segments pâles sont acquis : des saisons closes que plus aucun résultat ne changera. Le segment vif, en bout de barre, est la saison en cours — seule à bouger encore, et pour l'instant seulement ${nf(BY.FRA.y[4]/BY.FRA.t*100,1)} % du total français. `
-          + `<b>Le menu déroulant raccourcit la fenêtre</b>, et ce n'est pas un filtre : chaque été la saison la plus ancienne sort du calcul, donc les quatre dernières saisons sont le socle qui survivra au retrait de l'été 2027, les trois dernières à celui de 2028, et ainsi de suite. On y lit qui monte et qui descend quand le passé s'efface. `
-        : (() => {
-            /* Ce que la fenêtre raconte : le classement d'après les retraits. On
-               nomme les saisons qui sortent, sinon « 3 dernières saisons » ne
-               veut rien dire de précis. */
-            const sorties = SEASONS.slice(0, 5 - F.n);
-            /* « 2022/23 et 2023/24 et 2024/25 » : une énumération se ponctue. */
-            const liste = a => a.length < 2 ? a[0] : a.slice(0, -1).join(', ') + ' et ' + a[a.length - 1];
-            const plur = sorties.length > 1;
-            const ete = 2027 + (5 - F.n) - 1;
-            const bouge = rows.map(c => ({ c, d: BY[c].r - F.rang(BY[c]) })).filter(x => x.d !== 0);
-            const monte = bouge.filter(x => x.d > 0), baisse = bouge.filter(x => x.d < 0);
-            const fr = BY.FRA, dFR = fr.r - F.rang(fr);
-            return `<b>Ce n'est pas un filtre, c'est le classement d'après.</b> Chaque été, la saison la plus ancienne sort du calcul. `
-              + `Retirer ${plur ? 'les saisons' : 'la saison'} ${liste(sorties)} donne le socle que chaque nation emportera à l'été ${ete}`
-              + `${plur ? ` (après ${sorties.length} retraits successifs)` : ''} — <b>amputé ${plur ? 'des saisons qui restent' : 'de la saison qui reste'} à jouer d'ici là</b>, donc un socle, pas une prédiction. `
-              + `Les triangles donnent le mouvement par rapport au classement officiel à cinq ans, calculé sur les 55 associations. `
-              + (bouge.length
-                  ? `Dans le groupe affiché : ${monte.length ? monte.map(x => `${name(x.c)} +${x.d}`).join(', ') : 'personne ne monte'}`
-                    + `${baisse.length ? `, ${baisse.map(x => `${name(x.c)} ${x.d}`).join(', ')}` : ''}. `
-                  : `Aucun mouvement dans le groupe affiché. `)
-              + (dFR === 0
-                  ? `<b>La France garde son ${fr.r}<sup>e</sup> rang</b> sur cette fenêtre. `
-                  : `<b>La France ${dFR > 0 ? 'gagne' : 'perd'} ${Math.abs(dFR)} place${Math.abs(dFR) > 1 ? 's' : ''}</b>, ${fr.r}<sup>e</sup> aujourd'hui, ${F.rang(fr)}<sup>e</sup> sur cette fenêtre. `)
-              + `Le segment vif reste la saison en cours, la seule qui bouge encore. `;
-          })())
-        + `Chaque barre se lit aussi saison par saison au survol.`);
+  const pips = `Pastilles : un club engagé chacune, pleine tant qu'il est en lice, en creux une fois éliminé. `;
+  let txt;
+  if (isS) txt = `Coefficient de la saison en cours : la France est ${posS}<sup>e</sup> sur ${nR}. À ce stade, ce rang avantage les nations passées par les qualifications.`;
+  else if (F.n === 5) txt = `Somme des cinq dernières saisons : c'est ce total qui fixe les places européennes. Le segment vif est la saison en cours.`;
+  else {
+    const sorties = SEASONS.slice(0, 5 - F.n);
+    const liste = a => a.length < 2 ? a[0] : a.slice(0, -1).join(', ') + ' et ' + a[a.length - 1];
+    const ete = 2027 + (5 - F.n) - 1, fr = BY.FRA, dFR = fr.r - F.rang(fr);
+    txt = `Classement sans ${liste(sorties)} : le socle de chaque nation à l'été ${ete}, avant les saisons qui restent à jouer. `
+      + (dFR === 0 ? `La France reste ${fr.r}<sup>e</sup>.` : `La France passe de ${fr.r}<sup>e</sup> à ${F.rang(fr)}<sup>e</sup>.`);
+  }
+  document.getElementById('barNote').innerHTML = leg + pips + txt;
 }
 /* Infobulle saison par saison, calquée sur celle du bloc 2a : même repérage du
    segment survolé, même mise en avant par filtre, même positionnement. Une seule
@@ -1717,20 +1672,15 @@ function drawK(){
   const labK = SEAS.find(x=>x[0]===selY)[1];
   if(!isCur()){
     document.getElementById('kNote').innerHTML =
-      `<b>Le coefficient d'une nation est la moyenne de ses clubs engagés</b> : on additionne les points de tous ses clubs et on divise par le nombre d'engagés — un club qui ne joue pas tire la moyenne vers le bas. Les barres sont donc à l'échelle du coefficient, mais le survol donne les points réels de chaque club, ceux qu'on retrouve dans la source. `
-      + `Saison <b>${labK}</b>, terminée. Répartition définitive : les trois compétitions ont été jouées jusqu'au bout, la comparaison entre nations est donc franche. `
-      + `Un club reversé de C1 en C3 compte deux fois, une ligne par compétition, avec les points gagnés dans chacune — ce sont deux campagnes distinctes, pas une seule. `
-      + `<b>Chaque barre est redécoupée club par club</b> : survolez une portion pour voir les points de chaque club et son écart à la moyenne nationale — en vert ceux qui tirent le pays vers le haut, en rouge ceux qui le tirent vers le bas.`;
+      `Saison <b>${labK}</b>, terminée. Barres à l'échelle du coefficient ; le survol donne les points de chaque club et son écart à la moyenne nationale. Un club reversé de C1 en C3 a une ligne dans chaque compétition.`;
     return;
   }
   const started = [0,1,2].filter(k=>passe(CAL[k][0][0])).map(k=>KSHORT[k]);
   const notyet  = [0,1,2].filter(k=>!passe(CAL[k][0][0]));
-  const MEAN = `<b>Le coefficient d'une nation est la moyenne de ses clubs engagés</b> : on additionne les points de tous ses clubs et on divise par le nombre d'engagés — un club qui ne joue pas tire la moyenne vers le bas. Les barres sont à l'échelle du coefficient ; le survol donne les points réels de chaque club et son <b>écart à la moyenne nationale</b> — en vert ceux qui tirent le pays vers le haut, en rouge ceux qui le tirent vers le bas. `;
-  document.getElementById('kNote').innerHTML = MEAN + (notyet.length
-    ? `<b>À lire avec le calendrier.</b> Seule ${started.join(' et ')} a commencé sa phase de ligue ; ${notyet.map(k=>KSHORT[k]+' démarre le '+frDate(CAL[k][0][0])).join(' et ')}. La domination du bleu ne dit donc rien d'une dépendance à la C1 : elle dit que les clubs de C3 et de C4 n'ont pas encore joué et n'ont pas encore touché leur bonus de participation. Le peu qui figure en orange et en vert vient des qualifications de juillet-août. Cette lecture ne deviendra comparable qu'à partir du ${frDate(CAL[notyet[notyet.length-1]][0][0])}.`
-    : `Les trois compétitions ont commencé : la répartition est désormais comparable d'une nation à l'autre. Points d'un club rattachés à la compétition où il se trouve aujourd'hui — un club reversé de C1 en C3 compte en C3.`);
-  document.getElementById('kNote').innerHTML +=
-    ` <b>Chaque barre est redécoupée club par club</b>, du plus gros contributeur au plus petit à l'intérieur de sa compétition : survolez une portion pour savoir qui a rapporté quoi. Un club engagé mais encore à zéro n'occupe aucune largeur ; il reste listé dans l'infobulle.`;
+  document.getElementById('kNote').innerHTML = `Barres à l'échelle du coefficient ; le survol donne les points de chaque club et son écart à la moyenne nationale. `
+    + (notyet.length
+      ? `Seule ${started.join(' et ')} a commencé sa phase de ligue (${notyet.map(k=>KSHORT[k]+' le '+frDate(CAL[k][0][0])).join(', ')}) : le bleu domine pour cette raison, pas par dépendance à la C1.`
+      : `Un club reversé de C1 en C3 compte en C3.`);
 }
 /* survol des portions : la barre seule dit « d'où viennent les points » ;
    l'infobulle dit lequel des clubs les a rapportés, et ce qu'il pèse. */
@@ -1857,10 +1807,7 @@ function drawClubs(){
   const share = top ? top.p / (fcl.reduce((a,b)=>a+b.p,0)||1) : 0;
   const labC = SEAS.find(x=>x[0]===selY)[1];
   document.getElementById('clNote').innerHTML =
-    `Saison <b>${labC}</b>${isCur()?', en cours':''}. Un disque par club, aire proportionnelle aux points d'équipe rapportés ; la couleur est la compétition dans laquelle ces points ont été gagnés. `
-    + `La France aligne <b>${fc[0]} en C1, ${fc[1]} en C3 et ${fc[2]} en C4</b> sur ${kDiv('FRA')} engagés, et son meilleur contributeur (${top ? nomClub(top.n) : '—'}) pèse ${Math.round(share*100)} % du total national — `
-    + `là où l'Angleterre étale ${kClubs('ENG').filter(x=>x.p>0).length} clubs payants sur ${kDiv('ENG')} engagés. `
-    + `C'est la vraie mécanique du coefficient : le total est divisé par le nombre d'engagés, donc un club à zéro coûte autant qu'un club à huit rapporte.`;
+    `Saison <b>${labC}</b>${isCur()?', en cours':''}. Un disque par club, aire proportionnelle à ses points, couleur de sa compétition. Le meilleur club français (${top ? nomClub(top.n) : '—'}) pèse ${Math.round(share*100)} % du total national.`;
 }
 
 /* ---------- échelles ---------- */
@@ -2042,17 +1989,15 @@ function drawL(){
     const best = TOP8.filter(hasSeason).reduce((a,c)=> curve(c)[LI] > curve(a)[LI] ? c : a);
     const fv = series('FRA')[LI];
     document.getElementById('capL').innerHTML =
-      `Saison <b>${lab}</b>, lecture en <b>écart au leader</b>. À chaque étape, la meilleure nation des huit est ramenée à zéro — la ligne épaisse du haut — et les autres se lisent en dessous, en points de coefficient de saison. `
-      + `C'est la même donnée qu'en cumul, mais l'origine suit le leader : les huit courbes cessent de monter ensemble et l'écart, lui, reste à l'échelle du graphique jusqu'au dernier tour. `
-      + `Un segment qui remonte, c'est du terrain repris sur le leader ; un segment qui plonge alors que la nation a marqué — le point est là pour le dire — signifie simplement que le leader a marqué davantage. `
-      + (fv != null ? `Au dernier point, la France est à <b>${fv < -0.05 ? '\u2212'+nf(Math.abs(fv),2) : '0,00'}</b> de ${name(best)}.` : '');
+      `Saison <b>${lab}</b>, écart au leader : à chaque étape, la meilleure nation des huit est à zéro. `
+      + (fv != null ? `La France est à <b>${fv < -0.05 ? '\u2212'+nf(Math.abs(fv),2) : '0,00'}</b> de ${name(best)}.` : '');
     return;
   }
   document.getElementById('capL').innerHTML = isCur()
-    ? `Saison <b>${lab}</b>, en cours. L'axe couvre l'année entière, de l'entrée en lice à la finale du 5 juin 2027 ; la zone grisée reste à jouer. <b>Entrée en lice</b> = bonus de participation, 6 points par club qualifié pour la phase de ligue de C1. <b>Rank bonus</b> = bonus lié au classement final de la phase de ligue, attribué fin janvier — la colonne se remplira alors. Les bonus de qualification aux 8<sup>es</sup>, quarts, demies et finale restent intégrés au tour qui les déclenche.`
-    : `Saison <b>${lab}</b>, terminée. Courbes reconstruites tour par tour depuis l'archive de 5-jahres-wertung.de : le point final de chaque courbe reproduit exactement le coefficient officiel de la saison. ${+selY<2024
-        ? `Format en phase de groupes, six journées — J7 et J8 sont donc plates. Le bonus de participation figurait dans une colonne dédiée au départ, et il n'existait pas encore de bonus de classement : la colonne « Rank bonus » est vide, c'est la règle de l'époque.`
-        : `<b>Ini.</b> = participation, 6 points par club de C1. <b>Rank bonus</b> = supplément lié au classement de la phase de ligue, +0,25 par place au-dessus de la 25<sup>e</sup>. Les bonus de qualification aux 8<sup>es</sup>, quarts, demies et finale restent intégrés à leur tour.`}`;
+    ? `Saison <b>${lab}</b>, en cours ; la zone grisée reste à jouer. <b>Entrée en lice</b> : bonus de participation (6 points par club de C1). <b>Rank bonus</b> : bonus de classement de la phase de ligue, versé fin janvier.`
+    : `Saison <b>${lab}</b>, terminée. ${+selY<2024
+        ? `Phase de groupes à six journées : J7 et J8 sont plates, et le bonus de classement n'existait pas.`
+        : `<b>Ini.</b> : bonus de participation. <b>Rank bonus</b> : bonus de classement de la phase de ligue.`}`;
 }
 function hoverL(sel, LI, X, Y, W, H, mL, mR, PAD){
   const svg=document.getElementById('chartL'), box=document.getElementById('boxL'), tip=document.getElementById('tipL');
@@ -2126,7 +2071,7 @@ function drawZ(){
   g+=`</svg>`;
   document.getElementById('chartZ').outerHTML = g.replace('<svg','<svg id="chartZ" role="img" aria-label="Gain par étape et cumul sur une échelle unique"');
   const labZ = SEAS.find(x=>x[0]===selY)[1];
-  document.getElementById('capZ').innerHTML = `Saison <b>${labZ}</b>${isCur()?', en cours':''}. Les deux mesures partagent la même unité — le coefficient — donc le même axe : barres translucides pour le gain du tour, ligne pleine pour le cumul. La première barre, hachurée, est l'entrée en lice — le bonus de participation, pas un résultat. ${sel.map(c=>`${name(c)} <b>${nf(sTotal(c),2)}</b>`).join(' · ')}. ${isCur()?'Seuls les tours déjà disputés sont tracés.':"Sur une saison close, le gain d'un tour est reconstitué par différence des cumuls de l'archive."}`;
+  document.getElementById('capZ').innerHTML = `Saison <b>${labZ}</b>${isCur()?', en cours':''}. Barres : gain du tour ; ligne : cumul ; barre hachurée : bonus de participation. ${sel.map(c=>`${name(c)} <b>${nf(sTotal(c),2)}</b>`).join(' · ')}.`;
 }
 mkChips(document.getElementById('zchips'), TOP8, selZ, true, ()=>drawZ());
 
@@ -2163,9 +2108,8 @@ function drawM(){
   const labM = SEAS.find(x=>x[0]===selY)[1];
   const doneCols = isCur() ? gs.filter(gi=>gHas(gi)&&!gFuture(gi)).length : nG;
   document.getElementById('mtxNote').innerHTML =
-    `Saison <b>${labM}</b>${isCur()?', en cours':''}. Une ligne par nation, le temps de gauche à droite jusqu'à la finale, aller et retour regroupés. L'<b>aire</b> du disque porte le coefficient gagné : un disque deux fois plus large vaut quatre fois plus de points. Le premier disque est l'entrée en lice : le bonus de participation, pas un résultat. `
-    + (isCur() ? `La zone grisée reste à jouer — ${doneCols} colonne${doneCols>1?'s':''} sur ${nG} ${doneCols>1?'sont':'est'} derrière nous. ` : `Saison complète : les dix-neuf colonnes sont renseignées. `)
-    + `Barres de droite : total de la saison.`;
+    `Saison <b>${labM}</b>${isCur()?', en cours':''}. L'aire du disque porte le coefficient gagné ; le premier disque est le bonus de participation. `
+    + (isCur() ? `La zone grisée reste à jouer. ` : '') + `À droite, le total de la saison.`;
 }
 
 /* Les trois listes de saison, une fois tous les dessins définis. */
@@ -2415,13 +2359,13 @@ const CLUB_COURT = {'Tottenham Hotspur':'Tottenham','Manchester United':'Man Uni
     if (totCol5(blocs)) {
       const fin = [5, 6, 7, 8, 9, 10].map(j => sortis(j));
       t += `Après la ${LONG[4].toLowerCase()}, ${!sortis(5) ? 'aucun club ne sort' : `${sortis(5)} club${sortis(5) > 1 ? 's' : ''} ${sortis(5) > 1 ? 'sortent' : 'sort'}`} d'Europe`
-        + (revHiver ? `, ${revHiver} ${revHiver > 1 ? 'sont reversés' : 'est reversé'} — le dernier hiver des bascules C1 → C3 et C3 → C4` : '')
-        + `, puis ${fin.slice(1).reduce((a, b) => a + b, 0)} tombent tour après tour jusqu'aux finales. `
+        + (revHiver ? `, ${revHiver} ${revHiver > 1 ? 'sont reversés' : 'est reversé'}` : '')
+        + `, puis ${fin.slice(1).reduce((a, b) => a + b, 0)} tombent jusqu'aux finales. `
         + (gagnants.length ? `<b>${gagnants.map(r => `${COMP[r.s[10]]} : ${nomClub(r.n)}`).join(' · ')}.</b> ` : '');
     } else {
-      t += `La phase finale n'a pas commencé : ses colonnes se rempliront au fil des tours. `;
+      t += `La phase finale reste à jouer. `;
     }
-    t += `« + n » : clubs qui entrent à ce tour. En bas, les sortis tombent sous le tour où ils ont perdu. Survolez un ruban ou un bloc pour voir les clubs.`;
+    t += `« + n » : clubs qui entrent à ce tour.`;
     document.getElementById('capSk').innerHTML = t;
   }
   const totCol5 = blocs => Object.keys(blocs[6]).length > 0;
@@ -2724,19 +2668,11 @@ const legende = segs => segs.map(s =>
     const perim = porteeD === 'top' ? '' : `<b>${rows.length} associations</b> affichées. `;
     const pct = r => Math.round(100 * r.d[0] / (r.tot || 1));
     document.getElementById('capDec').innerHTML =
-      perim + `Quatre composantes de natures différentes, que le classement additionne sans le dire. `
-      + `<b>Le bonus d'entrée</b> vaut ${(isCur() || +selY >= 2024) ? 6 : 4} points par club qualifié pour la ${labLigue().toLowerCase()} de C1, divisés par le nombre de clubs engagés : il est acquis avant le premier ballon et récompense le rang de la saison passée. `
-      + `<b>Les qualifications</b> ne sont ouvertes qu'aux nations dont les clubs entrent tôt — une nation dont tous les clubs sont directement qualifiés ne peut structurellement rien y marquer. `
-      + `<b>${labLigue()}</b> est le seul poste que toutes les nations présentes jouent dans les mêmes conditions, et c'est lui qu'isole le bloc 6${(isCur() || +selY >= 2024) ? ' ; il porte aussi le bonus de classement de fin de phase' : ''}. `
-      + `<b>La phase finale</b> n'est ouverte qu'à ceux qui ont passé la ${labLigue().toLowerCase()} : c'est le poste le plus inégalitaire, et celui qui fait les écarts de haut de tableau. `
+      perim + `<b>Bonus d'entrée</b> : ${(isCur() || +selY >= 2024) ? 6 : 4} points par club en ${labLigue().toLowerCase()} de C1, acquis d'avance. <b>Qualifications</b> : seules les nations dont les clubs entrent tôt peuvent y marquer. <b>Phase finale</b> : le poste qui fait les écarts en haut du tableau. `
       + (isCur()
-          ? `${LeNom(leader.c)} mène la saison avec ${nfx(leader.tot)}, dont ${nfx(leader.d[0])} acquis d'avance (${pct(leader)} %) ; la France est à ${nfx(fr.tot)}, dont ${nfx(fr.d[0])} (${pct(fr)} %). `
-            + `<b>À ce stade la lecture est faussée</b> : la phase de ligue vient de commencer et la phase finale n'existe pas encore, le bonus pèse donc mécaniquement une part énorme du total. Le sélecteur de saison montre à quoi ressemble une répartition complète.`
-          : `Saison <b>${lab}</b>, terminée. ${LeNom(leader.c)} termine en tête avec ${nfx(leader.tot)}, dont ${nfx(leader.d[3])} de phase finale (${Math.round(100 * leader.d[3] / (leader.tot || 1))} %) ; la France ${nfx(fr.tot)}, dont ${nfx(fr.d[3])} (${Math.round(100 * fr.d[3] / (fr.tot || 1))} %). `
-            + `<b>Décomposition reconstruite</b> match par match depuis les pages d'archive de la source, pas d'un champ publié tel quel : chaque rencontre est rattachée à son tour, et les bonus sont répartis selon le barème de la saison. Le contrôle est la somme — les quatre postes retrouvent au millième le coefficient publié, pour chacune des ${Object.keys(DECA[selY] || {}).length} associations de la saison. `
-            + (+selY >= 2024
-                ? `Les barrages des 8<sup>es</sup> sont comptés dans la phase finale : ils se jouent après la phase de ligue, même s'ils ne rapportent aucun bonus de tour.`
-                : `Avant 2024/25 le format était différent — phase de groupes à six journées, barème d'entrée à 4 points par club de C1, pas de bonus de classement ni de barrages des 8<sup>es</sup>. La comparaison avec les saisons récentes se fait en proportion, pas en valeur.`));
+          ? `${LeNom(leader.c)} mène avec ${nfx(leader.tot)}, dont ${pct(leader)} % de bonus d'entrée ; la France ${nfx(fr.tot)}, dont ${pct(fr)} %. En début de saison, le bonus pèse forcément lourd.`
+          : `Saison <b>${lab}</b> : ${LeNom(leader.c)} termine en tête avec ${nfx(leader.tot)}, dont ${Math.round(100 * leader.d[3] / (leader.tot || 1))} % de phase finale ; la France ${nfx(fr.tot)}, dont ${Math.round(100 * fr.d[3] / (fr.tot || 1))} %.`
+            + (+selY >= 2024 ? '' : ` Ancien format : phase de groupes, bonus d'entrée à 4 points.`));
   };
 
   /* survol : mêmes mécaniques que le 2a */
@@ -2875,23 +2811,9 @@ const legende = segs => segs.map(s =>
     const best = rows[0];
     const horsJeu = ENGAGEES.length - ENGAGEES.map(n => n.c).filter(aJoue).length;
     document.getElementById('capRdt').innerHTML =
-      (porteeR === 'top'
-        ? `Les huit premières du classement à cinq ans. `
-        : `Les <b>${list.length} associations</b> dont au moins un club a déjà disputé une journée de phase de ligue ; les ${horsJeu} autres n'ont pas encore de rendement — leurs clubs n'entrent qu'en C4, le 15 octobre. `)
-      + `Le nombre de clubs engagés cesse de compter : les points sont rapportés aux matchs réellement disputés. `
-      + `Une nation à 5 clubs et une à 9 deviennent comparables. En phase de ligue une victoire vaut 2 points et un nul 1 : `
-      + `<b>1,00 signifie « un nul par match »</b>, au-delà on gagne plus qu'on ne perd. Chaque disque mesure une journée, et la colonne de droite donne le cumul. `
-      + `La France est <b>${rows.indexOf('FRA') + 1}<sup>e</sup> sur ${rows.length}</b> avec ${nf(rdtC('FRA', last) ?? 0, 2)} sur ${matchsA('FRA', last)} match${matchsA('FRA', last) > 1 ? 's' : ''}, contre ${nf(rdtC(best, last) ?? 0, 2)} pour ${leNom(best)}. `
-      /* « un seul résultat » était faux, et GT l'a relevé : un match fait passer
-         l'Angleterre de 2,00 à 1,88 et ne déloge personne. C'est une SOIRÉE qui
-         retourne le classement, parce que le cumul est une moyenne et qu'une
-         moyenne sur huit observations se déplace vite. On le montre en chiffres
-         plutôt qu'en adjectifs, et le garde-fou reste le nombre de matchs, déjà
-         affiché au bout de chaque ligne. */
-      + `<b>Deux réserves.</b> Le cumul est une moyenne, et sur ${nj} journée${nj > 1 ? 's' : ''} disputée${nj > 1 ? 's' : ''} elle se déplace vite : `
-      + `${leNom(best)} mène avec ${nf(rdtC(best, last) ?? 0, 2)} sur ${matchsA(best, last)} matchs — une soirée à 1,00, ce qui n'a rien d'une catastrophe, la ferait tomber à ${nf((brutA(best, last) + matchsA(best, last)) / (2 * matchsA(best, last)), 2)}. `
-      + `Le nombre de matchs au bout de chaque ligne est le vrai garde-fou : il grossit, et le cumul se fige. `
-      + `Seconde réserve : le rendement demande le nombre de clubs engagés par compétition, que la source ne publie que pour la saison en cours — d'où l'absence de sélecteur de saison ici.`;
+      (porteeR === 'top' ? '' : `${list.length} associations ont déjà joué en phase de ligue. `)
+      + `Points par match de phase de ligue (victoire 2, nul 1) : <b>1,00 = un nul par match</b>. À droite, le cumul et le nombre de matchs. `
+      + `La France est <b>${rows.indexOf('FRA') + 1}<sup>e</sup> sur ${rows.length}</b> avec ${nf(rdtC('FRA', last) ?? 0, 2)}, ${leNom(best)} mène avec ${nf(rdtC(best, last) ?? 0, 2)}. Sur peu de matchs, la moyenne bouge vite.`;
   }
   const bRT = document.getElementById('r-top'), bRA = document.getElementById('r-all');
   const syncR = () => { bRT.setAttribute('aria-pressed', porteeR === 'top');
@@ -3385,14 +3307,10 @@ const legende = segs => segs.map(s =>
     const dessus  = fr ? rows.filter(r => r.p05 > fr.p95) : [];
     const dessous = fr ? rows.filter(r => r.p95 < fr.p05) : [];
     document.getElementById('capPrj').innerHTML = leg
-      + `<b>${nf(nSaisons(),0)} saisons rejouées</b>, arrêtées à la fin de la phase de ligue, bonus de classement compris. `
-      + `Les cinq repères sont les centiles 5, 20, 50, 80 et 95 de ces tirages : une nation a une chance sur vingt de finir sous son trait fin gauche, une sur vingt au-dessus du droit, trois sur cinq dans la barre épaisse. `
-      + (fr ? `<b>La France</b>, ${fr.r} matchs de phase de ligue à jouer : médiane <b>${nf(fr.cen, 1)}</b>, neuf tirages sur dix entre ${nf(fr.p05, 1)} et ${nf(fr.p95, 1)}. ` : '')
-      + (fr ? `La bande bleue est sa portée à 90 %. `
-            + (croise.length ? `${croise.length} nation${croise.length > 1 ? 's' : ''} la recoupe${croise.length > 1 ? 'nt' : ''} — ${croise.map(r => name(r.c)).join(', ')} — l'ordre n'est pas décidé. ` : `Aucune nation du groupe ne la recoupe. `)
-            + (dessus.length ? `${dessus.map(r => name(r.c)).join(', ')} ${dessus.length > 1 ? 'restent hors' : 'reste hors'} d'atteinte d'ici janvier. ` : '')
-            + (dessous.length ? `${dessous.map(r => name(r.c)).join(', ')} ne peu${dessous.length > 1 ? 'vent' : 't'} plus la rattraper sur cette phase. ` : '') : '')
-      + `<b>La phase finale n'est pas comptée ici</b>, et elle pèse lourd. Bascule sur « saison pleine » pour l'inclure.`;
+      + `${nf(nSaisons(),0)} saisons rejouées jusqu'à la fin de la phase de ligue. `
+      + (fr ? `<b>France</b> : médiane <b>${nf(fr.cen, 1)}</b>, entre ${nf(fr.p05, 1)} et ${nf(fr.p95, 1)} neuf fois sur dix. `
+            + (croise.length ? `${croise.length} nation${croise.length > 1 ? 's' : ''} peu${croise.length > 1 ? 'vent' : 't'} encore la croiser. ` : '') : '')
+      + `Sans la phase finale : « saison pleine » l'inclut.`;
 
     function capSaison(rows, fr, leg, poids, S){
       const rang = (() => {                       // rang à 5 ans avec la médiane de chacun
@@ -3409,25 +3327,11 @@ const legende = segs => segs.map(s =>
       const menaces = rows.filter(r => r.c !== 'FRA').map(r => ({ c: r.c, p: devant(r.c) }))
         .filter(x => x.p != null && x.p > 0.05 && x.p < 0.95).sort((a, b) => b.p - a.p);
       document.getElementById('capPrj').innerHTML = leg
-        + `<b>${nf(nSaisons(),0)} saisons complètes rejouées</b> — phase de ligue restante, classement final, barrages, huitièmes, quarts, demies, finale — avec le barème 2024/25. `
-        + `Les cinq repères sont les centiles 5, 20, 50, 80 et 95 de ces tirages. `
-        + (fr ? `<b>La France :</b> médiane <b>${nf(fr.cen, 1)}</b>, trois tirages sur cinq entre ${nf(fr.p20, 1)} et ${nf(fr.p80, 1)}, neuf sur dix entre ${nf(fr.p05, 1)} et ${nf(fr.p95, 1)}` : '')
-        + (rang ? `, ce qui la placerait <b>${rang.r}<sup>${rang.r === 1 ? 're' : 'e'}</sup></b> au classement à cinq ans avec ${nf(rang.v, 1)} points`
-            + (rang.dessous ? `, devant ${leNom(rang.dessous.c)} (${nf(rang.dessous.v, 1)})` : '')
-            + (rang.dessus ? ` et derrière ${leNom(rang.dessus.c)} (${nf(rang.dessus.v, 1)})` : '') + `. ` : '. ')
-        + (menaces.length
-            ? `<b>Ce qui se joue vraiment :</b> ${menaces.map(m => `${name(m.c)} finit devant la France dans ${Math.round(m.p*100)} % des tirages`).join(', ')}. Le reste du groupe est décidé dans plus de 19 tirages sur 20. `
-            : `Aucune nation du groupe ne bascule d'un côté ou de l'autre dans plus d'un tirage sur vingt. `)
-        /* Le paragraphe « Ce que ça ne vaut pas » a été retiré à la demande de GT.
-           Il disait deux choses vraies — tirages au sort sans têtes de série,
-           paramètres non éprouvés sur l'historique. La seconde cessera de l'être
-           le jour du backtest ; la première restera vraie et vit desormais dans
-           la section « Méthode, source et limites », en bas de page, avec les
-           autres réserves. La projection reste annoncée pour ce qu'elle est :
-           des saisons rejouées, pas une prévision. */
-        + (S.ecarts && S.ecarts.length
-            ? `<b style="color:var(--s2)">Contrôle en échec :</b> ${S.ecarts.join(' · ')}.`
-            : `<b>Contrôles passés :</b> sur les trois compétitions, la simulation distribue exactement 90 points de phase finale, 30 participations à un tour et 75 / 75 / 42 points de bonus de classement — ni plus, ni moins.`);
+        + `${nf(nSaisons(),0)} saisons complètes rejouées, jusqu'à la finale. `
+        + (fr ? `<b>France</b> : médiane <b>${nf(fr.cen, 1)}</b>, entre ${nf(fr.p05, 1)} et ${nf(fr.p95, 1)} neuf fois sur dix` : '')
+        + (rang ? `, soit <b>${rang.r}<sup>${rang.r === 1 ? 're' : 'e'}</sup></b> à cinq ans. ` : '. ')
+        + (menaces.length ? `Chance de finir devant elle : ${menaces.slice(0, 3).map(m => `${name(m.c)} ${Math.round(m.p*100)} %`).join(', ')}.` : '')
+        + (S.ecarts && S.ecarts.length ? ` <b style="color:var(--s2)">Contrôle en échec :</b> ${S.ecarts.join(' · ')}.` : '');
     }
     }
     const bL = document.getElementById('h-ligue'), bS = document.getElementById('h-saison');
@@ -3523,12 +3427,9 @@ const legende = segs => segs.map(s =>
     const vides   = rows.filter(n => enVie(n) === 0).length;
     const pire    = rows.filter(n => enVie(n) > 0).sort((a,b) => partMorte(b) - partMorte(a))[0];
     document.getElementById('vNote').innerHTML =
-      `<b>Une case par club engagé</b>, à la couleur de sa compétition tant qu'il est en lice. Une fois sorti, la case devient grise et porte <b>le tour où il est tombé</b> — d'autant plus pâle qu'il est tombé tôt. La longueur de la ligne est donc le diviseur du coefficient : neuf cases pour l'Angleterre, trois pour Andorre. `
-      + `Sur ${rows.length} associations affichées, ${pleines} ${pleines > 1 ? 'ont' : 'a'} encore l'intégralité de leur effectif`
-      + (vides ? ` et ${vides} n'${vides > 1 ? 'ont' : 'a'} plus aucun club en lice — leur coefficient de saison est définitivement arrêté` : '')
-      + (pire ? `. La plus entamée parmi celles qui jouent encore : ${name(pire.c)}, ${enVie(pire)} sur ${engages(pire)}` : '')
-      + `. Rangé par ${ordre === 'rk' ? 'classement à cinq ans, l\'ordre du reste de la page' : 'part du diviseur déjà perdue, de la plus entamée à la plus intacte'}`
-      + `. <b>À ce stade de la saison, « éliminé » veut dire « n'a pas atteint sa phase de ligue »</b> : toutes les sorties enregistrées à ce jour datent des tours de juillet-août. Les éliminations de la phase finale viendront à partir de février.`;
+      `Une case par club engagé, à la couleur de sa compétition ; grise une fois éliminé, avec le tour de sortie. `
+      + `${pleines} association${pleines > 1 ? 's ont' : ' a'} encore tous ${pleines > 1 ? 'leurs' : 'ses'} clubs`
+      + (vides ? `, ${vides} n'en ${vides > 1 ? 'ont' : 'a'} plus aucun` : '') + `.`;
   }
 
   /* ---------- 7c · l'écrémage par nation ----------
@@ -3614,11 +3515,9 @@ const legende = segs => segs.map(s =>
     const pos = N.findIndex(o => o.c === 'FRA');
     const nat = k => N.filter(o => B[o.c].some(r => r[k] !== 9)).length;
     document.getElementById('capSurv').innerHTML =
-      `<b>${lab}</b> · une ligne par nation, une colonne par tour : une bille par club. <b>Pleine</b>, le club joue ce tour, dans la couleur de sa compétition (C1 bleu, C3 orange, C4 vert) ; <b>pâle</b>, il n'est pas encore entré en lice ; <b>petit point gris</b>, il est éliminé. Une bille qui change de couleur, c'est une bascule. `
-      + `Chaque colonne compte les clubs qui jouent ce tour : ${pres(0)} engagés, ${pres(4)} en ${ancienV() ? 'phase de groupes' : 'phase de ligue'}`
-      + (km >= 10 ? `, ${pres(8)} en demies, ${pres(9)} en finale et 3 vainqueurs. ${nat(9)} nations ont un club en finale. ` : `. La phase finale se remplira au fil des tours. `)
-      + `Les nations sont rangées par résistance : la part moyenne de leurs clubs encore en lice, tour après tour. `
-      + (pos >= 0 ? `La France est ${pos + 1}<sup>e</sup> sur ${N.length}.` : '');
+      `<b>${lab}</b> · une bille par club : pleine s'il joue le tour (C1 bleu, C3 orange, C4 vert), pâle s'il n'est pas encore entré, grise s'il est éliminé. `
+      + (km >= 10 ? `${nat(9)} nations ont un club en finale. ` : '')
+      + `Nations rangées par résistance` + (pos >= 0 ? ` ; la France est ${pos + 1}<sup>e</sup> sur ${N.length}.` : '.');
   }
 
   /* ---------- 7b · la courbe de survie ----------
@@ -3725,11 +3624,8 @@ const legende = segs => segs.map(s =>
     const B = baseV(), km = kMax(), lab = SEAS.find(x => x[0] === selY)[1];
     const list = [...selB].filter(c => B[c]), abs = [...selB].filter(c => !B[c]);
     document.getElementById('capCs').innerHTML =
-      `<b>${lab}</b> · clubs encore en lice après chaque tour, toutes compétitions confondues : un club reversé de C1 en C3 ou de C3 en C4 continue, il ne quitte la courbe qu'à sa dernière défaite. `
-      + `En gris, à chaque pente : les clubs perdus à ce tour. `
-      + (km < NK ? `La phase de ligue se joue : personne n'y est éliminé avant la 8<sup>e</sup> journée, la suite se tracera au fil des tours. ` : '')
-      + (abs.length ? `Absente${abs.length > 1 ? 's' : ''} cette saison : ${abs.map(name).join(', ')}. ` : '')
-      + `Trois nations au plus, tirées au sort à l'arrivée sur la page.`;
+      `<b>${lab}</b> · clubs encore en lice après chaque tour ; un club reversé de compétition continue. En gris, les clubs perdus. `
+      + (abs.length ? `Absente${abs.length > 1 ? 's' : ''} cette saison : ${abs.map(name).join(', ')}.` : '');
   }
   const courbe = () => { drawCs(); capCs(); };
   drawCsHook = courbe;
@@ -3802,8 +3698,8 @@ const legende = segs => segs.map(s =>
   const fr=BY.FRA, por=BY.POR;
   const overtake = fr.p[2] > por.p[2];
   document.getElementById('projNote').innerHTML = overtake
-    ? `<b>Lecture.</b> La France conserve son rang tant que ${SEASONS[0]} seule sort du calcul. Au retrait suivant, elle perd ${nf(fr.y[1])} (${SEASONS[1]}) quand le Portugal ne perd que ${nf(por.y[1])} : le Portugal passe devant, ${nf(por.p[3])} contre ${nf(fr.p[3])}. Le sursis français se joue donc sur la saison en cours et la suivante, pas sur l'écart actuel de ${nf(fr.t-por.t)}.`
-    : `<b>Lecture.</b> À socle constant, la France conserve son rang sur les trois horizons projetés. Ces colonnes ne simulent aucun résultat futur : elles retirent seulement les saisons qui sortiront du calcul.`;
+    ? `Au deuxième retrait, la France perd ${nf(fr.y[1])} (${SEASONS[1]}) et le Portugal ${nf(por.y[1])} : le Portugal passe devant, ${nf(por.p[3])} contre ${nf(fr.p[3])}.`
+    : `À socle constant, la France garde son rang sur les trois horizons. Aucun résultat futur n'est simulé.`;
 })();
 
 /* ---------- clubs français ---------- */
