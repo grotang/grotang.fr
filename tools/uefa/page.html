@@ -2193,6 +2193,7 @@ function drawM(){
     sel.value = choix;
   }
   sel.onchange = () => { choix = sel.value; dessine(); };
+  const CLUB_COURT = {'Olympique Lyonnais':'Lyon','Olympique de Marseille':'Marseille','Paris Saint-Germain':'PSG','Atlético de Madrid':'Atlético','Eintracht Francfort':'Francfort','Étoile rouge de Belgrade':'Étoile rouge','Zénith Saint-Pétersbourg':'Zénith','FCSB (Steaua Bucarest)':'FCSB','Heart of Midlothian':'Hearts','Jagiellonia Białystok':'Jagiellonia','Iberia 1999 Tbilissi':'Iberia 1999',"St Patrick's Athletic":"St Patrick's",'Budućnost Podgorica':'Budućnost','İstanbul Başakşehir':'Başakşehir','DAC Dunajská Streda':'DAC','Olimpija Ljubljana':'Olimpija','Sporting Charleroi':'Charleroi','Slovan Bratislava':'Slovan','Raków Częstochowa':'Raków','Partizan Belgrade':'Partizan','Hapoël Beer-Sheva':'Beer-Sheva','Paços de Ferreira':'Paços','Vitória Guimarães':'Vitória','Sporting Portugal':'Sporting','Sheriff Tiraspol':'Sheriff','Lincoln Red Imps':'Lincoln','Žalgiris Vilnius':'Žalgiris','Partizani Tirana':'Partizani','Bohemians Dublin':'Bohemians','FH Hafnarfjörður':'FH','Maccabi Tel-Aviv':'Maccabi TA','Hapoël Tel-Aviv':'Hapoël TA','Lokomotiv Moscou':'Lokomotiv','Chakhtar Donetsk':'Chakhtar','Dinamo Tbilissi':'Dinamo Tb.','Puskás Akadémia':'Puskás','Athletic Bilbao':'Bilbao','Mladá Boleslav':'Boleslav','Zrinjski Mostar':'Zrinjski'};
   const enLice = v => v >= 0 && v <= 2;
   // trou entre deux tours joués (ex. perdant du T3 C1 reversé directement en phase de ligue C3) : le club attend dans sa nouvelle compétition
   const combler = s => { s = [...s]; for (let j = 1; j < NC; j++) if (s[j] === -1 && enLice(s[j - 1])) { const k = s.findIndex((v, i) => i > j && v !== -1); if (k > 0 && enLice(s[k])) s[j] = s[k]; } return s; };
@@ -2204,7 +2205,7 @@ function drawM(){
     LONG[4] = ancien() ? 'Phase de groupes' : 'Phase de ligue';
     SORTIE[4] = ancien() ? 'en phase de groupes' : 'en phase de ligue';
     const L = clubs();
-    const W = Math.max(1080, Math.round(box.clientWidth || 1100));
+    const W = Math.max(1240, Math.round(box.clientWidth || 1240));
     const blocs = [...Array(NC).keys()].map(j => {
       const o = {};
       [0, 1, 2].forEach(k => { const R = L.filter(r => r.s[j] === k); if (R.length) o[k] = { R }; });
@@ -2261,8 +2262,37 @@ function drawM(){
       s += `<rect class="nd" data-o="${objets.length - 1}" x="${X[j]}" y="${b.y.toFixed(1)}" width="${NW}" height="${b.h.toFixed(1)}" rx="2" fill="${k === SORTI ? 'var(--ink-3)' : COL(k)}"/>`;
       const seul = b.R.length === 1 && j === 10 && k !== SORTI;
       const lab = k === SORTI ? (j === 10 ? `battu${b.R.length > 1 ? 's' : ''} en finale ${b.R.length}` : `sortis ${b.R.length}`) : seul ? `${COMP[k]} · ${nomClub(b.R[0].n)}` : `${COMP[k]} ${b.R.length}`;
-      s += `<text x="${X[j] + NW + 5}" y="${b.y + b.h / 2 + 4}" font-size="${j >= 6 ? 11 : 11.5}" font-weight="${k === SORTI ? 600 : 700}" fill="${k === SORTI ? 'var(--ink-3)' : 'var(--ink)'}" ${halo}>${lab}</text>`;
+      if (k === SORTI) { s += sortisLab(b, j); return; }
+      s += `<text x="${X[j] + NW + 5}" y="${b.y + b.h / 2 + 4}" font-size="${j >= 6 ? 11 : 11.5}" font-weight="700" fill="var(--ink)" ${halo}>${lab}</text>`;
     }));
+    // étiquettes des sortis : le nom des clubs (une nation), les nations qui perdent le plus de clubs (Europe)
+    function sortisLab(b, j){
+      const x = X[j] + NW + 5, maxC = j === 10 ? 40 : Math.max(8, Math.floor((X[1] - X[0] - NW - 10) / 5.6));
+      const court = t => t.length > maxC ? t.slice(0, maxC - 1).trimEnd() + '…' : t;
+      const club = n => { const f = nomClub(n); if (f.length <= maxC) return f;
+        const c = CLUB_COURT[f] || f.split(' ').filter(w => !/^([A-Z]{2,4}|\d+)$/.test(w)).join(' ') || f;
+        return court(c); };
+      const txt = (y, t, w, f) => `<text x="${x}" y="${y.toFixed(1)}" font-size="${f}" font-weight="${w}" fill="var(--ink-3)" ${halo}>${t}</text>`;
+      const titre = j === 10 ? `battu${b.R.length > 1 ? 's' : ''} en finale` : 'sortis';
+      if (choix !== 'EUR') {
+        const R = [...b.R].sort((p, q) => p.s[j - 1] - q.s[j - 1]);
+        if (sc >= 12) return R.map((r, i) => txt(b.y + (i + .5) * sc + 4, (j === 10 ? 'battu · ' : '') + club(r.n), 600, 11)).join('');
+        return txt(b.y + b.h / 2 + 4, `${titre} ${R.length}`, 600, 11) + R.map((r, i) => txt(b.y + b.h / 2 + 18 + i * 13, club(r.n), 400, 10.5)).join('');
+      }
+      let out = txt(b.y + Math.min(b.h / 2, 10) + 4, `${titre} ${b.R.length}`, 600, 11), y = b.y + Math.min(b.h / 2, 10) + 18;
+      const ligne = t => { out += txt(y, court(t), 400, 10.5); y += 13; };
+      if (j === 10) { b.R.forEach(r => ligne(club(r.n))); return out; }
+      const n = {}; b.R.forEach(r => n[r.c] = (n[r.c] || 0) + 1);
+      const grp = {}; Object.entries(n).forEach(([c, v]) => (grp[v] = grp[v] || []).push(c));
+      let vus = 0;
+      for (const v of Object.keys(grp).map(Number).sort((a, b) => b - a)) {
+        const g = grp[v].sort((a, b) => name(a).localeCompare(name(b), 'fr'));
+        if (vus + g.length <= 3) { g.forEach(c => ligne(`${name(c)} ${v}`)); vus += g.length; }
+        else { ligne(`${g.length} nations à ${v}`); break; }
+        if (vus >= 3) break;
+      }
+      return out;
+    }
     s += `</svg>`;
     document.getElementById('chartSk').outerHTML = s.replace('<svg', '<svg id="chartSk" role="img" aria-label="Parcours des clubs sur la saison, de la qualification à la finale"');
     brancher(); legende(L, blocs);
