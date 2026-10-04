@@ -92,6 +92,12 @@ confondues (sortir de C1 en juillet, c'est basculer en C3) ; et trois défaites
 mènent directement à une phase de ligue, sans autre match — barrage de C1,
 troisième tour de C1 côté League Path, barrage de C3.
 
+Depuis octobre 2026, la courbe de survie (bloc 7b) ne lit plus ce bloc : elle
+lit le relevé club par club du bloc 7c (`SANKEY` pour la saison en cours,
+`SANKEY_S` pour 2021/22 à 2025/26). Effectif encore en lice après un tour = les
+clubs qui ne sont pas encore éliminés à l'étape suivante. Les mêmes règles
+s'appliquent : on ne sort qu'à sa dernière défaite.
+
 Contrôle : `engagés − éliminés = encore en lice`, pour les 54 associations.
 Il passe. C'est lui qui a révélé que le Monténégro manquait au décompte des
 engagés, la source ne pouvant pas déduire son diviseur d'un coefficient de

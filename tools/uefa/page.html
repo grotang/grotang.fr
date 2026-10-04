@@ -553,7 +553,7 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
 
   <div class="panel">
     <div class="ptitle"><span class="no">7b</span><h3>La courbe de survie</h3>
-      <span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">tour par tour · trois phases à largeur égale</span></span></span></div>
+      <span class="sub"><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelV" aria-label="Saison"></select></span></span></span></div>
     <div class="chips" id="vchips"></div>
     <figure>
       <div class="chartbox" id="boxSurv"><svg id="chartSurv" role="img" aria-label="Nombre de clubs encore en lice au fil de la saison"></svg></div>
@@ -1970,11 +1970,12 @@ function mkSeasonCtl(id){
    ce sélecteur : on déclare la référence ici et l'IIFE la remplit. Sans ça,
    changer de saison appelait une fonction qui n'existait pas encore. */
 let drawDec = () => {};
+let drawSv = () => {};   /* bloc 7b, rempli plus bas */
 let drawSk = () => {};   /* bloc 7c, rempli plus bas (même raison) */
 
 function syncSeason(){
-  ['seasonSel','seasonSelZ','seasonSelM','seasonSelK','seasonSelC','seasonSelD','seasonSelS'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=selY; });
-  drawK(); drawClubs(); drawDec(); drawL(); drawZ(); drawM(); drawSk();
+  ['seasonSel','seasonSelZ','seasonSelM','seasonSelK','seasonSelC','seasonSelD','seasonSelS','seasonSelV'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=selY; });
+  drawK(); drawClubs(); drawDec(); drawL(); drawZ(); drawM(); drawSk(); drawSv();
 }
 
 const selL=new Set(TOP8);
@@ -2156,7 +2157,7 @@ function drawM(){
 }
 
 /* Les trois listes de saison, une fois tous les dessins définis. */
-['seasonSel','seasonSelZ','seasonSelM','seasonSelK','seasonSelC','seasonSelD','seasonSelS'].forEach(mkSeasonCtl);
+['seasonSel','seasonSelZ','seasonSelM','seasonSelK','seasonSelC','seasonSelD','seasonSelS','seasonSelV'].forEach(mkSeasonCtl);
 
 /* ---------- 7c · de juillet à la finale (Sankey de la saison complète) ----------
    Onze colonnes : les quatre tours de qualification, la phase de groupes ou de
@@ -3551,99 +3552,45 @@ const legende = segs => segs.map(s =>
     const libres = JETONS.filter(t => !pris.has(t));
     PALV = {}; let i = 0;
     for (const c of list) PALV[c] = c === EUR ? '--ink-2' : (SLOT[c] || libres[i++] || '--ink-3'); };
-  /* ---- l'axe : TROIS PHASES DE MEME LARGEUR, et non le temps ----
-     L'axe chronologique ecrasait les quatre tours de l'ete dans 8 % de la
-     largeur et laissait cinq mois de vide a droite : illisible la ou tout se
-     joue, vide partout ailleurs. Chaque phase prend donc un tiers de l'axe,
-     quel que soit le nombre de semaines qu'elle occupe au calendrier. On ne lit
-     pas une chronologie ici, on lit un parcours d'elimination, tour par tour.
-     Le vocabulaire et le bandeau de phases sont ceux du calendrier du bloc 0 —
-     « Phase qualificative », « Phase de ligue », « Phase finale » — pour qu'on
-     parle de la meme chose d'un bloc a l'autre. */
-  const t = iso => dOf(iso).getTime();
-  const TOURS = [
-    { ph:'Phase qualificative', teinte:'--n4', cols: QUAL[0].map(q => q[0]) },
-    { ph:'Phase de ligue',      teinte:'--fr', cols: Array.from({length: 8}, (_, i) => 'J' + (i+1)) },
-    { ph:'Phase finale',        teinte:'--n7', cols: KO[0].map(k => k[0]) },
-  ];
-  const jouees7 = k => CAL[k].filter(([iso]) => kickAt(iso) < TODAY).length;
-  const jFaites = Math.max(jouees7(0), jouees7(1), jouees7(2));
-
-  /* ---- la moyenne europeenne, selectionnable comme une nation ----
-     C'etait une VUE separee ("toute l'Europe"), donc un bouton de plus et une
-     lecture qu'on ne pouvait pas comparer a la sienne. C'est maintenant une
-     entite du meme filtre : les 233 clubs ramenes aux 53 associations, soit un
-     effectif moyen de 4,4 — la meme echelle que n'importe quelle nation. */
+  /* ---- les données : le relevé club par club du bloc 7c ----
+     Une seule source pour toutes les saisons depuis 2021/22 : pour chaque club,
+     son état à chacune des onze étapes (bloc SANKEY pour la saison en cours,
+     SANKEY_S pour les saisons passées). L'effectif encore en lice après un tour
+     = les clubs qui ne sont pas encore éliminés à l'étape suivante. Un club
+     reversé de C1 en C3 ou de C3 en C4 reste en lice : on ne sort du graphe qu'à
+     sa dernière défaite, toutes compétitions confondues. */
   const EUR = '__EUR';
+  const baseV = () => isCur() ? SANKEY : (SANKEY_S[selY] || {});
+  const natsV = () => Object.keys(baseV()).filter(c => baseV()[c].length);
   const nEng = ENGAGEES.length;
-  const totEng = ENGAGEES.reduce((a, n) => a + engages(n), 0);
-  const nomV = c => c === EUR ? `Moyenne des ${nEng}` : name(c);
-  const engV = c => c === EUR ? totEng / nEng : engages(BY[c]);
-  const vieV = c => c === EUR ? ENGAGEES.reduce((a, n) => a + enVie(n), 0) / nEng : enVie(BY[c]);
+  const nomV = c => c === EUR ? `Moyenne des ${natsV().length || nEng}` : name(c);
   const fmtV = v => Number.isInteger(v) ? String(v) : nf(v, 1);
-  /* Effectif apres chacun des quatre tours. Plus une pente qui traverse les
-     colonnes faute de savoir : le bloc QUAL donne la vraie marche, tour par
-     tour, et elle tombe exactement sur sa colonne. */
-  const serieV = c => c === EUR
-    ? [0,1,2,3].map(i => ENGAGEES.reduce((a, n) => a + (QUALS[n.c] ? QUALS[n.c].s[i] : enVie(n)), 0) / nEng)
-    : (QUALS[c] ? QUALS[c].s : null);
+  const ancienV = () => !isCur() && +selY < 2024;
+  const ETAPES = () => ['1er juil.', 'Q1', 'Q2', 'Q3', 'Bar.', ancienV() ? 'Groupes' : 'Ligue', 'Barr. KO', '8es', '1/4', '1/2', 'F'];
+  const NK = 10;
+  const enJeu = v => v >= 0 && v <= 2;
+  /* k = 0 : au départ ; k = 1..10 : après le k-ième tour (Q1 … finale). */
+  const serieNat = c => { const R = baseV()[c] || [];
+    return [R.length, ...Array.from({ length: NK }, (_, i) => R.filter(r => r[i + 1] !== 9).length)]; };
+  const serieV = c => { if (c !== EUR) return baseV()[c] ? serieNat(c) : null;
+    const N = natsV(); if (!N.length) return null;
+    const S = N.map(serieNat); return S[0].map((_, k) => S.reduce((a, s) => a + s[k], 0) / N.length); };
+  /* Dernier tour connu : le dernier où au moins un club est encore présent. Saison
+     passée : la finale. Saison en cours : les barrages, tant que la phase de ligue
+     n'a pas rendu son verdict. */
+  const kMax = () => { const B = Object.values(baseV()); let m = 0;
+    for (let k = 1; k <= NK; k++) if (B.some(L => L.some(r => enJeu(r[k])))) m = k;
+    return m; };
 
-  function cadre(hi, H){
-    const W = 1000, mT = 40, mB = 44, mL = 44, mR = 18;
-    const L = (W - mL - mR) / 3;
-    const xP = i => mL + i * L;                                  /* debut de phase */
-    const xC = (ph, i) => mL + ph * L + L * (i + 1) / TOURS[ph].cols.length;   /* fin du tour i */
-    const Y = v => mT + (H - mT - mB) * (1 - v / hi);
-    return { W, H, mT, mB, mL, mR, L, xP, xC, Y };
-  }
-
-  function grille(f){
-    let g = '';
-    /* Bandeau de phases : meme dessin que le calendrier du bloc 0 — une pastille
-       nommee, et deux frontieres pleine hauteur, parce que ce sont de vrais
-       changements de regime et pas des decoupages decoratifs. */
-    TOURS.forEach((T, i) => {
-      const x1 = f.xP(i), x2 = f.xP(i + 1);
-      g += `<rect x="${(x1+1).toFixed(1)}" y="4" width="${(x2-x1-2).toFixed(1)}" height="19" rx="4" fill="var(${T.teinte})" opacity=".26"/>`
-        + `<line x1="${x1.toFixed(1)}" y1="4" x2="${x1.toFixed(1)}" y2="${f.H-f.mB}" stroke="var(--rule)" stroke-width="1"/>`
-        + `<line x1="${x2.toFixed(1)}" y1="4" x2="${x2.toFixed(1)}" y2="${f.H-f.mB}" stroke="var(--rule)" stroke-width="1"/>`
-        + `<text x="${((x1+x2)/2).toFixed(1)}" y="17.5" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing=".05em" fill="var(--ink-2)">${T.ph}</text>`;
-    });
-    for (let v = 0; v <= f.hiV + 1e-9; v += 1)
-      g += `<line x1="${f.mL}" y1="${f.Y(v).toFixed(1)}" x2="${f.W-f.mR}" y2="${f.Y(v).toFixed(1)}" stroke="var(--rule-soft)"/>`
-        + `<text x="${f.mL-8}" y="${(f.Y(v)+4).toFixed(1)}" text-anchor="end" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${v}</text>`;
-    /* une colonne par tour, et son nom sous l'axe */
-    TOURS.forEach((T, ph) => T.cols.forEach((lab, i) => {
-      const x = f.xC(ph, i), dernier = i === T.cols.length - 1;
-      if (!dernier) g += `<line x1="${x.toFixed(1)}" y1="${f.mT}" x2="${x.toFixed(1)}" y2="${f.H-f.mB}" stroke="var(--rule-soft)" stroke-dasharray="2 3"/>`;
-      g += `<text x="${x.toFixed(1)}" y="${f.H-f.mB+16}" text-anchor="middle" font-size="10.5" font-weight="${dernier?700:600}" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${lab}</text>`;
-    }));
-    g += `<text x="${f.mL.toFixed(1)}" y="${f.H-f.mB+16}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--ink-3)">1<tspan font-size="7" dy="-4">er</tspan><tspan dy="4"> juil.</tspan></text>`;
-    /* le present : la derniere journee disputee */
-    const xn = xNow(f);
-    g += `<line x1="${xn.toFixed(1)}" y1="${f.mT}" x2="${xn.toFixed(1)}" y2="${f.H-f.mB+22}" stroke="var(--ink-2)" stroke-width="1.2"/>`
-      + `<text x="${xn.toFixed(1)}" y="${(f.H-f.mB+34).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--ink-2)">aujourd'hui</text>`;
-    return g;
-  }
-  /* Ou en est-on sur cet axe : a la fin de la derniere journee disputee, sinon a
-     la frontiere des qualifications. */
-  const xNow = f => jFaites > 0 ? f.xC(1, jFaites - 1) : f.xP(1);
-
-  /* Etiquettes de fin de courbe : trois nations a 7 clubs se posent au meme pixel
-     et deviennent une bouillie. On les ecarte verticalement du strict minimum, en
-     partant du haut, sans jamais toucher a la courbe elle-meme.
-     La correction de depassement est LOCALE. Elle etait globale : quand le
-     paquet du bas debordait le plancher, on retranchait le depassement a TOUTES
-     les etiquettes, et celle d'en haut — qui avait cent pixels de libre autour
-     d'elle — se retrouvait decollee de sa courbe de quarante pixels. */
+  /* Etiquettes de fin de courbe : écartées verticalement du strict minimum. */
   function poseEtiquettes(items, hMin, bas, haut){
     const o = items.slice().sort((a, b) => a.y - b.y);
     for (let i = 1; i < o.length; i++) if (o[i].y - o[i-1].y < hMin) o[i].y = o[i-1].y + hMin;
-    if (o.length && o[o.length-1].y > bas) {            /* le bas deborde : on remonte */
+    if (o.length && o[o.length-1].y > bas) {
       o[o.length-1].y = bas;
       for (let i = o.length-2; i >= 0; i--) o[i].y = Math.min(o[i].y, o[i+1].y - hMin);
     }
-    if (o.length && haut != null && o[0].y < haut) {    /* et le haut, si besoin */
+    if (o.length && haut != null && o[0].y < haut) {
       o[0].y = haut;
       for (let i = 1; i < o.length; i++) o[i].y = Math.max(o[i].y, o[i-1].y + hMin);
     }
@@ -3652,87 +3599,89 @@ const legende = segs => segs.map(s =>
 
   function drawSurv(){
     const svg = document.getElementById('chartSurv');
-    const H = 320;
     majPal();
-    const list = [...selV].filter(c => c === EUR || BY[c]);
-    if (!list.length) return;
-    const hi = Math.max(...list.map(engV)) + 0.6;
-    const f = cadre(hi, H); f.hiV = Math.floor(hi);
-    let g = `<svg viewBox="0 0 ${f.W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">` + grille(f);
+    const list = [...selV].filter(c => serieV(c));
+    const W = 1000, H = 340, mT = 40, mB = 44, mL = 44, mR = 150;
+    const km = kMax(), cur = isCur();
+    const X = k => mL + (W - mL - mR) * k / NK;
+    const S = Object.fromEntries(list.map(c => [c, serieV(c)]));
+    const hi = Math.max(1, ...list.map(c => S[c][0])) + 0.6;
+    const Y = v => mT + (H - mT - mB) * (1 - v / hi);
+    let g = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
+    /* bandeau de phases, comme au bloc 0 et au bloc 7c */
+    [['Phase qualificative', '--n4', 0, 4], [ancienV() ? 'Phase de groupes' : 'Phase de ligue', '--fr', 4, 5], ['Phase finale', '--n7', 5, NK]].forEach(([ph, t, a, b]) => {
+      const x1 = X(a), x2 = X(b);
+      g += `<rect x="${(x1 + 1).toFixed(1)}" y="4" width="${(x2 - x1 - 2).toFixed(1)}" height="19" rx="4" fill="var(${t})" opacity=".26"/>`
+        + `<text x="${((x1 + x2) / 2).toFixed(1)}" y="17.5" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing="${b - a > 1 ? '.05em' : '0'}" fill="var(--ink-2)">${ph}</text>`
+        + (a ? `<line x1="${x1.toFixed(1)}" y1="4" x2="${x1.toFixed(1)}" y2="${H - mB}" stroke="var(--rule)"/>` : '');
+    });
+    for (let v = 0; v <= Math.floor(hi) + 1e-9; v++)
+      g += `<line x1="${mL}" y1="${Y(v).toFixed(1)}" x2="${X(NK)}" y2="${Y(v).toFixed(1)}" stroke="var(--rule-soft)"/>`
+        + `<text x="${mL - 8}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${v}</text>`;
+    ETAPES().forEach((lab, k) => {
+      if (k && k < NK) g += `<line x1="${X(k).toFixed(1)}" y1="${mT}" x2="${X(k).toFixed(1)}" y2="${H - mB}" stroke="var(--rule-soft)" stroke-dasharray="2 3"/>`;
+      g += `<text x="${X(k).toFixed(1)}" y="${H - mB + 16}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${cur && k > km ? 'var(--ink-4, var(--ink-3))' : 'var(--ink-3)'}" opacity="${cur && k > km ? .55 : 1}">${lab}</text>`;
+    });
+    /* saison en cours : la phase de ligue se joue, personne n'y est éliminé avant la 8e journée */
+    const xFin = cur ? X(km + 0.5) : X(km);
+    if (cur) g += `<line x1="${xFin.toFixed(1)}" y1="${mT}" x2="${xFin.toFixed(1)}" y2="${H - mB + 22}" stroke="var(--ink-2)" stroke-width="1.2"/>`
+      + `<text x="${xFin.toFixed(1)}" y="${H - mB + 34}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--ink-2)">aujourd'hui</text>`;
 
-    /* Les effectifs sont des entiers : a 7 clubs, trois nations se superposent au
-       pixel pres et il n'en resterait qu'une visible. On decale chaque courbe de
-       quelques centiemes de club — assez pour les distinguer, trop peu pour
-       tromper la lecture, et la grille reste sur les entiers. */
-    const dec = i => (i - (list.length - 1) / 2) * 0.075;
-    const xn = xNow(f);
+    /* Courbes décalées de quelques centièmes de club : sans ça, deux nations au
+       même effectif se superposeraient exactement. */
+    const dec = i => (i - (list.length - 1) / 2) * 0.05;
     const etiq = [];
     list.forEach((c, i) => {
-      const e = engV(c), v = vieV(c), o = dec(i);
-      const col = `var(${PALV[c] || '--ink-3'})`, gras = c === 'FRA' || c === EUR;
+      const s = S[c], o = dec(i), col = `var(${PALV[c] || '--ink-3'})`, gras = c === 'FRA' || c === EUR;
       const w = c === 'FRA' ? 2.8 : (c === EUR ? 2.4 : 1.8);
-      const yE = f.Y(e + o), yV = f.Y(v + o);
-      /* UN ESCALIER, plein, du 1er juillet a aujourd'hui. Chaque marche tombe
-         sur la colonne du tour ou elle s'est produite : c'est le grand livre
-         des qualifications qui la date, plus une interpolation. Puis le trait
-         reste plat — la phase de ligue n'elimine personne avant janvier. */
-      const ser = serieV(c) || [v, v, v, v];
-      let d = `M${f.mL.toFixed(1)} ${yE.toFixed(1)}`, prec = e;
-      for (let j = 0; j < 4; j++) {
-        const x = f.xC(0, j), y = f.Y(ser[j] + o);
-        d += ` L${x.toFixed(1)} ${f.Y(prec + o).toFixed(1)}`;
-        if (Math.abs(ser[j] - prec) > 1e-9) {
-          d += ` L${x.toFixed(1)} ${y.toFixed(1)}`;
-          g += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${gras?3.2:2.4}" fill="${col}"/>`;
+      let d = `M${X(0).toFixed(1)} ${Y(s[0] + o).toFixed(1)}`;
+      for (let k = 1; k <= km; k++) {
+        d += ` L${X(k).toFixed(1)} ${Y(s[k - 1] + o).toFixed(1)}`;
+        if (Math.abs(s[k] - s[k - 1]) > 1e-9) {
+          d += ` L${X(k).toFixed(1)} ${Y(s[k] + o).toFixed(1)}`;
+          g += `<circle cx="${X(k).toFixed(1)}" cy="${Y(s[k] + o).toFixed(1)}" r="${gras ? 3.2 : 2.4}" fill="${col}"/>`;
         }
-        prec = ser[j];
       }
-      d += ` L${xn.toFixed(1)} ${yV.toFixed(1)}`;
+      const yF = Y(s[km] + o);
+      d += ` L${xFin.toFixed(1)} ${yF.toFixed(1)}`;
       g += `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"/>`;
-      g += `<circle cx="${f.mL.toFixed(1)}" cy="${yE.toFixed(1)}" r="${gras?3.4:2.6}" fill="none" stroke="${col}" stroke-width="${w}"/>`;
-      const txt = `${nomV(c)} ${fmtV(v)}/${fmtV(e)}`;
-      etiq.push({ y: yV + 4, yv: yV, col, fr: gras, txt,
-                  x: Math.min(xn + 9, f.W - 6 - txt.length * 6.1) });
+      g += `<circle cx="${X(0).toFixed(1)}" cy="${Y(s[0] + o).toFixed(1)}" r="${gras ? 3.4 : 2.6}" fill="none" stroke="${col}" stroke-width="${w}"/>`;
+      etiq.push({ y: yF + 4, yv: yF, col, fr: gras, txt: `${nomV(c)} ${fmtV(s[km])}/${fmtV(s[0])}`, x: xFin + 9 });
     });
-    /* Plancher : le bas du cadre. Y(0) tombe exactement sur l'axe ; un plancher
-       plus haut poussait les etiquettes a zero vers le haut, et la cascade
-       remontait jusqu'a sortir la premiere courbe du graphe. */
-    poseEtiquettes(etiq, 14, H - f.mB + 2, f.mT + 6).forEach(e => {
+    poseEtiquettes(etiq, 14, H - mB + 2, mT + 6).forEach(e => {
       if (Math.abs(e.y - 4 - e.yv) > 2)
-        g += `<line x1="${(xn+3).toFixed(1)}" y1="${e.yv.toFixed(1)}" x2="${(e.x-2).toFixed(1)}" y2="${(e.y-4).toFixed(1)}" stroke="${e.col}" stroke-width="1" opacity=".5"/>`;
-      g += `<text x="${e.x.toFixed(1)}" y="${e.y.toFixed(1)}" font-size="11.5" font-weight="${e.fr?700:600}" fill="${e.col}">${e.txt}</text>`;
+        g += `<line x1="${(xFin + 3).toFixed(1)}" y1="${e.yv.toFixed(1)}" x2="${(e.x - 2).toFixed(1)}" y2="${(e.y - 4).toFixed(1)}" stroke="${e.col}" stroke-width="1" opacity=".5"/>`;
+      g += `<text x="${e.x.toFixed(1)}" y="${e.y.toFixed(1)}" font-size="11.5" font-weight="${e.fr ? 700 : 600}" fill="${e.col}">${e.txt}</text>`;
     });
     svg.outerHTML = (g + '</svg>').replace('<svg', '<svg id="chartSurv"');
-    legSurv();
   }
 
-  function legSurv(){}
-
   function capSurv(){
-    const viv = ENGAGEES.reduce((a, n) => a + enVie(n), 0);
-    const list = [...selV].filter(c => c === EUR || BY[c]);
-    const nats = list.filter(c => c !== EUR);
-    const plats = nats.filter(c => elimines(BY[c]) === 0);
-    const parTour = [0,1,2,3].map(i => ENGAGEES.reduce((a, n) => {
-      const q = QUALS[n.c]; if (!q) return a;
-      return a + ((i ? q.s[i-1] : q.e) - q.s[i]); }, 0));
+    const N = natsV(), B = baseV(), km = kMax(), et = ETAPES();
+    const lab = SEAS.find(x => x[0] === selY)[1];
+    const tot = N.reduce((a, c) => a + B[c].length, 0);
+    const sortis = k => N.reduce((a, c) => a + B[c].filter(r => r[k] === 9 && r[k - 1] !== 9).length, 0);
+    const list = [...selV].filter(c => c !== EUR && B[c]);
+    const absents = [...selV].filter(c => c !== EUR && !B[c]);
+    const fin = c => serieNat(c)[km];
+    /* qui tient le mieux : la part moyenne de l'effectif encore en lice, tour après tour (l'aire sous la courbe) */
+    const aire = c => { const s = serieNat(c); return s.slice(1, km + 1).reduce((a, v) => a + v, 0) / s[0]; };
+    const resist = list.slice().sort((a, b) => aire(b) - aire(a));
+    const ete = [1, 2, 3, 4].map(sortis), ko = [5, 6, 7, 8, 9, 10].map(sortis);
     document.getElementById('capSurv').innerHTML =
-      `Nombre de clubs encore en lice, du 1<sup>er</sup> juillet à la finale. `
-      + `<b>L'axe n'est pas le temps, ce sont les tours</b> : les trois phases occupent chacune un tiers de la largeur, quel que soit le nombre de semaines qu'elles pèsent au calendrier. Les quatre tours de l'été tenaient dans 8 % d'un axe chronologique — invisibles, alors que c'est là que tout s'est joué jusqu'ici. `
-      + `<b>Chaque marche tombe sur le tour où elle s'est produite.</b> ${parTour[0]} clubs sont sortis d'Europe au 1<sup>er</sup> tour, ${parTour[1]} au 2<sup>e</sup>, ${parTour[2]} au 3<sup>e</sup> et ${parTour[3]} aux barrages — ${totEng - viv} sur ${totEng} engagés. `
-      + `<b>Sortir d'une compétition n'est pas sortir d'Europe</b> : un club éliminé de la C1 bascule en C3 ou en C4 et continue. Un club ne quitte le graphe qu'à sa dernière défaite, toutes compétitions confondues ; les clubs reversés directement en phase de ligue, sans autre match, restent comptés vivants. `
-      + `Puis le trait reste plat : la phase de ligue n'élimine personne, le tri s'y fait au classement et ne tombe qu'à la 8<sup>e</sup> journée. Rien n'est tracé au-delà d'aujourd'hui. `
-      + `<b>D'où viennent ces marches</b> : des tableaux de confrontations des trois compétitions, relevés une fois pour la saison. La source du site, elle, ne publie que l'effectif du jour — jamais la date de sortie. Le relevé est recoupé association par association : <b>engagés − éliminés = encore en lice</b>, et les ${nEng} égalités tombent juste. `
-      + `<b>Huit courbes au maximum, tirées au sort</b> à l'arrivée sur la page : c'est le seul bloc où le classement ne dit rien — une association à trois clubs perd son effectif aussi vite qu'une autre à neuf, et les huit premières donnent huit traits presque plats. Le bouton rejoue le tirage. `
-      + `<b>« Moyenne des ${nEng} »</b> se choisit comme une nation : les ${totEng} clubs européens ramenés aux ${nEng} associations, soit un effectif moyen de ${nf(totEng/nEng, 1)} au départ. `
-      + (nats.length && plats.length === nats.length
-          ? `Aucune des nations affichées n'a perdu un club cet été : leurs traits sont plats de bout en bout. `
-          : nats.length ? `${nats.length - plats.length} des ${nats.length} nations affichées ont perdu des clubs pendant les qualifications. ` : '')
-      + `Les courbes sont décalées de quelques centièmes de club pour rester distinctes : sans ça, deux nations au même effectif se superposeraient exactement.`;
+      `<b>${lab}</b> · nombre de clubs encore en lice après chaque tour, toutes compétitions confondues : un club reversé de C1 en C3 ou de C3 en C4 continue, il ne quitte le graphe qu'à sa dernière défaite. `
+      + `L'été élimine ${ete.reduce((a, b) => a + b, 0)} des ${tot} engagés (${ete[0]} au 1<sup>er</sup> tour, ${ete[1]} au 2<sup>e</sup>, ${ete[2]} au 3<sup>e</sup>, ${ete[3]} aux barrages). `
+      + (km >= NK
+          ? `La ${et[5] === 'Groupes' ? 'phase de groupes' : 'phase de ligue'} en sort ${ko[0]}, puis la phase finale ${ko.slice(1).reduce((a, b) => a + b, 0)} : il reste 3 vainqueurs. `
+          : `La phase de ligue se joue : personne n'y est éliminé avant la 8<sup>e</sup> journée, la suite se tracera au fil des tours. `)
+      + (resist.length > 1 && aire(resist[0]) > aire(resist[resist.length - 1]) ? `Parmi les nations affichées, ${name(resist[0])} est celle qui garde le plus longtemps la plus grande part de ses clubs, ${name(resist[resist.length - 1])} celle qui les perd le plus vite. ` : '')
+      + (absents.length ? `Absente${absents.length > 1 ? 's' : ''} cette saison : ${absents.map(name).join(', ')}. ` : '')
+      + `Huit courbes au maximum, tirées au sort à l'arrivée sur la page. « ${nomV(EUR)} » se choisit comme une nation. Les courbes sont décalées de quelques centièmes de club pour rester distinctes.`;
   }
 
   /* ---------- pilotage commun ---------- */
   const surv = () => { drawSurv(); capSurv(); };
+  drawSv = surv;
   function tout(){ drawV(); surv(); }
   const bTop = document.getElementById('v-top'), bAll = document.getElementById('v-all');
   const syncV = () => { bTop.setAttribute('aria-pressed', porte === 'top');
