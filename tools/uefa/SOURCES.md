@@ -92,8 +92,9 @@ confondues (sortir de C1 en juillet, c'est basculer en C3) ; et trois défaites
 mènent directement à une phase de ligue, sans autre match — barrage de C1,
 troisième tour de C1 côté League Path, barrage de C3.
 
-Depuis octobre 2026, la carte « L'écrémage, nation par nation » (bloc 7b) ne lit plus ce bloc : elle
-lit le relevé club par club du bloc 7c (`SANKEY` pour la saison en cours,
+Depuis octobre 2026, la courbe de survie (bloc 7b) et la carte « L'écrémage
+par nation » (bloc 7c) ne lisent plus ce bloc : elles lisent le relevé club par
+club du bloc 7d (`SANKEY` pour la saison en cours,
 `SANKEY_S` pour 2021/22 à 2025/26). Effectif encore en lice après un tour = les
 clubs qui ne sont pas encore éliminés à l'étape suivante. Les mêmes règles
 s'appliquent : on ne sort qu'à sa dernière défaite.
@@ -186,7 +187,7 @@ de ceux de la source, nation par nation, parmi les seuls clubs éliminés. Contr
 129 sorties sur 129, et pour chaque nation le nombre de sorties par tour retrouve
 exactement celui du bloc QUAL.
 
-## Évolution de la saison en Sankey (bloc 7c)
+## Évolution de la saison en Sankey (bloc 7d)
 
 Chaque club engagé est suivi sur 11 étapes : 1er, 2e, 3e tour, barrages,
 phase de groupes ou de ligue, barrages à élimination directe, 8es, quarts,

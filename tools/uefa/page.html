@@ -172,6 +172,7 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 /* 7c : les rubans du Sankey s'éclairent au survol, les autres s'effacent. */
 #chartSk{display:block; width:100%; height:auto}
 #chartSurv{display:block; width:100%; height:auto}
+#chartCs{display:block; width:100%; height:auto}
 #chartSk .lk{transition:opacity .15s; cursor:help}
 #chartSk.foc .lk{opacity:.12}
 #chartSk.foc .lk.on{opacity:.85}
@@ -543,7 +544,7 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">7a</span><h3>Qui est encore en course</h3>
+    <div class="ptitle"><span class="no">7a</span><h3>Qui est encore en course cette saison</h3>
       <span class="sub"><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
         <button type="button" id="v-top" aria-pressed="false">Les 8 premières</button><button type="button" id="v-all" aria-pressed="true">Toutes</button></span></span><span class="ctl"><span class="lb">Ordre</span><span class="seg" role="group" aria-label="Ordre">
         <button type="button" id="v-rk" aria-pressed="true">Classement</button><button type="button" id="v-pm" aria-pressed="false">Poids mort</button></span></span></span></div>
@@ -553,7 +554,17 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">7b</span><h3>L'écrémage, nation par nation</h3>
+    <div class="ptitle"><span class="no">7b</span><h3>La courbe de survie</h3>
+      <span class="sub"><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelB" aria-label="Saison"></select></span></span></span></div>
+    <div class="chips" id="bchips"></div>
+    <figure>
+      <div class="chartbox" id="boxCs"><svg id="chartCs" role="img" aria-label="Clubs encore en lice après chaque tour"></svg></div>
+      <figcaption id="capCs"></figcaption>
+    </figure>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle"><span class="no">7c</span><h3>L'écrémage par nation</h3>
       <span class="sub"><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelV" aria-label="Saison"></select></span></span></span></div>
     <figure>
       <div class="chartbox" id="boxSurv"><svg id="chartSurv" role="img" aria-label="Nombre de clubs encore en lice au fil de la saison"></svg></div>
@@ -562,7 +573,7 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">7c</span><h3>Évolution de la saison en Sankey</h3>
+    <div class="ptitle"><span class="no">7d</span><h3>Évolution de la saison en Sankey</h3>
       <span class="sub"><span class="ctl"><span class="lb">Nation</span><span class="sel"><select id="skNat" aria-label="Nation"></select></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelS" aria-label="Saison"></select></span></span></span></div>
     <figure>
       <div class="chartbox" id="boxSk" style="overflow-x:auto"><svg id="chartSk" role="img" aria-label="Parcours des clubs sur la saison, de la qualification à la finale"></svg><div class="tip" id="tipSk" hidden></div></div>
@@ -1970,12 +1981,13 @@ function mkSeasonCtl(id){
    ce sélecteur : on déclare la référence ici et l'IIFE la remplit. Sans ça,
    changer de saison appelait une fonction qui n'existait pas encore. */
 let drawDec = () => {};
-let drawSv = () => {};   /* bloc 7b, rempli plus bas */
-let drawSk = () => {};   /* bloc 7c, rempli plus bas (même raison) */
+let drawSv = () => {};   /* bloc 7c (écrémage), rempli plus bas */
+let drawCsHook = () => {};   /* bloc 7b (courbe de survie), rempli plus bas */
+let drawSk = () => {};   /* bloc 7d (Sankey), rempli plus bas (même raison) */
 
 function syncSeason(){
-  ['seasonSel','seasonSelZ','seasonSelM','seasonSelK','seasonSelC','seasonSelD','seasonSelS','seasonSelV'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=selY; });
-  drawK(); drawClubs(); drawDec(); drawL(); drawZ(); drawM(); drawSk(); drawSv();
+  ['seasonSel','seasonSelZ','seasonSelM','seasonSelK','seasonSelC','seasonSelD','seasonSelS','seasonSelV','seasonSelB'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=selY; });
+  drawK(); drawClubs(); drawDec(); drawL(); drawZ(); drawM(); drawSk(); drawSv(); drawCsHook();
 }
 
 const selL=new Set(TOP8);
@@ -2157,9 +2169,10 @@ function drawM(){
 }
 
 /* Les trois listes de saison, une fois tous les dessins définis. */
-['seasonSel','seasonSelZ','seasonSelM','seasonSelK','seasonSelC','seasonSelD','seasonSelS','seasonSelV'].forEach(mkSeasonCtl);
+['seasonSel','seasonSelZ','seasonSelM','seasonSelK','seasonSelC','seasonSelD','seasonSelS','seasonSelV','seasonSelB'].forEach(mkSeasonCtl);
 
-/* ---------- 7c · de juillet à la finale (Sankey de la saison complète) ----------
+const CLUB_COURT = {'Tottenham Hotspur':'Tottenham','Manchester United':'Man United','Manchester City':'Man City','West Ham United':'West Ham','Borussia Dortmund':'Dortmund','Bayer Leverkusen':'Leverkusen','Borussia Mönchengladbach':'Gladbach','Newcastle United':'Newcastle','Nottingham Forest':'Nottingham','Wolverhampton Wanderers':'Wolves','Brighton & Hove Albion':'Brighton','Real Sociedad':'R. Sociedad','Olympique Lyonnais':'Lyon','Olympique de Marseille':'Marseille','Paris Saint-Germain':'PSG','Atlético de Madrid':'Atlético','Eintracht Francfort':'Francfort','Étoile rouge de Belgrade':'Étoile rouge','Zénith Saint-Pétersbourg':'Zénith','FCSB (Steaua Bucarest)':'FCSB','Heart of Midlothian':'Hearts','Jagiellonia Białystok':'Jagiellonia','Iberia 1999 Tbilissi':'Iberia 1999',"St Patrick's Athletic":"St Patrick's",'Budućnost Podgorica':'Budućnost','İstanbul Başakşehir':'Başakşehir','DAC Dunajská Streda':'DAC','Olimpija Ljubljana':'Olimpija','Sporting Charleroi':'Charleroi','Slovan Bratislava':'Slovan','Raków Częstochowa':'Raków','Partizan Belgrade':'Partizan','Hapoël Beer-Sheva':'Beer-Sheva','Paços de Ferreira':'Paços','Vitória Guimarães':'Vitória','Sporting Portugal':'Sporting','Sheriff Tiraspol':'Sheriff','Lincoln Red Imps':'Lincoln','Žalgiris Vilnius':'Žalgiris','Partizani Tirana':'Partizani','Bohemians Dublin':'Bohemians','FH Hafnarfjörður':'FH','Maccabi Tel-Aviv':'Maccabi TA','Hapoël Tel-Aviv':'Hapoël TA','Lokomotiv Moscou':'Lokomotiv','Chakhtar Donetsk':'Chakhtar','Dinamo Tbilissi':'Dinamo Tb.','Puskás Akadémia':'Puskás','Athletic Bilbao':'Bilbao','Mladá Boleslav':'Boleslav','Zrinjski Mostar':'Zrinjski'};
+/* ---------- 7d · de juillet à la finale (Sankey de la saison complète) ----------
    Onze colonnes : les quatre tours de qualification, la phase de groupes ou de
    ligue, puis chaque tour à élimination directe jusqu'au vainqueur. Dans chaque
    colonne, un bloc par compétition (C1, C3, C4) et un bloc gris pour les clubs
@@ -2226,7 +2239,6 @@ function drawM(){
     else if (d.t === 'isr') g = r(0, 0, W, H, '#fff') + r(0, 1.2, W, 1.6, '#0038B8') + r(0, 8.2, W, 1.6, '#0038B8');
     return `<g><title>${name(c)}</title>${g}<rect x="${x + .25}" y="${y + .25}" width="${W - .5}" height="${H - .5}" fill="none" stroke="var(--rule)" stroke-width=".5"/></g>`;
   }
-  const CLUB_COURT = {'Tottenham Hotspur':'Tottenham','Manchester United':'Man United','Manchester City':'Man City','West Ham United':'West Ham','Borussia Dortmund':'Dortmund','Bayer Leverkusen':'Leverkusen','Borussia Mönchengladbach':'Gladbach','Newcastle United':'Newcastle','Nottingham Forest':'Nottingham','Wolverhampton Wanderers':'Wolves','Brighton & Hove Albion':'Brighton','Real Sociedad':'R. Sociedad','Olympique Lyonnais':'Lyon','Olympique de Marseille':'Marseille','Paris Saint-Germain':'PSG','Atlético de Madrid':'Atlético','Eintracht Francfort':'Francfort','Étoile rouge de Belgrade':'Étoile rouge','Zénith Saint-Pétersbourg':'Zénith','FCSB (Steaua Bucarest)':'FCSB','Heart of Midlothian':'Hearts','Jagiellonia Białystok':'Jagiellonia','Iberia 1999 Tbilissi':'Iberia 1999',"St Patrick's Athletic":"St Patrick's",'Budućnost Podgorica':'Budućnost','İstanbul Başakşehir':'Başakşehir','DAC Dunajská Streda':'DAC','Olimpija Ljubljana':'Olimpija','Sporting Charleroi':'Charleroi','Slovan Bratislava':'Slovan','Raków Częstochowa':'Raków','Partizan Belgrade':'Partizan','Hapoël Beer-Sheva':'Beer-Sheva','Paços de Ferreira':'Paços','Vitória Guimarães':'Vitória','Sporting Portugal':'Sporting','Sheriff Tiraspol':'Sheriff','Lincoln Red Imps':'Lincoln','Žalgiris Vilnius':'Žalgiris','Partizani Tirana':'Partizani','Bohemians Dublin':'Bohemians','FH Hafnarfjörður':'FH','Maccabi Tel-Aviv':'Maccabi TA','Hapoël Tel-Aviv':'Hapoël TA','Lokomotiv Moscou':'Lokomotiv','Chakhtar Donetsk':'Chakhtar','Dinamo Tbilissi':'Dinamo Tb.','Puskás Akadémia':'Puskás','Athletic Bilbao':'Bilbao','Mladá Boleslav':'Boleslav','Zrinjski Mostar':'Zrinjski'};
   const enLice = v => v >= 0 && v <= 2;
   // trou entre deux tours joués (ex. perdant du T3 C1 reversé directement en phase de ligue C3) : le club attend dans sa nouvelle compétition
   const combler = s => { s = [...s]; for (let j = 1; j < NC; j++) if (s[j] === -1 && enLice(s[j - 1])) { const k = s.findIndex((v, i) => i > j && v !== -1); if (k > 0 && enLice(s[k])) s[j] = s[k]; } return s; };
@@ -3519,12 +3531,12 @@ const legende = segs => segs.map(s =>
       + `. <b>À ce stade de la saison, « éliminé » veut dire « n'a pas atteint sa phase de ligue »</b> : toutes les sorties enregistrées à ce jour datent des tours de juillet-août. Les éliminations de la phase finale viendront à partir de février.`;
   }
 
-  /* ---------- 7b · l'écrémage, nation par nation ----------
+  /* ---------- 7c · l'écrémage par nation ----------
      Une ligne par nation, une case par tour : le nombre de ses clubs encore en
      lice après ce tour, et une teinte d'autant plus foncée qu'elle en garde une
      grande part. Toutes les nations de la saison, pas une sélection : c'est la
-     comparaison entre elles qui compte ici (le bloc 7c, lui, fouille une nation).
-     Source : le relevé club par club du bloc 7c (SANKEY pour la saison en cours,
+     comparaison entre elles qui compte ici (le bloc 7d, lui, fouille une nation).
+     Source : le relevé club par club du bloc 7d (SANKEY pour la saison en cours,
      SANKEY_S pour 2021/22 à 2025/26). Un club reversé de C1 en C3 ou de C3 en C4
      reste en lice : on ne quitte la carte qu'à sa dernière défaite. */
   const baseV = () => isCur() ? SANKEY : (SANKEY_S[selY] || {});
@@ -3552,7 +3564,8 @@ const legende = segs => segs.map(s =>
     const svg = document.getElementById('chartSurv');
     const km = kMax(), et = ETAPES(), B = baseV(), N = lignesV();
     const box = document.getElementById('boxSurv');
-    const W = Math.max(760, Math.round(box.clientWidth || 1000)), rh = 15, mT = 50, mL = 150, mR = 44, H = mT + N.length * rh + 8;
+    const EC = (location.hash.match(/ec=([AB])/) || [])[1] || 'H';
+    const W = Math.max(760, Math.round(box.clientWidth || 1000)), rh = EC === 'A' ? 20 : 15, mT = 50, mL = 150, mR = 44, H = mT + N.length * rh + 8;
     const cw = (W - mL - mR) / (NK + 1), X = k => mL + cw * k;
     let g = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`;
     [['Phase qualificative', '--n4', 0, 5], [ancienV() ? 'Phase de groupes' : 'Phase de ligue', '--fr', 5, 6], ['Phase finale', '--n7', 6, NK + 1]].forEach(([ph, t, a, b]) => {
@@ -3566,6 +3579,29 @@ const legende = segs => segs.map(s =>
     N.forEach((o, i) => { const y = mT + i * rh, fr = o.c === 'FRA';
       if (fr) g += `<rect x="4" y="${y}" width="${W - 8}" height="${rh}" rx="3" fill="var(--fr-soft)"/>`;
       g += `<text x="${mL - 8}" y="${y + 11}" text-anchor="end" font-size="11" font-weight="${fr ? 700 : 400}" fill="${fr ? 'var(--ink)' : 'var(--ink-2)'}">${name(o.c)}</text>`;
+      if (EC === 'A') {
+        /* entonnoir : épaisseur = part de l'effectif encore en lice, pente entre deux tours */
+        const hm = rh - 3, ym = y + rh / 2, P = o.s.slice(0, km + 1).map((v, k) => [X(k) + cw / 2, v / o.s[0]]);
+        P.unshift([X(0) + 2, 1]); if (km >= NK || true) P.push([X(km) + cw - 2, P[P.length - 1][1]]);
+        const haut = P.map(([x, p]) => `${x.toFixed(1)},${(ym - p * hm / 2).toFixed(1)}`), bas = P.slice().reverse().map(([x, p]) => `${x.toFixed(1)},${(ym + p * hm / 2).toFixed(1)}`);
+        g += `<g><title>${name(o.c)} · ${o.s.slice(0, km + 1).join(' → ')}</title><path d="M${haut.join(' L')} L${bas.join(' L')} Z" fill="var(--fr)" opacity="${fr ? .95 : .7}"/></g>`;
+        g += `<text x="${X(0) + 6}" y="${y + rh / 2 + 3.5}" font-size="10" font-weight="700" fill="#fff">${o.s[0]}</text>`;
+        let kz = km; while (kz > 0 && o.s[kz] === 0) kz--;
+        const xz = kz < km ? X(kz) + cw / 2 + (X(kz + 1) - X(kz)) : X(km) + cw;
+        g += `<text x="${(xz + 5).toFixed(1)}" y="${y + rh / 2 + 3.5}" font-size="10" font-weight="600" fill="var(--ink-3)">${o.s[km] ? o.s[km] : `0 · ${kz < km ? et[kz + 1] : ''}`}</text>`;
+      } else if (EC === 'B') {
+        /* billes : un point par club, plein tant qu'il joue, de la couleur de sa compétition */
+        const colC = k => `var(${['--c1', '--c3', '--c4'][k]})`;
+        const R = B[o.c].map(r => r.slice(0, 11)).sort((a, b) => b.filter(v => v !== 9).length - a.filter(v => v !== 9).length);
+        const dx = Math.min(10, (cw - 8) / Math.max(1, R.length));
+        for (let k = 0; k <= km; k++) R.forEach((r, q) => {
+          const x = X(k) + 5 + dx * (q + .5), yy = y + rh / 2, v = k ? r[k] : r.find(enJeu) ?? -1;
+          const suiv = r.slice(k).find(enJeu);
+          if (v === 9) g += `<circle cx="${x.toFixed(1)}" cy="${yy}" r="1.2" fill="var(--ink-3)" opacity=".35"/>`;
+          else if (enJeu(v)) g += `<circle cx="${x.toFixed(1)}" cy="${yy}" r="${Math.min(4, dx / 2 - .4)}" fill="${colC(v)}"/>`;
+          else if (suiv !== undefined) g += `<circle cx="${x.toFixed(1)}" cy="${yy}" r="${Math.min(4, dx / 2 - .4)}" fill="${colC(suiv)}" opacity=".28"/>`;
+        });
+      } else
       o.s.forEach((v, k) => { if (k > km || !v) return; const p = v / o.s[0];
         const tt = `${name(o.c)} · ${k ? `après ${k === NK ? 'la finale' : et[k]}` : 'au départ'} : ${v} club${v > 1 ? 's' : ''} sur ${o.s[0]} (${Math.round(p * 100)} %)`;
         g += `<g><title>${tt}</title><rect x="${(X(k) + .5).toFixed(1)}" y="${y + .5}" width="${(cw - 1).toFixed(1)}" height="${rh - 1}" rx="2" fill="var(--fr)" opacity="${(.12 + .78 * p).toFixed(2)}"/>`
@@ -3596,6 +3632,148 @@ const legende = segs => segs.map(s =>
           : `La phase de ligue se joue : ses colonnes se rempliront au fil des tours. `)
       + (frO ? `La France est ${pos + 1}<sup>e</sup> sur ${N.length}.` : '');
   }
+
+  /* ---------- 7b · la courbe de survie ----------
+     Trois nations au plus, tirées au sort à l'arrivée sur la page : leurs clubs
+     encore en lice après chaque tour, sur le même relevé que les blocs 7c et 7d.
+     Entre deux tours, la courbe descend en pente. À chaque perte, en gris : le
+     nombre de clubs perdus et leurs noms. Le nom de la nation est posé sur sa
+     courbe, sur le plus long palier proche du centre, pas en bout de course. */
+  const MAXB = 3;
+  const tirageB = () => { const pool = natsV(), out = [];
+    while (out.length < MAXB && pool.length) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+    return out; };
+  const selB = new Set(tirageB());
+  const JETONS = ['--n1','--n2','--n3','--n4','--n5','--n6','--n7','--n8'];
+  let PALB = {};
+  const majPalB = () => { const list = [...selB];
+    const pris = new Set(list.map(c => SLOT[c]).filter(Boolean));
+    const libres = JETONS.filter(t => !pris.has(t));
+    PALB = {}; let i = 0;
+    for (const c of list) PALB[c] = SLOT[c] || libres[i++] || '--ink-3'; };
+  const nomCourt = n => { const f = nomClub(n); return CLUB_COURT[f] || f; };
+
+  function drawCs(){
+    majPalB();
+    const svg = document.getElementById('chartCs'), box = document.getElementById('boxCs');
+    const B = baseV(), km = kMax(), et = ETAPES(), cur = isCur();
+    const list = [...selB].filter(c => B[c]);
+    const W = Math.max(760, Math.round(box.clientWidth || 1000)), H = 400, mT = 40, mB = 30, mL = 34, mR = 26;
+    const X = k => mL + (W - mL - mR) * k / NK;
+    const hi = Math.max(1, ...list.map(c => B[c].length)) + 0.7;
+    const Y = v => mT + (H - mT - mB) * (1 - v / hi);
+    const halo = `stroke="var(--surface)" stroke-width="3.5" stroke-linejoin="round" paint-order="stroke"`;
+    let g = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`;
+    [['Phase qualificative', '--n4', 0, 4], [ancienV() ? 'Phase de groupes' : 'Phase de ligue', '--fr', 4, 5], ['Phase finale', '--n7', 5, NK]].forEach(([ph, t, a, b]) => {
+      const x1 = X(a), x2 = X(b);
+      g += `<rect x="${(x1 + 1).toFixed(1)}" y="4" width="${(x2 - x1 - 2).toFixed(1)}" height="19" rx="4" fill="var(${t})" opacity=".26"/>`
+        + `<text x="${((x1 + x2) / 2).toFixed(1)}" y="17.5" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing="${b - a > 1 ? '.05em' : '0'}" fill="var(--ink-2)">${ph}</text>`
+        + (a ? `<line x1="${x1.toFixed(1)}" y1="4" x2="${x1.toFixed(1)}" y2="${H - mB}" stroke="var(--rule)"/>` : '');
+    });
+    for (let v = 0; v <= Math.floor(hi); v++)
+      g += `<line x1="${mL}" y1="${Math.round(Y(v))}" x2="${X(NK)}" y2="${Math.round(Y(v))}" stroke="var(--rule-soft)"/>`
+        + `<text x="${mL - 8}" y="${Math.round(Y(v)) + 4}" text-anchor="end" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${v}</text>`;
+    et.forEach((lab, k) => g += `<text x="${X(k).toFixed(1)}" y="${H - mB + 18}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--ink-3)" opacity="${cur && k > km ? .5 : 1}">${k ? lab : '1er juil.'}</text>`);
+    const xFin = cur ? X(km + 0.5) : X(km);
+    if (cur) g += `<line x1="${xFin.toFixed(1)}" y1="${mT}" x2="${xFin.toFixed(1)}" y2="${H - mB + 4}" stroke="var(--ink-2)" stroke-width="1.2"/>`
+      + `<text x="${(xFin + 6).toFixed(1)}" y="${mT + 10}" font-size="10" font-weight="700" fill="var(--ink-2)">aujourd'hui</text>`;
+
+    const dec = i => (i - (list.length - 1) / 2) * 0.06;
+    const occupe = [];   // boîtes déjà prises par une étiquette
+    const libre = (x1, y1, x2, y2) => !occupe.some(o => x1 < o[2] && x2 > o[0] && y1 < o[3] && y2 > o[1]);
+    const prend = (x1, y1, x2, y2) => occupe.push([x1, y1, x2, y2]);
+    let traits = '', notes = '', noms = '';
+    list.forEach((c, i) => {
+      const s = serieNat(c), o = dec(i), col = `var(${PALB[c]})`, fr = c === 'FRA';
+      const P = s.slice(0, km + 1).map((v, k) => [X(k), Y(v + o)]);
+      if (cur) P.push([xFin, Y(s[km] + o)]);
+      traits += `<path d="M${P.map(p => p.map(n => n.toFixed(1)).join(' ')).join(' L')}" fill="none" stroke="${col}" stroke-width="${fr ? 3.2 : 2.6}" stroke-linejoin="round" stroke-linecap="round"/>`
+        + `<circle cx="${P[0][0].toFixed(1)}" cy="${P[0][1].toFixed(1)}" r="3.4" fill="var(--surface)" stroke="${col}" stroke-width="2.2"/>`;
+      // le vainqueur, posé d'abord : les pertes s'écartent de lui
+      if (!cur && s[NK] > 0) {
+        const w = '★ ' + B[c].filter(r => enJeu(r[NK])).map(r => nomCourt(r[11])).join(', ');
+        const xw = X(NK) - 4, lw = w.length * 6.4;
+        let yw = Y(s[NK] + o) - 9, n = 0;
+        while (!libre(xw - lw, yw - 11, xw, yw + 3) && n++ < 20) yw -= 14;
+        prend(xw - lw, yw - 11, xw, yw + 3);
+        notes += `<text x="${xw.toFixed(1)}" y="${yw.toFixed(1)}" text-anchor="end" font-size="11" font-weight="700" fill="#C99400" ${halo}>${w}</text>`;
+      }
+      // les pertes : « −2 » puis les noms, en gris, au-dessus et à droite du milieu de la pente
+      for (let k = 1; k <= km; k++) {
+        const d = s[k - 1] - s[k]; if (d <= 0) continue;
+        traits += `<circle cx="${X(k).toFixed(1)}" cy="${Y(s[k] + o).toFixed(1)}" r="3" fill="${col}"/>`;
+        const R = B[c].filter(r => r[k] === 9 && r[k - 1] !== 9).map(r => nomCourt(r[11]));
+        const lignes = [`−${d}`, ...R];
+        const xm = (X(k - 1) + X(k)) / 2 + 6, hL = 12, larg = Math.max(...lignes.map(t => t.length)) * 5.8 + 6;
+        let y0 = (Y(s[k - 1] + o) + Y(s[k] + o)) / 2 - 8 - (lignes.length - 1) * hL;
+        let n = 0; while (!libre(xm, y0 - 10, xm + larg, y0 - 10 + lignes.length * hL) && n++ < 30) y0 -= 6;
+        prend(xm, y0 - 10, xm + larg, y0 - 10 + lignes.length * hL);
+        lignes.forEach((t, q) => notes += `<text x="${xm.toFixed(1)}" y="${(y0 + q * hL).toFixed(1)}" font-size="${q ? 10.5 : 11}" font-weight="${q ? 500 : 700}" fill="var(--ink-3)" ${halo}>${t}</text>`);
+      }
+      // le nom de la nation : sur le plus long palier, de préférence près du centre
+      const runs = []; let a = 0;
+      const pts = P.map(([x, y]) => ({ x, y }));
+      for (let k = 1; k < pts.length; k++) if (Math.abs(pts[k].y - pts[a].y) > .5) { if (k - 1 > a || pts[k - 1].x - pts[a].x > 0) runs.push([a, k - 1]); a = k; }
+      runs.push([a, pts.length - 1]);
+      const cx = (X(0) + X(NK)) / 2;
+      const zero = Y(0 + o) - .5;
+      const cand = runs.map(([p, q]) => ({ x: (pts[p].x + pts[q].x) / 2, y: pts[p].y, L: (pts[q].x - pts[p].x) * (pts[p].y >= zero ? .05 : 1) }))
+        .sort((u, v) => (v.L - Math.abs(v.x - cx) * .15) - (u.L - Math.abs(u.x - cx) * .15));
+      const txt = `${name(c)} · ${s[0]} clubs`, lw = txt.length * 7 + 8;
+      let pose = null;
+      cherche: for (const cd of cand) for (const dy of [-9, 17, -23, 31]) {
+        const y = cd.y + dy, x1 = cd.x - lw / 2;
+        if (y > mT + 4 && y < H - mB - 2 && libre(x1, y - 12, x1 + lw, y + 3)) { pose = { x: cd.x, y }; break cherche; }
+      }
+      pose = pose || { x: cand[0].x, y: cand[0].y - 9 };
+      prend(pose.x - lw / 2, pose.y - 12, pose.x + lw / 2, pose.y + 3);
+      noms += `<text x="${pose.x.toFixed(1)}" y="${pose.y.toFixed(1)}" text-anchor="middle" font-size="13" font-weight="700" fill="${col}" ${halo}>${txt}</text>`;
+    });
+    g += traits + notes + noms + '</svg>';
+    svg.outerHTML = g.replace('<svg', '<svg id="chartCs" role="img" aria-label="Clubs encore en lice après chaque tour, pour trois nations au plus"');
+  }
+
+  function capCs(){
+    const B = baseV(), km = kMax(), lab = SEAS.find(x => x[0] === selY)[1];
+    const list = [...selB].filter(c => B[c]), abs = [...selB].filter(c => !B[c]);
+    document.getElementById('capCs').innerHTML =
+      `<b>${lab}</b> · clubs encore en lice après chaque tour, toutes compétitions confondues : un club reversé de C1 en C3 ou de C3 en C4 continue, il ne quitte la courbe qu'à sa dernière défaite. `
+      + `En gris, à chaque pente : les clubs perdus à ce tour. `
+      + (km < NK ? `La phase de ligue se joue : personne n'y est éliminé avant la 8<sup>e</sup> journée, la suite se tracera au fil des tours. ` : '')
+      + (abs.length ? `Absente${abs.length > 1 ? 's' : ''} cette saison : ${abs.map(name).join(', ')}. ` : '')
+      + `Trois nations au plus, tirées au sort à l'arrivée sur la page.`;
+  }
+  const courbe = () => { drawCs(); capCs(); };
+  drawCsHook = courbe;
+  (function(){
+    const host = document.getElementById('bchips');
+    const dessine = () => { majPalB();
+      const sel = [...selB], plein = sel.length >= MAXB;
+      const dispo = [...new Set([...natsV(), ...ENGAGEES.map(n => n.c)])].filter(c => !selB.has(c)).sort((a, b) => name(a).localeCompare(name(b), 'fr'));
+      host.innerHTML = `<span class="lbl">Nations</span>`
+        + `<button type="button" data-rnd="1" title="Rejouer le tirage">🎲 Random</button>`
+        + `<button type="button" data-fr="1">France seule</button>`
+        + `<span class="sep"></span>`
+        + `<span class="sel"><select id="badd"${plein ? ' disabled' : ''} aria-label="Ajouter une nation">`
+        + `<option value="">${plein ? `${MAXB} nations, c'est le maximum` : 'Ajouter une nation…'}</option>`
+        + dispo.map(c => `<option value="${c}">${name(c)}</option>`).join('')
+        + `</select></span>`
+        + `<span class="brk"></span>`
+        + sel.map(c => `<button type="button" class="tint" data-del="${c}" aria-pressed="true"`
+            + ` style="background:var(${PALB[c]});border-color:var(${PALB[c]})" title="Retirer ${name(c)}">${name(c)} ×</button>`).join('');
+      host.querySelector('#badd').onchange = ev => { if (!ev.target.value) return;
+        if (selB.size < MAXB) selB.add(ev.target.value); dessine(); courbe(); };
+    };
+    host.onclick = ev => { const b = ev.target.closest('button'); if (!b) return;
+      if (b.dataset.rnd) { selB.clear(); tirageB().forEach(c => selB.add(c)); }
+      else if (b.dataset.fr) { selB.clear(); selB.add('FRA'); }
+      else if (b.dataset.del && selB.size > 1) selB.delete(b.dataset.del);
+      dessine(); courbe(); };
+    dessine();
+  })();
+  courbe();
+  window.addEventListener('resize', () => { clearTimeout(window.__cs); window.__cs = setTimeout(drawCs, 150); });
+  document.addEventListener('grotang:theme', drawCs);
 
   /* ---------- pilotage commun ---------- */
   const surv = () => { drawSurv(); capSurv(); };
