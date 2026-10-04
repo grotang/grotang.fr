@@ -180,21 +180,29 @@ de ceux de la source, nation par nation, parmi les seuls clubs éliminés. Contr
 129 sorties sur 129, et pour chaque nation le nombre de sorties par tour retrouve
 exactement celui du bloc QUAL.
 
-## Les bascules de l'été (bloc 7c)
+## De juillet à la finale (bloc 7c)
 
-`wiki/sankey-2026-27.json`, produit par `sankey-clubs.py` : pour chacun des 237
-clubs engagés, la compétition dans laquelle il a joué chaque tour de l'été (1er,
-2e, 3e tour, barrages), puis son arrivée (phase de ligue de C1, C3, C4, ou
-éliminé). Un exempté compte comme ayant passé son tour. Clubs passés par les
-qualifications : grand livre Wikipédia ; clubs entrés directement en phase de
-ligue : effectif de la source. Contrôles : chaque nation retrouve son effectif,
-le statut « éliminé » coïncide club par club avec celui de la source, et chaque
-phase de ligue compte 36 clubs. Le script s'arrête au premier écart.
+Chaque club engagé est suivi sur 11 étapes : 1er, 2e, 3e tour, barrages,
+phase de groupes ou de ligue, barrages à élimination directe, 8es, quarts,
+demies, finale, vainqueur. À chaque étape, son état vaut C1, C3, C4, « pas
+encore entré » ou « éliminé ». Un exempté ou un qualifié direct compte comme
+présent au tour sauté. Un club reversé directement d'un tour à un tour plus
+lointain (ex. perdant du 3e tour de C1, voie de la ligue, versé en phase
+de ligue de C3) est affiché comme attendant dans sa nouvelle compétition.
 
-Saisons passées du bloc 7c : `archive/sankey-saisons.json`, produit par
+Saison en cours : `wiki/sankey-2026-27.json`, produit par `sankey-clubs.py`.
+Clubs passés par les qualifications : grand livre Wikipédia ; clubs entrés
+directement en phase de ligue : effectif de la source. Contrôles : chaque
+nation retrouve son effectif, le statut « éliminé » coïncide club par club avec
+celui de la source, et chaque phase de ligue compte 36 clubs. Le script
+s'arrête au premier écart. Les colonnes de la phase finale restent « à venir »
+tant que le suivi club par club de la phase finale n'existe pas.
+
+Saisons passées : `archive/sankey-saisons.json`, produit par
 `archive/sankey-archive.py` à partir des pages d'archive (matchs et effectifs
-de 2021/22 à 2025/26). Aucun vainqueur n'est recalculé : l'état d'un club à un
-tour est la compétition où il a joué ce tour, son arrivée celle de sa phase de
-groupes ou de ligue. Contrôles : 32 clubs par phase de groupes jusqu'en
-2023/24, 36 par phase de ligue depuis, et aucun club qui joue sans figurer dans
-l'effectif. Le tour préliminaire de C1 est rangé avec le 1er tour.
+de 2021/22 à 2025/26). Le vainqueur de chaque finale est lu dans le score,
+prolongation ou tirs au but compris ; rien n'est recalculé. Contrôles : 32
+clubs par phase de groupes jusqu'en 2023/24, 36 par phase de ligue depuis,
+puis 16, 8, 4, 2 et 1 club par compétition aux tours suivants, une finale lue
+par compétition, et aucun club qui joue sans figurer dans l'effectif. Le tour
+préliminaire de C1 est rangé avec le 1er tour.

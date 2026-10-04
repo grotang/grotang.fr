@@ -9,7 +9,10 @@ arrivé (phase de ligue d'une compétition, ou éliminé). Alimente le bloc 7c
 Sources : le grand livre des qualifications (wiki/qualifs-AAAA.json) pour les
 clubs passés par l'été, l'effectif de la source (fixtures/expected.json, champ
 eff) pour les clubs entrés directement en phase de ligue et pour les noms.
-Sortie : wiki/sankey-AAAA.json, { code : [[q1, q2, q3, bar, ligue, nom source]] }
+Sortie : wiki/sankey-AAAA.json, { code : [[11 états, nom source]] } — les
+mêmes onze colonnes que les saisons archivées (q1, q2, q3, barrages, phase de
+ligue, barrages KO, 8es, quarts, demies, finale, vainqueur). La phase finale
+n'étant pas jouée, ses six états valent -1 (à venir) ou 9 (éliminé en été).
 Pour les quatre tours : 0 = C1, 1 = C3, 2 = C4, -1 = pas (encore) en lice,
 9 = déjà éliminé. Pour la phase de ligue : 0, 1, 2, ou 9 = éliminé en été.
 Un exempté (« bye ») compte comme ayant joué et passé son tour.
@@ -61,7 +64,7 @@ def main():
         der = max(TOURS.index(x['tour']) for x in et)
         if a == 9:
             for j in range(der + 1, 4): etat[j] = 9
-        parcours[c].append((club, etat + [a]))
+        parcours[c].append((club, etat + [a] + [9 if a == 9 else -1] * 6))
     out, ecarts, doutes = {}, [], []
     for c, rows in E.items():
         libres = {r[0]: r for r in rows}
@@ -76,12 +79,12 @@ def main():
             if proche(club, n) == 0 and len(libres) > 1: doutes.append((c, club, sorted(libres))); continue
             res.append(et + [n]); del libres[n]
         for n, r in libres.items():                    # entrés directement en phase de ligue
-            res.append([-1, -1, -1, -1, r[1], n])
+            res.append([-1, -1, -1, -1, r[1]] + [-1] * 6 + [n])
         out[c] = res
         if len(res) != len(rows): ecarts.append((c, len(res), len(rows)))
         statut = {r[0]: r[2] for r in rows}            # contrôle : éliminé ici <=> éliminé à la source
         for r in res:
-            if (r[4] == 9) != bool(statut[r[5]]): ecarts.append((c, r[5], 'statut'))
+            if (r[4] == 9) != bool(statut[r[11]]): ecarts.append((c, r[11], 'statut'))
     json.dump(out, open(OUT, 'w', encoding='utf-8'), ensure_ascii=False, sort_keys=True)
     tout = [r for v in out.values() for r in v]
     ligue = [sum(1 for r in tout if r[4] == k) for k in range(3)]
