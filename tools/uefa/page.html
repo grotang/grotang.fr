@@ -2214,11 +2214,14 @@ function drawM(){
     const totCol = blocs.map(o => Object.values(o).reduce((a, b) => a + b.R.length, 0));
     const vivants = blocs.map(o => [0, 1, 2].reduce((a, k) => a + (o[k] ? o[k].R.length : 0), 0));
     const nBlocs = Math.max(...blocs.map(o => Object.keys(o).length));
-    const mT = 54, mB = 16, GAP = 12, NW = 10;
+    const mT = 84, mB = 16, GAP = 12, NW = 10, dy = 30;
     const VAR = 'B'; // sorties en gouttière sous le tour perdu (A : à la colonne suivante, C : entre deux colonnes)
     let H = choix === 'EUR' ? 640 : Math.max(320, 150 + Math.max(...totCol) * 30);
     let sc = (H - mT - mB - GAP * (nBlocs - 1)) / Math.max(1, ...totCol);
-    const mL = 40, mR = 190;
+    const mL = 40;
+    // marge droite à la mesure des étiquettes de vainqueurs (≈ 6,3 px par caractère à 11 px gras)
+    const labV = [0, 1, 2].map(k => { const R = L.filter(r => r.s[10] === k); return !R.length ? '' : R.length === 1 ? `${COMP[k]} · ${nomClub(R[0].n)}` : `${COMP[k]} ${R.length}`; });
+    const mR = Math.max(60, Math.round(Math.max(...labV.map(t => t.length)) * 6.3) + 22);
     const X = [...Array(NC).keys()].map(j => Math.round(mL + (W - mL - mR - NW) * j / (NC - 1)));
     let yG = 0;
     if (VAR === 'A') blocs.forEach(o => { let y = mT;
@@ -2243,8 +2246,14 @@ function drawM(){
     objets = [];
     let s = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`;
     // séparateur été / phase finale
-    const xs = (X[4] + X[5]) / 2 + NW / 2;
-    s += `<line x1="${xs}" x2="${xs}" y1="44" y2="${(VAR === 'A' ? H : yG - 22) - 6}" stroke="var(--rule)" stroke-dasharray="3 4"/>`;
+    // bandeau de phases : même dessin que le calendrier du bloc 0
+    const yBas = (VAR === 'A' ? H : yG - 22) - 6, bord = [mL - 30, (X[3] + X[4] + NW) / 2, (X[4] + X[5] + NW) / 2, W - 6];
+    [['Phase qualificative', '--n4'], [ancien() ? 'Phase de groupes' : 'Phase de ligue', '--fr'], ['Phase finale', '--n7']].forEach(([ph, t], i) => {
+      const x1 = bord[i], x2 = bord[i + 1];
+      s += `<rect x="${(x1 + 1).toFixed(1)}" y="4" width="${(x2 - x1 - 2).toFixed(1)}" height="19" rx="4" fill="var(${t})" opacity=".26"/>`
+        + `<text x="${((x1 + x2) / 2).toFixed(1)}" y="17.5" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing=".05em" fill="var(--ink-2)">${ph}</text>`;
+      if (i) s += `<line x1="${x1.toFixed(1)}" x2="${x1.toFixed(1)}" y1="4" y2="${yBas}" stroke="var(--rule)"/>`;
+    });
     if (VAR !== 'A') {
       s += `<line x1="${mL - 30}" x2="${W - 10}" y1="${yG - 20}" y2="${yG - 20}" stroke="var(--rule)"/>`
         + `<text x="${mL - 30}" y="${yG - 6}" font-size="10.5" font-weight="700" letter-spacing=".05em" fill="var(--ink-3)">SORTIS</text>`;
@@ -2255,9 +2264,9 @@ function drawM(){
         : `<rect x="${mL - 30}" y="${yG + 6}" width="6" height="${w}" fill="var(--ink-3)"/><text x="${mL - 20}" y="${yG + 6 + w / 2 + 4}" font-size="10" fill="var(--ink-3)">${n} club${n > 1 ? 's' : ''}</text>`;
     }
     X.forEach((x, j) => {
-      s += `<text x="${x + NW / 2}" y="16" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing=".05em" fill="var(--ink-2)">${COURT[j].toUpperCase()}</text>`;
+      s += `<text x="${x + NW / 2}" y="${16 + dy}" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing=".05em" fill="var(--ink-2)">${COURT[j].toUpperCase()}</text>`;
       const sous = !totCol[j] ? (isCur() && j >= 5 ? 'à venir' : '—') : j === 10 ? '' : `${vivants[j]} en lice`;
-      if (sous) s += `<text x="${x + NW / 2}" y="31" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">${sous}</text>`;
+      if (sous) s += `<text x="${x + NW / 2}" y="${31 + dy}" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">${sous}</text>`;
     });
     for (let j = 1; j < NC; j++) {
       const G = new Map();
