@@ -14,6 +14,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 import { nav, navCSS, FAVICON, FAVICON_SVG, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF } from './chrome.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -345,8 +346,23 @@ const dateSitemap = (bal, avant, apres, sansHorodatage) => {
   return memeContenu && m ? m[1] : today;
 };
 for (const [f, buf] of CARTE) { fs.mkdirSync(path.dirname(path.join(OUT, f)), { recursive: true }); fs.writeFileSync(path.join(OUT, f), buf); }
-const majUefa   = dateSitemap('/uefa/',   PRECEDENT,   uefa.html,   true);
-const majTennis = dateSitemap('/tennis/', PREC_TENNIS, tennis.html, false);
+/* `public/` n'est plus dans le dépôt : il est fabriqué au moment de publier, sur
+   une machine neuve, sans version précédente à comparer. La date d'une page est
+   donc celle du dernier commit qui a touché ses sources — c'est exactement
+   « la dernière fois que son contenu a changé », puisque le robot ne dépose
+   plus rien quand les chiffres n'ont pas bougé. pages.yml récupère l'historique
+   complet pour ça (fetch-depth: 0). Sans git, on retombe sur l'ancienne règle. */
+const dateGit = (...src) => {
+  try {
+    const d = execFileSync('git', ['log', '-1', '--format=%cs', '--', ...src], { cwd: ROOT, encoding: 'utf8' }).trim();
+    return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null;
+  } catch { return null; }
+};
+const COMMUN = ['tools/build.mjs', 'tools/chrome.mjs'];
+const majUefa   = dateGit('tools/uefa/page.html', ...COMMUN)
+  || dateSitemap('/uefa/',   PRECEDENT,   uefa.html,   true);
+const majTennis = dateGit('tools/tennis.src.html', ...COMMUN)
+  || dateSitemap('/tennis/', PREC_TENNIS, tennis.html, false);
 
 const sizes = {
   'uefa/index.html': writeStable('uefa/index.html', uefa.html, PRECEDENT),

@@ -5,8 +5,10 @@ name: Publication GitHub Pages
 # de se republier deux fois par jour ne tient pas dans ce budget. GitHub Pages ne
 # compte pas les déploiements pour un dépôt public.
 #
-# Rien à construire ici : `public/` est déjà le site fini, commité par le job de
-# rafraîchissement. Ce workflow ne fait que le téléverser et le publier.
+# Le site est FABRIQUÉ ici, à partir des sources : `public/` n'est plus dans le
+# dépôt. Avant, le robot et nous déposions tous les deux les mêmes fichiers
+# fabriqués, et git ne savait pas les fusionner. Maintenant chacun ne touche
+# qu'aux sources, et la page finie n'existe que le temps d'une publication.
 
 on:
   push:
@@ -16,7 +18,9 @@ on:
       # le signe de vie mensuel, une correction d'outillage, une note dans le README.
       # C'est la règle qu'on avait déjà chez Netlify, conservée ici par hygiène —
       # elle ne coûte plus rien mais évite un déploiement qui ne change rien.
-      - 'public/**'
+      - 'tools/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -39,13 +43,33 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # Historique complet : la date de chaque page dans le sitemap est celle du
+      # dernier commit qui a touché ses sources.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Fabriquer le site
+        run: node tools/build.mjs
+
+      # La carte de partage (og:image) se photographie dans un vrai navigateur.
+      - name: Navigateur
+        run: npx playwright install --with-deps chromium
+
+      - name: Carte de partage
+        run: node tools/uefa/carte.mjs
 
       - uses: actions/configure-pages@v5
 
       # Le domaine personnalisé est déclaré par un fichier CNAME servi à la racine.
-      # Il est écrit ici plutôt que commité dans public/ : ce dossier est régénéré
-      # par tools/build.mjs, qui l'efface à chaque passage.
+      # Il est écrit ici, après la fabrication : tools/build.mjs vide public/.
       - name: Déclarer le domaine
         run: echo 'grotang.fr' > public/CNAME
 

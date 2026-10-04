@@ -105,6 +105,12 @@ jobs:
         id: refresh
         run: node tools/uefa/refresh.mjs ${{ inputs.force && '--force' || '' }}
 
+      # public/ n'est plus dans le dépôt : sur une machine neuve il n'existe pas.
+      # Le script ci-dessus ne le fabrique que s'il a trouvé du neuf ; la
+      # projection et le test en ont besoin dans tous les cas.
+      - name: Fabriquer la page
+        run: node tools/build.mjs
+
       # LA PROJECTION. Elle tournait dans le navigateur de chaque visiteur, a
       # chaque ouverture : 2 000 saisons simulees, une seconde sur un poste fixe
       # et cinq a neuf sur un telephone, pour une erreur d'echantillonnage de un
@@ -119,12 +125,6 @@ jobs:
       - name: Projection sur le runner
         run: node tools/uefa/projette.mjs 200000
 
-      # La carte de partage : l'image qui s'affiche quand on colle le lien dans
-      # WhatsApp, LinkedIn, Slack. Fabriquee depuis la page qu'on vient de
-      # construire, donc avec les chiffres du jour. Refaite seulement si son
-      # dessin a change : sinon l'ancienne est gardee a l'octet pres.
-      - name: Carte de partage
-        run: node tools/uefa/carte.mjs
 
       # LE FILET. tools/uefa/test-page.mjs ouvre la page reconstruite dans un
       # vrai navigateur et vérifie une quinzaine de faits : pas d'erreur
@@ -188,8 +188,9 @@ jobs:
       # déclenché par le GITHUB_TOKEN.
       #
       # Conditionné au dépôt : un passage qui ne trouve rien de neuf ne republie
-      # pas, et le signe de vie mensuel ne touche pas public/ — inutile de
-      # déployer dans ces deux cas.
+      # pas, et le signe de vie mensuel ne touche aucune source de la page —
+      # inutile de déployer dans ces deux cas. C'est pages.yml qui fabrique et
+      # publie le site, carte de partage comprise.
       - name: Publier le site
         if: steps.depot.outputs.deploy == 'true'
         env:

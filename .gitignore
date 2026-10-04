@@ -7,3 +7,8 @@ node_modules/
 
 # Sortie du script de projection : regeneree a chaque lancer, pas une source.
 tools/uefa/projection_uefa.csv
+
+# Le site fini n'est plus versionné : pages.yml le fabrique au moment de
+# publier. Le robot et nous ne touchons plus qu'aux sources, donc plus aucun
+# fichier fabriqué en commun, donc plus de conflit.
+public/
