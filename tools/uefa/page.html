@@ -564,7 +564,7 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">7c</span><h3>L'écrémage par nation</h3>
+    <div class="ptitle"><span class="no">7c</span><h3>L'écrémage, nation par nation</h3>
       <span class="sub"><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelV" aria-label="Saison"></select></span></span></span></div>
     <figure>
       <div class="chartbox" id="boxSurv"><svg id="chartSurv" role="img" aria-label="Nombre de clubs encore en lice au fil de la saison"></svg></div>
@@ -3561,76 +3561,64 @@ const legende = segs => segs.map(s =>
       .sort((p, q) => q.a - p.a || q.s[0] - p.s[0] || name(p.c).localeCompare(name(q.c), 'fr')); };
 
   function drawSurv(){
-    const svg = document.getElementById('chartSurv');
-    const km = kMax(), et = ETAPES(), B = baseV(), N = lignesV();
-    const box = document.getElementById('boxSurv');
-    const EC = (location.hash.match(/ec=([AB])/) || [])[1] || 'H';
-    const W = Math.max(760, Math.round(box.clientWidth || 1000)), rh = EC === 'A' ? 20 : 15, mT = 50, mL = 150, mR = 44, H = mT + N.length * rh + 8;
-    const cw = (W - mL - mR) / (NK + 1), X = k => mL + cw * k;
+    const svg = document.getElementById('chartSurv'), box = document.getElementById('boxSurv');
+    const km = kMax(), B = baseV(), N = lignesV();
+    /* Une colonne = un tour, et les clubs qui le JOUENT : la finale compte les 6
+       finalistes, les demies les 12 demi-finalistes. L'écrémage se lit entre deux
+       colonnes. Même lecture que le Sankey du bloc 7d. */
+    const COLS = ['Q1', 'Q2', 'Q3', 'Bar.', ancienV() ? 'Groupes' : 'Ligue', 'Barr. KO', '8es', '1/4', '1/2', 'Finale', 'Vainqueur'];
+    const NC2 = COLS.length;
+    const W = Math.max(760, Math.round(box.clientWidth || 1000)), rh = 15, mT = 50, mL = 150, mR = 12, H = mT + N.length * rh + 8;
+    const cw = (W - mL - mR) / NC2, X = k => mL + cw * k;
+    const colC = k => `var(${['--c1', '--c3', '--c4'][k]})`;
     let g = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`;
-    [['Phase qualificative', '--n4', 0, 5], [ancienV() ? 'Phase de groupes' : 'Phase de ligue', '--fr', 5, 6], ['Phase finale', '--n7', 6, NK + 1]].forEach(([ph, t, a, b]) => {
+    [['Phase qualificative', '--n4', 0, 4], [ancienV() ? 'Phase de groupes' : 'Phase de ligue', '--fr', 4, 5], ['Phase finale', '--n7', 5, NC2]].forEach(([ph, t, a, b]) => {
       const x1 = X(a), x2 = X(b), etroit = b - a === 1;
       g += `<rect x="${(x1 + 1).toFixed(1)}" y="2" width="${(x2 - x1 - 2).toFixed(1)}" height="19" rx="4" fill="var(${t})" opacity=".26"/>`
         + `<text x="${((x1 + x2) / 2).toFixed(1)}" y="15.5" text-anchor="middle" font-size="${etroit ? 9.5 : 10.5}" font-weight="700" letter-spacing="${etroit ? '0' : '.05em'}" fill="var(--ink-2)">${ph}</text>`
         + (a ? `<line x1="${x1.toFixed(1)}" y1="2" x2="${x1.toFixed(1)}" y2="${H - 4}" stroke="var(--rule)"/>` : '');
     });
-    et.forEach((lab, k) => g += `<text x="${(X(k) + cw / 2).toFixed(1)}" y="${mT - 10}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--ink-3)" opacity="${k > km ? .5 : 1}">${lab}</text>`);
-    if (km < NK) g += `<text x="${((X(km + 1) + X(NK + 1)) / 2).toFixed(1)}" y="${mT + 16}" text-anchor="middle" font-size="11" fill="var(--ink-3)">à venir</text>`;
+    const tot = k => N.reduce((a, o) => a + B[o.c].filter(r => r[k] !== 9).length, 0);
+    COLS.forEach((lab, k) => {
+      g += `<text x="${(X(k) + cw / 2).toFixed(1)}" y="${mT - 18}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--ink-2)" opacity="${k > km ? .5 : 1}">${lab}</text>`
+        + `<text x="${(X(k) + cw / 2).toFixed(1)}" y="${mT - 6}" text-anchor="middle" font-size="9.5" fill="var(--ink-3)">${k > km ? 'à venir' : tot(k) + ' clubs'}</text>`;
+    });
     N.forEach((o, i) => { const y = mT + i * rh, fr = o.c === 'FRA';
       if (fr) g += `<rect x="4" y="${y}" width="${W - 8}" height="${rh}" rx="3" fill="var(--fr-soft)"/>`;
       g += `<text x="${mL - 8}" y="${y + 11}" text-anchor="end" font-size="11" font-weight="${fr ? 700 : 400}" fill="${fr ? 'var(--ink)' : 'var(--ink-2)'}">${name(o.c)}</text>`;
-      if (EC === 'A') {
-        /* entonnoir : épaisseur = part de l'effectif encore en lice, pente entre deux tours */
-        const hm = rh - 3, ym = y + rh / 2, P = o.s.slice(0, km + 1).map((v, k) => [X(k) + cw / 2, v / o.s[0]]);
-        P.unshift([X(0) + 2, 1]); if (km >= NK || true) P.push([X(km) + cw - 2, P[P.length - 1][1]]);
-        const haut = P.map(([x, p]) => `${x.toFixed(1)},${(ym - p * hm / 2).toFixed(1)}`), bas = P.slice().reverse().map(([x, p]) => `${x.toFixed(1)},${(ym + p * hm / 2).toFixed(1)}`);
-        g += `<g><title>${name(o.c)} · ${o.s.slice(0, km + 1).join(' → ')}</title><path d="M${haut.join(' L')} L${bas.join(' L')} Z" fill="var(--fr)" opacity="${fr ? .95 : .7}"/></g>`;
-        g += `<text x="${X(0) + 6}" y="${y + rh / 2 + 3.5}" font-size="10" font-weight="700" fill="#fff">${o.s[0]}</text>`;
-        let kz = km; while (kz > 0 && o.s[kz] === 0) kz--;
-        const xz = kz < km ? X(kz) + cw / 2 + (X(kz + 1) - X(kz)) : X(km) + cw;
-        g += `<text x="${(xz + 5).toFixed(1)}" y="${y + rh / 2 + 3.5}" font-size="10" font-weight="600" fill="var(--ink-3)">${o.s[km] ? o.s[km] : `0 · ${kz < km ? et[kz + 1] : ''}`}</text>`;
-      } else if (EC === 'B') {
-        /* billes : un point par club, plein tant qu'il joue, de la couleur de sa compétition */
-        const colC = k => `var(${['--c1', '--c3', '--c4'][k]})`;
-        const R = B[o.c].map(r => r.slice(0, 11)).sort((a, b) => b.filter(v => v !== 9).length - a.filter(v => v !== 9).length);
-        const dx = Math.min(10, (cw - 8) / Math.max(1, R.length));
-        for (let k = 0; k <= km; k++) R.forEach((r, q) => {
-          const x = X(k) + 5 + dx * (q + .5), yy = y + rh / 2, v = k ? r[k] : r.find(enJeu) ?? -1;
-          const suiv = r.slice(k).find(enJeu);
-          if (v === 9) g += `<circle cx="${x.toFixed(1)}" cy="${yy}" r="1.2" fill="var(--ink-3)" opacity=".35"/>`;
-          else if (enJeu(v)) g += `<circle cx="${x.toFixed(1)}" cy="${yy}" r="${Math.min(4, dx / 2 - .4)}" fill="${colC(v)}"/>`;
-          else if (suiv !== undefined) g += `<circle cx="${x.toFixed(1)}" cy="${yy}" r="${Math.min(4, dx / 2 - .4)}" fill="${colC(suiv)}" opacity=".28"/>`;
+      // les clubs de la nation, du plus long parcours au plus court : chacun garde sa place d'une colonne à l'autre
+      const R = B[o.c].map(r => ({ s: r.slice(0, 11), n: r[11] })).sort((a, b) => b.s.filter(v => v !== 9).length - a.s.filter(v => v !== 9).length);
+      const dx = Math.min(10, (cw - 8) / Math.max(1, R.length)), rad = Math.min(4, dx / 2 - .4), yy = y + rh / 2;
+      for (let k = 0; k <= km; k++) {
+        const vivants = R.filter(r => r.s[k] !== 9);
+        let cell = '';
+        R.forEach((r, q) => {
+          const x = X(k) + 5 + dx * (q + .5), v = r.s[k];
+          if (v === 9) cell += `<circle cx="${x.toFixed(1)}" cy="${yy}" r="1.2" fill="var(--ink-3)" opacity=".35"/>`;
+          else if (enJeu(v)) cell += `<circle cx="${x.toFixed(1)}" cy="${yy}" r="${rad}" fill="${colC(v)}"/>`;
+          else { const suiv = r.s.slice(k).find(enJeu); if (suiv !== undefined) cell += `<circle cx="${x.toFixed(1)}" cy="${yy}" r="${rad}" fill="${colC(suiv)}" opacity=".28"/>`; }
         });
-      } else
-      o.s.forEach((v, k) => { if (k > km || !v) return; const p = v / o.s[0];
-        const tt = `${name(o.c)} · ${k ? `après ${k === NK ? 'la finale' : et[k]}` : 'au départ'} : ${v} club${v > 1 ? 's' : ''} sur ${o.s[0]} (${Math.round(p * 100)} %)`;
-        g += `<g><title>${tt}</title><rect x="${(X(k) + .5).toFixed(1)}" y="${y + .5}" width="${(cw - 1).toFixed(1)}" height="${rh - 1}" rx="2" fill="var(--fr)" opacity="${(.12 + .78 * p).toFixed(2)}"/>`
-          + `<text x="${(X(k) + cw / 2).toFixed(1)}" y="${y + 11}" text-anchor="middle" font-size="9.5" font-weight="600" fill="${p > .55 ? '#fff' : 'var(--ink-2)'}">${v}</text></g>`;
-      });
-      if (km >= NK && o.s[NK]) { const w = B[o.c].filter(r => enJeu(r[NK])).map(r => nomClub(r[11])).join(', ');
-        g += `<g><title>Vainqueur : ${w}</title><text x="${X(NK + 1) + 8}" y="${y + 11.5}" font-size="12" fill="#E5A800">★${o.s[NK] > 1 ? o.s[NK] : ''}</text></g>`; }
+        const tt = `${name(o.c)} · ${COLS[k]} : ${vivants.length} club${vivants.length > 1 ? 's' : ''} sur ${R.length}` + (vivants.length && vivants.length <= 4 ? ` (${vivants.map(r => nomClub(r.n)).join(', ')})` : '');
+        g += `<g><title>${tt}</title><rect x="${X(k).toFixed(1)}" y="${y}" width="${cw.toFixed(1)}" height="${rh}" fill="transparent"/>${cell}</g>`;
+      }
     });
-    svg.outerHTML = (g + '</svg>').replace('<svg', '<svg id="chartSurv" role="img" aria-label="Clubs encore en lice après chaque tour, nation par nation"');
+    if (km < NC2 - 1) g += `<text x="${((X(km + 1) + X(NC2)) / 2).toFixed(1)}" y="${mT + 16}" text-anchor="middle" font-size="11" fill="var(--ink-3)">à venir</text>`;
+    svg.outerHTML = (g + '</svg>').replace('<svg', '<svg id="chartSurv" role="img" aria-label="Clubs de chaque nation présents à chaque tour"');
   }
 
   function capSurv(){
     const N = lignesV(), B = baseV(), km = kMax();
     const lab = SEAS.find(x => x[0] === selY)[1];
     const tot = N.reduce((a, o) => a + o.s[0], 0);
-    const sortis = k => N.reduce((a, o) => a + o.s[k - 1] - o.s[k], 0);
-    const ete = [1, 2, 3, 4].map(sortis);
-    const pos = N.findIndex(o => o.c === 'FRA'), frO = N[pos];
-    const finalistes = km >= NK ? N.filter(o => o.s[NK - 1] > 0).length : 0;
-    const vides = N.filter(o => o.s[Math.min(km, 4)] === 0).length;
+    const pres = k => N.reduce((a, o) => a + B[o.c].filter(r => r[k] !== 9).length, 0);
+    const pos = N.findIndex(o => o.c === 'FRA');
+    const nat = k => N.filter(o => B[o.c].some(r => r[k] !== 9)).length;
     document.getElementById('capSurv').innerHTML =
-      `<b>${lab}</b> · une ligne par nation, une case par tour : le nombre de ses clubs encore en lice après ce tour, toutes compétitions confondues. Plus la case est foncée, plus la nation garde une grande part de son effectif. `
-      + `Un club reversé de C1 en C3 ou de C3 en C4 continue : il ne quitte la carte qu'à sa dernière défaite. `
-      + `<b>Les nations sont rangées par résistance</b> : la part moyenne de leurs clubs encore en lice, tour après tour. `
-      + `L'été élimine ${ete.reduce((a, b) => a + b, 0)} des ${tot} engagés (${ete[0]} au 1<sup>er</sup> tour, ${ete[1]} au 2<sup>e</sup>, ${ete[2]} au 3<sup>e</sup>, ${ete[3]} aux barrages) : ${vides} nation${vides > 1 ? 's' : ''} sur ${N.length} n'${vides > 1 ? 'ont' : 'a'} plus aucun club en ${ancienV() ? 'phase de groupes' : 'phase de ligue'}. `
-      + (km >= NK
-          ? `${finalistes} nations ont encore un club en finale ; ★ marque celles qui gagnent une coupe. `
-          : `La phase de ligue se joue : ses colonnes se rempliront au fil des tours. `)
-      + (frO ? `La France est ${pos + 1}<sup>e</sup> sur ${N.length}.` : '');
+      `<b>${lab}</b> · une ligne par nation, une colonne par tour : une bille par club. <b>Pleine</b>, le club joue ce tour, dans la couleur de sa compétition (C1 bleu, C3 orange, C4 vert) ; <b>pâle</b>, il n'est pas encore entré en lice ; <b>petit point gris</b>, il est éliminé. Une bille qui change de couleur, c'est une bascule. `
+      + `Chaque colonne compte les clubs qui jouent ce tour : ${pres(0)} engagés, ${pres(4)} en ${ancienV() ? 'phase de groupes' : 'phase de ligue'}`
+      + (km >= 10 ? `, ${pres(8)} en demies, ${pres(9)} en finale et 3 vainqueurs. ${nat(9)} nations ont un club en finale. ` : `. La phase finale se remplira au fil des tours. `)
+      + `Les nations sont rangées par résistance : la part moyenne de leurs clubs encore en lice, tour après tour. `
+      + (pos >= 0 ? `La France est ${pos + 1}<sup>e</sup> sur ${N.length}.` : '');
   }
 
   /* ---------- 7b · la courbe de survie ----------
