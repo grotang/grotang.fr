@@ -26,6 +26,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright';
+import { servir } from './serveur.mjs';
 
 const FICHIER = path.resolve(process.argv[2] || 'public/uefa/index.html');
 const dur = [], mou = [];
@@ -87,7 +88,10 @@ const page = await nav.newPage({ viewport: { width: 1440, height: 1200 } });
 const erreurs = [];
 page.on('pageerror', e => erreurs.push(e.message));
 page.on('console', m => { if (m.type() === 'error') erreurs.push(m.text()); });
-await page.goto('file://' + FICHIER, { waitUntil: 'load' });
+/* Servie en http local : les polices auto-hébergées (/fonts/) ne chargent pas en file://.
+   La racine est le dossier au-dessus de la page (public/), qui contient /fonts/. */
+const serveur = await servir(path.dirname(path.dirname(FICHIER)));
+await page.goto(serveur.url(path.basename(path.dirname(FICHIER)) + '/' + path.basename(FICHIER)), { waitUntil: 'load' });
 await page.waitForTimeout(2500);
 
 /* Les ressources externes ne partent pas depuis un runner : ce n'est pas une
@@ -131,7 +135,7 @@ await page.waitForTimeout(900);
 const large = await page.evaluate(() => document.documentElement.scrollWidth);
 signalant('pas de débordement horizontal à 390 px', large <= 392, `${large} px`);
 
-await nav.close();
+await nav.close(); serveur.fermer();
 
 /* ---------- verdict ---------- */
 const n = dur.length + mou.length;

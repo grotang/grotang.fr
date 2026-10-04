@@ -56,6 +56,14 @@ const writeStable = (p, s, avant) => {
 /* page.html est écrite pour l'hébergement d'artefact Claude, qui fournit lui-même
    <!doctype>/<head>/<body>. Ici on doit produire un document complet : on scinde
    sur la fin du bloc <style>, ce qui sépare proprement l'en-tête du corps. */
+/* page.html charge Google Fonts (elle doit rester autonome hors du site) ; en
+   production, ces trois lignes cèdent la place aux polices auto-hébergées. */
+function uefaHead(head) {
+  const h = head.replace(/<title>[^<]*<\/title>\n?/, '').replace(/<link rel="preconnect" href="https:\/\/fonts\.(googleapis|gstatic)\.com"[^>]*>\n?/g, '')
+    .replace(/<link rel="stylesheet" href="https:\/\/fonts\.googleapis\.com[^>]*>\n?/, '');
+  if (/fonts\.googleapis/.test(h)) throw new Error('page.html : lien Google Fonts non retiré');
+  return h;
+}
 function buildUefa() {
   const src = read('tools/uefa/page.html');
   const cut = src.indexOf('</style>');
@@ -146,7 +154,8 @@ ${VERIF}
 <script type="application/ld+json">${jsonld}</script>
 ${FAVICON}
 ${THEME_BOOT}
-${head.replace(/<title>[^<]*<\/title>\n?/, '')}
+${FONTS}
+${uefaHead(head)}
 <script>window.PUBLIE = ${JSON.stringify(publie)};</script>
 <style>${navCSS}
 .gnav{margin-bottom:0}
@@ -345,6 +354,11 @@ const dateSitemap = (bal, avant, apres, sansHorodatage) => {
   const m = PREC_SITEMAP && PREC_SITEMAP.match(new RegExp(bal + '[^]*?<lastmod>([\\d-]{10})</lastmod>'));
   return memeContenu && m ? m[1] : today;
 };
+/* polices auto-hébergées */
+for (const f of fs.readdirSync(path.join(ROOT, 'tools/fonts'))) {
+  fs.mkdirSync(path.join(OUT, 'fonts'), { recursive: true });
+  fs.copyFileSync(path.join(ROOT, 'tools/fonts', f), path.join(OUT, 'fonts', f));
+}
 for (const [f, buf] of CARTE) { fs.mkdirSync(path.dirname(path.join(OUT, f)), { recursive: true }); fs.writeFileSync(path.join(OUT, f), buf); }
 /* `public/` n'est plus dans le dépôt : il est fabriqué au moment de publier, sur
    une machine neuve, sans version précédente à comparer. La date d'une page est

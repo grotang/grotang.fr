@@ -9,9 +9,26 @@
    fasse. C'est cette incohérence-là que les exports ci-dessous suppriment :
    mêmes jetons, même attribut `data-theme`, même bouton, même mémoire. */
 
-export const FONTS = `<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&family=Newsreader:opsz,wght@6..72,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">`;
+/* Polices auto-hébergées (tools/fonts/, copiées dans public/fonts/ par build.mjs).
+   Avant : feuille Google Fonts bloquante, deux domaines tiers à contacter avant le
+   premier texte (≈ 2,5 s perdues sur mobile selon PageSpeed). Les trois fichiers
+   du premier écran sont préchargés ; les autres (latin étendu, chasse fixe) ne
+   viennent que si un caractère les demande. */
+export const FONTS = `<link rel="preload" href="/fonts/carlito-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/carlito-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/newsreader-latin-opsz-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>@font-face{font-family:'Carlito';font-style:normal;font-display:swap;font-weight:400;src:url(/fonts/carlito-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Carlito';font-style:normal;font-display:swap;font-weight:400;src:url(/fonts/carlito-latin-ext-400-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Carlito';font-style:normal;font-display:swap;font-weight:700;src:url(/fonts/carlito-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Carlito';font-style:normal;font-display:swap;font-weight:700;src:url(/fonts/carlito-latin-ext-700-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Newsreader';font-style:normal;font-display:swap;font-weight:200 800;src:url(/fonts/newsreader-latin-opsz-normal.woff2) format('woff2-variations');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Newsreader';font-style:normal;font-display:swap;font-weight:200 800;src:url(/fonts/newsreader-latin-ext-opsz-normal.woff2) format('woff2-variations');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-display:swap;font-weight:400;src:url(/fonts/ibm-plex-mono-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-display:swap;font-weight:400;src:url(/fonts/ibm-plex-mono-latin-ext-400-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-display:swap;font-weight:500;src:url(/fonts/ibm-plex-mono-latin-500-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-display:swap;font-weight:500;src:url(/fonts/ibm-plex-mono-latin-ext-500-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-display:swap;font-weight:600;src:url(/fonts/ibm-plex-mono-latin-600-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-display:swap;font-weight:600;src:url(/fonts/ibm-plex-mono-latin-ext-600-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}</style>`;
 
 /* Mesure d'audience — Umami Cloud, palier gratuit.
  *
@@ -37,7 +54,7 @@ export const TOKENS = `
 :root{
   color-scheme: light;
   --ground:#EBEEF3; --surface:#FBFCFE; --surface-2:#F3F5F9;
-  --ink:#0F141D; --ink-2:#48525F; --ink-3:#78828F;
+  --ink:#0F141D; --ink-2:#48525F; --ink-3:#626C79;
   --rule:#D4DAE3; --rule-soft:#E3E8EF;
   --fr:#2a78d6; --fr-soft:#E4EDFA;
   --good:#0F7040; --bad:#B02C2C;
@@ -56,7 +73,7 @@ export const TOKENS = `
 :root[data-theme="dark"]{
   color-scheme: dark;
   --ground:#0A0D13; --surface:#141A24; --surface-2:#1B222E;
-  --ink:#E8ECF3; --ink-2:#A0AAB9; --ink-3:#727D8C;
+  --ink:#E8ECF3; --ink-2:#A0AAB9; --ink-3:#8A94A3;
   --rule:#28313F; --rule-soft:#1F2733;
   --fr:#5D9BF0; --fr-soft:#16233A;
   --good:#43BE83; --bad:#EE7A76;
@@ -122,7 +139,7 @@ export const navCSS = `
 .gnav nav a{font-size:12.5px;font-weight:600;color:var(--ink-3);
   padding:5px 10px;border-radius:6px;line-height:1.2;white-space:nowrap}
 .gnav nav a:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 7%,transparent)}
-.gnav nav a[aria-current="page"]{color:var(--fr);
+.gnav nav a[aria-current="page"]{color:color-mix(in srgb,var(--fr) 70%,var(--ink));
   background:color-mix(in srgb,var(--fr) 12%,transparent)}
 .gn-theme{display:inline-flex;align-items:center;gap:7px;cursor:pointer;flex:none;
   appearance:none;border:1px solid var(--rule);background:var(--surface-2);color:var(--ink-3);

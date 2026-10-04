@@ -16,6 +16,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { servir } from './serveur.mjs';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const PAGE = path.join(ICI, '../../public/uefa/index.html');
@@ -26,7 +27,9 @@ const SIG = SORTIE.replace(/\.png$/, '.sig');
 const EXE = process.env.PW_CHROMIUM || (fs.existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : null);
 const nav = await chromium.launch(EXE ? { executablePath: EXE } : {});
 const pg = await nav.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1, colorScheme: THEME });
-await pg.goto('file://' + PAGE);
+/* Servie en http local : les polices auto-hébergées (/fonts/) ne chargent pas en file://. */
+const serveur = await servir(path.join(ICI, '../../public'));
+await pg.goto(serveur.url('uefa/'));
 await pg.evaluate(t => { document.documentElement.dataset.theme = t; }, THEME);
 await pg.waitForFunction(() => typeof PRJ !== 'undefined' && document.fonts.ready, null, { timeout: 15000 });
 await pg.evaluate(() => document.fonts.ready);
@@ -83,6 +86,6 @@ await pg.evaluate(() => Promise.all(['600 54px Newsreader', '400 27px Carlito', 
   '500 23px "IBM Plex Mono"', '600 22px "IBM Plex Mono"'].map(f => document.fonts.load(f))));
 await pg.waitForTimeout(300);
 await pg.screenshot({ path: SORTIE, clip: { x: 0, y: 0, width: 1200, height: 630 } });
-await nav.close();
+await nav.close(); serveur.fermer();
 fs.writeFileSync(SIG, sig + '\n');
 console.log('carte ->', SORTIE);

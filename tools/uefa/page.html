@@ -6,7 +6,7 @@
 :root{
   color-scheme: light;
   --ground:#EBEEF3; --surface:#FBFCFE; --surface-2:#F3F5F9;
-  --ink:#0F141D; --ink-2:#48525F; --ink-3:#78828F;
+  --ink:#0F141D; --ink-2:#48525F; --ink-3:#626C79;
   --rule:#D4DAE3; --rule-soft:#E3E8EF;
   --fr:#2a78d6; --fr-soft:#E4EDFA;
   --good:#0F7040; --bad:#B02C2C;
@@ -25,7 +25,7 @@
 :root[data-theme="dark"]{
   color-scheme: dark;
   --ground:#0A0D13; --surface:#141A24; --surface-2:#1B222E;
-  --ink:#E8ECF3; --ink-2:#A0AAB9; --ink-3:#727D8C;
+  --ink:#E8ECF3; --ink-2:#A0AAB9; --ink-3:#8A94A3;
   --rule:#28313F; --rule-soft:#1F2733;
   --fr:#5D9BF0; --fr-soft:#16233A;
   --good:#43BE83; --bad:#EE7A76;
@@ -97,7 +97,7 @@ h1{font-size:clamp(30px,4.8vw,48px); font-weight:600; line-height:1.04; letter-s
 .xtable th{color:var(--ink-3); font-weight:600; font-size:11px; letter-spacing:.04em; text-transform:uppercase}
 .xtable tr.gros td{color:var(--bad); font-weight:600}
 .eyebrow{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); font-weight:600;
-         font-variation-settings:"wdth" 100}
+         font-variation-settings:"wdth" 100; min-height:1.5em; line-height:1.5}
 
 section{margin-top:clamp(30px,4.5vw,52px)}
 .shead{display:flex; flex-wrap:wrap; gap:6px 18px; align-items:baseline; border-bottom:1px solid var(--rule); padding-bottom:8px; margin-bottom:18px}
@@ -267,6 +267,10 @@ section > .famille + .panel{margin-top:22px}
    Sans cette réserve, l'Angleterre occupait 100 % de la piste et son total n'avait
    nulle part où aller — le seul cas où le graphe se taisait était le plus lu. */
 #bars{--res:46px}
+/* place réservée avant le dessin : la page ne saute pas au chargement */
+#cal:empty{aspect-ratio:1000/214}
+#calmeta:empty{min-height:1.6em}
+#bars:empty,#kbars:empty{min-height:220px}
 .barrow .tot{position:absolute; top:50%; transform:translateY(-50%); pointer-events:none;
   font:700 12.5px/1 "IBM Plex Mono",monospace; white-space:nowrap; letter-spacing:.01em;
   color:var(--ink); padding-left:8px}
@@ -1280,13 +1284,13 @@ const sombre = () => lumi(toRGB(cssHex('--surface'))) < .4;
    du gras, ce libellé de 9,5 px en graisse 700 tient très bien à 4,0. */
 const encre = (fond, teinte) => {
   const blanc = toRGB(cssHex('--surface'));
-  if (contraste(blanc, fond) >= 4.0) return cssHex('--surface');
+  if (contraste(blanc, fond) >= 4.5) return cssHex('--surface');
   /* L'encre dérive de la couleur de la NATION assombrie, pas du fond pâle :
      mélanger un pastel avec du noir donne un brun terne, alors qu'une teinte
      assombrie reste vive et appartient visiblement à la même famille. */
-  for (const p of [.62, .5, .4, .3]) {
+  for (const p of [.62, .5, .4, .3, .22]) {
     const f = melange(teinte, [0,0,0], p);
-    if (contraste(f, fond) >= 4.0) return toHex(f);
+    if (contraste(f, fond) >= 4.5) return toHex(f);
   }
   return cssHex('--ink');
 };
@@ -1362,7 +1366,7 @@ function pastilles(n){
   const titre = mort
     ? `${enVie(n)} clubs encore en lice sur ${engages(n)} engagés — ${Math.round(partMorte(n)*100)} % du diviseur ne peut plus rien rapporter`
     : `${enVie(n)} clubs engagés, tous encore en lice`;
-  return `<span class="pips" aria-label="${titre}">`
+  return `<span class="pips" role="img" aria-label="${titre}">`
     + vivants.map((k, j) => `<i data-i="${j}" style="background:var(${KVAR[k]})"></i>`).join('')
     + Array.from({length: mort}, (_, j) => `<i data-i="${vivants.length + j}" class="out"></i>`).join('')
     + `</span>`;
