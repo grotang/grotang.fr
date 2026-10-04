@@ -190,3 +190,11 @@ qualifications : grand livre Wikipédia ; clubs entrés directement en phase de
 ligue : effectif de la source. Contrôles : chaque nation retrouve son effectif,
 le statut « éliminé » coïncide club par club avec celui de la source, et chaque
 phase de ligue compte 36 clubs. Le script s'arrête au premier écart.
+
+Saisons passées du bloc 7c : `archive/sankey-saisons.json`, produit par
+`archive/sankey-archive.py` à partir des pages d'archive (matchs et effectifs
+de 2021/22 à 2025/26). Aucun vainqueur n'est recalculé : l'état d'un club à un
+tour est la compétition où il a joué ce tour, son arrivée celle de sa phase de
+groupes ou de ligue. Contrôles : 32 clubs par phase de groupes jusqu'en
+2023/24, 36 par phase de ligue depuis, et aucun club qui joue sans figurer dans
+l'effectif. Le tour préliminaire de C1 est rangé avec le 1er tour.
