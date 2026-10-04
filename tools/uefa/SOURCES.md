@@ -179,3 +179,13 @@ produit par `sorties-clubs.py`, qui rapproche les noms du grand livre (Wikipédi
 de ceux de la source, nation par nation, parmi les seuls clubs éliminés. Contrôle :
 129 sorties sur 129, et pour chaque nation le nombre de sorties par tour retrouve
 exactement celui du bloc QUAL.
+
+## Les bascules de l'été (bloc 7c)
+
+`wiki/sankey-2026-27.json`, produit par `sankey-clubs.py` : pour chacun des 237
+clubs engagés, la compétition d'entrée, celle où il a fini l'été, et son arrivée
+(phase de ligue de C1, C3, C4, ou éliminé). Clubs passés par les qualifications :
+grand livre Wikipédia ; clubs entrés directement en phase de ligue : effectif de
+la source. Contrôles : chaque nation retrouve son effectif, le statut « éliminé »
+coïncide club par club avec celui de la source, et chaque phase de ligue compte
+36 clubs. Le script s'arrête au premier écart.

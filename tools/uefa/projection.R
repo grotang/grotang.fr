@@ -11,6 +11,19 @@
 #           Rscript projection.R --sigma 0.30 --nsim 5000
 # ============================================================================
 
+
+
+
+# Pour update le json sur notre PC, depuis GitHub (là où est la source)
+# Lignes de commandes dans terminal powershell:
+# cd "C:\Users\tangu\Documents\Claude\2026.09 grotang.fr\grotang.fr"
+# git pull
+
+
+
+
+
+
 # ----------------------------- PARAMETRES -----------------------------------
 
 P <- list(
