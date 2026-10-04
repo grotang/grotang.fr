@@ -171,6 +171,7 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 .pips, .vgrid{cursor:help}
 /* 7c : les rubans du Sankey s'éclairent au survol, les autres s'effacent. */
 #chartSk{display:block; width:100%; height:auto}
+#chartSurv{display:block; width:100%; height:auto}
 #chartSk .lk{transition:opacity .15s; cursor:help}
 #chartSk.foc .lk{opacity:.12}
 #chartSk.foc .lk.on{opacity:.85}
@@ -552,9 +553,8 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">7b</span><h3>La courbe de survie</h3>
+    <div class="ptitle"><span class="no">7b</span><h3>L'écrémage, nation par nation</h3>
       <span class="sub"><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelV" aria-label="Saison"></select></span></span></span></div>
-    <div class="chips" id="vchips"></div>
     <figure>
       <div class="chartbox" id="boxSurv"><svg id="chartSurv" role="img" aria-label="Nombre de clubs encore en lice au fil de la saison"></svg></div>
       <figcaption id="capSurv"></figcaption>
@@ -3519,164 +3519,82 @@ const legende = segs => segs.map(s =>
       + `. <b>À ce stade de la saison, « éliminé » veut dire « n'a pas atteint sa phase de ligue »</b> : toutes les sorties enregistrées à ce jour datent des tours de juillet-août. Les éliminations de la phase finale viendront à partir de février.`;
   }
 
-  /* ---------- 7b · la courbe de survie ---------- */
-  /* Aucune source ne publie la date d'élimination club par club. Ce qu'on publie
-     à chaque relevé, c'est l'effectif du jour ; la page l'archive (bloc SURVIE) et
-     la courbe se construit relevé après relevé. Tout ce qui précède le premier
-     relevé archivé est en pointillé : on sait que ces clubs sont sortis pendant
-     les qualifications, on ne sait pas quel soir. */
-  /* Filtre de nations propre à ce bloc : les 53 associations engagées sont
-     sélectionnables, huit au maximum. Au-delà, huit escaliers qui se croisent ne
-     se lisent plus — et il n'y a que huit jetons de couleur. Les chips affichent
-     ce qui est retenu et se retirent d'un clic ; le menu déroulant ajoute.
-     Limiter à huit n'est pas une contrainte technique déguisée : c'est le nombre
-     de courbes qu'un œil suit sur un même graphe. */
-  const MAXV = 8;
-  /* Huit nations tirees au sort a chaque arrivee sur la page, et non les huit
-     premieres. C'est le seul bloc de la page ou le classement ne dit rien : une
-     association a trois clubs perd son effectif aussi vite qu'une autre a neuf,
-     et le top 8 y presente huit traits parfaitement plats. Le tirage fait
-     tomber des nations qu'on n'irait jamais chercher — et rappelle qu'elles
-     sont 53. */
-  const tirage = () => { const pool = ENGAGEES.map(n => n.c), out = [];
-    while (out.length < MAXV && pool.length) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
-    return out; };
-  const selV = new Set(tirage());
-  /* Une nation du top 8 garde SA couleur, celle qu'elle a partout sur la page.
-     Les autres prennent un jeton resté libre. L'identité des huit est donc
-     préservée, et une nation ajoutée ne vole jamais la couleur d'une voisine. */
-  const JETONS = ['--n1','--n2','--n3','--n4','--n5','--n6','--n7','--n8'];
-  let PALV = {};
-  const majPal = () => { const list = [...selV];
-    const pris = new Set(list.map(c => SLOT[c]).filter(Boolean));
-    const libres = JETONS.filter(t => !pris.has(t));
-    PALV = {}; let i = 0;
-    for (const c of list) PALV[c] = c === EUR ? '--ink-2' : (SLOT[c] || libres[i++] || '--ink-3'); };
-  /* ---- les données : le relevé club par club du bloc 7c ----
-     Une seule source pour toutes les saisons depuis 2021/22 : pour chaque club,
-     son état à chacune des onze étapes (bloc SANKEY pour la saison en cours,
-     SANKEY_S pour les saisons passées). L'effectif encore en lice après un tour
-     = les clubs qui ne sont pas encore éliminés à l'étape suivante. Un club
-     reversé de C1 en C3 ou de C3 en C4 reste en lice : on ne sort du graphe qu'à
-     sa dernière défaite, toutes compétitions confondues. */
-  const EUR = '__EUR';
+  /* ---------- 7b · l'écrémage, nation par nation ----------
+     Une ligne par nation, une case par tour : le nombre de ses clubs encore en
+     lice après ce tour, et une teinte d'autant plus foncée qu'elle en garde une
+     grande part. Toutes les nations de la saison, pas une sélection : c'est la
+     comparaison entre elles qui compte ici (le bloc 7c, lui, fouille une nation).
+     Source : le relevé club par club du bloc 7c (SANKEY pour la saison en cours,
+     SANKEY_S pour 2021/22 à 2025/26). Un club reversé de C1 en C3 ou de C3 en C4
+     reste en lice : on ne quitte la carte qu'à sa dernière défaite. */
   const baseV = () => isCur() ? SANKEY : (SANKEY_S[selY] || {});
   const natsV = () => Object.keys(baseV()).filter(c => baseV()[c].length);
-  const nEng = ENGAGEES.length;
-  const nomV = c => c === EUR ? `Moyenne des ${natsV().length || nEng}` : name(c);
-  const fmtV = v => Number.isInteger(v) ? String(v) : nf(v, 1);
   const ancienV = () => !isCur() && +selY < 2024;
-  const ETAPES = () => ['1er juil.', 'Q1', 'Q2', 'Q3', 'Bar.', ancienV() ? 'Groupes' : 'Ligue', 'Barr. KO', '8es', '1/4', '1/2', 'F'];
+  const ETAPES = () => ['Départ', 'Q1', 'Q2', 'Q3', 'Bar.', ancienV() ? 'Groupes' : 'Ligue', 'Barr. KO', '8es', '1/4', '1/2', 'Finale'];
   const NK = 10;
   const enJeu = v => v >= 0 && v <= 2;
   /* k = 0 : au départ ; k = 1..10 : après le k-ième tour (Q1 … finale). */
   const serieNat = c => { const R = baseV()[c] || [];
     return [R.length, ...Array.from({ length: NK }, (_, i) => R.filter(r => r[i + 1] !== 9).length)]; };
-  const serieV = c => { if (c !== EUR) return baseV()[c] ? serieNat(c) : null;
-    const N = natsV(); if (!N.length) return null;
-    const S = N.map(serieNat); return S[0].map((_, k) => S.reduce((a, s) => a + s[k], 0) / N.length); };
-  /* Dernier tour connu : le dernier où au moins un club est encore présent. Saison
-     passée : la finale. Saison en cours : les barrages, tant que la phase de ligue
-     n'a pas rendu son verdict. */
+  /* Dernier tour connu : le dernier où au moins un club est encore présent.
+     Saison passée : la finale. Saison en cours : les barrages, tant que la phase
+     de ligue n'a pas rendu son verdict. */
   const kMax = () => { const B = Object.values(baseV()); let m = 0;
     for (let k = 1; k <= NK; k++) if (B.some(L => L.some(r => enJeu(r[k])))) m = k;
     return m; };
-
-  /* Etiquettes de fin de courbe : écartées verticalement du strict minimum. */
-  function poseEtiquettes(items, hMin, bas, haut){
-    const o = items.slice().sort((a, b) => a.y - b.y);
-    for (let i = 1; i < o.length; i++) if (o[i].y - o[i-1].y < hMin) o[i].y = o[i-1].y + hMin;
-    if (o.length && o[o.length-1].y > bas) {
-      o[o.length-1].y = bas;
-      for (let i = o.length-2; i >= 0; i--) o[i].y = Math.min(o[i].y, o[i+1].y - hMin);
-    }
-    if (o.length && haut != null && o[0].y < haut) {
-      o[0].y = haut;
-      for (let i = 1; i < o.length; i++) o[i].y = Math.max(o[i].y, o[i-1].y + hMin);
-    }
-    return o;
-  }
+  /* Résistance : la part moyenne de l'effectif encore en lice, tour après tour
+     (l'aire sous la courbe de survie). C'est l'ordre des lignes. */
+  const lignesV = () => { const km = kMax();
+    return natsV().map(c => { const s = serieNat(c); return { c, s, a: s.slice(1, km + 1).reduce((x, y) => x + y, 0) / s[0] / Math.max(1, km) }; })
+      .sort((p, q) => q.a - p.a || q.s[0] - p.s[0] || name(p.c).localeCompare(name(q.c), 'fr')); };
 
   function drawSurv(){
     const svg = document.getElementById('chartSurv');
-    majPal();
-    const list = [...selV].filter(c => serieV(c));
-    const W = 1000, H = 340, mT = 40, mB = 44, mL = 44, mR = 150;
-    const km = kMax(), cur = isCur();
-    const X = k => mL + (W - mL - mR) * k / NK;
-    const S = Object.fromEntries(list.map(c => [c, serieV(c)]));
-    const hi = Math.max(1, ...list.map(c => S[c][0])) + 0.6;
-    const Y = v => mT + (H - mT - mB) * (1 - v / hi);
-    let g = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
-    /* bandeau de phases, comme au bloc 0 et au bloc 7c */
-    [['Phase qualificative', '--n4', 0, 4], [ancienV() ? 'Phase de groupes' : 'Phase de ligue', '--fr', 4, 5], ['Phase finale', '--n7', 5, NK]].forEach(([ph, t, a, b]) => {
-      const x1 = X(a), x2 = X(b);
-      g += `<rect x="${(x1 + 1).toFixed(1)}" y="4" width="${(x2 - x1 - 2).toFixed(1)}" height="19" rx="4" fill="var(${t})" opacity=".26"/>`
-        + `<text x="${((x1 + x2) / 2).toFixed(1)}" y="17.5" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing="${b - a > 1 ? '.05em' : '0'}" fill="var(--ink-2)">${ph}</text>`
-        + (a ? `<line x1="${x1.toFixed(1)}" y1="4" x2="${x1.toFixed(1)}" y2="${H - mB}" stroke="var(--rule)"/>` : '');
+    const km = kMax(), et = ETAPES(), B = baseV(), N = lignesV();
+    const box = document.getElementById('boxSurv');
+    const W = Math.max(760, Math.round(box.clientWidth || 1000)), rh = 15, mT = 50, mL = 150, mR = 44, H = mT + N.length * rh + 8;
+    const cw = (W - mL - mR) / (NK + 1), X = k => mL + cw * k;
+    let g = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`;
+    [['Phase qualificative', '--n4', 0, 5], [ancienV() ? 'Phase de groupes' : 'Phase de ligue', '--fr', 5, 6], ['Phase finale', '--n7', 6, NK + 1]].forEach(([ph, t, a, b]) => {
+      const x1 = X(a), x2 = X(b), etroit = b - a === 1;
+      g += `<rect x="${(x1 + 1).toFixed(1)}" y="2" width="${(x2 - x1 - 2).toFixed(1)}" height="19" rx="4" fill="var(${t})" opacity=".26"/>`
+        + `<text x="${((x1 + x2) / 2).toFixed(1)}" y="15.5" text-anchor="middle" font-size="${etroit ? 9.5 : 10.5}" font-weight="700" letter-spacing="${etroit ? '0' : '.05em'}" fill="var(--ink-2)">${ph}</text>`
+        + (a ? `<line x1="${x1.toFixed(1)}" y1="2" x2="${x1.toFixed(1)}" y2="${H - 4}" stroke="var(--rule)"/>` : '');
     });
-    for (let v = 0; v <= Math.floor(hi) + 1e-9; v++)
-      g += `<line x1="${mL}" y1="${Y(v).toFixed(1)}" x2="${X(NK)}" y2="${Y(v).toFixed(1)}" stroke="var(--rule-soft)"/>`
-        + `<text x="${mL - 8}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${v}</text>`;
-    ETAPES().forEach((lab, k) => {
-      if (k && k < NK) g += `<line x1="${X(k).toFixed(1)}" y1="${mT}" x2="${X(k).toFixed(1)}" y2="${H - mB}" stroke="var(--rule-soft)" stroke-dasharray="2 3"/>`;
-      g += `<text x="${X(k).toFixed(1)}" y="${H - mB + 16}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${cur && k > km ? 'var(--ink-4, var(--ink-3))' : 'var(--ink-3)'}" opacity="${cur && k > km ? .55 : 1}">${lab}</text>`;
+    et.forEach((lab, k) => g += `<text x="${(X(k) + cw / 2).toFixed(1)}" y="${mT - 10}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--ink-3)" opacity="${k > km ? .5 : 1}">${lab}</text>`);
+    if (km < NK) g += `<text x="${((X(km + 1) + X(NK + 1)) / 2).toFixed(1)}" y="${mT + 16}" text-anchor="middle" font-size="11" fill="var(--ink-3)">à venir</text>`;
+    N.forEach((o, i) => { const y = mT + i * rh, fr = o.c === 'FRA';
+      if (fr) g += `<rect x="4" y="${y}" width="${W - 8}" height="${rh}" rx="3" fill="var(--fr-soft)"/>`;
+      g += `<text x="${mL - 8}" y="${y + 11}" text-anchor="end" font-size="11" font-weight="${fr ? 700 : 400}" fill="${fr ? 'var(--ink)' : 'var(--ink-2)'}">${name(o.c)}</text>`;
+      o.s.forEach((v, k) => { if (k > km || !v) return; const p = v / o.s[0];
+        const tt = `${name(o.c)} · ${k ? `après ${k === NK ? 'la finale' : et[k]}` : 'au départ'} : ${v} club${v > 1 ? 's' : ''} sur ${o.s[0]} (${Math.round(p * 100)} %)`;
+        g += `<g><title>${tt}</title><rect x="${(X(k) + .5).toFixed(1)}" y="${y + .5}" width="${(cw - 1).toFixed(1)}" height="${rh - 1}" rx="2" fill="var(--fr)" opacity="${(.12 + .78 * p).toFixed(2)}"/>`
+          + `<text x="${(X(k) + cw / 2).toFixed(1)}" y="${y + 11}" text-anchor="middle" font-size="9.5" font-weight="600" fill="${p > .55 ? '#fff' : 'var(--ink-2)'}">${v}</text></g>`;
+      });
+      if (km >= NK && o.s[NK]) { const w = B[o.c].filter(r => enJeu(r[NK])).map(r => nomClub(r[11])).join(', ');
+        g += `<g><title>Vainqueur : ${w}</title><text x="${X(NK + 1) + 8}" y="${y + 11.5}" font-size="12" fill="#E5A800">★${o.s[NK] > 1 ? o.s[NK] : ''}</text></g>`; }
     });
-    /* saison en cours : la phase de ligue se joue, personne n'y est éliminé avant la 8e journée */
-    const xFin = cur ? X(km + 0.5) : X(km);
-    if (cur) g += `<line x1="${xFin.toFixed(1)}" y1="${mT}" x2="${xFin.toFixed(1)}" y2="${H - mB + 22}" stroke="var(--ink-2)" stroke-width="1.2"/>`
-      + `<text x="${xFin.toFixed(1)}" y="${H - mB + 34}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--ink-2)">aujourd'hui</text>`;
-
-    /* Courbes décalées de quelques centièmes de club : sans ça, deux nations au
-       même effectif se superposeraient exactement. */
-    const dec = i => (i - (list.length - 1) / 2) * 0.05;
-    const etiq = [];
-    list.forEach((c, i) => {
-      const s = S[c], o = dec(i), col = `var(${PALV[c] || '--ink-3'})`, gras = c === 'FRA' || c === EUR;
-      const w = c === 'FRA' ? 2.8 : (c === EUR ? 2.4 : 1.8);
-      let d = `M${X(0).toFixed(1)} ${Y(s[0] + o).toFixed(1)}`;
-      for (let k = 1; k <= km; k++) {
-        d += ` L${X(k).toFixed(1)} ${Y(s[k - 1] + o).toFixed(1)}`;
-        if (Math.abs(s[k] - s[k - 1]) > 1e-9) {
-          d += ` L${X(k).toFixed(1)} ${Y(s[k] + o).toFixed(1)}`;
-          g += `<circle cx="${X(k).toFixed(1)}" cy="${Y(s[k] + o).toFixed(1)}" r="${gras ? 3.2 : 2.4}" fill="${col}"/>`;
-        }
-      }
-      const yF = Y(s[km] + o);
-      d += ` L${xFin.toFixed(1)} ${yF.toFixed(1)}`;
-      g += `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"/>`;
-      g += `<circle cx="${X(0).toFixed(1)}" cy="${Y(s[0] + o).toFixed(1)}" r="${gras ? 3.4 : 2.6}" fill="none" stroke="${col}" stroke-width="${w}"/>`;
-      etiq.push({ y: yF + 4, yv: yF, col, fr: gras, txt: `${nomV(c)} ${fmtV(s[km])}/${fmtV(s[0])}`, x: xFin + 9 });
-    });
-    poseEtiquettes(etiq, 14, H - mB + 2, mT + 6).forEach(e => {
-      if (Math.abs(e.y - 4 - e.yv) > 2)
-        g += `<line x1="${(xFin + 3).toFixed(1)}" y1="${e.yv.toFixed(1)}" x2="${(e.x - 2).toFixed(1)}" y2="${(e.y - 4).toFixed(1)}" stroke="${e.col}" stroke-width="1" opacity=".5"/>`;
-      g += `<text x="${e.x.toFixed(1)}" y="${e.y.toFixed(1)}" font-size="11.5" font-weight="${e.fr ? 700 : 600}" fill="${e.col}">${e.txt}</text>`;
-    });
-    svg.outerHTML = (g + '</svg>').replace('<svg', '<svg id="chartSurv"');
+    svg.outerHTML = (g + '</svg>').replace('<svg', '<svg id="chartSurv" role="img" aria-label="Clubs encore en lice après chaque tour, nation par nation"');
   }
 
   function capSurv(){
-    const N = natsV(), B = baseV(), km = kMax(), et = ETAPES();
+    const N = lignesV(), B = baseV(), km = kMax();
     const lab = SEAS.find(x => x[0] === selY)[1];
-    const tot = N.reduce((a, c) => a + B[c].length, 0);
-    const sortis = k => N.reduce((a, c) => a + B[c].filter(r => r[k] === 9 && r[k - 1] !== 9).length, 0);
-    const list = [...selV].filter(c => c !== EUR && B[c]);
-    const absents = [...selV].filter(c => c !== EUR && !B[c]);
-    const fin = c => serieNat(c)[km];
-    /* qui tient le mieux : la part moyenne de l'effectif encore en lice, tour après tour (l'aire sous la courbe) */
-    const aire = c => { const s = serieNat(c); return s.slice(1, km + 1).reduce((a, v) => a + v, 0) / s[0]; };
-    const resist = list.slice().sort((a, b) => aire(b) - aire(a));
-    const ete = [1, 2, 3, 4].map(sortis), ko = [5, 6, 7, 8, 9, 10].map(sortis);
+    const tot = N.reduce((a, o) => a + o.s[0], 0);
+    const sortis = k => N.reduce((a, o) => a + o.s[k - 1] - o.s[k], 0);
+    const ete = [1, 2, 3, 4].map(sortis);
+    const pos = N.findIndex(o => o.c === 'FRA'), frO = N[pos];
+    const finalistes = km >= NK ? N.filter(o => o.s[NK - 1] > 0).length : 0;
+    const vides = N.filter(o => o.s[Math.min(km, 4)] === 0).length;
     document.getElementById('capSurv').innerHTML =
-      `<b>${lab}</b> · nombre de clubs encore en lice après chaque tour, toutes compétitions confondues : un club reversé de C1 en C3 ou de C3 en C4 continue, il ne quitte le graphe qu'à sa dernière défaite. `
-      + `L'été élimine ${ete.reduce((a, b) => a + b, 0)} des ${tot} engagés (${ete[0]} au 1<sup>er</sup> tour, ${ete[1]} au 2<sup>e</sup>, ${ete[2]} au 3<sup>e</sup>, ${ete[3]} aux barrages). `
+      `<b>${lab}</b> · une ligne par nation, une case par tour : le nombre de ses clubs encore en lice après ce tour, toutes compétitions confondues. Plus la case est foncée, plus la nation garde une grande part de son effectif. `
+      + `Un club reversé de C1 en C3 ou de C3 en C4 continue : il ne quitte la carte qu'à sa dernière défaite. `
+      + `<b>Les nations sont rangées par résistance</b> : la part moyenne de leurs clubs encore en lice, tour après tour. `
+      + `L'été élimine ${ete.reduce((a, b) => a + b, 0)} des ${tot} engagés (${ete[0]} au 1<sup>er</sup> tour, ${ete[1]} au 2<sup>e</sup>, ${ete[2]} au 3<sup>e</sup>, ${ete[3]} aux barrages) : ${vides} nation${vides > 1 ? 's' : ''} sur ${N.length} n'${vides > 1 ? 'ont' : 'a'} plus aucun club en ${ancienV() ? 'phase de groupes' : 'phase de ligue'}. `
       + (km >= NK
-          ? `La ${et[5] === 'Groupes' ? 'phase de groupes' : 'phase de ligue'} en sort ${ko[0]}, puis la phase finale ${ko.slice(1).reduce((a, b) => a + b, 0)} : il reste 3 vainqueurs. `
-          : `La phase de ligue se joue : personne n'y est éliminé avant la 8<sup>e</sup> journée, la suite se tracera au fil des tours. `)
-      + (resist.length > 1 && aire(resist[0]) > aire(resist[resist.length - 1]) ? `Parmi les nations affichées, ${name(resist[0])} est celle qui garde le plus longtemps la plus grande part de ses clubs, ${name(resist[resist.length - 1])} celle qui les perd le plus vite. ` : '')
-      + (absents.length ? `Absente${absents.length > 1 ? 's' : ''} cette saison : ${absents.map(name).join(', ')}. ` : '')
-      + `Huit courbes au maximum, tirées au sort à l'arrivée sur la page. « ${nomV(EUR)} » se choisit comme une nation. Les courbes sont décalées de quelques centièmes de club pour rester distinctes.`;
+          ? `${finalistes} nations ont encore un club en finale ; ★ marque celles qui gagnent une coupe. `
+          : `La phase de ligue se joue : ses colonnes se rempliront au fil des tours. `)
+      + (frO ? `La France est ${pos + 1}<sup>e</sup> sur ${N.length}.` : '');
   }
 
   /* ---------- pilotage commun ---------- */
@@ -3693,45 +3611,9 @@ const legende = segs => segs.map(s =>
     bPm.setAttribute('aria-pressed', ordre === 'pm'); drawV(); };
   bRk.onclick = () => { ordre = 'rk'; syncO(); };
   bPm.onclick = () => { ordre = 'pm'; syncO(); };
-  /* ---- filtre : chips retirables + menu d'ajout ---- */
-  (function(){
-    const host = document.getElementById('vchips');
-    const dessine = () => { majPal();
-      const sel = [...selV], plein = sel.length >= MAXV;
-      const dispo = [EUR, ...ENGAGEES.map(n => n.c).sort((a, b) => name(a).localeCompare(name(b), 'fr'))]
-        .filter(c => !selV.has(c));
-      /* Ordre : les commandes d'abord, les pastilles ensuite et sur leur propre
-         ligne. Elles seules changent de largeur d'un tirage a l'autre, et rien
-         ne se trouve plus a leur droite pour en subir le contrecoup. */
-      host.innerHTML = `<span class="lbl">Nations</span>`
-        + `<button type="button" data-rnd="1" title="Rejouer le tirage">🎲 Random</button>`
-        + `<button type="button" data-top="1">Les 8 premières</button>`
-        + `<button type="button" data-fr="1">France seule</button>`
-        + `<span class="sep"></span>`
-        + `<span class="sel"><select id="vadd"${plein ? ' disabled' : ''} aria-label="Ajouter une nation">`
-        + `<option value="">${plein ? `${MAXV} nations, c'est le maximum` : 'Ajouter une nation…'}</option>`
-        + dispo.map(c => `<option value="${c}">${nomV(c)}</option>`).join('')
-        + `</select></span>`
-        + `<span class="brk"></span>`
-        + sel.map(c => `<button type="button" class="tint" data-del="${c}" aria-pressed="true"`
-            + ` style="background:var(${PALV[c]});border-color:var(${PALV[c]})"`
-            + ` title="Retirer ${nomV(c)}">${nomV(c)} ×</button>`).join('');
-      host.querySelector('#vadd').onchange = ev => {
-        if (!ev.target.value) return;
-        if (selV.size < MAXV) selV.add(ev.target.value);
-        dessine(); surv(); };
-    };
-    host.onclick = ev => { const b = ev.target.closest('button'); if (!b) return;
-      if (b.dataset.rnd) { selV.clear(); tirage().forEach(c => selV.add(c)); }
-      else if (b.dataset.top) { selV.clear(); TOP8.forEach(c => selV.add(c)); }
-      else if (b.dataset.fr) { selV.clear(); selV.add('FRA'); }
-      /* On ne descend pas sous une nation : un graphe vide n'est pas un état utile. */
-      else if (b.dataset.del && selV.size > 1) selV.delete(b.dataset.del);
-      dessine(); surv(); };
-    dessine();
-  })();
   document.addEventListener('grotang:theme', () => { drawV(); drawSurv(); });
   tout();
+  window.addEventListener('resize', () => { clearTimeout(window.__sv); window.__sv = setTimeout(drawSurv, 150); });
 })();
 
 /* ---------- projection ---------- */
