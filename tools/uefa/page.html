@@ -2276,6 +2276,8 @@ function drawM(){
     }
 
     objets = [];
+    // hauteur entière : une hauteur fractionnaire (cas « Europe entière ») fait réduire le dessin d'un poil par le navigateur, et le texte perd son rendu net
+    H = Math.ceil(H);
     let s = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`;
     // séparateur été / phase finale
     // bandeau de phases : même dessin que le calendrier du bloc 0
