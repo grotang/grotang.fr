@@ -151,7 +151,8 @@ export const navCSS = `
 .gn-theme[aria-pressed="true"] .gn-theme-i{background:var(--fr);border-color:var(--fr)}
 @media (max-width:560px){.gnav{height:auto;padding-block:8px;flex-wrap:wrap;gap:8px}
   .gnav nav{margin-left:0;width:100%;justify-content:flex-start;order:3}
-  .gn-theme{margin-left:auto}}
+  .gn-theme{margin-left:auto;min-height:34px}
+  .gnav nav a{padding:9px 12px}}
 `;
 
 export const PAGES = [

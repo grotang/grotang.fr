@@ -201,6 +201,33 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
   #csListe p{margin:0 0 6px}
   #csListe span{color:var(--ink-3); font-weight:600}
   #csListe .or{color:#C99400; font-weight:700}
+  /* Reglages : le libelle passe au-dessus de sa commande, les commandes se
+     rangent cote a cote sans filet ni retrait. Boutons a 38 px : la taille d'un
+     doigt. */
+  .ptitle{margin-bottom:12px}
+  .ptitle .sub{display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px 14px}
+  .ctl, .ptitle .sub .ctl{flex-wrap:wrap; align-items:center; gap:6px 8px; margin:0; position:relative; padding-top:17px}
+  .ctl:not(:has(> .lb)){padding-top:0}
+  .ctl + .ctl{margin-left:0; padding-left:0; border-left:0}
+  .ctl > .lb{font-size:10px; position:absolute; top:0; left:0; white-space:nowrap; line-height:1.3}
+  .seg button{min-height:38px; padding:0 12px; font-size:13px}
+  .sel select{min-height:38px; font-size:13px}
+  .chips button{min-height:36px}
+  /* Pastilles de nations (blocs 3 et 4) : une seule bande qui defile au doigt. */
+  #lchips, #zchips{flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch;
+    margin-inline:-14px; padding:0 14px 2px}
+  #lchips::-webkit-scrollbar, #zchips::-webkit-scrollbar{display:none}
+  #lchips > *, #zchips > *{flex:none}
+  #lchips .brk, #zchips .brk{display:none}
+  .voir-tout{appearance:none; font:inherit; font-size:13px; font-weight:600; color:var(--ink); background:var(--surface-2);
+    border:1px solid var(--rule); border-radius:3px; min-height:40px; width:100%; margin:10px 0 2px; cursor:pointer}
+  /* En-tete : les reperes de fraicheur a gauche, sur deux lignes. */
+  .mast{gap:14px}
+  .mast-right{margin-left:0; justify-items:start; text-align:left}
+  .stamp{display:flex; flex-wrap:wrap; gap:3px 14px; text-align:left; font-size:12px}
+  .stamp .next{margin:0; padding:0; border:0; justify-content:flex-start}
+  .stamp .xchk{flex-basis:100%; margin-top:2px}
+  .stamp .xchk a{padding:8px 0}
 }
 #chartSk .lk{transition:opacity .15s; cursor:help}
 #chartSk.foc .lk{opacity:.12}
@@ -2027,7 +2054,7 @@ function drawL(){
   let g=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
   if(isCur()){ const fg=[...Array(nG).keys()].find(gFuture);
     if(fg!==undefined) g+=`<rect x="${(X(fg)-cw/2).toFixed(1)}" y="${mT}" width="${(W-mR-X(fg)+cw/2).toFixed(1)}" height="${H-mT-mB}" fill="var(--surface-2)" opacity=".8"/>`
-      +`<text x="${((X(fg)+W-mR)/2).toFixed(1)}" y="${mT+16}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink-3)">reste à jouer</text>`; }
+      +`<text x="${((X(fg)+W-mR)/2).toFixed(1)}" y="${mT+16}" text-anchor="middle" font-size="${M?15:11}" font-weight="600" fill="var(--ink-3)">reste à jouer</text>`; }
   sc.ticks.forEach(t=>{ g+=`<line x1="${mL}" y1="${Y(t).toFixed(1)}" x2="${W-mR}" y2="${Y(t).toFixed(1)}" stroke="var(--rule-soft)"/>`
     +`<text x="${mL-9}" y="${(Y(t)+4).toFixed(1)}" text-anchor="end" font-size="${M?15:11.5}" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${(gap&&t<0?'\u2212':'')+Math.abs(t).toLocaleString('fr-FR',{minimumFractionDigits:sc.dec,maximumFractionDigits:sc.dec})}</text>`; });
   if(gap) g+=`<line x1="${mL}" y1="${Y(0).toFixed(1)}" x2="${W-mR}" y2="${Y(0).toFixed(1)}" stroke="var(--ink-2)" stroke-width="1.5"/>`;
@@ -2865,7 +2892,7 @@ const legende = segs => segs.map(s =>
     const cy = (ri) => mT + ri * cellH + cellH / 2;
 
     let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
-    s += `<text x="${mL}" y="16" font-size="11" font-weight="600" fill="var(--ink-3)">points par match sur la journée · aire du disque = rendement · vert au-dessus de 1,00, rouge en dessous</text>`;
+    s += `<text x="${mL}" y="16" font-size="11" font-weight="600" fill="var(--ink-3)">${MOB() ? 'points par match · vert au-dessus de 1,00' : 'points par match sur la journée · aire du disque = rendement · vert au-dessus de 1,00, rouge en dessous'}</text>`;
 
     /* en-têtes : les journées en colonnes, le cumul juste après la dernière */
     for (let k = 0; k < nj; k++)
@@ -3308,7 +3335,7 @@ const legende = segs => segs.map(s =>
        d'axe et « portée de la France » se chevauchaient dès que la bande bleue
        remontait vers la gauche, ce qui arrive selon l'horizon choisi. */
     /* téléphone : cadre plus étroit (texte plus gros à l'écran), colonne de droite resserrée */
-    const M = MOB(), W = M ? 480 : 1000, rowH = M ? 32 : 36, mT = 56, mB = 34, mL = M ? 104 : 96, mR = M ? 100 : 176;
+    const M = MOB(), W = M ? 480 : 1000, rowH = M ? 34 : 36, mT = 56, mB = 34, mL = M ? 116 : 96, mR = M ? 104 : 176;
     const H = mT + rows.length * rowH + mB;
     /* L'axe n'a plus à contenir le repère d'acquis : il se cale sur la seule
        distribution, et le graphe cesse de traîner une moitié gauche vide. */
@@ -3318,7 +3345,7 @@ const legende = segs => segs.map(s =>
     const X = v => mL + (W - mL - mR) * ((v - sc.lo) / (sc.hi - sc.lo));
     let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
     sc.ticks.forEach(v => s += `<line x1="${X(v).toFixed(1)}" y1="${mT - 8}" x2="${X(v).toFixed(1)}" y2="${H - mB + 4}" stroke="var(--rule-soft)"/>`
-      + `<text x="${X(v).toFixed(1)}" y="${H - mB + 20}" text-anchor="middle" font-size="${M ? 13 : 11}" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${nf(v, sc.dec)}</text>`);
+      + `<text x="${X(v).toFixed(1)}" y="${H - mB + 20}" text-anchor="middle" font-size="${M ? 14 : 11}" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${nf(v, sc.dec)}</text>`);
     s += `<text x="${mL}" y="${mT - 32}" font-size="${M ? 13 : 11}" font-weight="600" fill="var(--ink-3)">coefficient ${horizon === 'ligue' ? 'de saison ' : 'saison '}${horizon === 'ligue'
       ? 'à la fin de la phase de ligue' : 'pleine'}</text>`;
     /* La question n'est pas « où finit la France » mais « qui peut encore la
@@ -3336,7 +3363,7 @@ const legende = segs => segs.map(s =>
       const c0 = col(r.c);
       const tt = `${name(r.c)} · médiane ${nf(r.cen, 1)} · 3 tirages sur 5 entre ${nf(r.p20, 1)} et ${nf(r.p80, 1)}`
         + ` · 9 sur 10 entre ${nf(r.p05, 1)} et ${nf(r.p95, 1)} · ${nf(r.acq, 3)} déjà acquis`;
-      s += M ? `<text x="2" y="${(y + 5).toFixed(1)}" font-size="15" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${nomPays(r.c)}</text>`
+      s += M ? `<text x="2" y="${(y + 6).toFixed(1)}" font-size="17" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${nomPays(r.c)}</text>`
         : `<text x="${mL - 10}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="12.5" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${name(r.c)}</text>`;
       /* Éventail à cinq repères, du plus large au plus étroit : le trait fin va
          du 5e au 95e centile, la barre épaisse du 20e au 80e, le disque est la
@@ -3346,7 +3373,7 @@ const legende = segs => segs.map(s =>
       [[r.p05, 7], [r.p95, 7]].forEach(([v, h]) => s += `<line x1="${X(v).toFixed(1)}" y1="${(y - h).toFixed(1)}" x2="${X(v).toFixed(1)}" y2="${(y + h).toFixed(1)}" stroke="${c0}" stroke-width="1.4" opacity=".55"/>`);
       [[r.p20, 9], [r.p80, 9]].forEach(([v, h]) => s += `<line x1="${X(v).toFixed(1)}" y1="${(y - h).toFixed(1)}" x2="${X(v).toFixed(1)}" y2="${(y + h).toFixed(1)}" stroke="${c0}" stroke-width="1.8" opacity=".85"/>`);
       s += `<circle cx="${X(r.cen).toFixed(1)}" cy="${y.toFixed(1)}" r="${fr ? 6 : 5}" fill="${c0}" stroke="var(--surface)" stroke-width="1.5"><title>${tt}</title></circle>`;
-      s += `<text x="${(X(r.p95) + 10).toFixed(1)}" y="${(y + 4).toFixed(1)}" font-size="${M ? 14 : 11.5}" font-weight="${fr ? 700 : 500}" font-family="IBM Plex Mono, monospace" fill="${fr ? 'var(--fr)' : 'var(--ink-3)'}">${nf(r.cen, 1)}</text>`;
+      s += `<text x="${(X(r.p95) + 10).toFixed(1)}" y="${(y + 4).toFixed(1)}" font-size="${M ? 15.5 : 11.5}" font-weight="${fr ? 700 : 500}" font-family="IBM Plex Mono, monospace" fill="${fr ? 'var(--fr)' : 'var(--ink-3)'}">${nf(r.cen, 1)}</text>`;
       /* La croix du meilleur scénario, France seule. Elle sort du même tirage
          que l'éventail, elle tombe donc juste à droite du 95e centile et tient
          dans l'axe — le chevron de repli ne sert plus que si un jour elle en
@@ -3364,7 +3391,7 @@ const legende = segs => segs.map(s =>
           + (hors ? `<path d="M${(xm+8).toFixed(1)} ${(y-4).toFixed(1)} l4 4 l-4 4" fill="none" stroke="var(--fr)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>` : '')
           + `</g>`;
       }
-      s += `<text x="${(W - 6).toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="${M ? 13 : 10.5}" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)" opacity=".85">${horizon === 'ligue' ? `${r.r} m.` : `${nf(BY[r.c].t - r.acq + r.cen, 1)}`}</text>`;
+      s += `<text x="${(W - 6).toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="${M ? 14 : 10.5}" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)" opacity=".85">${horizon === 'ligue' ? `${r.r} m.` : `${nf(BY[r.c].t - r.acq + r.cen, 1)}`}</text>`;
     });
     document.getElementById('chartPrj').outerHTML = (s + '</svg>').replace('<svg', '<svg id="chartPrj"');
     const fr = rows.find(r => r.c === 'FRA');
@@ -3374,8 +3401,8 @@ const legende = segs => segs.map(s =>
     /* Une seule légende pour les deux horizons : les repères sont les mêmes. */
     const jeton = (w, h, o, rd) => `<i style="width:${w}px;height:${h}px;${rd ? 'border-radius:' + rd + ';' : ''}background:var(--ink-3);opacity:${o};display:inline-block"></i>`;
     const leg = `<p style="margin:0 0 8px">`
-      + `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">${jeton(22,5,.22,'3px')}9 fois sur 10 &nbsp;(5<sup>e</sup>–95<sup>e</sup> centile)</span>`
-      + `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">${jeton(22,11,.34,'5px')}3 fois sur 5 &nbsp;(20<sup>e</sup>–80<sup>e</sup>)</span>`
+      + `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">${jeton(22,5,.22,'3px')}<span>9 fois sur 10 &nbsp;(5<sup style="line-height:0">e</sup>–95<sup style="line-height:0">e</sup> centile)</span></span>`
+      + `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">${jeton(22,11,.34,'5px')}<span>3 fois sur 5 &nbsp;(20<sup style="line-height:0">e</sup>–80<sup style="line-height:0">e</sup>)</span></span>`
       + `<span style="display:inline-flex;align-items:center;gap:5px">${jeton(9,9,1,'50%')}médiane`
       + (horizon === 'saison' ? ` · colonne de droite : total à 5 ans projeté` : ` · colonne de droite : matchs restants`) + `</span>`
       /* La croix n'est explicite que si on la nomme : sans cette mention, un
@@ -3451,7 +3478,7 @@ const legende = segs => segs.map(s =>
 /* Trois lectures d'un seul couple de nombres : clubs engagés, clubs encore en
    lice. Tout vient de la source (« 4 von 5 Teams aktiv »), rien n'est estimé. */
 (function(){
-  let porte = 'all';                      // 'top' = les huit premières · 'all' = toutes
+  let porte = MOB() ? 'top' : 'all';     // 'top' = les huit premières · 'all' = toutes (téléphone : les 8, la liste complète fait 900 px)
   let ordre = 'rk';                       // 'rk' = classement à 5 ans · 'pm' = poids mort
   const jeu = () => porte === 'top' ? TOP8.map(c => BY[c]) : ENGAGEES;
 
@@ -3560,10 +3587,12 @@ const legende = segs => segs.map(s =>
      peut plus se décaler ni se dédoubler, quel que soit le navigateur. Les billes
      passent sur deux rangées de cinq au plus, chaque club gardant sa place d'une
      colonne à l'autre : la grille tient en ~560 px au lieu de 880. */
-  function ecremageMobile(box, COLS, km, B, N){
+  let ecrTout = false;   // 7c téléphone : 15 nations, puis « Voir les N »
+  function ecremageMobile(box, COLS, km, B, N0){
+    const N = ecrTout ? N0 : N0.filter((o, i) => i < 15 || o.c === 'FRA');
     const colC = k => `var(${['--c1', '--c3', '--c4'][k]})`;
     const NC2 = COLS.length, sep = k => k === 4 || k === 5 ? ' sep' : '';
-    const tot = k => N.reduce((a, o) => a + B[o.c].filter(r => r[k] !== 9).length, 0);
+    const tot = k => N0.reduce((a, o) => a + B[o.c].filter(r => r[k] !== 9).length, 0);
     let h = `<div class="ecr-m" style="--nc:${NC2}">`;
     // bandeau de phases
     h += `<div class="nm hd"></div>`
@@ -3592,6 +3621,14 @@ const legende = segs => segs.map(s =>
     box.querySelectorAll('.ecr-m').forEach(e => e.remove());
     box.insertAdjacentHTML('beforeend', h);
     glisser(box, box.querySelector('.ecr-m'));
+    box.parentNode.querySelectorAll('.voir-tout').forEach(e => e.remove());
+    if (N0.length > N.length || ecrTout) {
+      const bt = document.createElement('button');
+      bt.type = 'button'; bt.className = 'voir-tout';
+      bt.textContent = ecrTout ? 'Replier' : `Voir les ${N0.length} nations`;
+      bt.onclick = () => { ecrTout = !ecrTout; drawSurv(); if (!ecrTout) box.scrollIntoView({block: 'nearest'}); };
+      box.after(bt);
+    }
   }
 
   function drawSurv(){
@@ -3828,6 +3865,7 @@ const legende = segs => segs.map(s =>
   bRk.onclick = () => { ordre = 'rk'; syncO(); };
   bPm.onclick = () => { ordre = 'pm'; syncO(); };
   document.addEventListener('grotang:theme', () => { drawV(); drawSurv(); });
+  bTop.setAttribute('aria-pressed', porte === 'top'); bAll.setAttribute('aria-pressed', porte === 'all');
   tout();
   window.addEventListener('resize', () => { clearTimeout(window.__sv); window.__sv = setTimeout(drawSurv, 150); });
 })();
