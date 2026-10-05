@@ -28,7 +28,7 @@
 
 P <- list(
 
-  NSIM    = 1200,   # Volume de saisons simulees.
+  NSIM    = 100,   # Volume de saisons simulees.
                     # 20000 si on veut lire le 99.75e centile sans bruit.
 
   SIGMA   = 0.12,   # CHOC DE FORME DE LA NATION DE TETE. Tire une fois par
