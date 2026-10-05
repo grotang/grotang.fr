@@ -1121,6 +1121,9 @@ let calQual = false;
    lisible et défilent au doigt ; quand ils ont une colonne de noms, elle reste
    figée à gauche (copie « épinglée » du début du dessin). */
 const MOB = () => window.matchMedia('(max-width:680px)').matches;
+/* Téléphone : les mêmes noms courts partout (blocs 2b, 5, 6, 7c, 8), alignés à gauche. */
+const NOM_COURT = { BIH: 'Bosnie-Herz.', MKD: 'Macédoine N.', NIR: 'Irlande N.', WAL: 'P. de Galles', LIE: 'Liechtenst.' };
+const nomPays = c => (MOB() && NOM_COURT[c]) || name(c);
 function glisser(box, svg, largeur, epingle){
   if (!box || !svg) return;
   box.querySelectorAll('.epingle').forEach(e => e.remove());
@@ -1128,7 +1131,7 @@ function glisser(box, svg, largeur, epingle){
   if (!MOB()) { box.classList.remove('glisse'); svg.style.width = ''; svg.style.marginLeft = ''; box.style.display = '';
     if (prev && prev.classList.contains('glisse-indice')) prev.remove(); return; }
   box.classList.add('glisse');
-  if (largeur) { svg.style.width = largeur + 'px'; svg.style.maxWidth = 'none'; }
+  { const w = largeur || +svg.getAttribute('width'); if (w) svg.style.width = w + 'px'; svg.style.maxWidth = 'none'; }
   if (epingle) {
     const vb = svg.viewBox.baseVal, wpx = largeur || +svg.getAttribute('width') || svg.getBoundingClientRect().width, k = wpx / vb.width;
     const r = { height: vb.height * k };
@@ -1831,7 +1834,7 @@ function drawClubs(){
      un texte a 14 px qu'on fait glisser vaut mieux qu'un texte a 8 px qui tient
      dans l'ecran. */
   const W = Math.max(560, Math.round(document.getElementById('cl8').clientWidth || 1000));
-  const mL = Math.min(142, Math.max(96, Math.round(W * 0.13)));
+  const mL = MOB() ? 80 : Math.min(142, Math.max(96, Math.round(W * 0.13)));
   const mR = 74, LANE = 2*R + 20, mT = 26;
   const H = mT + ALL.length * LANE + 12;
   let s = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`;
@@ -1839,7 +1842,8 @@ function drawClubs(){
 
   ALL.forEach((row, i) => {
     const y = mT + i*LANE + LANE/2, isFR = row.c === 'FRA';
-    s += `<text x="${mL-14}" y="${y+5}" text-anchor="end" font-size="14" font-weight="${isFR?'700':'600'}" fill="${isFR?'var(--fr)':'var(--ink)'}">${name(row.c)}</text>`;
+    s += MOB() ? `<text x="2" y="${y+5}" font-size="14" font-weight="${isFR?'700':'600'}" fill="${isFR?'var(--fr)':'var(--ink)'}">${nomPays(row.c)}</text>`
+      : `<text x="${mL-14}" y="${y+5}" text-anchor="end" font-size="14" font-weight="${isFR?'700':'600'}" fill="${isFR?'var(--fr)':'var(--ink)'}">${name(row.c)}</text>`;
     let x = mL;
     row.cl.forEach(cb => {
       const r = rad(cb.p); x += r;
@@ -2151,7 +2155,7 @@ mkChips(document.getElementById('zchips'), TOP8, selZ, true, ()=>drawZ());
 function drawM(){
   /* l'ordre des lignes suit la saison affichée, pas la saison en cours :
      en 2024/25 l'Angleterre finit à 29,46, elle ne peut pas être en milieu de tableau. */
-  const rows=TOP8S.filter(hasSeason).sort((a,b)=>sTotal(b)-sTotal(a)), W=1000, mL=104, mR=126, mT=56, rowH=34, H=mT+rows.length*rowH+30;
+  const rows=TOP8S.filter(hasSeason).sort((a,b)=>sTotal(b)-sTotal(a)), W=1000, mL=MOB()?92:104, mR=126, mT=56, rowH=34, H=mT+rows.length*rowH+30;
   if(!rows.length) return;
   const gs=[...Array(nG).keys()];
   const X=gi=>mL+(W-mL-mR)*(gi+0.5)/nG, cw=(W-mL-mR)/nG;
@@ -2168,7 +2172,8 @@ function drawM(){
   g+=`<line x1="${mL-8}" y1="${mT-6}" x2="${mL-8}" y2="${(mT+rows.length*rowH-10).toFixed(1)}" stroke="var(--ink-3)" stroke-width="1.5"/>`;
   rows.forEach((c,ri)=>{ const y=mT+ri*rowH+rowH/2-6, fr=c==='FRA', col=fr?'var(--fr)':'var(--ink-2)';
     if(fr) g+=`<rect x="${mL-8}" y="${(y-rowH/2+2).toFixed(1)}" width="${(W-mR-mL+8).toFixed(1)}" height="${rowH-4}" fill="var(--fr-soft)"/>`;
-    g+=`<text x="${mL-14}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="12" font-weight="${fr?'700':'600'}" fill="${col}">${name(c)}</text>`;
+    g+=MOB() ? `<text x="2" y="${(y+5).toFixed(1)}" font-size="14" font-weight="${fr?'700':'600'}" fill="${col}">${nomPays(c)}</text>`
+      : `<text x="${mL-14}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="12" font-weight="${fr?'700':'600'}" fill="${col}">${name(c)}</text>`;
     gs.forEach(gi=>{ const v=sGain(c,gi);
       if(v<=0.0005){ g+=`<circle cx="${X(gi).toFixed(1)}" cy="${y.toFixed(1)}" r="1.4" fill="var(--rule)"/>`; return; }
       g+=`<circle cx="${X(gi).toFixed(1)}" cy="${y.toFixed(1)}" r="${R(v).toFixed(1)}" fill="${fr?'var(--fr)':'var(--ink-2)'}" fill-opacity="${fr?0.85:0.6}"><title>${name(c)} — ${GROUPS[gi].lab} : ${nf(v,3)}</title></circle>`; });
@@ -2852,7 +2857,7 @@ const legende = segs => segs.map(s =>
     const nCol = nj, nRow = rows.length;
     const cellW = Math.max(72, Math.min(112, 660 / nj));
     const cellH = 46;
-    const mL = 118, mR = 132, mT = 42, mB = 30;
+    const mL = MOB() ? 92 : 118, mR = 132, mT = 42, mB = 30;
     const W = Math.max(MOB() ? 0 : 1000, mL + nCol * cellW + mR), H = mT + nRow * cellH + mB;
     const R = 0.5 * Math.min(cellH, cellW) - 6;
     const rad = v => v == null || v <= 0 ? 0 : R * Math.sqrt(Math.min(v, 2) / 2);   // AIRE proportionnelle
@@ -2870,7 +2875,8 @@ const legende = segs => segs.map(s =>
     for (let ri = 0; ri < nRow; ri++) {
       if (ri % 2) s += `<rect x="${mL - 8}" y="${(cy(ri) - cellH / 2).toFixed(1)}" width="${(nj * cellW + 16).toFixed(1)}" height="${cellH}" fill="var(--band)"/>`;
       { const c = rows[ri], fr = c === 'FRA';
-        s += `<text x="${mL - 16}" y="${(cy(ri) + 4).toFixed(1)}" text-anchor="end" font-size="12.5" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${name(c)}</text>`; }
+        s += MOB() ? `<text x="2" y="${(cy(ri) + 5).toFixed(1)}" font-size="13.5" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${nomPays(c)}</text>`
+          : `<text x="${mL - 16}" y="${(cy(ri) + 4).toFixed(1)}" text-anchor="end" font-size="12.5" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${name(c)}</text>`; }
       for (let ci = 0; ci < nCol; ci++) {
         const c = rows[ri], k = ci;
         const v = rdtJ(c, k), X = cx(ci), Y = cy(ri);
@@ -3302,7 +3308,7 @@ const legende = segs => segs.map(s =>
        d'axe et « portée de la France » se chevauchaient dès que la bande bleue
        remontait vers la gauche, ce qui arrive selon l'horizon choisi. */
     /* téléphone : cadre plus étroit (texte plus gros à l'écran), colonne de droite resserrée */
-    const M = MOB(), W = M ? 480 : 1000, rowH = M ? 32 : 36, mT = 56, mB = 34, mL = M ? 112 : 96, mR = M ? 84 : 176;
+    const M = MOB(), W = M ? 480 : 1000, rowH = M ? 32 : 36, mT = 56, mB = 34, mL = M ? 104 : 96, mR = M ? 100 : 176;
     const H = mT + rows.length * rowH + mB;
     /* L'axe n'a plus à contenir le repère d'acquis : il se cale sur la seule
        distribution, et le graphe cesse de traîner une moitié gauche vide. */
@@ -3330,7 +3336,8 @@ const legende = segs => segs.map(s =>
       const c0 = col(r.c);
       const tt = `${name(r.c)} · médiane ${nf(r.cen, 1)} · 3 tirages sur 5 entre ${nf(r.p20, 1)} et ${nf(r.p80, 1)}`
         + ` · 9 sur 10 entre ${nf(r.p05, 1)} et ${nf(r.p95, 1)} · ${nf(r.acq, 3)} déjà acquis`;
-      s += `<text x="${mL - 10}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="${M ? 16 : 12.5}" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${name(r.c)}</text>`;
+      s += M ? `<text x="2" y="${(y + 5).toFixed(1)}" font-size="15" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${nomPays(r.c)}</text>`
+        : `<text x="${mL - 10}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="12.5" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${name(r.c)}</text>`;
       /* Éventail à cinq repères, du plus large au plus étroit : le trait fin va
          du 5e au 95e centile, la barre épaisse du 20e au 80e, le disque est la
          médiane. Une seule famille de repères, une seule lecture. */
@@ -3553,7 +3560,6 @@ const legende = segs => segs.map(s =>
      peut plus se décaler ni se dédoubler, quel que soit le navigateur. Les billes
      passent sur deux rangées de cinq au plus, chaque club gardant sa place d'une
      colonne à l'autre : la grille tient en ~560 px au lieu de 880. */
-  const NOM_COURT = { BIH: 'Bosnie-Herz.', MKD: 'Macédoine N.', NIR: 'Irlande N.', WAL: 'P. de Galles', LIE: 'Liechtenst.' };
   function ecremageMobile(box, COLS, km, B, N){
     const colC = k => `var(${['--c1', '--c3', '--c4'][k]})`;
     const NC2 = COLS.length, sep = k => k === 4 || k === 5 ? ' sep' : '';
