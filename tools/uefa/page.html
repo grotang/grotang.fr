@@ -196,7 +196,11 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
   .glisse > svg{height:auto}
   .glisse-indice{display:block; font-size:12px; color:var(--ink-3); margin:4px 0 6px; text-align:right; transition:opacity .3s}
   .glisse-indice.vu{opacity:0}
-  #chartCs, #chartSurv, #chartSk{width:auto; max-width:none}
+  #chartSurv, #chartSk{width:auto; max-width:none}
+  #csListe{font-size:13px; line-height:1.5; margin:8px 0 2px}
+  #csListe p{margin:0 0 6px}
+  #csListe span{color:var(--ink-3); font-weight:600}
+  #csListe .or{color:#C99400; font-weight:700}
 }
 #chartSk .lk{transition:opacity .15s; cursor:help}
 #chartSk.foc .lk{opacity:.12}
@@ -3671,10 +3675,15 @@ const legende = segs => segs.map(s =>
     const svg = document.getElementById('chartCs'), box = document.getElementById('boxCs');
     const B = baseV(), km = kMax(), et = ETAPES(), cur = isCur();
     const list = [...selB].filter(c => B[c]);
-    const W = Math.max(760, Math.round(box.clientWidth || 1000)), H = 400, mT = 40, mB = 30, mL = 34, mR = 26;
+    /* Téléphone : le graphique tient dans la largeur (pas de défilement), les pertes
+       n'y portent que « −n », et les noms des clubs passent dans une liste dessous. */
+    const M = MOB();
+    const W = M ? 440 : Math.max(760, Math.round(box.clientWidth || 1000)), H = M ? 380 : 400, mT = 40, mB = 30, mL = M ? 26 : 34, mR = M ? 8 : 26;
     /* Un point = les clubs qui JOUENT ce tour, au centre de sa colonne (même lecture
        que le bloc 7c). La pente vers le point suivant = les clubs éliminés à ce tour. */
-    const COLS = ['Q1', 'Q2', 'Q3', 'Bar.', ancienV() ? 'Groupes' : 'Ligue', 'Barr. KO', '8es', '1/4', '1/2', 'Finale', 'Vainqueur'];
+    const COLS = M ? ['Q1', 'Q2', 'Q3', 'Bar.', ancienV() ? 'Gr.' : 'Lig.', 'KO', '8es', '¼', '½', 'F', '★']
+      : ['Q1', 'Q2', 'Q3', 'Bar.', ancienV() ? 'Groupes' : 'Ligue', 'Barr. KO', '8es', '1/4', '1/2', 'Finale', 'Vainqueur'];
+    const LONGS = ['1er tour', '2e tour', '3e tour', 'barrages', ancienV() ? 'phase de groupes' : 'phase de ligue', 'barrages KO', '8es', 'quarts', 'demies', 'finale'];
     const cw = (W - mL - mR) / COLS.length, E = a => mL + cw * a, X = k => E(k + .5);
     const hi = Math.max(1, ...list.map(c => B[c].length)) + 0.7;
     const Y = v => mT + (H - mT - mB) * (1 - v / hi);
@@ -3683,16 +3692,17 @@ const legende = segs => segs.map(s =>
     [['Phase qualificative', '--n4', 0, 4], [ancienV() ? 'Phase de groupes' : 'Phase de ligue', '--fr', 4, 5], ['Phase finale', '--n7', 5, COLS.length]].forEach(([ph, t, a, b]) => {
       const x1 = E(a), x2 = E(b);
       g += `<rect x="${(x1 + 1).toFixed(1)}" y="4" width="${(x2 - x1 - 2).toFixed(1)}" height="19" rx="4" fill="var(${t})" opacity=".26"/>`
-        + `<text x="${((x1 + x2) / 2).toFixed(1)}" y="17.5" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing="${b - a > 1 ? '.05em' : '0'}" fill="var(--ink-2)">${ph}</text>`
+        + ((M && b - a === 1) ? '' : `<text x="${((x1 + x2) / 2).toFixed(1)}" y="17.5" text-anchor="middle" font-size="${M ? 12 : 10.5}" font-weight="700" letter-spacing="${b - a > 1 ? '.05em' : '0'}" fill="var(--ink-2)">${M ? ph.replace('Phase qualificative', 'Qualifications').replace('Phase finale', 'Finale') : ph}</text>`)
         + (a ? `<line x1="${x1.toFixed(1)}" y1="4" x2="${x1.toFixed(1)}" y2="${H - mB}" stroke="var(--rule)"/>` : '');
     });
     for (let v = 0; v <= Math.floor(hi); v++)
       g += `<line x1="${mL}" y1="${Math.round(Y(v))}" x2="${E(COLS.length)}" y2="${Math.round(Y(v))}" stroke="var(--rule-soft)"/>`
-        + `<text x="${mL - 8}" y="${Math.round(Y(v)) + 4}" text-anchor="end" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${v}</text>`;
-    COLS.forEach((lab, k) => g += `<text x="${X(k).toFixed(1)}" y="${H - mB + 18}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--ink-3)" opacity="${cur && k > km ? .5 : 1}">${lab}</text>`);
+        + `<text x="${mL - (M ? 6 : 8)}" y="${Math.round(Y(v)) + 4}" text-anchor="end" font-size="${M ? 13 : 11}" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${v}</text>`;
+    COLS.forEach((lab, k) => g += `<text x="${X(k).toFixed(1)}" y="${H - mB + 18}" text-anchor="middle" font-size="${M ? 12.5 : 10.5}" font-weight="700" fill="var(--ink-3)" opacity="${cur && k > km ? .5 : 1}">${lab}</text>`);
     const xFin = X(km);
     if (cur) g += `<line x1="${xFin.toFixed(1)}" y1="${mT}" x2="${xFin.toFixed(1)}" y2="${H - mB + 4}" stroke="var(--ink-2)" stroke-width="1.2"/>`
-      + `<text x="${(xFin + 6).toFixed(1)}" y="${mT + 10}" font-size="10" font-weight="700" fill="var(--ink-2)">aujourd'hui</text>`;
+      + `<text x="${(xFin + 6).toFixed(1)}" y="${mT + 10}" font-size="${M ? 12 : 10}" font-weight="700" fill="var(--ink-2)">aujourd'hui</text>`;
+    const pertes = [];   // téléphone : la liste des clubs perdus, affichée sous le graphique
 
     const dec = i => (i - (list.length - 1) / 2) * 0.06;
     const occupe = [];   // boîtes déjà prises par une étiquette
@@ -3706,25 +3716,28 @@ const legende = segs => segs.map(s =>
       traits += `<path d="M${P.map(p => p.map(n => n.toFixed(1)).join(' ')).join(' L')}" fill="none" stroke="${col}" stroke-width="${fr ? 3.2 : 2.6}" stroke-linejoin="round" stroke-linecap="round"/>`
         + `<circle cx="${P[0][0].toFixed(1)}" cy="${P[0][1].toFixed(1)}" r="3.4" fill="var(--surface)" stroke="${col}" stroke-width="2.2"/>`;
       // le vainqueur, posé d'abord : les pertes s'écartent de lui
+      const liste = { c, col, n: s[0], l: [] }; pertes.push(liste);
       if (!cur && s[NK] > 0) {
         const w = '★ ' + B[c].filter(r => enJeu(r[NK])).map(r => nomCourt(r[11])).join(', ');
-        const xw = X(NK) - 4, lw = w.length * 6.4;
+        liste.w = w;
+        const xw = X(NK) - 4, lw = w.length * (M ? 7.4 : 6.4);
         let yw = Y(s[NK] + o) - 9, n = 0;
         while (!libre(xw - lw, yw - 11, xw, yw + 3) && n++ < 20) yw -= 14;
         prend(xw - lw, yw - 11, xw, yw + 3);
-        notes += `<text x="${xw.toFixed(1)}" y="${yw.toFixed(1)}" text-anchor="end" font-size="11" font-weight="700" fill="#C99400" ${halo}>${w}</text>`;
+        notes += `<text x="${xw.toFixed(1)}" y="${yw.toFixed(1)}" text-anchor="end" font-size="${M ? 12.5 : 11}" font-weight="700" fill="#C99400" ${halo}>${w}</text>`;
       }
       // les pertes : « −2 » puis les noms, en gris, au-dessus et à droite du milieu de la pente
       for (let k = 1; k <= km; k++) {
         traits += `<circle cx="${X(k).toFixed(1)}" cy="${Y(s[k] + o).toFixed(1)}" r="3" fill="${col}"/>`;   // un point par tour, perte ou pas
         const d = s[k - 1] - s[k]; if (d <= 0) continue;
         const R = B[c].filter(r => r[k] === 9 && r[k - 1] !== 9).map(r => nomCourt(r[11]));
-        const lignes = [`−${d}`, ...R];
+        liste.l.push([LONGS[k - 1], R]);
+        const lignes = M ? [`−${d}`] : [`−${d}`, ...R];
         const xm = (X(k - 1) + X(k)) / 2 + 6, hL = 12, larg = Math.max(...lignes.map(t => t.length)) * 5.8 + 6;
         let y0 = (Y(s[k - 1] + o) + Y(s[k] + o)) / 2 - 8 - (lignes.length - 1) * hL;
         let n = 0; while (!libre(xm, y0 - 10, xm + larg, y0 - 10 + lignes.length * hL) && n++ < 30) y0 -= 6;
         prend(xm, y0 - 10, xm + larg, y0 - 10 + lignes.length * hL);
-        lignes.forEach((t, q) => notes += `<text x="${xm.toFixed(1)}" y="${(y0 + q * hL).toFixed(1)}" font-size="${q ? 10.5 : 11}" font-weight="${q ? 500 : 700}" fill="var(--ink-3)" ${halo}>${t}</text>`);
+        lignes.forEach((t, q) => notes += `<text x="${xm.toFixed(1)}" y="${(y0 + q * hL).toFixed(1)}" font-size="${M ? 13 : q ? 10.5 : 11}" font-weight="${q ? 500 : 700}" fill="var(--ink-3)" ${halo}>${t}</text>`);
       }
       // le nom de la nation : sur le plus long palier, de préférence près du centre
       const runs = []; let a = 0;
@@ -3735,7 +3748,7 @@ const legende = segs => segs.map(s =>
       const zero = Y(0 + o) - .5;
       const cand = runs.map(([p, q]) => ({ x: (pts[p].x + pts[q].x) / 2, y: pts[p].y, L: (pts[q].x - pts[p].x) * (pts[p].y >= zero ? .05 : 1) }))
         .sort((u, v) => (v.L - Math.abs(v.x - cx) * .15) - (u.L - Math.abs(u.x - cx) * .15));
-      const txt = `${name(c)} · ${s[0]} clubs`, lw = txt.length * 7 + 8;
+      const txt = M ? name(c) : `${name(c)} · ${s[0]} clubs`, lw = txt.length * (M ? 8.4 : 7) + 8;
       let pose = null;
       cherche: for (const cd of cand) for (const dy of [-9, 17, -23, 31]) {
         const y = cd.y + dy, x1 = cd.x - lw / 2;
@@ -3743,18 +3756,23 @@ const legende = segs => segs.map(s =>
       }
       pose = pose || { x: cand[0].x, y: cand[0].y - 9 };
       prend(pose.x - lw / 2, pose.y - 12, pose.x + lw / 2, pose.y + 3);
-      noms += `<text x="${pose.x.toFixed(1)}" y="${pose.y.toFixed(1)}" text-anchor="middle" font-size="13" font-weight="700" fill="${col}" ${halo}>${txt}</text>`;
+      noms += `<text x="${pose.x.toFixed(1)}" y="${pose.y.toFixed(1)}" text-anchor="middle" font-size="${M ? 15 : 13}" font-weight="700" fill="${col}" ${halo}>${txt}</text>`;
     });
     g += traits + notes + noms + '</svg>';
     svg.outerHTML = g.replace('<svg', '<svg id="chartCs" role="img" aria-label="Clubs encore en lice après chaque tour, pour trois nations au plus"');
-    glisser(box, document.getElementById('chartCs'), null, mL);
+    let lst = document.getElementById('csListe');
+    if (!M) { if (lst) lst.remove(); glisser(box, document.getElementById('chartCs'), null, mL); return; }
+    if (!lst) { lst = document.createElement('div'); lst.id = 'csListe'; box.after(lst); }
+    lst.innerHTML = pertes.map(p => `<p><b style="color:${p.col}">${name(p.c)}</b> · ${p.n} clubs`
+      + (p.l.length ? ' — ' + p.l.map(([t, R]) => `<span>${t}</span> ${R.join(', ')}`).join(' · ') : ' — aucun club perdu')
+      + (p.w ? ` · <span class="or">${p.w}</span>` : '') + `</p>`).join('');
   }
 
   function capCs(){
     const B = baseV(), km = kMax(), lab = SEAS.find(x => x[0] === selY)[1];
     const list = [...selB].filter(c => B[c]), abs = [...selB].filter(c => !B[c]);
     document.getElementById('capCs').innerHTML =
-      `<b>${lab}</b> · chaque point compte les clubs qui jouent ce tour ; la pente qui suit, en gris, nomme ceux qui y sont éliminés. Un club reversé de compétition continue. `
+      `<b>${lab}</b> · chaque point compte les clubs qui jouent ce tour ; ${MOB() ? 'en gris, le nombre de clubs perdus à ce tour, nommés dans la liste au-dessus' : 'la pente qui suit, en gris, nomme ceux qui y sont éliminés'}. Un club reversé de compétition continue. `
       + (abs.length ? `Absente${abs.length > 1 ? 's' : ''} cette saison : ${abs.map(name).join(', ')}.` : '');
   }
   const courbe = () => { drawCs(); capCs(); };
