@@ -174,6 +174,23 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 #chartSurv{display:block; width:100%; height:auto}
 #chartCs{display:block; width:100%; height:auto}
 .glisse-indice{display:none}
+/* 7c au téléphone : grille HTML, colonne des noms figée */
+.ecr-m{display:grid; grid-template-columns:96px repeat(var(--nc), 46px); width:max-content; font-size:11.5px; line-height:1.15}
+.ecr-m > div{min-height:20px}
+.ecr-m .nm{position:sticky; left:0; z-index:2; background:var(--surface); display:flex; align-items:center; padding:0 8px 0 2px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink-2); border-right:1px solid var(--rule)}
+.ecr-m .nm.me{background:var(--fr-soft); color:var(--ink); font-weight:700}
+.ecr-m .ph{margin:0 1px 4px; border-radius:4px; text-align:center; font-size:10px; font-weight:700; letter-spacing:.03em; color:var(--ink-2);
+  background:color-mix(in srgb, var(--t) 26%, transparent); display:flex; align-items:center; justify-content:center; min-height:19px}
+.ecr-m .ch{display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:5px; font-size:10.5px; color:var(--ink-2)}
+.ecr-m .ch span{font-size:9.5px; color:var(--ink-3)}
+.ecr-m .ch.futur{opacity:.5}
+.ecr-m .cell{display:flex; flex-wrap:wrap; align-content:center; gap:2px; padding:3px; box-sizing:border-box; min-width:0}
+.ecr-m .cell.me{background:var(--fr-soft)}
+.ecr-m .sep{border-left:1px solid var(--rule)}
+.ecr-m .b{width:6px; height:6px; border-radius:50%; flex:none; display:block}
+.ecr-m .b.out{width:3px; height:3px; margin:1.5px; background:var(--ink-3); opacity:.4}
+
 @media (max-width:680px){
   .glisse{overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch}
   .glisse > svg{height:auto}
@@ -3527,6 +3544,46 @@ const legende = segs => segs.map(s =>
     return natsV().map(c => { const s = serieNat(c); return { c, s, a: s.slice(1, km + 1).reduce((x, y) => x + y, 0) / s[0] / Math.max(1, km) }; })
       .sort((p, q) => q.a - p.a || q.s[0] - p.s[0] || name(p.c).localeCompare(name(q.c), 'fr')); };
 
+  /* Téléphone : la même carte, construite en grille HTML et non plus en dessin.
+     La colonne des noms est une vraie colonne figée (position sticky) : elle ne
+     peut plus se décaler ni se dédoubler, quel que soit le navigateur. Les billes
+     passent sur deux rangées de cinq au plus, chaque club gardant sa place d'une
+     colonne à l'autre : la grille tient en ~560 px au lieu de 880. */
+  const NOM_COURT = { BIH: 'Bosnie-Herz.', MKD: 'Macédoine N.', NIR: 'Irlande N.', WAL: 'P. de Galles', LIE: 'Liechtenst.' };
+  function ecremageMobile(box, COLS, km, B, N){
+    const colC = k => `var(${['--c1', '--c3', '--c4'][k]})`;
+    const NC2 = COLS.length, sep = k => k === 4 || k === 5 ? ' sep' : '';
+    const tot = k => N.reduce((a, o) => a + B[o.c].filter(r => r[k] !== 9).length, 0);
+    let h = `<div class="ecr-m" style="--nc:${NC2}">`;
+    // bandeau de phases
+    h += `<div class="nm hd"></div>`
+      + `<div class="ph" style="grid-column:span 4;--t:var(--n4)">Phase qualificative</div>`
+      + `<div class="ph sep" style="--t:var(--fr)">${ancienV() ? 'Groupes' : 'Ligue'}</div>`
+      + `<div class="ph sep" style="grid-column:span ${NC2 - 5};--t:var(--n7)">Phase finale</div>`;
+    // en-têtes de colonnes
+    h += `<div class="nm hd"></div>` + COLS.map((lab, k) => `<div class="ch${sep(k)}${k > km ? ' futur' : ''}"><b>${lab}</b><span>${k > km ? 'à venir' : tot(k)}</span></div>`).join('');
+    N.forEach(o => {
+      const fr = o.c === 'FRA', me = fr ? ' me' : '';
+      const R = B[o.c].map(r => ({ s: r.slice(0, 11), n: r[11] })).sort((a, b) => b.s.filter(v => v !== 9).length - a.s.filter(v => v !== 9).length);
+      h += `<div class="nm${me}" title="${name(o.c)}">${NOM_COURT[o.c] || name(o.c)}</div>`;
+      for (let k = 0; k < NC2; k++) {
+        if (k > km) { h += `<div class="cell${sep(k)}${me}"></div>`; continue; }
+        const viv = R.filter(r => r.s[k] !== 9);
+        const tt = `${name(o.c)} · ${COLS[k]} : ${viv.length} club${viv.length > 1 ? 's' : ''} sur ${R.length}` + (viv.length && viv.length <= 4 ? ` (${viv.map(r => nomClub(r.n)).join(', ')})` : '');
+        h += `<div class="cell${sep(k)}${me}" title="${tt}">` + R.map(r => { const v = r.s[k];
+          if (v === 9) return `<i class="b out"></i>`;
+          if (enJeu(v)) return `<i class="b" style="background:${colC(v)}"></i>`;
+          const suiv = r.s.slice(k).find(enJeu);
+          return suiv !== undefined ? `<i class="b" style="background:${colC(suiv)};opacity:.28"></i>` : `<i class="b out"></i>`;
+        }).join('') + `</div>`;
+      }
+    });
+    h += `</div>`;
+    box.querySelectorAll('.ecr-m').forEach(e => e.remove());
+    box.insertAdjacentHTML('beforeend', h);
+    glisser(box, box.querySelector('.ecr-m'));
+  }
+
   function drawSurv(){
     const svg = document.getElementById('chartSurv'), box = document.getElementById('boxSurv');
     const km = kMax(), B = baseV(), N = lignesV();
@@ -3535,6 +3592,8 @@ const legende = segs => segs.map(s =>
        colonnes. Même lecture que le Sankey du bloc 7d. */
     const COLS = ['Q1', 'Q2', 'Q3', 'Bar.', ancienV() ? 'Groupes' : 'Ligue', 'Barr. KO', '8es', '1/4', '1/2', 'Finale', 'Vainqueur'];
     const NC2 = COLS.length;
+    if (MOB()) { svg.style.display = 'none'; ecremageMobile(box, COLS, km, B, N); return; }
+    svg.style.display = ''; box.querySelectorAll('.ecr-m').forEach(e => e.remove());
     const W = Math.max(760, Math.round(box.clientWidth || 1000)), rh = 15, mT = 50, mL = 150, mR = 12, H = mT + N.length * rh + 8;
     const cw = (W - mL - mR) / NC2, X = k => mL + cw * k;
     const colC = k => `var(${['--c1', '--c3', '--c4'][k]})`;
@@ -3571,7 +3630,7 @@ const legende = segs => segs.map(s =>
     });
     if (km < NC2 - 1) g += `<text x="${((X(km + 1) + X(NC2)) / 2).toFixed(1)}" y="${mT + 16}" text-anchor="middle" font-size="11" fill="var(--ink-3)">à venir</text>`;
     svg.outerHTML = (g + '</svg>').replace('<svg', '<svg id="chartSurv" role="img" aria-label="Clubs de chaque nation présents à chaque tour"');
-    glisser(box, document.getElementById('chartSurv'), null, mL);
+
   }
 
   function capSurv(){
