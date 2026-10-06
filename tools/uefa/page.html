@@ -3376,7 +3376,10 @@ const legende = segs => segs.map(s =>
       [[r.p05, 7], [r.p95, 7]].forEach(([v, h]) => s += `<line x1="${X(v).toFixed(1)}" y1="${(y - h).toFixed(1)}" x2="${X(v).toFixed(1)}" y2="${(y + h).toFixed(1)}" stroke="${c0}" stroke-width="1.4" opacity=".55"/>`);
       [[r.p20, 9], [r.p80, 9]].forEach(([v, h]) => s += `<line x1="${X(v).toFixed(1)}" y1="${(y - h).toFixed(1)}" x2="${X(v).toFixed(1)}" y2="${(y + h).toFixed(1)}" stroke="${c0}" stroke-width="1.8" opacity=".85"/>`);
       s += `<circle cx="${X(r.cen).toFixed(1)}" cy="${y.toFixed(1)}" r="${fr ? 6 : 5}" fill="${c0}" stroke="var(--surface)" stroke-width="1.5"><title>${tt}</title></circle>`;
-      s += `<text x="${(X(r.p95) + 10).toFixed(1)}" y="${(y + 4).toFixed(1)}" font-size="${M ? 15.5 : 11.5}" font-weight="${fr ? 700 : 500}" font-family="IBM Plex Mono, monospace" fill="${fr ? 'var(--fr)' : 'var(--ink-3)'}">${nf(r.cen, 1)}</text>`;
+      /* Téléphone : la croix du meilleur scénario tombait sur le chiffre de la
+         France ; on décale le chiffre juste après la croix. */
+      const xl = M && fr ? Math.max(X(r.p95) + 10, X(Math.min(r.haut, sc.hi)) + 12) : X(r.p95) + 10;
+      s += `<text x="${xl.toFixed(1)}" y="${(y + 4).toFixed(1)}" font-size="${M ? 15.5 : 11.5}" font-weight="${fr ? 700 : 500}" font-family="IBM Plex Mono, monospace" fill="${fr ? 'var(--fr)' : 'var(--ink-3)'}">${nf(r.cen, 1)}</text>`;
       /* La croix du meilleur scénario, France seule. Elle sort du même tirage
          que l'éventail, elle tombe donc juste à droite du 95e centile et tient
          dans l'axe — le chevron de repli ne sert plus que si un jour elle en
