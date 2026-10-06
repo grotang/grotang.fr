@@ -145,7 +145,7 @@ export const navCSS = `
   appearance:none;border:1px solid var(--rule);background:var(--surface-2);color:var(--ink-3);
   font:inherit;font-size:12px;font-weight:600;border-radius:6px;padding:4px 10px;line-height:1.3}
 .gn-coq{display:inline-flex;flex:none;margin-left:-6px}
-.gn-coq svg{width:36px;height:36px;display:block}
+.gn-coq svg{width:36px;height:36px;display:block;transform:scaleX(-1)}  /* bec tourné vers les onglets */
 .gn-theme:hover{border-color:var(--ink-3);color:var(--ink)}
 .gn-theme:focus-visible{outline:2px solid var(--fr);outline-offset:2px}
 .gn-theme .gn-theme-i{width:11px;height:11px;border-radius:50%;flex:none;
