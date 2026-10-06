@@ -3326,6 +3326,50 @@ const legende = segs => segs.map(s =>
                  haut: hautQ(t) };
       }).sort((a, b) => b.cen - a.cen); };
 
+    /* Survol, sur le modèle du bloc 1 : la nation, puis le détail. En fin de
+       saison, le total à 5 ans saison par saison, avec le poids de chacune — la
+       dernière est la médiane projetée. En fin de phase de ligue, l'éventail. */
+    const boxP = document.getElementById('boxPrj'), tipP = document.getElementById('tipPrj');
+    let geoP = null, rowsP = [];
+    function survolPrj(rows, g){ rowsP = rows; geoP = g; }
+    function tipPrjHtml(r){
+      const C = col(r.c), fr = r.c === 'FRA';
+      const li = (pastille, nom, val, pct, fort) => `<div class="tr"${fort ? '' : ' style="opacity:.75"'}>${pastille}`
+        + `<span class="nm"${fort ? ' style="color:var(--ink);font-weight:600"' : ''}>${nom}</span><b>${val}</b>${pct != null ? `<s style="color:var(--ink-3)">${pct}</s>` : ''}</div>`;
+      const pale = `<i style="background:color-mix(in srgb, ${C} 38%, var(--surface-2))"></i>`, plein = `<i style="background:${C}"></i>`;
+      const eventail = `3 fois sur 5 entre ${nf(r.p20, 1)} et ${nf(r.p80, 1)} · 9 fois sur 10 entre ${nf(r.p05, 1)} et ${nf(r.p95, 1)}`
+        + (fr ? ` · meilleur scénario ${nf(r.haut, 1)} (1 tirage sur 400)` : '');
+      if (horizon === 'ligue')
+        return `<div class="th">${name(r.c)} · fin de phase de ligue</div>`
+          + li(plein, 'médiane projetée', nf(r.cen, 2), null, true)
+          + li(pale, 'déjà acquis', nf(r.acq, 2), null)
+          + li(pale, 'matchs restants', r.r, null)
+          + `<div class="tfoot">${eventail}</div>`;
+      const y = BY[r.c].y, tot = y[0] + y[1] + y[2] + y[3] + r.cen;
+      return `<div class="th">${name(r.c)} · ${nf(tot)} à 5 ans, projeté</div>`
+        + y.slice(0, 4).map((v, i) => li(pale, SEASONS[i], nf(v, 2), nf(v / tot * 100, 1) + ' %')).join('')
+        + li(plein, `${SEASONS[4]} <span style="color:var(--ink-3)">projetée</span>`, nf(r.cen, 2), nf(r.cen / tot * 100, 1) + ' %', true)
+        + `<div class="tfoot">${SEASONS[4]} : déjà ${nf(r.acq, 2)} acquis · ${eventail}</div>`;
+    }
+    const cacheP = () => { tipP.hidden = true; const h = document.getElementById('hlPrj'); if (h) h.setAttribute('opacity', '0'); };
+    boxP.addEventListener('mouseleave', cacheP);
+    boxP.addEventListener('mousemove', ev => {
+      const svg = document.getElementById('chartPrj');
+      if (!geoP || !svg) return;
+      const sr = svg.getBoundingClientRect(), k = geoP.H / sr.height;
+      const i = Math.floor(((ev.clientY - sr.top) * k - geoP.mT) / geoP.rowH);
+      if (i < 0 || i >= rowsP.length) { cacheP(); return; }
+      const h = document.getElementById('hlPrj');
+      if (h) { h.setAttribute('y', (geoP.mT + i * geoP.rowH).toFixed(1)); h.setAttribute('opacity', '.06'); }
+      tipP.innerHTML = tipPrjHtml(rowsP[i]); tipP.hidden = false;
+      /* le cadre peut défiler (vue à 55 nations) : on cale l'infobulle sur la
+         partie visible, défilement compris */
+      const br = boxP.getBoundingClientRect(), tw = tipP.offsetWidth || 260, th = tipP.offsetHeight || 160;
+      const px = ev.clientX - br.left, py = ev.clientY - br.top;
+      tipP.style.left = Math.max(4, Math.min(br.width - tw - 4, px + 16)) + 'px';
+      tipP.style.top = (boxP.scrollTop + Math.max(4, Math.min(br.height - th - 4, py - th / 2))) + 'px';
+    });
+
     function dessine(){
     const rows = lignes(horizon === 'ligue' ? 'ligue' : 'tir');
     if (!rows.length) return;
@@ -3342,11 +3386,14 @@ const legende = segs => segs.map(s =>
     const sc = niceScale(loV, hiV, 9)   /* 9 intervalles : à 6, le pas tombait sur 5 et l'axe courait jusqu'à 25 pour un maximum de 21 */;
     const X = v => mL + (W - mL - mR) * ((v - sc.lo) / (sc.hi - sc.lo));
     let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
-    /* Téléphone : la colonne de droite reçoit un en-tête et un fond, sinon on ne
-       devine pas qu'elle donne le total à 5 ans (ou les matchs restants). */
-    if (M) s += `<rect x="${W - 58}" y="${mT - 44}" width="58" height="${H - mB - mT + 48}" rx="4" fill="var(--surface-2)"/>`
-      + `<text x="${W - 6}" y="${mT - 29}" text-anchor="end" font-size="14" font-weight="700" fill="var(--ink-2)">${horizon === 'ligue' ? 'matchs' : 'total'}</text>`
-      + `<text x="${W - 6}" y="${mT - 12}" text-anchor="end" font-size="14" font-weight="700" fill="var(--ink-2)">${horizon === 'ligue' ? 'restants' : 'à 5 ans'}</text>`;
+    /* La colonne de droite reçoit un en-tête et un fond, sinon on ne devine pas
+       qu'elle donne le total à 5 ans (ou les matchs restants). */
+    { const bw = M ? 58 : 76, fz = M ? 14 : 11;
+      s += `<rect x="${W - bw}" y="${mT - 44}" width="${bw}" height="${H - mB - mT + 48}" rx="4" fill="var(--surface-2)"/>`
+      + `<text x="${W - 6}" y="${mT - (M ? 29 : 27)}" text-anchor="end" font-size="${fz}" font-weight="700" fill="var(--ink-2)">${horizon === 'ligue' ? 'matchs' : 'total'}</text>`
+      + `<text x="${W - 6}" y="${mT - (M ? 12 : 13)}" text-anchor="end" font-size="${fz}" font-weight="700" fill="var(--ink-2)">${horizon === 'ligue' ? 'restants' : 'à 5 ans'}</text>`; }
+    /* bande de survol : une ligne s'éclaire sous le doigt ou la souris */
+    s += `<rect id="hlPrj" x="2" y="0" width="${W - 4}" height="${rowH}" rx="4" fill="var(--ink)" opacity="0"/>`;
     sc.ticks.forEach(v => s += `<line x1="${X(v).toFixed(1)}" y1="${mT - 8}" x2="${X(v).toFixed(1)}" y2="${H - mB + 4}" stroke="var(--rule-soft)"/>`
       + `<text x="${X(v).toFixed(1)}" y="${H - mB + 20}" text-anchor="middle" font-size="${M ? 14 : 11}" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${nf(v, sc.dec)}</text>`);
     s += `<text x="${mL}" y="${mT - 32}" font-size="${M ? 13 : 11}" font-weight="600" fill="var(--ink-3)">coefficient ${horizon === 'ligue' ? 'de saison ' : 'saison '}${horizon === 'ligue'
@@ -3364,18 +3411,16 @@ const legende = segs => segs.map(s =>
     rows.forEach((r, i) => {
       const y = mT + i * rowH + rowH / 2, fr = r.c === 'FRA';
       const c0 = col(r.c);
-      const tt = `${name(r.c)} · médiane ${nf(r.cen, 1)} · 3 tirages sur 5 entre ${nf(r.p20, 1)} et ${nf(r.p80, 1)}`
-        + ` · 9 sur 10 entre ${nf(r.p05, 1)} et ${nf(r.p95, 1)} · ${nf(r.acq, 3)} déjà acquis`;
       s += M ? `<text x="2" y="${(y + 6).toFixed(1)}" font-size="17" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${nomPays(r.c)}</text>`
         : `<text x="${mL - 10}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="12.5" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${name(r.c)}</text>`;
       /* Éventail à cinq repères, du plus large au plus étroit : le trait fin va
          du 5e au 95e centile, la barre épaisse du 20e au 80e, le disque est la
          médiane. Une seule famille de repères, une seule lecture. */
-      s += `<line x1="${X(r.p05).toFixed(1)}" y1="${y.toFixed(1)}" x2="${X(r.p95).toFixed(1)}" y2="${y.toFixed(1)}" stroke="${c0}" stroke-width="${fr ? 5 : 4}" opacity=".22" stroke-linecap="round"><title>${tt}</title></line>`;
-      s += `<line x1="${X(r.p20).toFixed(1)}" y1="${y.toFixed(1)}" x2="${X(r.p80).toFixed(1)}" y2="${y.toFixed(1)}" stroke="${c0}" stroke-width="${fr ? 15 : 12}" opacity=".34" stroke-linecap="round"><title>${tt}</title></line>`;
+      s += `<line x1="${X(r.p05).toFixed(1)}" y1="${y.toFixed(1)}" x2="${X(r.p95).toFixed(1)}" y2="${y.toFixed(1)}" stroke="${c0}" stroke-width="${fr ? 5 : 4}" opacity=".22" stroke-linecap="round"></line>`;
+      s += `<line x1="${X(r.p20).toFixed(1)}" y1="${y.toFixed(1)}" x2="${X(r.p80).toFixed(1)}" y2="${y.toFixed(1)}" stroke="${c0}" stroke-width="${fr ? 15 : 12}" opacity=".34" stroke-linecap="round"></line>`;
       [[r.p05, 7], [r.p95, 7]].forEach(([v, h]) => s += `<line x1="${X(v).toFixed(1)}" y1="${(y - h).toFixed(1)}" x2="${X(v).toFixed(1)}" y2="${(y + h).toFixed(1)}" stroke="${c0}" stroke-width="1.4" opacity=".55"/>`);
       [[r.p20, 9], [r.p80, 9]].forEach(([v, h]) => s += `<line x1="${X(v).toFixed(1)}" y1="${(y - h).toFixed(1)}" x2="${X(v).toFixed(1)}" y2="${(y + h).toFixed(1)}" stroke="${c0}" stroke-width="1.8" opacity=".85"/>`);
-      s += `<circle cx="${X(r.cen).toFixed(1)}" cy="${y.toFixed(1)}" r="${fr ? 6 : 5}" fill="${c0}" stroke="var(--surface)" stroke-width="1.5"><title>${tt}</title></circle>`;
+      s += `<circle cx="${X(r.cen).toFixed(1)}" cy="${y.toFixed(1)}" r="${fr ? 6 : 5}" fill="${c0}" stroke="var(--surface)" stroke-width="1.5"></circle>`;
       /* Téléphone : la croix du meilleur scénario tombait sur le chiffre de la
          France ; on décale le chiffre juste après la croix. */
       const xl = M && fr ? Math.max(X(r.p95) + 10, X(Math.min(r.haut, sc.hi)) + 12) : X(r.p95) + 10;
@@ -3390,8 +3435,7 @@ const legende = segs => segs.map(s =>
         const mx = r.haut;
         const hors = mx > sc.hi;
         const xm = X(Math.min(mx, sc.hi)) - (hors ? 9 : 0), b2 = 5;
-        const ttm = `Meilleur scénario de la France · ${nf(mx, 1)} — le 99,75\u1d49 centile, un tirage sur 400`;
-        s += `<g opacity=".62"><title>${ttm}</title>`
+        s += `<g opacity=".62">`
           + `<line x1="${(xm-b2).toFixed(1)}" y1="${(y-b2).toFixed(1)}" x2="${(xm+b2).toFixed(1)}" y2="${(y+b2).toFixed(1)}" stroke="var(--fr)" stroke-width="1.6" stroke-linecap="round"/>`
           + `<line x1="${(xm-b2).toFixed(1)}" y1="${(y+b2).toFixed(1)}" x2="${(xm+b2).toFixed(1)}" y2="${(y-b2).toFixed(1)}" stroke="var(--fr)" stroke-width="1.6" stroke-linecap="round"/>`
           + (hors ? `<path d="M${(xm+8).toFixed(1)} ${(y-4).toFixed(1)} l4 4 l-4 4" fill="none" stroke="var(--fr)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>` : '')
@@ -3400,6 +3444,7 @@ const legende = segs => segs.map(s =>
       s += `<text x="${(W - 6).toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="${M ? 14 : 10.5}" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)" opacity=".85">${horizon === 'ligue' ? `${r.r} m.` : `${nfx(BY[r.c].t - r.acq + r.cen)}`}</text>`;
     });
     document.getElementById('chartPrj').outerHTML = (s + '</svg>').replace('<svg', '<svg id="chartPrj"');
+    survolPrj(rows, { W, H, mT, rowH });
     const fr = rows.find(r => r.c === 'FRA');
     const S = simule();
     const tirages = horizon === 'ligue' ? 'ligue' : 'tir';
