@@ -3331,7 +3331,9 @@ const legende = segs => segs.map(s =>
     let geoP = null, rowsP = [];
     function survolPrj(rows, g){ rowsP = rows; geoP = g; }
     function tipPrjHtml(r){
-      /* Le cœur de l'infobulle : la boîte elle-même, lue de haut en bas — les
+      /* Chiffres : règle du site (nfx) — entier au-dessus de 30, une décimale
+         entre 5 et 30, deux en dessous. Une projection n'a pas de centième.
+         Le cœur de l'infobulle : la boîte elle-même, lue de haut en bas — les
          cinq repères dessinés sur la ligne, chacun avec sa valeur et ce qu'il
          veut dire. Le reste (acquis, total à 5 ans) vient en pied. */
       const C = col(r.c), fr = r.c === 'FRA';
@@ -3345,7 +3347,7 @@ const legende = segs => segs.map(s =>
         + (fr ? `<g stroke="var(--fr)" stroke-width="1.6" stroke-linecap="round" opacity=".7"><line x1="${x(r.haut) - 4}" y1="11" x2="${x(r.haut) + 4}" y2="19"/><line x1="${x(r.haut) - 4}" y1="19" x2="${x(r.haut) + 4}" y2="11"/></g>` : '')
         + `</svg>`;
       const li = (nom, sens, v, fort) => `<div class="tr"${fort ? '' : ' style="opacity:.8"'}>`
-        + `<span class="nm"${fort ? ' style="color:var(--ink);font-weight:700"' : ''}>${nom} <span style="color:var(--ink-3);font-weight:400">${sens}</span></span><b>${nf(v, 2)}</b></div>`;
+        + `<span class="nm"${fort ? ' style="color:var(--ink);font-weight:700"' : ''}>${nom} <span style="color:var(--ink-3);font-weight:400">${sens}</span></span><b>${nfx(v)}</b></div>`;
       const repere = (fr ? li('meilleur scénario', '· 1 tirage sur 400', r.haut) : '')
         + li('95<sup style="line-height:0">e</sup> centile', '· 1 fois sur 20 au-dessus', r.p95)
         + li('80<sup style="line-height:0">e</sup> centile', '· 1 fois sur 5 au-dessus', r.p80)
@@ -3354,9 +3356,9 @@ const legende = segs => segs.map(s =>
         + li('5<sup style="line-height:0">e</sup> centile', '· 1 fois sur 20 en dessous', r.p05);
       const quoi = horizon === 'ligue' ? `coefficient ${SEASONS[4]} à la fin de la phase de ligue` : `coefficient ${SEASONS[4]} en fin de saison`;
       const y = BY[r.c].y, tot = y[0] + y[1] + y[2] + y[3] + r.cen;
-      const pied = `déjà ${nf(r.acq, 2)} acquis · ` + (horizon === 'ligue'
+      const pied = `déjà ${nfx(r.acq)} acquis · ` + (horizon === 'ligue'
         ? `${r.r} match${r.r > 1 ? 's' : ''} restant${r.r > 1 ? 's' : ''}`
-        : `total à 5 ans projeté : ${nf(tot, 2)}`);
+        : `total à 5 ans projeté : ${nfx(tot)}`);
       return `<div class="th">${name(r.c)}</div><div class="tsub">${quoi}</div>` + boite + repere + `<div class="tfoot">${pied}</div>`;
     }
     const cacheP = () => { tipP.hidden = true; const h = document.getElementById('hlPrj'); if (h) h.setAttribute('opacity', '0'); };
