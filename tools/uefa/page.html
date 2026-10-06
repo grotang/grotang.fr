@@ -3832,7 +3832,12 @@ const legende = segs => segs.map(s =>
     /* Téléphone : le graphique tient dans la largeur (pas de défilement), les pertes
        n'y portent que « −n », et les noms des clubs passent dans une liste dessous. */
     const M = MOB();
-    const W = M ? 440 : Math.max(760, Math.round(box.clientWidth || 1000)), H = M ? 380 : 400, mT = 40, mB = 30, mL = M ? 26 : 34, mR = M ? 8 : 26;
+    /* Les vainqueurs s'écrivent SOUS l'axe, dans la colonne « Vainqueur » : un
+       nom par ligne, à la couleur de sa nation. Sur le graphique, seul un anneau
+       or marque le point. Aucune collision possible avec les courbes. */
+    const VQ = isCur() ? [] : list.flatMap(c => B[c].filter(r => enJeu(r[NK])).map(r => ({ c, n: nomCourt(r[11]), k: r[NK] })));
+    const hV = M ? 16 : 14, extra = VQ.length ? VQ.length * hV + 10 : 0;
+    const W = M ? 440 : Math.max(760, Math.round(box.clientWidth || 1000)), H = (M ? 380 : 400) + extra, mT = 40, mB = 30 + extra, mL = M ? 26 : 34, mR = M ? 8 : 26;
     /* Un point = les clubs qui JOUENT ce tour, au centre de sa colonne (même lecture
        que le bloc 7c). La pente vers le point suivant = les clubs éliminés à ce tour. */
     const COLS = M ? ['Q1', 'Q2', 'Q3', 'Bar.', ancienV() ? 'Gr.' : 'Lig.', 'KO', '8es', '¼', '½', 'F', '★']
@@ -3853,6 +3858,7 @@ const legende = segs => segs.map(s =>
       g += `<line x1="${mL}" y1="${Math.round(Y(v))}" x2="${E(COLS.length)}" y2="${Math.round(Y(v))}" stroke="var(--rule-soft)"/>`
         + `<text x="${mL - (M ? 6 : 8)}" y="${Math.round(Y(v)) + 4}" text-anchor="end" font-size="${M ? 13 : 11}" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${v}</text>`;
     COLS.forEach((lab, k) => g += `<text x="${X(k).toFixed(1)}" y="${H - mB + 18}" text-anchor="middle" font-size="${M ? 12.5 : 10.5}" font-weight="700" fill="var(--ink-3)" opacity="${cur && k > km ? .5 : 1}">${lab}</text>`);
+    VQ.forEach((v, q) => g += `<text x="${E(COLS.length).toFixed(1)}" y="${(H - mB + 18 + (q + 1) * hV + 4).toFixed(1)}" text-anchor="end" font-size="${M ? 12.5 : 11}" font-weight="700" fill="var(${PALB[v.c]})"><tspan fill="#C99400">★</tspan> ${v.n} <tspan fill="var(--ink-3)" font-weight="600">· ${['C1', 'C3', 'C4'][v.k]}</tspan></text>`);
     const xFin = X(km);
     if (cur) g += `<line x1="${xFin.toFixed(1)}" y1="${mT}" x2="${xFin.toFixed(1)}" y2="${H - mB + 4}" stroke="var(--ink-2)" stroke-width="1.2"/>`
       + `<text x="${(xFin + 6).toFixed(1)}" y="${mT + 10}" font-size="${M ? 12 : 10}" font-weight="700" fill="var(--ink-2)">aujourd'hui</text>`;
@@ -3865,23 +3871,26 @@ const legende = segs => segs.map(s =>
     let traits = '', notes = '', noms = '';
     list.forEach((c, i) => {
       const s = serieNat(c), o = dec(i), col = `var(${PALB[c]})`, fr = c === 'FRA';
-      const P = s.slice(0, km + 1).map((v, k) => [X(k), Y(v + o)]);
-      if (cur) P.push([xFin, Y(s[km] + o)]);
+      /* La courbe s'arrête au tour où la nation tombe à zéro club : au-delà, il
+         n'y a plus rien à suivre, et les traits couchés sur l'axe brouillaient. */
+      const k0 = s.findIndex((v, k) => k <= km && v === 0), kFin = k0 >= 0 ? k0 : km;
+      const P = s.slice(0, kFin + 1).map((v, k) => [X(k), Y(v + o)]);
+      if (cur && k0 < 0) P.push([xFin, Y(s[km] + o)]);
       traits += `<path d="M${P.map(p => p.map(n => n.toFixed(1)).join(' ')).join(' L')}" fill="none" stroke="${col}" stroke-width="${fr ? 3.2 : 2.6}" stroke-linejoin="round" stroke-linecap="round"/>`
         + `<circle cx="${P[0][0].toFixed(1)}" cy="${P[0][1].toFixed(1)}" r="3.4" fill="var(--surface)" stroke="${col}" stroke-width="2.2"/>`;
       // le vainqueur, posé d'abord : les pertes s'écartent de lui
       const liste = { c, col, n: s[0], l: [] }; pertes.push(liste);
       if (!cur && s[NK] > 0) {
-        const w = '★ ' + B[c].filter(r => enJeu(r[NK])).map(r => nomCourt(r[11])).join(', ');
-        liste.w = w;
-        const xw = X(NK) - 4, lw = w.length * (M ? 7.4 : 6.4);
-        let yw = Y(s[NK] + o) - 9, n = 0;
-        while (!libre(xw - lw, yw - 11, xw, yw + 3) && n++ < 20) yw -= 14;
-        prend(xw - lw, yw - 11, xw, yw + 3);
-        notes += `<text x="${xw.toFixed(1)}" y="${yw.toFixed(1)}" text-anchor="end" font-size="${M ? 12.5 : 11}" font-weight="700" fill="#C99400" ${halo}>${w}</text>`;
+        /* Le ou les vainqueurs : un anneau or sur le dernier point (les noms sont
+           écrits sous l'axe). */
+        const V = B[c].filter(r => enJeu(r[NK]));
+        liste.w = '★ ' + V.map(r => nomCourt(r[11])).join(', ');
+        const xp = X(NK), yp = Y(s[NK] + o);
+        traits += `<circle cx="${xp.toFixed(1)}" cy="${yp.toFixed(1)}" r="${M ? 7 : 6.5}" fill="none" stroke="#C99400" stroke-width="2"/>`;
+        prend(xp - 9, yp - 9, xp + 9, yp + 9);
       }
       // les pertes : « −2 » puis les noms, en gris, au-dessus et à droite du milieu de la pente
-      for (let k = 1; k <= km; k++) {
+      for (let k = 1; k <= kFin; k++) {
         traits += `<circle cx="${X(k).toFixed(1)}" cy="${Y(s[k] + o).toFixed(1)}" r="3" fill="${col}"/>`;   // un point par tour, perte ou pas
         const d = s[k - 1] - s[k]; if (d <= 0) continue;
         const R = B[c].filter(r => r[k] === 9 && r[k - 1] !== 9).map(r => nomCourt(r[11]));
