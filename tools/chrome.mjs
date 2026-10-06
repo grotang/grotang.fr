@@ -144,6 +144,8 @@ export const navCSS = `
 .gn-theme{display:inline-flex;align-items:center;gap:7px;cursor:pointer;flex:none;
   appearance:none;border:1px solid var(--rule);background:var(--surface-2);color:var(--ink-3);
   font:inherit;font-size:12px;font-weight:600;border-radius:6px;padding:4px 10px;line-height:1.3}
+.gn-coq{display:inline-flex;flex:none;margin-left:-6px}
+.gn-coq svg{width:36px;height:36px;display:block}
 .gn-theme:hover{border-color:var(--ink-3);color:var(--ink)}
 .gn-theme:focus-visible{outline:2px solid var(--fr);outline-offset:2px}
 .gn-theme .gn-theme-i{width:11px;height:11px;border-radius:50%;flex:none;
@@ -151,7 +153,8 @@ export const navCSS = `
 .gn-theme[aria-pressed="true"] .gn-theme-i{background:var(--fr);border-color:var(--fr)}
 @media (max-width:560px){.gnav{height:auto;padding-block:8px;flex-wrap:wrap;gap:8px}
   .gnav nav{margin-left:0;width:100%;justify-content:flex-start;order:3}
-  .gn-theme{margin-left:auto;min-height:34px}
+  .gn-coq{margin-left:auto}
+  .gn-theme{margin-left:0;min-height:34px}
   .gnav nav a{padding:9px 12px}}
 `;
 
@@ -159,6 +162,10 @@ export const PAGES = [
   { href: '/uefa/',   label: 'Coefficient UEFA', key: 'uefa' },
   { href: '/tennis/', label: 'Français en Grand Chelem', key: 'tennis' },
 ];
+
+/* Le coq, dessiné pour le site (pas un logo existant) : queue dressée aux
+   trois couleurs, crête rouge. Décoratif, donc caché aux lecteurs d'écran. */
+const COQ_SVG = `<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"> <path d="M27 38 C 18 34, 12 22, 16 6 C 19 18, 24 26, 31 31 Z" fill="#d63a3a"/> <path d="M27 40 C 16 38, 8 28, 7 13 C 12 24, 19 31, 30 34 Z" fill="#f4f6f9" stroke="#b9c3d0" stroke-width=".7"/> <path d="M27 42 C 15 43, 6 36, 3 24 C 9 32, 17 37, 29 37 Z" fill="#2a4fa8"/> <path d="M26 36 C 27 29, 33 27, 38 28 C 40 24, 41 18, 42 13 C 43 9, 49 8, 51 12 C 52 15, 50 18, 49 21 C 49 24, 52 28, 52 33 C 52 42, 46 49, 38 50 C 30 51, 25 45, 26 36 Z" fill="#2a4fa8"/> <path d="M41 16 C 46 18, 48 24, 48 29 C 45 27, 42 26, 39 27 C 40 23, 40 19, 41 16 Z" fill="#3d63c4"/> <path d="M29 38 C 33 33, 42 32, 47 37 C 43 38, 41 43, 35 45 C 31 44, 28 42, 29 38 Z" fill="#f4f6f9"/> <path d="M33 41 C 37 39, 41 38, 44 38" stroke="#2a4fa8" stroke-width=".8" fill="none" opacity=".5"/> <path d="M42 11 C 40 6, 44 3, 45 7 C 45 2, 50 2, 49 7 C 51 3, 56 5, 53 10 C 51 12, 46 11, 42 11 Z" fill="#d63a3a"/> <path d="M51 12.5 L 57.5 14.5 L 51 16 Z" fill="#f2b705"/> <path d="M50 17 C 52.5 18, 52.5 22.5, 50 23.5 C 48 22.5, 48 19, 50 17 Z" fill="#d63a3a"/> <circle cx="47.6" cy="12.6" r="1.3" fill="#fff"/><circle cx="47.9" cy="12.6" r=".65" fill="#111"/> <path d="M36 50 L 35.5 57 L 32 59.5 M 35.5 57 L 38.5 59.5 M43 48.5 L 44 56.5 L 41 59.5 M 44 56.5 L 47.5 58.5" stroke="#f2b705" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/> </svg>`;
 
 export function nav(current) {
   const links = PAGES.map(p =>
@@ -172,6 +179,7 @@ export function nav(current) {
   const icone = FAVICON_SVG.replace('<svg ', '<svg aria-hidden="true" focusable="false" ');
   return `<div class="gnav" data-nosnippet><a class="gn-mark" href="/uefa/">${icone}<b style="font-weight:inherit">GROTANG<span>.FR</span></b></a>`
     + `<nav>${links}</nav>`
+    + `<span class="gn-coq">${COQ_SVG}</span>`
     + `<button type="button" class="gn-theme" id="gn-theme" aria-pressed="false" title="Basculer clair / sombre">`
     + `<span class="gn-theme-i" aria-hidden="true"></span><span class="gn-theme-t">Sombre</span></button></div>`;
 }
