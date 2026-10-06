@@ -112,7 +112,10 @@ export const THEME_JS = `<script>(function(){
     if(btn){ btn.setAttribute('aria-pressed', t==='dark');
              btn.querySelector('.gn-theme-t').textContent = t==='dark' ? 'Clair' : 'Sombre'; }
     if(persist) store.set(t);
-    document.dispatchEvent(new CustomEvent('grotang:theme',{detail:{theme:t}}));
+    /* Les graphiques ne se redessinent que sur un VRAI changement de thème :
+       au chargement, le thème est déjà posé avant qu'ils soient dessinés, et
+       ce second passage coûtait près d'une demi-seconde sur téléphone. */
+    if(persist) document.dispatchEvent(new CustomEvent('grotang:theme',{detail:{theme:t}}));
   }
   apply(store.get()==='dark'?'dark':'light', false);
   if(btn) btn.addEventListener('click', function(){
