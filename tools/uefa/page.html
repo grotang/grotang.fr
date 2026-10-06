@@ -221,13 +221,11 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
   #lchips .brk, #zchips .brk{display:none}
   .voir-tout{appearance:none; font:inherit; font-size:13px; font-weight:600; color:var(--ink); background:var(--surface-2);
     border:1px solid var(--rule); border-radius:3px; min-height:40px; width:100%; margin:10px 0 2px; cursor:pointer}
-  /* En-tete : les reperes de fraicheur a gauche, sur deux lignes. */
+  /* En-tete : bloc de fraicheur aligne a droite, une info par ligne (comme au bureau). */
   .mast{gap:14px}
-  .mast-right{margin-left:0; justify-items:start; text-align:left}
-  .stamp{display:flex; flex-wrap:wrap; gap:3px 14px; text-align:left; font-size:12px}
-  .stamp .next{margin:0; padding:0; border:0; justify-content:flex-start}
-  .stamp .xchk{flex-basis:100%; margin-top:2px}
   .stamp .xchk a{padding:8px 0}
+  .stamp .xchk{font-size:11px; justify-content:flex-end; text-align:right}
+  .stamp .xchk .dot{align-self:flex-start; margin-top:5px}
 }
 #chartSk .lk{transition:opacity .15s; cursor:help}
 #chartSk.foc .lk{opacity:.12}
@@ -3335,7 +3333,7 @@ const legende = segs => segs.map(s =>
        d'axe et « portée de la France » se chevauchaient dès que la bande bleue
        remontait vers la gauche, ce qui arrive selon l'horizon choisi. */
     /* téléphone : cadre plus étroit (texte plus gros à l'écran), colonne de droite resserrée */
-    const M = MOB(), W = M ? 480 : 1000, rowH = M ? 34 : 36, mT = 56, mB = 34, mL = M ? 116 : 96, mR = M ? 104 : 176;
+    const M = MOB(), W = M ? 480 : 1000, rowH = M ? 34 : 36, mT = 56, mB = 34, mL = M ? 116 : 96, mR = M ? 118 : 176;
     const H = mT + rows.length * rowH + mB;
     /* L'axe n'a plus à contenir le repère d'acquis : il se cale sur la seule
        distribution, et le graphe cesse de traîner une moitié gauche vide. */
@@ -3344,6 +3342,11 @@ const legende = segs => segs.map(s =>
     const sc = niceScale(loV, hiV, 9)   /* 9 intervalles : à 6, le pas tombait sur 5 et l'axe courait jusqu'à 25 pour un maximum de 21 */;
     const X = v => mL + (W - mL - mR) * ((v - sc.lo) / (sc.hi - sc.lo));
     let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
+    /* Téléphone : la colonne de droite reçoit un en-tête et un fond, sinon on ne
+       devine pas qu'elle donne le total à 5 ans (ou les matchs restants). */
+    if (M) s += `<rect x="${W - 58}" y="${mT - 44}" width="58" height="${H - mB - mT + 48}" rx="4" fill="var(--surface-2)"/>`
+      + `<text x="${W - 6}" y="${mT - 29}" text-anchor="end" font-size="14" font-weight="700" fill="var(--ink-2)">${horizon === 'ligue' ? 'matchs' : 'total'}</text>`
+      + `<text x="${W - 6}" y="${mT - 12}" text-anchor="end" font-size="14" font-weight="700" fill="var(--ink-2)">${horizon === 'ligue' ? 'restants' : 'à 5 ans'}</text>`;
     sc.ticks.forEach(v => s += `<line x1="${X(v).toFixed(1)}" y1="${mT - 8}" x2="${X(v).toFixed(1)}" y2="${H - mB + 4}" stroke="var(--rule-soft)"/>`
       + `<text x="${X(v).toFixed(1)}" y="${H - mB + 20}" text-anchor="middle" font-size="${M ? 14 : 11}" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${nf(v, sc.dec)}</text>`);
     s += `<text x="${mL}" y="${mT - 32}" font-size="${M ? 13 : 11}" font-weight="600" fill="var(--ink-3)">coefficient ${horizon === 'ligue' ? 'de saison ' : 'saison '}${horizon === 'ligue'
