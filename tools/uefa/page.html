@@ -232,7 +232,12 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 .vnd > div{display:contents}
 .vnd > div > span{padding:4px 8px; border-bottom:1px solid var(--rule-soft); display:flex; align-items:center; min-width:0}
 .vnd-h > span{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700; color:var(--ink-3); border-bottom:1px solid var(--rule)!important; position:sticky; top:0; background:var(--surface); z-index:1}
-.vnd-nat > span{font-weight:700; color:var(--ink); padding-top:12px!important; background:var(--surface-2)}
+.vnd-nat > span{font-weight:700; color:var(--ink); padding-top:10px!important; padding-bottom:6px!important; background:var(--surface-2); cursor:pointer}
+.vnd-nat:hover > span{background:color-mix(in srgb, var(--ink) 7%, var(--surface-2))}
+.vnd-nat:focus-visible > span{outline:2px solid var(--fr); outline-offset:-2px}
+.vnd-nat em{font-style:normal; font-weight:500; font-size:11.5px; color:var(--ink-3); margin-left:8px}
+.vnd-nat .chev{width:0; height:0; border-style:solid; border-width:4px 0 4px 6px; border-color:transparent transparent transparent var(--ink-3); margin-right:8px; transition:transform .15s; flex:none; border-radius:0}
+.vnd-nat.ouv .chev{transform:rotate(90deg)}
 .vnd-nat .b{font-weight:600; color:var(--ink-2); font-family:"IBM Plex Mono",monospace; font-size:12px}
 .vnd-nat .b u, .vnd-club u{text-decoration:none; color:var(--ink-3); margin-left:1px}
 .vnd .p{justify-content:flex-end; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:600}
@@ -254,6 +259,7 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
   .vnd i{width:9px; height:9px}
   .vnd .cs{gap:2px}
   .vnd-nat .b{font-size:11px}
+  .vnd-nat em{display:none}
 }
 #chartSk .lk{transition:opacity .15s; cursor:help}
 #chartSk.foc .lk{opacity:.12}
@@ -625,7 +631,8 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
   <div class="panel">
     <div class="ptitle"><span class="no">6b</span><h3>Le bilan, club par club</h3>
       <span class="sub"><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
-        <button type="button" id="vnd-top" aria-pressed="true">Les 8 premières</button><button type="button" id="vnd-all" aria-pressed="false">Toutes</button></span></span></span></div>
+        <button type="button" id="vnd-top" aria-pressed="true">Les 8 premières</button><button type="button" id="vnd-all" aria-pressed="false">Toutes</button></span><span class="sel"><select id="vnd-nat" aria-label="Une nation"></select></span></span><span class="ctl"><span class="lb">Clubs</span><span class="seg" role="group" aria-label="Clubs">
+        <button type="button" id="vnd-ouv" aria-pressed="true">Dépliés</button><button type="button" id="vnd-fer" aria-pressed="false">Pliés</button></span></span></span></div>
     <figure>
       <div class="vscroll"><div class="vnd" id="vnd"></div></div>
       <figcaption id="vndNote"></figcaption>
@@ -4064,7 +4071,9 @@ const legende = segs => segs.map(s =>
 (function(){
   const host = document.getElementById('vnd'), note = document.getElementById('vndNote');
   if (!host) return;
-  let portee = 'top';
+  let portee = 'top';                 // 'top', 'all' ou le code d'une nation
+  let ouvert = true;                  // état par défaut des nations : clubs visibles ou non
+  const bascule = new Set();          // nations repliées / dépliées à la main, à l'inverse du défaut
   const court = n => { const f = nomClub(n); return CLUB_COURT[f] || f; };
   /* [nom, compétition, éliminé, points, qV, qN, qD, lV, lN, lD] ; la France a aussi
      son tableau détaillé, qui sert de secours tant que la source n'a pas été relue. */
@@ -4079,7 +4088,7 @@ const legende = segs => segs.map(s =>
   const cases = v => ['v', 'n', 'd'].map((cl, i) => `<i class="${cl}"></i>`.repeat(v[i])).join('');
   const bilan = v => v[0] + v[1] + v[2] ? `<span>${v[0]}<u>V</u> ${v[1]}<u>N</u> ${v[2]}<u>D</u></span>` : '';
   function dessine(){
-    const nats = (portee === 'top' ? TOP8 : ENGAGEES.map(n => n.c));
+    const nats = portee === 'top' ? TOP8 : portee === 'all' ? ENGAGEES.map(n => n.c) : [portee];
     const M = MOB();
     let manque = 0, h = `<div class="vnd-h"><span></span><span>${M ? 'Qualif.' : 'Qualifications'}</span><span>${M ? 'Ligue' : 'Phase de ligue'}</span><span>${M ? 'pts/m' : 'pts / match'}</span></div>`;
     for (const c of nats) {
@@ -4087,8 +4096,9 @@ const legende = segs => segs.map(s =>
       const L = C.reduce((a, x) => [a[0] + x.l[0], a[1] + x.l[1], a[2] + x.l[2]], [0, 0, 0]);
       const Q = C.reduce((a, x) => [a[0] + x.q[0], a[1] + x.q[1], a[2] + x.q[2]], [0, 0, 0]);
       const pn = ppm(L), fr = c === 'FRA';
-      h += `<div class="vnd-nat${fr ? ' me' : ''}"><span>${nomPays(c)}</span><span class="b">${bilan(Q)}</span><span class="b">${bilan(L)}</span><span class="p">${pn == null ? '—' : nfx(pn)}</span></div>`;
-      C.slice().sort((a, b) => (ppm(b.l) ?? -1) - (ppm(a.l) ?? -1) || (b.q[0] - a.q[0])).forEach(x => {
+      const vu = (portee !== 'top' && portee !== 'all') || (ouvert !== bascule.has(c));   // une nation choisie seule est toujours dépliée
+      h += `<div class="vnd-nat${fr ? ' me' : ''}${vu ? ' ouv' : ''}" data-c="${c}" role="button" tabindex="0" aria-expanded="${vu}" title="${vu ? 'Replier' : 'Déplier'} ${name(c)}"><span><i class="chev"></i>${nomPays(c)}<em>${C.length} club${C.length > 1 ? 's' : ''}</em></span><span class="b">${bilan(Q)}</span><span class="b">${bilan(L)}</span><span class="p">${pn == null ? '—' : nfx(pn)}</span></div>`;
+      if (vu) C.slice().sort((a, b) => (ppm(b.l) ?? -1) - (ppm(a.l) ?? -1) || (b.q[0] - a.q[0])).forEach(x => {
         const p = ppm(x.l);
         h += `<div class="vnd-club${x.out ? ' out' : ''}${fr ? ' me' : ''}" title="${nomClub(x.n)} · qualifications ${x.q.join('-')} · phase de ligue ${x.l.join('-')}${x.out ? ' · éliminé' : ''}">`
           + `<span class="nm"><b style="background:var(${['--c1', '--c3', '--c4'][x.k] || '--ink-3'})"></b>${court(x.n)}</span>`
@@ -4100,11 +4110,29 @@ const legende = segs => segs.map(s =>
     note.innerHTML = `Une case par match : <i class="v"></i> victoire <i class="n"></i> nul <i class="d"></i> défaite. Points par match en phase de ligue (victoire 2, nul 1) ; la pastille dit la compétition, le nom grisé un club éliminé.`
       + (manque ? ` Bilan des autres nations à la prochaine mise à jour automatique.` : '');
   }
-  const bT = document.getElementById('vnd-top'), bA = document.getElementById('vnd-all');
-  const sync = () => { bT.setAttribute('aria-pressed', portee === 'top'); bA.setAttribute('aria-pressed', portee === 'all'); dessine(); };
+  const bT = document.getElementById('vnd-top'), bA = document.getElementById('vnd-all'), sN = document.getElementById('vnd-nat');
+  const bO = document.getElementById('vnd-ouv'), bF = document.getElementById('vnd-fer');
+  /* Le menu des nations : comme celui du bloc 1, il prend l'aspect d'un bouton
+     enfoncé quand c'est lui qui commande la vue. */
+  sN.innerHTML = `<option value="" disabled hidden>Une nation…</option>`
+    + [...ENGAGEES].sort((a, b) => name(a.c).localeCompare(name(b.c), 'fr')).map(n => `<option value="${n.c}">${name(n.c)}</option>`).join('');
+  const sync = () => {
+    bT.setAttribute('aria-pressed', portee === 'top'); bA.setAttribute('aria-pressed', portee === 'all');
+    const une = (portee !== 'top' && portee !== 'all'); sN.dataset.on = une; if (!une) sN.selectedIndex = 0;
+    bO.setAttribute('aria-pressed', ouvert); bF.setAttribute('aria-pressed', !ouvert);
+    dessine(); };
   bT.onclick = () => { portee = 'top'; sync(); };
   bA.onclick = () => { portee = 'all'; sync(); };
-  dessine();
+  sN.onchange = () => { if (sN.value) { portee = sN.value; sync(); } };
+  bO.onclick = () => { ouvert = true; bascule.clear(); sync(); };
+  bF.onclick = () => { ouvert = false; bascule.clear(); sync(); };
+  /* Un clic sur la ligne d'une nation la plie ou la déplie (le micro sous le macro). */
+  const plier = el => { const c = el.dataset.c; if ((portee !== 'top' && portee !== 'all')) return;
+    bascule.has(c) ? bascule.delete(c) : bascule.add(c); dessine(); };
+  host.addEventListener('click', ev => { const r = ev.target.closest('.vnd-nat'); if (r) plier(r); });
+  host.addEventListener('keydown', ev => { const r = ev.target.closest('.vnd-nat');
+    if (r && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); plier(r); } });
+  sync();
 })();
 
 /* ---------- clubs français ---------- */
