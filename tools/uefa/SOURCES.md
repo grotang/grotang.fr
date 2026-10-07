@@ -213,3 +213,13 @@ clubs par phase de groupes jusqu'en 2023/24, 36 par phase de ligue depuis,
 puis 16, 8, 4, 2 et 1 club par compétition aux tours suivants, une finale lue
 par compétition, et aucun club qui joue sans figurer dans l'effectif. Le tour
 préliminaire de C1 est rangé avec le 1er tour.
+
+## Bilan V/N/D club par club (bloc 6b)
+
+Saisons closes 2021/22 → 2025/26 : `archive/vnd-archive.py` lit les pages « AV Spiele »
+enregistrées à la main (tous les matchs, tour par tour) et écrit `archive/vnd-saisons.json`,
+recopié une fois dans le bloc `VND` de la page. Score après prolongation, tirs au but ignorés.
+Contrôle : victoires = défaites sur chaque saison ; points de qualifications recoupés avec
+`decomp-AAAA.json` (un seul écart, IRL 2025/26, dû au diviseur, pas au bilan).
+Saison en cours : colonnes V/N/D de PktNat.php (qualifications, puis tour principal) relues
+chaque nuit ; le tour principal ne sépare pas la ligue de la phase finale.
