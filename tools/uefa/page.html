@@ -227,19 +227,21 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
   .stamp .xchk{font-size:11px; justify-content:flex-end; text-align:right}
   .stamp .xchk .dot{align-self:flex-start; margin-top:5px}
 }
-/* 6b : la balance V/N/D — défaites à gauche, victoires à droite, nuls au centre ;
-   chaque côté se découpe par phase, de la teinte la plus claire (qualifications)
-   à la plus foncée (phase finale). */
+/* 6b / 6c : bilan V/N/D. Teintes par phase, de la plus pâle à la plus intense :
+   qualifications, ligue (ou groupes), phase finale. */
 :root{ --vq:#7FC4A0; --vl:#2E9A62; --vf:#0B5C32; --dq:#E79B9B; --dl:#C64A4A; --df:#8A1F1F; --nq:#D9DEE6; --nl:#B6C0CD; --nf:#8E9AAB; --nt:#1B2230 }
 :root[data-theme="dark"]{ --vq:#2B6B4A; --vl:#3FA36E; --vf:#7FD3A4; --dq:#6E3434; --dl:#C25454; --df:#F09A9A; --nq:#2F3742; --nl:#4A5463; --nf:#6B7686; --nt:#E6EAF0 }
-.vnd{display:grid; grid-template-columns:minmax(160px,220px) 1fr 56px 62px; font-size:13px; line-height:1.3}
+.vnd{display:grid; grid-template-columns:minmax(150px,200px) repeat(4, minmax(110px,1fr)) 50px 58px; font-size:13px; line-height:1.3; min-width:760px}
 .vnd > div{display:contents}
 .vnd > div > span{padding:5px 8px; border-bottom:1px solid var(--rule-soft); display:flex; align-items:center; min-width:0}
-.vnd-h > span{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700; color:var(--ink-3); border-bottom:1px solid var(--rule)!important; position:sticky; top:0; background:var(--surface); z-index:2}
+.vnd > div > span.cel.g{border-left:1px solid var(--rule)}
+.vnd-h > span{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700; color:var(--ink-3); border-bottom:1px solid var(--rule)!important; position:sticky; top:0; background:var(--surface); z-index:3}
 .vnd-h .c{justify-content:center}
 .vnd .p{justify-content:flex-end; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:600}
+.vnd .nm{position:sticky; left:0; z-index:2; background:var(--surface)}
+.vnd-h > span:first-child{left:0; z-index:4}
 .vnd-nat > span{font-weight:700; color:var(--ink); padding-top:8px!important; padding-bottom:8px!important; cursor:pointer}
-.vnd-nat:hover > span{background:color-mix(in srgb, var(--ink) 5%, transparent)}
+.vnd-nat:hover > span{background:color-mix(in srgb, var(--ink) 5%, var(--surface))}
 .vnd-nat:focus-visible > span{outline:2px solid var(--fr); outline-offset:-2px}
 .vnd-nat em{font-style:normal; font-weight:500; font-size:11.5px; color:var(--ink-3); margin-left:7px; white-space:nowrap}
 .vnd-nat .chev{width:0; height:0; border-style:solid; border-width:4px 0 4px 6px; border-color:transparent transparent transparent var(--ink-3); margin-right:8px; transition:transform .15s; flex:none}
@@ -249,25 +251,27 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 .vnd-club .nm b{width:7px; height:7px; border-radius:2px; flex:none; margin-right:7px}
 .vnd-club.out .nm{color:var(--ink-3); text-decoration:line-through; text-decoration-color:var(--rule)}
 .vnd-club.me > span, .vnd-nat.me > span{background:var(--fr-soft)}
-.bal{position:relative; width:100%; height:18px}
-.vnd-club .bal{height:13px}
-.bal span{position:absolute; top:0; bottom:0; display:flex; align-items:center; justify-content:center; font:600 10px "IBM Plex Mono",monospace; color:#fff; overflow:hidden}
+.vnd .vide{color:var(--ink-3); margin:auto}
+.bal, .bar{position:relative; width:100%; height:18px}
+.bal span, .bar span{position:absolute; top:0; bottom:0; display:flex; align-items:center; justify-content:center; font:600 10px "IBM Plex Mono",monospace; color:#fff; overflow:hidden}
 .bal .ax{position:absolute; left:50%; top:-4px; bottom:-4px; width:1.5px; margin-left:-.75px; background:var(--ink); opacity:.55}
-.bal .vq{background:var(--vq)} .bal .vl{background:var(--vl)} .bal .vf{background:var(--vf)}
-.bal .dq{background:var(--dq)} .bal .dl{background:var(--dl)} .bal .df{background:var(--df)}
-.bal .nq{background:var(--nq); color:var(--nt)} .bal .nl{background:var(--nl); color:var(--nt)} .bal .nf{background:var(--nf)}
-:root[data-theme="dark"] .bal .vf, :root[data-theme="dark"] .bal .df{color:#1B2230}
+.gfr{display:flex; flex-wrap:wrap; gap:2px}
+.gfr i{width:9px; height:9px; border-radius:2px; display:block}
+.vnd .vq{background:var(--vq)} .vnd .vl{background:var(--vl)} .vnd .vf{background:var(--vf)}
+.vnd .dq{background:var(--dq)} .vnd .dl{background:var(--dl)} .vnd .df{background:var(--df)}
+.vnd .nq{background:var(--nq); color:var(--nt)} .vnd .nl{background:var(--nl); color:var(--nt)} .vnd .nf{background:var(--nf)}
+:root[data-theme="dark"] .vnd .vf, :root[data-theme="dark"] .vnd .df{color:#1B2230}
 .vnd-leg{display:flex; flex-wrap:wrap; gap:6px 16px; font-size:12px; color:var(--ink-2); margin:0 0 10px; align-items:center}
 .vnd-leg i{display:inline-block; width:24px; height:10px; border-radius:2px; margin-right:5px; vertical-align:-1px}
 .vnd-leg .k{color:var(--ink-3)}
-#vndBox{position:relative}
+.vnd-box{position:relative; overflow:auto}
 @media (max-width:680px){
-  .vnd{grid-template-columns:minmax(92px,110px) 1fr 34px 40px; font-size:12.5px}
-  .vnd > div > span{padding:5px 3px}
+  .vnd{grid-template-columns:104px repeat(4, 118px) 36px 44px; font-size:12.5px}
+  .vnd > div > span{padding:5px 4px}
   .vnd-club .nm{padding-left:10px!important}
   .vnd-h > span{font-size:9.5px; letter-spacing:.03em}
   .vnd-nat em{display:none}
-  .bal span{font-size:9px}
+  .bal span, .bar span{font-size:9px}
 }
 #chartSk .lk{transition:opacity .15s; cursor:help}
 #chartSk.foc .lk{opacity:.12}
@@ -637,14 +641,26 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">6b</span><h3>Le bilan, club par club</h3>
+    <div class="ptitle"><span class="no">6b</span><h3>Le bilan, en balance</h3>
       <span class="sub"><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="vnd-sea" aria-label="Saison"></select></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
         <button type="button" id="vnd-top" aria-pressed="true">Les 8 premières</button><button type="button" id="vnd-all" aria-pressed="false">Toutes</button></span><span class="sel"><select id="vnd-nat" aria-label="Une nation"></select></span></span><span class="ctl"><span class="lb">Clubs</span><span class="seg" role="group" aria-label="Clubs">
         <button type="button" id="vnd-ouv" aria-pressed="false">Dépliés</button><button type="button" id="vnd-fer" aria-pressed="true">Pliés</button></span></span></span></div>
     <div class="vnd-leg"><span><i style="background:linear-gradient(90deg,var(--df) 33%,var(--dl) 33% 66%,var(--dq) 66%)"></i>défaites</span><span><i style="background:linear-gradient(90deg,var(--nq) 33%,var(--nl) 33% 66%,var(--nf) 66%)"></i>nuls</span><span><i style="background:linear-gradient(90deg,var(--vq) 33%,var(--vl) 33% 66%,var(--vf) 66%)"></i>victoires</span><span class="k">de la teinte la plus pâle à la plus intense : qualifications · ligue · phase finale</span></div>
     <figure>
-      <div class="vscroll" id="vndBox"><div class="vnd" id="vnd"></div><div class="tip" id="tipVnd" hidden></div></div>
+      <div class="vscroll vnd-box" id="vndBox"><div class="vnd" id="vnd"></div><div class="tip" id="vndTip" hidden></div></div>
       <figcaption id="vndNote"></figcaption>
+    </figure>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle"><span class="no">6c</span><h3>Le bilan, en barres</h3>
+      <span class="sub"><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="vnc-sea" aria-label="Saison"></select></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
+        <button type="button" id="vnc-top" aria-pressed="true">Les 8 premières</button><button type="button" id="vnc-all" aria-pressed="false">Toutes</button></span><span class="sel"><select id="vnc-nat" aria-label="Une nation"></select></span></span><span class="ctl"><span class="lb">Clubs</span><span class="seg" role="group" aria-label="Clubs">
+        <button type="button" id="vnc-ouv" aria-pressed="false">Dépliés</button><button type="button" id="vnc-fer" aria-pressed="true">Pliés</button></span></span></span></div>
+    <div class="vnd-leg"><span><i style="background:linear-gradient(90deg,var(--df) 33%,var(--dl) 33% 66%,var(--dq) 66%)"></i>défaites</span><span><i style="background:linear-gradient(90deg,var(--nq) 33%,var(--nl) 33% 66%,var(--nf) 66%)"></i>nuls</span><span><i style="background:linear-gradient(90deg,var(--vq) 33%,var(--vl) 33% 66%,var(--vf) 66%)"></i>victoires</span><span class="k">de la teinte la plus pâle à la plus intense : qualifications · ligue · phase finale</span></div>
+    <figure>
+      <div class="vscroll vnd-box" id="vncBox"><div class="vnd" id="vnc"></div><div class="tip" id="vncTip" hidden></div></div>
+      <figcaption id="vncNote"></figcaption>
     </figure>
   </div>
 </section>
@@ -4075,142 +4091,135 @@ const legende = segs => segs.map(s =>
 })();
 
 </script>
-<script>/* ---------- 6b · le bilan club par club (V / N / D) ----------
-   Une balance par nation : défaites à gauche, victoires à droite, nuls à cheval
-   sur l'axe. Chaque côté se découpe par phase — teinte claire, moyenne, foncée :
-   qualifications, groupes ou ligue, phase finale. Déplier une nation montre ses
-   clubs, à leur propre échelle (sinon leurs barres seraient des traits).
-   Saisons closes : bloc VND, relevé une fois sur la liste des matchs de
-   l'archive. Saison en cours : la page club par club de la source, relue chaque
-   nuit — elle ne distingue pas la phase de ligue de la phase finale, tout y est
-   rangé en ligue (juste jusqu'aux barrages KO de février). */
-(function(){
-  const host = document.getElementById('vnd'), box = document.getElementById('vndBox'), note = document.getElementById('vndNote');
+<script>/* ---------- 6b / 6c · le bilan V / N / D ----------
+   Deux lectures en essai, mêmes données, mêmes commandes :
+   6b « balance » — par phase (qualifications, ligue, phase finale) puis au
+      global : défaites à gauche, victoires à droite, nuls à cheval sur l'axe,
+      en PROPORTION des matchs joués (une nation qui joue peu pèse autant).
+   6c « barres » — mêmes quatre colonnes, la longueur dit le NOMBRE de matchs.
+   Dépliée, une nation montre ses clubs en gaufres : une case par match.
+   Saisons closes : bloc VND (liste des matchs de l'archive). Saison en cours :
+   PktNat relu chaque nuit — il ne sépare pas la ligue de la phase finale, tout
+   y est rangé en ligue (juste jusqu'aux barrages KO de février). */
+function bilanVND(cfg){
+  const $ = id => document.getElementById(cfg.p + id);
+  const host = $(''), box = $('Box'), note = $('Note'), tip = $('Tip');
   if (!host) return;
-  const ANS = Object.keys(VND).map(Number).sort();                 // 2021 … 2025
-  const COUR = ANS[ANS.length - 1] + 1;                            // 2026 = saison en cours
-  let saison = String(COUR);                                       // ou une saison close, ou '5' (les cinq de la fenêtre)
-  let portee = 'top';                                              // 'top', 'all' ou un code nation
-  let ouvert = false;                                              // défaut : nations pliées…
-  const bascule = new Set(['FRA']);                                // …sauf la France
+  const ANS = Object.keys(VND).map(Number).sort(), COUR = ANS[ANS.length - 1] + 1;
+  let saison = String(COUR), portee = 'top', ouvert = false;
+  const bascule = new Set(['FRA']);
   const seule = () => portee !== 'top' && portee !== 'all';
   const court = n => { const f = nomClub(n); return CLUB_COURT[f] || f; };
-  const Z = () => [0, 0, 0];
-  const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
-  /* Clubs d'une saison : { c: [{ n, k, out, p: [q, l, f] }] } */
+  const Z = () => [0, 0, 0], add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+  const tot = p => add(add(p[0], p[1]), p[2]), nb = t => t[0] + t[1] + t[2];
+  const pct = t => nb(t) ? Math.round(100 * (t[0] + t[1] / 2) / nb(t)) : null;
+  const pc = v => v == null ? '' : v + ' %';
   function clubsSaison(an){
     const out = {};
     if (an === COUR) {
-      for (const c in (D.eff || {})) {
-        const E = D.eff[c];
+      for (const c in (D.eff || {})) { const E = D.eff[c];
         if (E.length && E.every(r => r.length >= 10)) out[c] = E.map(r => ({ n: r[0], k: r[1], out: !!r[2], p: [[r[4], r[5], r[6]], [r[7], r[8], r[9]], Z()] }));
-        else if (c === 'FRA' && D.fra) out[c] = D.fra.teams.map(t => ({ n: t.name, k: t.k, out: false, p: [[t.qW || 0, t.qD || 0, t.qL || 0], [t.mW || 0, t.mD || 0, t.mL || 0], Z()] }));
-      }
+        else if (c === 'FRA' && D.fra) out[c] = D.fra.teams.map(t => ({ n: t.name, k: t.k, out: false, p: [[t.qW || 0, t.qD || 0, t.qL || 0], [t.mW || 0, t.mD || 0, t.mL || 0], Z()] })); }
       return out;
     }
     const S = VND[an] || {};
     for (const c in S) out[c] = S[c].map(r => ({ n: r[0], k: r[1], out: false, p: [r[2], r[3], r[4]] }));
     return out;
   }
-  /* « Les 5 » : la fenêtre du coefficient. Un club se reconnaît d'une saison à
-     l'autre par son nom affiché (la source n'écrit pas toujours son nom pareil). */
   function donnees(){
     if (saison !== '5') return clubsSaison(+saison);
     const out = {};
-    for (let an = COUR - 4; an <= COUR; an++) {
-      const S = clubsSaison(an);
-      for (const c in S) for (const x of S[c]) {
-        const L = (out[c] = out[c] || []), cle = court(x.n);
+    for (let an = COUR - 4; an <= COUR; an++) { const S = clubsSaison(an);
+      for (const c in S) for (const x of S[c]) { const L = (out[c] = out[c] || []), cle = court(x.n);
         let y = L.find(z => court(z.n) === cle);
         if (!y) { y = { n: x.n, k: x.k, out: false, p: [Z(), Z(), Z()] }; L.push(y); }
-        y.p = y.p.map((v, i) => add(v, x.p[i])); if (an === COUR) y.k = x.k;
-      }
-    }
+        y.p = y.p.map((v, i) => add(v, x.p[i])); if (an === COUR) y.k = x.k; } }
     return out;
   }
-  const tot = p => add(add(p[0], p[1]), p[2]);
-  const nb = t => t[0] + t[1] + t[2];
-  const pct = t => nb(t) ? Math.round(100 * (t[0] + t[1] / 2) / nb(t)) : null;
-  const ext = p => { const t = tot(p); return Math.max(t[0], t[2]) + t[1] / 2; };
-  let bw = 0;                                                      // largeur réelle d'une balance, en px
-  function balance(p, u){
-    // u : % de la largeur par match. Nuls centrés, puis victoires à droite, défaites à gauche.
-    const t = tot(p), N = t[1], cls = [['nq', 'nl', 'nf'], ['vq', 'vl', 'vf'], ['dq', 'dl', 'df']];
-    const seg = (x, w, c, v) => w > 0 ? `<span class="${c}" style="left:${x.toFixed(2)}%;width:${w.toFixed(2)}%">${bw && w * bw / 100 >= 15 ? v : ''}</span>` : '';
-    let s = '', x = 50 - N * u / 2;
-    for (let k = 0; k < 3; k++) { const w = p[k][1] * u; s += seg(x, w, cls[0][k], p[k][1]); x += w; }
-    x = 50 + N * u / 2;
-    for (let k = 0; k < 3; k++) { const w = p[k][0] * u; s += seg(x, w, cls[1][k], p[k][0]); x += w; }
-    x = 50 - N * u / 2;
-    for (let k = 0; k < 3; k++) { const w = p[k][2] * u; x -= w; s += seg(x, w, cls[2][k], p[k][2]); }
+  const SH = [['nq', 'nl', 'nf'], ['vq', 'vl', 'vf'], ['dq', 'dl', 'df']];   // [nul|vict|déf][phase]
+  let bw = 0;                                                              // largeur réelle d'une cellule, px
+  const seg = (x, w, c, v) => w > 0 ? `<span class="${c}" style="left:${x.toFixed(2)}%;width:${w.toFixed(2)}%">${bw && w * bw / 100 >= 15 ? v : ''}</span>` : '';
+  /* une cellule = une liste de tranches [phase, V, N, D] ; la colonne « global » en a trois */
+  function balance(parts){
+    const T = parts.reduce((a, q) => add(a, q.t), Z()), M = nb(T); if (!M) return '<span class="vide">—</span>';
+    const u = 50 / M; let s = '', x = 50 - T[1] * u / 2;   // 100 % de victoires = la demi-largeur de droite
+    for (const q of parts) { const w = q.t[1] * u; s += seg(x, w, SH[0][q.k], q.t[1]); x += w; }
+    x = 50 + T[1] * u / 2;
+    for (const q of parts) { const w = q.t[0] * u; s += seg(x, w, SH[1][q.k], q.t[0]); x += w; }
+    x = 50 - T[1] * u / 2;
+    for (const q of parts) { const w = q.t[2] * u; x -= w; s += seg(x, w, SH[2][q.k], q.t[2]); }
     return `<div class="bal">${s}<i class="ax"></i></div>`;
   }
-  let lignes = [];                                                 // pour l'infobulle
+  function barre(parts, max){
+    const T = parts.reduce((a, q) => add(a, q.t), Z()); if (!nb(T)) return '<span class="vide">—</span>';
+    const u = 100 / Math.max(1, max); let s = '', x = 0;
+    for (const r of [1, 0, 2]) for (const q of parts) { const v = q.t[r === 1 ? 0 : r === 0 ? 1 : 2], w = v * u;
+      s += seg(x, w, SH[r === 1 ? 1 : r === 0 ? 0 : 2][q.k], v); x += w; }
+    return `<div class="bar">${s}</div>`;
+  }
+  const gaufre = parts => { const T = parts.reduce((a, q) => add(a, q.t), Z()); if (!nb(T)) return '<span class="vide">—</span>';
+    let s = ''; for (const [r, i] of [[1, 0], [0, 1], [2, 2]]) for (const q of parts) s += `<i class="${SH[r][q.k]}"></i>`.repeat(q.t[i]);
+    return `<div class="gfr">${s}</div>`; };
+  const tranches = (p, col) => col < 3 ? [{ k: col, t: p[col] }] : [0, 1, 2].map(k => ({ k, t: p[k] }));
+  let lignes = [];
   function dessine(){
     const M = MOB(), Dn = donnees();
     const tous = ENGAGEES.map(n => n.c).filter(c => Dn[c]);
     const nats = portee === 'top' ? TOP8.filter(c => Dn[c]) : portee === 'all' ? tous.concat(Object.keys(Dn).filter(c => !tous.includes(c))) : (Dn[portee] ? [portee] : []);
     const agg = c => Dn[c].reduce((a, x) => a.map((v, i) => add(v, x.p[i])), [Z(), Z(), Z()]);
     const vu = c => seule() || (ouvert !== bascule.has(c));
-    const uN = 47 / Math.max(1, ...nats.map(c => ext(agg(c))));
-    const uC = 47 / Math.max(6, ...nats.filter(vu).flatMap(c => Dn[c].map(x => ext(x.p))));   // plancher : en début de saison, deux victoires ne remplissent pas la ligne
+    const anc = saison !== '5' && +saison < 2024;
+    const COLS = ['Qualifications', anc ? 'Groupes' : 'Ligue', 'Phase finale', 'Global'];
+    const maxc = [0, 1, 2, 3].map(col => Math.max(1, ...nats.map(c => nb(tranches(agg(c), col).reduce((a, q) => add(a, q.t), Z())))));
     lignes = [];
-    let h = `<div class="vnd-h"><span></span><span class="c">${M ? 'défaites ← → victoires' : 'Défaites ← → Victoires'}</span><span class="p">V−D</span><span class="p">% pts</span></div>`;
+    let h = `<div class="vnd-h"><span></span>${COLS.map(x => `<span class="c">${x}</span>`).join('')}<span class="p">V−D</span><span class="p">% pts</span></div>`;
     for (const c of nats) {
       const A = agg(c), T = tot(A), fr = c === 'FRA', o = vu(c), i = lignes.push({ nom: name(c), p: A, n: Dn[c].length }) - 1;
       h += `<div class="vnd-nat${fr ? ' me' : ''}${o ? ' ouv' : ''}" data-c="${c}" data-i="${i}" role="button" tabindex="0" aria-expanded="${o}">`
-        + `<span><i class="chev"></i>${nomPays(c)}<em>${nb(T)} m.</em></span><span>${balance(A, uN)}</span>`
-        + `<span class="p">${T[0] - T[2] > 0 ? '+' : ''}${T[0] - T[2]}</span><span class="p">${pct(T) == null ? '—' : pct(T) + '\u202f%'}</span></div>`;
+        + `<span class="nm"><i class="chev"></i>${nomPays(c)}<em>${nb(T)} m.</em></span>`
+        + [0, 1, 2, 3].map(col => `<span class="cel${col === 3 ? ' g' : ''}">${cfg.mode === 'bal' ? balance(tranches(A, col)) : barre(tranches(A, col), maxc[col])}</span>`).join('')
+        + `<span class="p">${T[0] - T[2] > 0 ? '+' : ''}${T[0] - T[2]}</span><span class="p">${pc(pct(T)) || '—'}</span></div>`;
       if (o) Dn[c].slice().sort((a, b) => { const ta = tot(a.p), tb = tot(b.p); return (tb[0] - tb[2]) - (ta[0] - ta[2]) || nb(tb) - nb(ta); }).forEach(x => {
         const t = tot(x.p), j = lignes.push({ nom: nomClub(x.n), p: x.p }) - 1;
         h += `<div class="vnd-club${x.out ? ' out' : ''}${fr ? ' me' : ''}" data-i="${j}">`
-          + `<span class="nm"><b style="background:var(${['--c1', '--c3', '--c4'][x.k] || '--ink-3'})"></b>${court(x.n)}</span><span>${balance(x.p, uC)}</span>`
-          + `<span class="p">${nb(t) ? (t[0] - t[2] > 0 ? '+' : '') + (t[0] - t[2]) : ''}</span><span class="p">${pct(t) == null ? '' : pct(t) + '\u202f%'}</span></div>`;
+          + `<span class="nm"><b style="background:var(${['--c1', '--c3', '--c4'][x.k] || '--ink-3'})"></b>${court(x.n)}</span>`
+          + [0, 1, 2, 3].map(col => `<span class="cel${col === 3 ? ' g' : ''}">${gaufre(tranches(x.p, col))}</span>`).join('')
+          + `<span class="p">${nb(t) ? (t[0] - t[2] > 0 ? '+' : '') + (t[0] - t[2]) : ''}</span><span class="p">${pc(pct(t))}</span></div>`;
       });
     }
     host.innerHTML = h;
-    /* Les chiffres ne s'écrivent que dans les segments assez larges : il faut la
-       largeur réelle d'une balance, mesurée au premier dessin. */
-    const b = host.querySelector('.bal');
-    if (b && Math.abs(b.clientWidth - bw) > 8) { bw = b.clientWidth; return dessine(); }
+    const b = host.querySelector('.vnd-nat .cel');
+    if (b && Math.abs(b.clientWidth - 16 - bw) > 8) { bw = b.clientWidth - 16; return dessine(); }
     const manque = saison === String(COUR) && !Object.values(D.eff || {}).every(E => !E.length || E.every(r => r.length >= 10));
-    note.innerHTML = (saison === String(COUR) ? 'Saison en cours : la phase finale sera distinguée de la ligue à partir des barrages KO. ' : '')
-      + (manque ? 'Bilan des autres nations à la prochaine mise à jour automatique. ' : '')
-      + `Survol : le détail par phase. Une nation se déplie d'un clic ; ses clubs ont leur propre échelle.`;
+    note.innerHTML = (cfg.mode === 'bal' ? 'Chaque balance est en proportion des matchs joués dans la colonne. ' : 'La longueur des barres dit le nombre de matchs, colonne par colonne. ')
+      + 'Dépliée, une nation montre ses clubs en gaufres : une case par match. '
+      + (saison === String(COUR) ? 'Saison en cours : la phase finale sera distinguée de la ligue à partir des barrages KO. ' : '')
+      + (manque ? 'Bilan des autres nations à la prochaine mise à jour automatique.' : '');
   }
-  /* infobulle : le détail par phase, comme ailleurs sur la page */
-  const tip = document.getElementById('tipVnd');
-  const vnd = t => `${t[0]}<span style="color:var(--ink-3)">V</span> ${t[1]}<span style="color:var(--ink-3)">N</span> ${t[2]}<span style="color:var(--ink-3)">D</span>`;
   box.addEventListener('mousemove', ev => {
     const r = ev.target.closest('[data-i]'); if (!r) { tip.hidden = true; return; }
     const L = lignes[+r.dataset.i]; if (!L) return;
-    const anc = saison !== '5' && +saison < 2024;
-    const libs = ['Qualifications', anc ? 'Phase de groupes' : 'Phase de ligue', 'Phase finale'];
+    const anc = saison !== '5' && +saison < 2024, libs = ['Qualifications', anc ? 'Phase de groupes' : 'Phase de ligue', 'Phase finale'];
+    const vnd = t => `${t[0]}<span style="color:var(--ink-3)">V</span> ${t[1]}<span style="color:var(--ink-3)">N</span> ${t[2]}<span style="color:var(--ink-3)">D</span>`;
     const T = tot(L.p);
     tip.innerHTML = `<div class="th">${L.nom}${L.n ? ` · ${L.n} clubs` : ''}</div>`
-      + L.p.map((t, k) => nb(t) ? `<div class="tr"><span class="nm">${libs[k]}</span><b>${vnd(t)}</b></div>` : '').join('')
-      + `<div class="tfoot">${nb(T)} matchs · ${pct(T)} % des points pris (victoire 1, nul ½)</div>`;
+      + L.p.map((t, k) => nb(t) ? `<div class="tr"><span class="nm">${libs[k]}</span><b>${vnd(t)}</b><s style="color:var(--ink-3)">${pc(pct(t))}</s></div>` : '').join('')
+      + `<div class="tfoot">${nb(T)} matchs · ${pc(pct(T))} des points pris (victoire 1, nul ½)</div>`;
     tip.hidden = false;
-    const br = box.getBoundingClientRect(), tw = tip.offsetWidth || 220, th = tip.offsetHeight || 120;
-    tip.style.left = Math.max(4, Math.min(br.width - tw - 4, ev.clientX - br.left + 16)) + 'px';
+    const br = box.getBoundingClientRect(), tw = tip.offsetWidth || 240, th = tip.offsetHeight || 120;
+    tip.style.left = (box.scrollLeft + Math.max(4, Math.min(br.width - tw - 4, ev.clientX - br.left + 16))) + 'px';
     tip.style.top = (box.scrollTop + Math.max(4, Math.min(br.height - th - 4, ev.clientY - br.top - th / 2))) + 'px';
   });
   box.addEventListener('mouseleave', () => { tip.hidden = true; });
-
-  /* commandes */
-  const bT = document.getElementById('vnd-top'), bA = document.getElementById('vnd-all'), sN = document.getElementById('vnd-nat');
-  const bO = document.getElementById('vnd-ouv'), bF = document.getElementById('vnd-fer'), sS = document.getElementById('vnd-sea');
+  const bT = $('-top'), bA = $('-all'), sN = $('-nat'), bO = $('-ouv'), bF = $('-fer'), sS = $('-sea');
   sS.innerHTML = ANS.map(a => `<option value="${a}">${a}/${String(a + 1).slice(2)}</option>`).join('')
-    + `<option value="${COUR}">${COUR}/${String(COUR + 1).slice(2)} · en cours</option>`
-    + `<option value="5">Les 5 dernières</option>`;
+    + `<option value="${COUR}">${COUR}/${String(COUR + 1).slice(2)} · en cours</option><option value="5">Les 5 dernières</option>`;
   sS.value = saison;
   sN.innerHTML = `<option value="" disabled hidden>Une nation…</option>`
     + [...ENGAGEES].sort((a, b) => name(a.c).localeCompare(name(b.c), 'fr')).map(n => `<option value="${n.c}">${name(n.c)}</option>`).join('');
-  const sync = () => {
-    bT.setAttribute('aria-pressed', portee === 'top'); bA.setAttribute('aria-pressed', portee === 'all');
+  const sync = () => { bT.setAttribute('aria-pressed', portee === 'top'); bA.setAttribute('aria-pressed', portee === 'all');
     sN.dataset.on = seule(); if (!seule()) sN.selectedIndex = 0;
-    bO.setAttribute('aria-pressed', ouvert); bF.setAttribute('aria-pressed', !ouvert);
-    dessine(); };
+    bO.setAttribute('aria-pressed', ouvert); bF.setAttribute('aria-pressed', !ouvert); dessine(); };
   bT.onclick = () => { portee = 'top'; sync(); };
   bA.onclick = () => { portee = 'all'; sync(); };
   sN.onchange = () => { if (sN.value) { portee = sN.value; sync(); } };
@@ -4221,9 +4230,14 @@ const legende = segs => segs.map(s =>
   host.addEventListener('click', ev => { const r = ev.target.closest('.vnd-nat'); if (r) plier(r); });
   host.addEventListener('keydown', ev => { const r = ev.target.closest('.vnd-nat');
     if (r && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); plier(r); } });
-  window.addEventListener('resize', () => { clearTimeout(window.__vnd); window.__vnd = setTimeout(() => { bw = 0; dessine(); }, 150); });
+  window.addEventListener('resize', () => { clearTimeout(cfg.t); cfg.t = setTimeout(() => { bw = 0; dessine(); }, 150); });
   sync();
-})();
+  /* téléphone : le tableau défile de côté, la colonne des noms reste figée */
+  if (MOB()) { const i = document.createElement('div'); i.className = 'glisse-indice'; i.textContent = 'Faites glisser pour voir la suite →';
+    box.before(i); box.addEventListener('scroll', () => { if (box.scrollLeft > 24) i.classList.add('vu'); }, { passive: true }); }
+}
+bilanVND({ p: 'vnd', mode: 'bal' });
+bilanVND({ p: 'vnc', mode: 'bar' });
 
 /* ---------- clubs français ---------- */
 (function(){
