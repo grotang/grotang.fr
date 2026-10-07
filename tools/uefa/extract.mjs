@@ -259,7 +259,11 @@ export function extract(parse, html, { names = {}, clubAliases = {}, topN = 8 } 
      d'équipe]. Il nourrit les infobulles « clubs » des blocs 1 et 7a, qui doivent
      marcher pour toutes les nations et pas seulement pour les huit premières. */
   const eff = {};
-  for (const n of nations) eff[n.c] = n._block.teams.map(t => [clean(t.name), t.k, t.out ? 1 : 0, t.points]);
+  /* À la suite, le bilan du club : victoires, nuls, défaites en qualifications
+     puis en phase de ligue (bloc 6b). Ajoutés EN FIN de ligne : les lecteurs
+     des quatre premiers champs ne bougent pas. */
+  for (const n of nations) eff[n.c] = n._block.teams.map(t => [clean(t.name), t.k, t.out ? 1 : 0, t.points,
+    t.qW || 0, t.qD || 0, t.qL || 0, t.mW || 0, t.mD || 0, t.mL || 0]);
 
   const frBlock = (nations.find(n => n.c === 'FRA') || fail('France absente')) ._block;
   const fra = {
