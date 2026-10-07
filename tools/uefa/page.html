@@ -4160,7 +4160,9 @@ function bilanVND(cfg){
   const gaufre = parts => { const T = parts.reduce((a, q) => add(a, q.t), Z()); if (!nb(T)) return '<span class="vide">—</span>';
     let s = ''; for (const [r, i] of [[1, 0], [0, 1], [2, 2]]) for (const q of parts) s += `<i class="${SH[r][q.k]}"></i>`.repeat(q.t[i]);
     return `<div class="gfr">${s}</div>`; };
-  const tranches = (p, col) => col < 3 ? [{ k: col, t: p[col] }] : [0, 1, 2].map(k => ({ k, t: p[k] }));
+  /* une colonne de phase = une tranche ; le global = UNE tranche, toutes phases confondues,
+     dans la teinte franche (la moyenne) : c'est la vue d'ensemble, le détail est à gauche */
+  const tranches = (p, col) => col < 3 ? [{ k: col, t: p[col] }] : [{ k: 1, t: tot(p) }];
   let lignes = [];
   function dessine(){
     const M = MOB(), Dn = donnees();
