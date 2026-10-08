@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.woff2': 'font/woff2', '.svg': 'image/svg+xml',
-  '.png': 'image/png', '.xml': 'application/xml', '.txt': 'text/plain; charset=utf-8' };
+  '.png': 'image/png', '.xml': 'application/xml', '.txt': 'text/plain; charset=utf-8', '.json': 'application/json' };
 
 export async function servir(racine) {
   racine = path.resolve(racine);

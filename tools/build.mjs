@@ -378,7 +378,20 @@ const majUefa   = dateGit('tools/uefa/page.html', ...COMMUN)
 const majTennis = dateGit('tools/tennis.src.html', ...COMMUN)
   || dateSitemap('/tennis/', PREC_TENNIS, tennis.html, false);
 
+/* Matchs club par club (bloc 6b, survol des gaufres) : fichier à part, chargé
+   seulement quand on déplie une nation — inutile d'alourdir la page pour tous.
+   Saisons closes (archive) + été de la saison en cours (Wikipédia). */
+const MATCHS = (() => {
+  const m = JSON.parse(read('tools/uefa/archive/matchs-saisons.json'));
+  for (const f of fs.readdirSync(path.join(ROOT, 'tools/uefa/wiki'))) {
+    const a = /^matchs-(\d{4})-\d{2}\.json$/.exec(f);
+    if (a) m[a[1]] = JSON.parse(read('tools/uefa/wiki/' + f));
+  }
+  return JSON.stringify(m);
+})();
+
 const sizes = {
+  'uefa/matchs.json': write('uefa/matchs.json', MATCHS),
   'uefa/index.html': writeStable('uefa/index.html', uefa.html, PRECEDENT),
   'tennis/index.html': write('tennis/index.html', tennis.html),
   '404.html': write('404.html', NOTFOUND),

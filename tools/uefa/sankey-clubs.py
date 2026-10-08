@@ -9,7 +9,7 @@ arrivé (phase de ligue d'une compétition, ou éliminé). Alimente le bloc 7c
 Sources : le grand livre des qualifications (wiki/qualifs-AAAA.json) pour les
 clubs passés par l'été, l'effectif de la source (fixtures/expected.json, champ
 eff) pour les clubs entrés directement en phase de ligue et pour les noms.
-Sortie : wiki/sankey-AAAA.json, { code : [[11 états, nom source]] } — les
+Sortie : wiki/sankey-AAAA.json (et wiki/noms-AAAA.json, nom Wikipédia -> nom source), { code : [[11 états, nom source]] } — les
 mêmes onze colonnes que les saisons archivées (q1, q2, q3, barrages, phase de
 ligue, barrages KO, 8es, quarts, demies, finale, vainqueur). La phase finale
 n'étant pas jouée, ses six états valent -1 (à venir) ou 9 (éliminé en été).
@@ -26,6 +26,7 @@ QUAL = os.path.join(ICI, 'wiki', 'qualifs-2026-27.json')
 NAT = os.path.join(ICI, 'nations.json')
 EFF = os.path.join(ICI, 'fixtures', 'expected.json')
 OUT = os.path.join(ICI, 'wiki', 'sankey-2026-27.json')
+NOMS = os.path.join(ICI, 'wiki', 'noms-2026-27.json')   # Wikipédia -> source, par nation (bloc 6b)
 TOURS = ['Q1', 'Q2', 'Q3', 'PO']
 ALIAS = {'Bosnia and Herzegovina': 'Bosnia & Herzegovina', 'Georgia (country)': 'Georgia'}
 # Noms que le rapprochement par mots ne peut pas deviner (traduction, ville
@@ -65,19 +66,19 @@ def main():
         if a == 9:
             for j in range(der + 1, 4): etat[j] = 9
         parcours[c].append((club, etat + [a] + [9 if a == 9 else -1] * 6))
-    out, ecarts, doutes = {}, [], []
+    out, ecarts, doutes, carte = {}, [], [], defaultdict(dict)
     for c, rows in E.items():
         libres = {r[0]: r for r in rows}
         res = []
         todo = []
         for club, et in parcours.get(c, []):
-            if EGAL.get(club) in libres: res.append(et + [EGAL[club]]); del libres[EGAL[club]]
+            if EGAL.get(club) in libres: res.append(et + [EGAL[club]]); carte[c][club] = EGAL[club]; del libres[EGAL[club]]
             else: todo.append((club, et))
         for club, et in sorted(todo, key=lambda z: -max([proche(z[0], n) for n in libres] or [0])):
             if not libres: doutes.append((c, club)); continue
             n = max(libres, key=lambda x: proche(club, x))
             if proche(club, n) == 0 and len(libres) > 1: doutes.append((c, club, sorted(libres))); continue
-            res.append(et + [n]); del libres[n]
+            res.append(et + [n]); carte[c][club] = n; del libres[n]
         for n, r in libres.items():                    # entrés directement en phase de ligue
             res.append([-1, -1, -1, -1, r[1]] + [-1] * 6 + [n])
         out[c] = res
@@ -86,6 +87,7 @@ def main():
         for r in res:
             if (r[4] == 9) != bool(statut[r[11]]): ecarts.append((c, r[11], 'statut'))
     json.dump(out, open(OUT, 'w', encoding='utf-8'), ensure_ascii=False, sort_keys=True)
+    json.dump(carte, open(NOMS, 'w', encoding='utf-8'), ensure_ascii=False, sort_keys=True)
     tout = [r for v in out.values() for r in v]
     ligue = [sum(1 for r in tout if r[4] == k) for k in range(3)]
     if ligue != [36, 36, 36]: ecarts.append(('phases de ligue', ligue))

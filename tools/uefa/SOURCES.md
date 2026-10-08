@@ -223,3 +223,19 @@ Contrôle : victoires = défaites sur chaque saison ; points de qualifications r
 `decomp-AAAA.json` (un seul écart, IRL 2025/26, dû au diviseur, pas au bilan).
 Saison en cours : colonnes V/N/D de PktNat.php (qualifications, puis tour principal) relues
 chaque nuit ; le tour principal ne sépare pas la ligue de la phase finale.
+
+Gaufres (une case par match, dans l'ordre joué, le match au survol) : fichier à part
+`uefa/matchs.json`, écrit par `tools/build.mjs` et chargé au premier dépliage d'une nation.
+- saisons closes : `archive/matchs-archive.py` (mêmes pages « AV Spiele ») → `archive/matchs-saisons.json` ;
+  contrôle : le bilan de chaque club retrouve `vnd-saisons.json` (0 écart) ;
+- saison en cours, été seulement : `matchs-cour.py` lit les trois pages Wikipédia des
+  qualifications (aller puis retour) → `wiki/matchs-2026-27.json` ; noms ramenés à la source par
+  `wiki/noms-2026-27.json` (écrit par `sankey-clubs.py`) ; contrôle : le bilan de qualification
+  de chaque club retrouve PktNat (0 écart). Les matchs de ligue n'ont pas de liste publique :
+  leurs cases suivent, sans détail.
+
+## Rendement tour par tour (bloc 6a)
+
+Saisons closes : `archive/journees-archive.py` (pages « AV Spiele ») → `archive/journees-saisons.json`,
+recopié dans le bloc `JOUR` de la page. Saison en cours : points tirés du coefficient (gain de
+l'étape × diviseur), recalés sur le bilan V/N/D de PktNat pour l'été.
