@@ -4294,9 +4294,11 @@ function bilanVND(cfg){
       const score = m.o == null ? `<span style="color:var(--ink-3)">détail non publié pour la saison en cours</span>`
         : (m.h ? `<b>${moi}</b> ${m.gf}–${m.ga} ${lui}` : `${lui} ${m.ga}–${m.gf} <b>${moi}</b>`) + ` <span style="color:var(--ink-3)">· ${nomPays(m.o[1])}</span>`;
       mh = `<div class="th">${saison === '5' ? `${m.an}/${String(m.an + 1).slice(2)} · ` : ''}${m.k != null ? ['C1', 'C3', 'C4'][m.k] + ' · ' : ''}${etp}</div>`
-        + `<div class="tr" style="margin-bottom:8px"><span class="nm" style="color:${coul};font-weight:700">${res}</span><span>${score}</span></div>`;
+        + `<div class="tr"><span class="nm" style="color:${coul};font-weight:700">${res}</span><span>${score}</span></div>`;
     }
-    tip.innerHTML = mh + `<div class="th">${L.nom}${L.n ? ` · ${L.n} clubs` : ''}</div>`
+    /* sur une case : le match seul ; ailleurs sur la ligne : le bilan du club */
+    if (mh) tip.innerHTML = mh;
+    else tip.innerHTML = `<div class="th">${L.nom}${L.n ? ` · ${L.n} clubs` : ''}</div>`
       + L.p.map((t, k) => nb(t) ? `<div class="tr"><span class="nm">${libs[k]}</span><b>${vnd(t)}</b><s style="color:var(--ink-3)">${pc(pct(t))}</s></div>` : '').join('')
       + `<div class="tfoot">${nb(T)} matchs · ${pc(pct(T))} des points pris (victoire 1, nul ½)</div>`;
     tip.hidden = false;
