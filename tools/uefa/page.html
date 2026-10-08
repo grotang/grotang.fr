@@ -4218,7 +4218,16 @@ function bilanVND(cfg){
     for (const [an, n, p] of x.src) {
       const S = MT[an], L = (S && S.c[c] && S.c[c][n]) || [], nJ = S ? S.n : 8;
       const ph = s => s < 4 ? 0 : s < 4 + nJ ? 1 : 2, vu = [Z(), Z(), Z()];
-      L.forEach((m, i) => { const r = RES(m[3], m[4]); vu[ph(m[0])][r]++;
+      /* Garde-fou (saison en cours surtout : la ligue vient de Wikipédia) : dans
+         chaque phase, on ne garde du détail que ce que le bilan officiel couvre.
+         Liste en avance sur la source → on s'arrête au nombre de matchs connus ;
+         liste en désaccord → pas de détail pour la phase, les cases restent nues. */
+      const garde = [0, 1, 2].map(q => {
+        const P = L.filter(m => ph(m[0]) === q).slice(0, nb(p[q])), t = Z();
+        for (const m of P) t[RES(m[3], m[4])]++;
+        return t.every((v, r) => v <= p[q][r]) ? new Set(P) : new Set();
+      });
+      L.forEach((m, i) => { if (!garde[ph(m[0])].has(m)) return; const r = RES(m[3], m[4]); vu[ph(m[0])][r]++;
         out.push({ an, s: m[0], i, ph: ph(m[0]), r, k: m[1], o: S.noms[m[2]], gf: m[3], ga: m[4], h: m[5], club: n, nJ }); });
       /* ce que la liste ne détaille pas (ligue de la saison en cours) : en fin de phase */
       for (let q = 0; q < 3; q++) for (const r of [0, 1, 2]) for (let z = vu[q][r]; z < p[q][r]; z++)
@@ -4272,7 +4281,7 @@ function bilanVND(cfg){
     const manque = saison === String(COUR) && !Object.values(D.eff || {}).every(E => !E.length || E.every(r => r.length >= 10));
     note.innerHTML = 'La longueur des barres dit le nombre de matchs, colonne par colonne. '
       + 'Dépliée, une nation montre ses clubs en gaufres : une case par match, dans l\'ordre joué, le match au survol. '
-      + (saison === String(COUR) ? 'Saison en cours : les matchs de ligue ne sont pas détaillés, la phase finale sera distinguée à partir des barrages KO. ' : '')
+      + (saison === String(COUR) ? 'Saison en cours : matchs de ligue relevés sur Wikipédia et recoupés avec le bilan officiel ; la phase finale sera distinguée à partir des barrages KO. ' : '')
       + (manque ? 'Bilan des autres nations à la prochaine mise à jour automatique.' : '');
   }
   box.addEventListener('mousemove', ev => {

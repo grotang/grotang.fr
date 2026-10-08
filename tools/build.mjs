@@ -387,6 +387,20 @@ const MATCHS = (() => {
     const a = /^matchs-(\d{4})-\d{2}\.json$/.exec(f);
     if (a) m[a[1]] = JSON.parse(read('tools/uefa/wiki/' + f));
   }
+  /* phase de ligue de la saison en cours (Wikipédia, relue par le robot à chaque
+     passage) : ajoutée à la suite de l'été, même forme que le reste */
+  for (const f of fs.readdirSync(path.join(ROOT, 'tools/uefa/wiki'))) {
+    if (!/^ligue-\d{4}-\d{2}\.json$/.test(f)) continue;
+    for (const [an, nats] of Object.entries(JSON.parse(read('tools/uefa/wiki/' + f)))) {
+      const S = m[an] = m[an] || { n: 8, noms: [], c: {} };
+      const idx = new Map(S.noms.map((x, i) => [x[0] + '|' + x[1], i]));
+      const nid = (n, c) => { const k = n + '|' + c; if (!idx.has(k)) { idx.set(k, S.noms.length); S.noms.push([n, c]); } return idx.get(k); };
+      for (const [c, clubs] of Object.entries(nats)) for (const [n, L] of Object.entries(clubs)) {
+        const dest = ((S.c[c] = S.c[c] || {})[n] = (S.c[c][n] || []).filter(x => x[0] < 4));
+        for (const [j, k, o, oc, gf, ga, h] of L) dest.push([4 + j, k, nid(o, oc), gf, ga, h]);
+      }
+    }
+  }
   return JSON.stringify(m);
 })();
 

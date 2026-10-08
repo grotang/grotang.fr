@@ -231,8 +231,13 @@ Gaufres (une case par match, dans l'ordre joué, le match au survol) : fichier �
 - saison en cours, été seulement : `matchs-cour.py` lit les trois pages Wikipédia des
   qualifications (aller puis retour) → `wiki/matchs-2026-27.json` ; noms ramenés à la source par
   `wiki/noms-2026-27.json` (écrit par `sankey-clubs.py`) ; contrôle : le bilan de qualification
-  de chaque club retrouve PktNat (0 écart). Les matchs de ligue n'ont pas de liste publique :
-  leurs cases suivent, sans détail.
+  de chaque club retrouve PktNat (0 écart) ;
+- saison en cours, phase de ligue : `ligue-wiki.mjs`, appelé par le robot (`refresh.mjs`) à
+  CHAQUE passage, lit les trois pages Wikipédia « AAAA–AA UEFA … League league phase » par
+  l'API REST de Wikimédia (User-Agent du site, trois requêtes par passage) → `wiki/ligue-AAAA-AA.json`,
+  réécrit seulement s'il change. Jamais bloquant : en cas d'échec, le fichier de la veille reste.
+  La page ne montre le détail d'un club que si ses matchs recoupent son bilan officiel PktNat ;
+  sinon (Wikipédia en retard ou en écart) les cases restent sans détail.
 
 ## Rendement tour par tour (bloc 6a)
 

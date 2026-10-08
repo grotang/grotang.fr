@@ -18,6 +18,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DOMParser } from 'linkedom';
 import { extract, warnings, PAGES, BASE, SourceError } from './extract.mjs';
+import { majLigue } from './ligue-wiki.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '../..');
@@ -158,7 +159,16 @@ try {
   log(`source arrêtée au ${data.meta.lastUpdated} · ${data.nations.length} nations · ${data.clubs.length} clubs`);
   log(`France : coefficient de saison ${data.nations.find(n => n.c === 'FRA').y[4]}, rang ${data.nations.find(n => n.c === 'FRA').r}`);
 
-  if (same && !FORCE) { log('inchangé depuis la dernière publication — rien à faire'); process.exit(0); }
+  /* Matchs de phase de ligue (Wikipédia), pour le survol des gaufres du bloc 6b.
+     Relus à CHAQUE passage, que la source ait bougé ou non : Wikipédia et la
+     source ne se mettent pas à jour à la même minute. Jamais bloquant. Le
+     fichier réécrit est déposé par le workflow (git add -A) puis publié. */
+  if (!FIXTURES && !DRY) {
+    try { if (await majLigue({ data, ici: HERE, log })) log('matchs de ligue mis à jour — la page sera republiée'); }
+    catch (e) { log(`  ⚠ matchs de ligue (Wikipédia) non relus : ${e.message} — on garde ceux de la veille`); }
+  }
+
+  if (same && !FORCE) { log('coefficient inchangé depuis la dernière publication — rien d\'autre à faire'); process.exit(0); }
   if (DRY) { log('essai à blanc : les contrôles passent, rien n\'est écrit'); process.exit(0); }
 
   fs.writeFileSync(PAGE, majSurvie(writeBlock(src, data), data));
