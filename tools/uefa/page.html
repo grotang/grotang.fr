@@ -227,7 +227,7 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
   .stamp .xchk{font-size:11px; justify-content:flex-end; text-align:right}
   .stamp .xchk .dot{align-self:flex-start; margin-top:5px}
 }
-/* 6b / 6c : bilan V/N/D. Teintes par phase, de la plus pâle à la plus intense :
+/* 6b : bilan V/N/D. Teintes par phase, de la plus pâle à la plus intense :
    qualifications, ligue (ou groupes), phase finale. */
 :root{ --vq:#7FC4A0; --vl:#2E9A62; --vf:#0B5C32; --dq:#E79B9B; --dl:#C64A4A; --df:#8A1F1F; --nq:#D9DEE6; --nl:#B6C0CD; --nf:#8E9AAB; --nt:#1B2230 }
 :root[data-theme="dark"]{ --vq:#2B6B4A; --vl:#3FA36E; --vf:#7FD3A4; --dq:#6E3434; --dl:#C25454; --df:#F09A9A; --nq:#2F3742; --nl:#4A5463; --nf:#6B7686; --nt:#E6EAF0 }
@@ -252,9 +252,8 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 .vnd-club.out .nm{color:var(--ink-3); text-decoration:line-through; text-decoration-color:var(--rule)}
 .vnd-club.me > span, .vnd-nat.me > span{background:var(--fr-soft)}
 .vnd .vide{color:var(--ink-3); margin:auto}
-.bal, .bar{position:relative; width:100%; height:18px}
-.bal span, .bar span{position:absolute; top:0; bottom:0; display:flex; align-items:center; justify-content:center; font:600 10px "IBM Plex Mono",monospace; color:#fff; overflow:hidden}
-.bal .ax{position:absolute; left:50%; top:-4px; bottom:-4px; width:1.5px; margin-left:-.75px; background:var(--ink); opacity:.55}
+.bar{position:relative; width:100%; height:18px}
+.bar span{position:absolute; top:0; bottom:0; display:flex; align-items:center; justify-content:center; font:600 10px "IBM Plex Mono",monospace; color:#fff; overflow:hidden}
 .gfr{display:flex; flex-wrap:wrap; gap:2px}
 .gfr i{width:9px; height:9px; border-radius:2px; display:block}
 .vnd .vq{background:var(--vq)} .vnd .vl{background:var(--vl)} .vnd .vf{background:var(--vf)}
@@ -271,7 +270,7 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
   .vnd-club .nm{padding-left:10px!important}
   .vnd-h > span{font-size:9.5px; letter-spacing:.03em}
   .vnd-nat em{display:none}
-  .bal span, .bar span{font-size:9px}
+  .bar span{font-size:9px}
 }
 #chartSk .lk{transition:opacity .15s; cursor:help}
 #chartSk.foc .lk{opacity:.12}
@@ -641,19 +640,7 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">6b</span><h3>Le bilan, en balance</h3>
-      <span class="sub"><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="vnd-sea" aria-label="Saison"></select></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
-        <button type="button" id="vnd-top" aria-pressed="true">Les 8 premières</button><button type="button" id="vnd-all" aria-pressed="false">Toutes</button></span><span class="sel"><select id="vnd-nat" aria-label="Une nation"></select></span></span><span class="ctl"><span class="lb">Clubs</span><span class="seg" role="group" aria-label="Clubs">
-        <button type="button" id="vnd-ouv" aria-pressed="false">Dépliés</button><button type="button" id="vnd-fer" aria-pressed="true">Pliés</button></span></span></span></div>
-    <div class="vnd-leg"><span><i style="background:linear-gradient(90deg,var(--df) 33%,var(--dl) 33% 66%,var(--dq) 66%)"></i>défaites</span><span><i style="background:linear-gradient(90deg,var(--nq) 33%,var(--nl) 33% 66%,var(--nf) 66%)"></i>nuls</span><span><i style="background:linear-gradient(90deg,var(--vq) 33%,var(--vl) 33% 66%,var(--vf) 66%)"></i>victoires</span><span class="k">de la teinte la plus pâle à la plus intense : qualifications · ligue · phase finale</span></div>
-    <figure>
-      <div class="vscroll vnd-box" id="vndBox"><div class="vnd" id="vnd"></div><div class="tip" id="vndTip" hidden></div></div>
-      <figcaption id="vndNote"></figcaption>
-    </figure>
-  </div>
-
-  <div class="panel">
-    <div class="ptitle"><span class="no">6c</span><h3>Le bilan, en barres</h3>
+    <div class="ptitle"><span class="no">6b</span><h3>Le bilan</h3>
       <span class="sub"><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="vnc-sea" aria-label="Saison"></select></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
         <button type="button" id="vnc-top" aria-pressed="true">Les 8 premières</button><button type="button" id="vnc-all" aria-pressed="false">Toutes</button></span><span class="sel"><select id="vnc-nat" aria-label="Une nation"></select></span></span><span class="ctl"><span class="lb">Clubs</span><span class="seg" role="group" aria-label="Clubs">
         <button type="button" id="vnc-ouv" aria-pressed="false">Dépliés</button><button type="button" id="vnc-fer" aria-pressed="true">Pliés</button></span></span></span></div>
@@ -4164,16 +4151,14 @@ const legende = segs => segs.map(s =>
 })();
 
 </script>
-<script>/* ---------- 6b / 6c · le bilan V / N / D ----------
-   Deux lectures en essai, mêmes données, mêmes commandes :
-   6b « balance » — par phase (qualifications, ligue, phase finale) puis au
-      global : défaites à gauche, victoires à droite, nuls à cheval sur l'axe,
-      en PROPORTION des matchs joués (une nation qui joue peu pèse autant).
-   6c « barres » — mêmes quatre colonnes, la longueur dit le NOMBRE de matchs.
+<script>/* ---------- 6b · le bilan V / N / D ----------
+   Quatre colonnes : qualifications, ligue (ou groupes), phase finale, global.
+   La longueur des barres dit le NOMBRE de matchs, colonne par colonne.
    Dépliée, une nation montre ses clubs en gaufres : une case par match.
    Saisons closes : bloc VND (liste des matchs de l'archive). Saison en cours :
    PktNat relu chaque nuit — il ne sépare pas la ligue de la phase finale, tout
-   y est rangé en ligue (juste jusqu'aux barrages KO de février). */
+   y est rangé en ligue (juste jusqu'aux barrages KO de février).
+   (La variante « balance », en proportions, a été essayée puis écartée.) */
 function bilanVND(cfg){
   const $ = id => document.getElementById(cfg.p + id);
   const host = $(''), box = $('Box'), note = $('Note'), tip = $('Tip');
@@ -4213,16 +4198,6 @@ function bilanVND(cfg){
   let bw = 0;                                                              // largeur réelle d'une cellule, px
   const seg = (x, w, c, v) => w > 0 ? `<span class="${c}" style="left:${x.toFixed(2)}%;width:${w.toFixed(2)}%">${bw && w * bw / 100 >= 15 ? v : ''}</span>` : '';
   /* une cellule = une liste de tranches [phase, V, N, D] ; la colonne « global » en a trois */
-  function balance(parts){
-    const T = parts.reduce((a, q) => add(a, q.t), Z()), M = nb(T); if (!M) return '<span class="vide">—</span>';
-    const u = 50 / M; let s = '', x = 50 - T[1] * u / 2;   // 100 % de victoires = la demi-largeur de droite
-    for (const q of parts) { const w = q.t[1] * u; s += seg(x, w, SH[0][q.k], q.t[1]); x += w; }
-    x = 50 + T[1] * u / 2;
-    for (const q of parts) { const w = q.t[0] * u; s += seg(x, w, SH[1][q.k], q.t[0]); x += w; }
-    x = 50 - T[1] * u / 2;
-    for (const q of parts) { const w = q.t[2] * u; x -= w; s += seg(x, w, SH[2][q.k], q.t[2]); }
-    return `<div class="bal">${s}<i class="ax"></i></div>`;
-  }
   function barre(parts, max){
     const T = parts.reduce((a, q) => add(a, q.t), Z()); if (!nb(T)) return '<span class="vide">—</span>';
     const u = 100 / Math.max(1, max); let s = '', x = 0;
@@ -4252,7 +4227,7 @@ function bilanVND(cfg){
       const A = agg(c), T = tot(A), fr = c === 'FRA', o = vu(c), i = lignes.push({ nom: name(c), p: A, n: Dn[c].length }) - 1;
       h += `<div class="vnd-nat${fr ? ' me' : ''}${o ? ' ouv' : ''}" data-c="${c}" data-i="${i}" role="button" tabindex="0" aria-expanded="${o}">`
         + `<span class="nm"><i class="chev"></i>${nomPays(c)}<em>${nb(T)} m.</em></span>`
-        + [0, 1, 2, 3].map(col => `<span class="cel${col === 3 ? ' g' : ''}">${cfg.mode === 'bal' ? balance(tranches(A, col)) : barre(tranches(A, col), maxc[col])}</span>`).join('')
+        + [0, 1, 2, 3].map(col => `<span class="cel${col === 3 ? ' g' : ''}">${barre(tranches(A, col), maxc[col])}</span>`).join('')
         + `<span class="p">${T[0] - T[2] > 0 ? '+' : ''}${T[0] - T[2]}</span><span class="p">${pc(pct(T)) || '—'}</span></div>`;
       if (o) Dn[c].slice().sort((a, b) => { const ta = tot(a.p), tb = tot(b.p); return (tb[0] - tb[2]) - (ta[0] - ta[2]) || nb(tb) - nb(ta); }).forEach(x => {
         const t = tot(x.p), j = lignes.push({ nom: nomClub(x.n), p: x.p }) - 1;
@@ -4266,7 +4241,7 @@ function bilanVND(cfg){
     const b = host.querySelector('.vnd-nat .cel');
     if (b && Math.abs(b.clientWidth - 16 - bw) > 8) { bw = b.clientWidth - 16; return dessine(); }
     const manque = saison === String(COUR) && !Object.values(D.eff || {}).every(E => !E.length || E.every(r => r.length >= 10));
-    note.innerHTML = (cfg.mode === 'bal' ? 'Chaque balance est en proportion des matchs joués dans la colonne. ' : 'La longueur des barres dit le nombre de matchs, colonne par colonne. ')
+    note.innerHTML = 'La longueur des barres dit le nombre de matchs, colonne par colonne. '
       + 'Dépliée, une nation montre ses clubs en gaufres : une case par match. '
       + (saison === String(COUR) ? 'Saison en cours : la phase finale sera distinguée de la ligue à partir des barrages KO. ' : '')
       + (manque ? 'Bilan des autres nations à la prochaine mise à jour automatique.' : '');
@@ -4311,8 +4286,7 @@ function bilanVND(cfg){
   if (MOB()) { const i = document.createElement('div'); i.className = 'glisse-indice'; i.textContent = 'Faites glisser pour voir la suite →';
     box.before(i); box.addEventListener('scroll', () => { if (box.scrollLeft > 24) i.classList.add('vu'); }, { passive: true }); }
 }
-bilanVND({ p: 'vnd', mode: 'bal' });
-bilanVND({ p: 'vnc', mode: 'bar' });
+bilanVND({ p: 'vnc' });
 
 /* ---------- clubs français ---------- */
 (function(){
