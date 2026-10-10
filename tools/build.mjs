@@ -64,8 +64,32 @@ function uefaHead(head) {
   if (/fonts\.googleapis/.test(h)) throw new Error('page.html : lien Google Fonts non retiré');
   return h;
 }
+/* Phase finale de la saison en cours, vérifiée (bloc KOV de la page) : les matchs
+   relus sur Wikipédia, club par club, ne sont retenus que s'ils recoupent le bilan
+   officiel de la source (V/N/D du tour principal, qui confond ligue et phase finale).
+   Wikipédia en avance : on s'arrête au nombre de matchs connus de la source ;
+   en désaccord : rien pour ce club, il garde sa phase finale rangée avec la ligue. */
+function phaseFinaleVerifiee(src) {
+  const D = JSON.parse(src.slice(src.indexOf('/*DATA_START*/') + 14, src.indexOf('/*DATA_END*/')).replace(/^const D\s*=\s*/, '').replace(/;\s*$/, ''));
+  const m = /^(\d{4})\/(\d{4})$/.exec(D.meta.season || ''); if (!m) return {};
+  const f = path.join(ROOT, `tools/uefa/wiki/ligue-${m[1]}-${m[2].slice(2)}.json`);
+  if (!fs.existsSync(f)) return {};
+  const L = JSON.parse(fs.readFileSync(f, 'utf8'))[m[1]] || {}, out = {};
+  const res = x => x[4] > x[5] ? 0 : x[4] === x[5] ? 1 : 2;
+  for (const [c, rows] of Object.entries(D.eff || {})) for (const r of rows) {
+    if (r.length < 10) continue;
+    const W = ((L[c] || {})[r[0]] || []).slice(0, r[7] + r[8] + r[9]), t = [0, 0, 0];
+    for (const x of W) t[res(x)]++;
+    if (t[0] > r[7] || t[1] > r[8] || t[2] > r[9]) continue;
+    const ko = [0, 1, 2, 3, 4].map(() => [0, 0, 0]);
+    for (const x of W) if (x[0] >= 8) ko[x[0] - 8][res(x)]++;
+    if (ko.some(v => v[0] + v[1] + v[2])) (out[c] = out[c] || {})[r[0]] = ko;
+  }
+  return out;
+}
 function buildUefa() {
-  const src = read('tools/uefa/page.html');
+  let src = read('tools/uefa/page.html');
+  src = src.replace(/\/\*KOV_START\*\/[\s\S]*?\/\*KOV_END\*\//, () => `/*KOV_START*/const KOV = ${JSON.stringify(phaseFinaleVerifiee(src))};/*KOV_END*/`);
   const cut = src.indexOf('</style>');
   if (cut < 0) throw new Error('page.html : bloc <style> introuvable');
   const head = src.slice(0, cut + 8);

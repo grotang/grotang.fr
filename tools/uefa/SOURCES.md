@@ -238,6 +238,12 @@ Gaufres (une case par match, dans l'ordre joué, le match au survol) : fichier �
   réécrit seulement s'il change. Jamais bloquant : en cas d'échec, le fichier de la veille reste.
   La page ne montre le détail d'un club que si ses matchs recoupent son bilan officiel PktNat ;
   sinon (Wikipédia en retard ou en écart) les cases restent sans détail.
+- saison en cours, phase finale : mêmes règles, pages « AAAA–AA UEFA … League knockout phase »,
+  lues dès qu'elles existent (avant le tirage de décembre, on passe sans bruit). `build.mjs` en
+  tire le bloc `KOV` de la page (V/N/D par club et par tour), en ne gardant que les clubs dont les
+  matchs recoupent le bilan officiel du tour principal — qui, à la source, confond ligue et phase
+  finale. KOV sépare enfin les deux dans le 6b et remplit les colonnes de phase finale du 6a.
+  Testé sur la phase finale 2025/26 : 270 matchs-club, ordre et scores identiques à l'archive.
 
 ## Rendement tour par tour (bloc 6a)
 
