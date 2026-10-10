@@ -124,7 +124,7 @@ function buildUefa() {
     dateModified: isoMaj, temporalCoverage: '2022/2027',
     creator: { '@type': 'Organization', name: 'grotang.fr', url: 'https://grotang.fr/' },
     keywords: ['coefficient UEFA', 'classement des associations', 'indice UEFA',
-               'Ligue des champions', 'places européennes', 'France'],
+               'Ligue des Champions', 'places européennes', 'France'],
   });
 
   return { meta, html: `<!doctype html>

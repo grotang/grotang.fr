@@ -61,7 +61,7 @@ export const TOKENS = `
   --n1:#2a78d6; --n2:#eb6834; --n3:#1baf7a; --n4:#eda100; --n5:#e87ba4; --n6:#008300; --n7:#4a3aa7; --n8:#e34948;
   --band:#F0F2F6;
   /* Les trois compétitions portent leurs couleurs UEFA : bleu nuit pour la Ligue
-     des champions, orange pour la Ligue Europa, vert pour la Conference League.
+     des Champions, orange pour la Ligue Europa, vert pour la Ligue Conférence.
      Les teintes de marque sont volontairement assombries en mode clair : la
      pastille du calendrier est remplie et le numéro de journée s'écrit en blanc
      dessus. L'orange de marque donnait 3,1:1, illisible ; ces valeurs tiennent

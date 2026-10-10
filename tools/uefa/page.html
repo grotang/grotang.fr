@@ -1055,7 +1055,7 @@ document.getElementById('foot').textContent =
 /* ================= LA SAISON ================= */
 const TOP8  = N.slice(0,8).map(n=>n.c);
 const TOP8S = [...TOP8].sort((x,y)=>BY[y].y[4]-BY[x].y[4]);
-const KNAME = ['C1 · Ligue des champions','C3 · Ligue Europa','C4 · Conference League'];
+const KNAME = ['C1 · Ligue des Champions','C3 · Ligue Europa','C4 · Ligue Conférence'];
 const KSHORT= ['C1','C3','C4'];
 const KVAR  = ['--c1','--c3','--c4'];
 const SLOT  = {}; ['FRA',...TOP8.filter(c=>c!=='FRA')].forEach((c,i)=>SLOT[c]='--n'+(i+1));
