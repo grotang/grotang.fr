@@ -235,9 +235,13 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 .vnd{display:grid; grid-template-columns:minmax(150px,200px) repeat(4, minmax(110px,1fr)) 50px 58px; font-size:13px; line-height:1.3; min-width:760px}
 .vnd > div{display:contents}
 .vnd > div > span{padding:5px 8px; border-bottom:1px solid var(--rule-soft); display:flex; align-items:center; min-width:0}
+.vnd > div > span.cel{padding-left:14px; padding-right:14px}   /* de l'air entre deux phases */
 .vnd > div > span.cel.g{border-left:1px solid var(--rule)}
 .vnd-h > span{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700; color:var(--ink-3); border-bottom:1px solid var(--rule)!important; position:sticky; top:0; background:var(--surface); z-index:3}
 .vnd-h .c{justify-content:center}
+.vnd-h .ph{display:block; width:100%; text-align:center; padding:3px 4px; border-radius:4px; font-weight:700; color:var(--ink-2);
+  background:color-mix(in srgb, var(--t, var(--ink-3)) 26%, transparent)}
+.vnd-h .ph:not([style]){background:color-mix(in srgb, var(--ink-3) 12%, transparent)}
 .vnd .p{justify-content:flex-end; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:600}
 .vnd .nm{position:sticky; left:0; z-index:2; background:var(--surface)}
 .vnd-h > span:first-child{left:0; z-index:4}
@@ -268,6 +272,7 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 @media (max-width:680px){
   .vnd{grid-template-columns:104px repeat(4, 118px) 36px 44px; font-size:12.5px}
   .vnd > div > span{padding:5px 4px}
+  .vnd > div > span.cel{padding-left:8px; padding-right:8px}
   .vnd-club .nm{padding-left:10px!important}
   .vnd-h > span{font-size:9.5px; letter-spacing:.03em}
   .vnd-nat em{display:none}
@@ -4260,7 +4265,10 @@ function bilanVND(cfg){
     const maxc = [0, 1, 2, 3].map(col => Math.max(1, ...nats.map(c => nb(tranches(agg(c), col).reduce((a, q) => add(a, q.t), Z())))));
     lignes = []; pastilles = [];
     if (nats.some(vu)) charge();
-    let h = `<div class="vnd-h"><span></span>${COLS.map(x => `<span class="c">${x}</span>`).join('')}<span class="p">V−D</span><span class="p">% pts</span></div>`;
+    /* en-têtes de phase dans les teintes du site (bandeaux des blocs 6a et 7) : qualifications,
+       ligue, phase finale ; le global reste neutre */
+    const TEINTE = ['--n4', '--fr', '--n7', null];
+    let h = `<div class="vnd-h"><span></span>${COLS.map((x, i) => `<span class="c"><b class="ph"${TEINTE[i] ? ` style="--t:var(${TEINTE[i]})"` : ''}>${x}</b></span>`).join('')}<span class="p">V−D</span><span class="p">% pts</span></div>`;
     for (const c of nats) {
       const A = agg(c), T = tot(A), fr = c === 'FRA', o = vu(c), i = lignes.push({ nom: name(c), p: A, n: Dn[c].length }) - 1;
       h += `<div class="vnd-nat${fr ? ' me' : ''}${o ? ' ouv' : ''}" data-c="${c}" data-i="${i}" role="button" tabindex="0" aria-expanded="${o}">`
@@ -4277,7 +4285,8 @@ function bilanVND(cfg){
     }
     host.innerHTML = h;
     const b = host.querySelector('.vnd-nat .cel');
-    if (b && Math.abs(b.clientWidth - 16 - bw) > 8) { bw = b.clientWidth - 16; return dessine(); }
+    if (b) { const cs = getComputedStyle(b), w = b.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      if (Math.abs(w - bw) > 8) { bw = w; return dessine(); } }
     const manque = saison === String(COUR) && !Object.values(D.eff || {}).every(E => !E.length || E.every(r => r.length >= 10));
     note.innerHTML = 'La longueur des barres dit le nombre de matchs, colonne par colonne. '
       + 'Dépliée, une nation montre ses clubs en gaufres : une case par match, dans l\'ordre joué, le match au survol. '
