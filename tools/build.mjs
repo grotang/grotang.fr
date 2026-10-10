@@ -64,32 +64,52 @@ function uefaHead(head) {
   if (/fonts\.googleapis/.test(h)) throw new Error('page.html : lien Google Fonts non retiré');
   return h;
 }
-/* Phase finale de la saison en cours, vérifiée (bloc KOV de la page) : les matchs
-   relus sur Wikipédia, club par club, ne sont retenus que s'ils recoupent le bilan
-   officiel de la source (V/N/D du tour principal, qui confond ligue et phase finale).
+/* Phase finale de la saison en cours, vérifiée : les matchs relus sur Wikipédia,
+   club par club, ne sont retenus que s'ils recoupent le bilan officiel de la source
+   (V/N/D du tour principal, qui confond ligue et phase finale).
    Wikipédia en avance : on s'arrête au nombre de matchs connus de la source ;
-   en désaccord : rien pour ce club, il garde sa phase finale rangée avec la ligue. */
-function phaseFinaleVerifiee(src) {
+   en désaccord : rien pour ce club.
+   Deux sorties :
+   - KOV : V/N/D par club et par tour (6a, 6b) ;
+   - les états du Sankey de la saison en cours (SANKEY, onze colonnes), prolongés
+     au-delà de la ligue : un club joue un tour → la colonne prend sa compétition ;
+     exempté des barrages (directement en 8es) → il les traverse ; sorti à la source
+     → éliminé après son dernier tour joué, ou dès la ligue s'il n'a joué aucun match
+     de phase finale. Un club sorti dont la liste n'est pas encore complète (Wikipédia
+     en retard) n'est pas tranché : il attend le passage suivant. Sert 7a à 7d. */
+function phaseFinale(src) {
   const D = JSON.parse(src.slice(src.indexOf('/*DATA_START*/') + 14, src.indexOf('/*DATA_END*/')).replace(/^const D\s*=\s*/, '').replace(/;\s*$/, ''));
-  const m = /^(\d{4})\/(\d{4})$/.exec(D.meta.season || ''); if (!m) return {};
-  const f = path.join(ROOT, `tools/uefa/wiki/ligue-${m[1]}-${m[2].slice(2)}.json`);
-  if (!fs.existsSync(f)) return {};
-  const L = JSON.parse(fs.readFileSync(f, 'utf8'))[m[1]] || {}, out = {};
+  const SK = JSON.parse(src.slice(src.indexOf('/*SANKEY_START*/') + 16, src.indexOf('/*SANKEY_END*/')).replace(/^const SANKEY\s*=\s*/, '').replace(/;\s*$/, ''));
+  const kov = {};
+  const m = /^(\d{4})\/(\d{4})$/.exec(D.meta.season || '');
+  const f = m && path.join(ROOT, `tools/uefa/wiki/ligue-${m[1]}-${m[2].slice(2)}.json`);
+  const L = f && fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8'))[m[1]] || {} : {};
   const res = x => x[4] > x[5] ? 0 : x[4] === x[5] ? 1 : 2;
   for (const [c, rows] of Object.entries(D.eff || {})) for (const r of rows) {
     if (r.length < 10) continue;
-    const W = ((L[c] || {})[r[0]] || []).slice(0, r[7] + r[8] + r[9]), t = [0, 0, 0];
+    const n = r[7] + r[8] + r[9];
+    const W = ((L[c] || {})[r[0]] || []).slice(0, n), t = [0, 0, 0];
     for (const x of W) t[res(x)]++;
     if (t[0] > r[7] || t[1] > r[8] || t[2] > r[9]) continue;
     const ko = [0, 1, 2, 3, 4].map(() => [0, 0, 0]);
     for (const x of W) if (x[0] >= 8) ko[x[0] - 8][res(x)]++;
-    if (ko.some(v => v[0] + v[1] + v[2])) (out[c] = out[c] || {})[r[0]] = ko;
+    if (ko.some(v => v[0] + v[1] + v[2])) (kov[c] = kov[c] || {})[r[0]] = ko;
+    /* Sankey : colonnes 5 (barrages KO) à 9 (finale), 10 (vainqueur) */
+    const row = (SK[c] || []).find(z => z[11] === r[0]);
+    if (!row || !(row[4] >= 0 && row[4] <= 2)) continue;           // pas en ligue (sorti l'été)
+    const k = row[4], joue = ko.map(v => v[0] + v[1] + v[2] > 0);
+    const der = joue.lastIndexOf(true), complet = W.length === n;
+    for (let t2 = 0; t2 < 5; t2++) if (joue[t2] || (t2 === 0 && der >= 1)) row[5 + t2] = k;
+    if (r[2] && complet) for (let j = 5 + der + 1; j <= 10; j++) row[j] = 9;   // sorti : après son dernier tour
+    if (!r[2] && der === 4 && complet) row[10] = k;                            // finale jouée, toujours en lice : vainqueur
   }
-  return out;
+  return { kov, sk: SK };
 }
 function buildUefa() {
   let src = read('tools/uefa/page.html');
-  src = src.replace(/\/\*KOV_START\*\/[\s\S]*?\/\*KOV_END\*\//, () => `/*KOV_START*/const KOV = ${JSON.stringify(phaseFinaleVerifiee(src))};/*KOV_END*/`);
+  { const pf = phaseFinale(src);
+    src = src.replace(/\/\*KOV_START\*\/[\s\S]*?\/\*KOV_END\*\//, () => `/*KOV_START*/const KOV = ${JSON.stringify(pf.kov)};/*KOV_END*/`)
+             .replace(/\/\*SANKEY_START\*\/[\s\S]*?\/\*SANKEY_END\*\//, () => `/*SANKEY_START*/const SANKEY = ${JSON.stringify(pf.sk)};/*SANKEY_END*/`); }
   const cut = src.indexOf('</style>');
   if (cut < 0) throw new Error('page.html : bloc <style> introuvable');
   const head = src.slice(0, cut + 8);

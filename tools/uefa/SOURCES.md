@@ -244,6 +244,11 @@ Gaufres (une case par match, dans l'ordre joué, le match au survol) : fichier �
   matchs recoupent le bilan officiel du tour principal — qui, à la source, confond ligue et phase
   finale. KOV sépare enfin les deux dans le 6b et remplit les colonnes de phase finale du 6a.
   Testé sur la phase finale 2025/26 : 270 matchs-club, ordre et scores identiques à l'archive.
+  Le même passage prolonge le Sankey de la saison en cours (bloc `SANKEY` de la page construite)
+  au-delà de la ligue : tour joué → compétition du club ; directement en 8es → il traverse les
+  barrages ; sorti à la source (statut PktNat) → éliminé après son dernier tour joué, ou dès la
+  ligue sans match de phase finale ; liste incomplète → pas tranché avant le passage suivant.
+  7a (tour de sortie), 7b, 7c et 7d suivent ainsi la phase finale sans autre changement.
 
 ## Rendement tour par tour (bloc 6a)
 

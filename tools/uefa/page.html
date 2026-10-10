@@ -293,9 +293,9 @@ svg{display:block; width:100%; height:auto}
 /* Quatre gris pour les quatre tours de sortie : plus le club est tombe tot,
    plus sa case est pale — elle s'est effacee il y a longtemps. Le contraste du
    texte est tenu sur les quatre. */
-:root{ --x1:#E7EBF0; --x2:#D5DBE4; --x3:#C2CAD6; --x4:#AFB9C8; }
+:root{ --x1:#E7EBF0; --x2:#D5DBE4; --x3:#C2CAD6; --x4:#AFB9C8; --x5:#9CA7B8; }
 :root{ --xi:#3B4554; }
-:root[data-theme="dark"]{ --x1:#262D38; --x2:#2F3742; --x3:#39424F; --x4:#444E5D; --xi:#AEB6C2; }
+:root[data-theme="dark"]{ --x1:#262D38; --x2:#2F3742; --x3:#39424F; --x4:#444E5D; --x5:#4F5A6A; --xi:#AEB6C2; }
 
 .ptitle{display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 9px; margin-bottom:14px}
 .ptitle .no{font-size:11px; font-weight:700; letter-spacing:.06em; color:var(--surface); background:var(--ink);
@@ -453,7 +453,7 @@ section > .famille + .panel{margin-top:22px}
    elle tenait dans les 24 px d'une case qui affichait une croix. */
 .vcell.out{color:var(--xi); box-shadow:none; opacity:1; font-size:9px; letter-spacing:-.02em}
 .vcell.x1{background:var(--x1)} .vcell.x2{background:var(--x2)}
-.vcell.x3{background:var(--x3)} .vcell.x4{background:var(--x4)}
+.vcell.x3{background:var(--x3)} .vcell.x4{background:var(--x4)} .vcell.x5{background:var(--x5)}
 .vrow .rd{text-align:right; font-size:12px; color:var(--ink-2); white-space:nowrap}
 .vrow .rd b{font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink)}
 .vrow .rd s{text-decoration:none; color:var(--ink-3)}
@@ -1496,7 +1496,10 @@ const effectif = c => {
     ? D.eff[c].map(([n, k, o, p]) => ({ n, k, o: !!o, p }))
     : (D.clubs || []).filter(x => x.cc === c).map(x => ({ n: x.n, k: x.k, o: false, p: x.p }));
   const S = SORTIES[c] || {};
-  return L.map(x => ({ ...x, pw: P[x.n] || 0, t: x.o && S[x.n] != null ? S[x.n] : null }))
+  /* sorties d'après l'été : tour lu dans le Sankey de la saison, prolongé par la
+     phase finale (voir build.mjs) — 4 ligue, 5 barrages KO, 6 huitièmes… 9 finale */
+  const T = {}; for (const r of ((typeof SANKEY !== 'undefined' && SANKEY[c]) || [])) { const i = r.slice(0, 11).indexOf(9); if (i >= 5) T[r[11]] = i - 1; }
+  return L.map(x => ({ ...x, pw: P[x.n] || 0, t: x.o ? (S[x.n] != null ? S[x.n] : T[x.n] != null ? T[x.n] : null) : null }))
     .sort((a, b) => b.pw - a.pw || b.p - a.p || a.n.localeCompare(b.n));
 };
 /* Le club derrière chaque case. Les pastilles et les cases sont rangées par
@@ -1511,7 +1514,7 @@ const ordreCases = (c, tours) => {
   if (tours) morts.sort((a, b) => (a.t ?? 9) - (b.t ?? 9));
   return [...[0, 1, 2].flatMap(k => L.filter(x => !x.o && x.k === k)), ...morts];
 };
-const TCOURT = ['Q1', 'Q2', 'Q3', 'Bar'];
+const TCOURT = ['Q1', 'Q2', 'Q3', 'Bar', 'Lig', 'PO', '8es', '1/4', '1/2', 'F'];
 function tipClubs(c, foc){
   const n = BY[c], L = effectif(c);
   const tete = `<div class="th">${name(c)} · ${engages(n)} club${engages(n) > 1 ? 's' : ''} engagé${engages(n) > 1 ? 's' : ''}</div>`;
@@ -2461,7 +2464,7 @@ const CLUB_COURT = {'Tottenham Hotspur':'Tottenham','Manchester United':'Man Uni
     }
     X.forEach((x, j) => { if (j >= ND) return;
       s += `<text x="${x + NW / 2}" y="${16 + dy}" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing=".05em" fill="var(--ink-2)">${COURT[j].toUpperCase()}</text>`;
-      const sous = !totCol[j] ? (isCur() && j >= 5 ? 'à venir' : '—') : j === 10 ? '' : `${vivants[j]} en lice`;
+      const sous = (!totCol[j] || (isCur() && j >= 5 && !vivants[j])) ? (isCur() && j >= 5 ? 'à venir' : '—') : j === 10 ? '' : `${vivants[j]} en lice`;
       if (sous) s += `<text x="${x + NW / 2}" y="${31 + dy}" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">${sous}</text>`;
     });
     for (let j = 1; j < NC; j++) {
@@ -3744,7 +3747,7 @@ const legende = segs => segs.map(s =>
   /* ---------- 7a · qui est encore en course ---------- */
   const vleg = document.getElementById('vleg');
   vleg.innerHTML = KNAME.map((n, i) => `<span><i style="background:var(${KVAR[i]})"></i>${n}</span>`).join('')
-    + `<span><i style="background:var(--x1)"></i><i style="background:var(--x2)"></i><i style="background:var(--x3)"></i><i style="background:var(--x4)"></i>sorti — la case dit à quel tour, et il pèse encore dans le diviseur</span>`;
+    + `<span><i style="background:var(--x1)"></i><i style="background:var(--x2)"></i><i style="background:var(--x3)"></i><i style="background:var(--x4)"></i><i style="background:var(--x5)"></i>sorti — la case dit à quel tour, et il pèse encore dans le diviseur</span>`;
 
   /* Le sigle écrit dans la case : blanc quand il passe le contraste, une encre
      foncée de la même teinte sinon. En thème sombre les jetons de compétition
@@ -3773,14 +3776,17 @@ const legende = segs => segs.map(s =>
       /* Les sortis, dans l'ordre du calendrier : le grand livre donne le tour
          de chacun. A defaut (une association que le releve ne couvre pas), la
          croix d'avant. */
-      const TL = ['Q1','Q2','Q3','Bar'], TLONG = ['1er tour de qualification','2e tour','3e tour','barrages'];
+      const TL = TCOURT;
       const q = QUALS[n.c]; const sortis = [];
       if (q) { let prec = q.e; for (let i = 0; i < 4; i++) { for (let j = 0; j < prec - q.s[i]; j++) sortis.push(i); prec = q.s[i]; } }
+      /* après l'été : le tour de sortie vient du Sankey prolongé (ligue, puis phase finale) */
+      for (const r of ((typeof SANKEY !== 'undefined' && SANKEY[n.c]) || []).map(r => r.slice(0, 11).indexOf(9)).filter(i => i >= 5).sort((x, y) => x - y))
+        if (sortis.length < elimines(n)) sortis.push(r - 1);
       while (sortis.length < elimines(n)) sortis.push(null);
       const cases = vivants.map((k, j) => `<i class="vcell" data-i="${j}" style="background:var(${KVAR[k]});color:${ENCRE[k]}">${KSHORT[k]}</i>`).join('')
         + sortis.slice(0, elimines(n)).map((t, j) => t == null
             ? `<i class="vcell out x2" data-i="${vivants.length + j}">×</i>`
-            : `<i class="vcell out x${t+1}" data-i="${vivants.length + j}">${TL[t]}</i>`).join('');
+            : `<i class="vcell out x${Math.min(t + 1, 5)}" data-i="${vivants.length + j}">${TL[t]}</i>`).join('');
       const pm = partMorte(n);
       return `<div class="vrow${n.c === 'FRA' ? ' me' : ''}" data-nat="${n.c}">
         <div class="nm">${name(n.c)}</div>
