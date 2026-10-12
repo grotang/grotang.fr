@@ -618,7 +618,7 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
   <div class="panel">
     <div class="ptitle"><span class="no">4</span><h3>Gain et cumul</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">lignes : cumul (axe de gauche) · barres : gain de l'étape (axe de droite)</span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelZ" aria-label="Saison"></select></span></span></span></div>
     <div class="chips" id="zchips"></div>
-    <figure><div class="chartbox" id="boxZ"><svg id="chartZ" role="img" aria-label="Cumul et gain par étape, deux échelles"></svg><div class="tip" id="tipZ" hidden></div></div>
+    <figure><div class="chartbox big" id="boxZ"><svg id="chartZ" role="img" aria-label="Cumul et gain par étape, deux échelles"></svg><div class="tip" id="tipZ" hidden></div></div>
       <figcaption id="capZ"></figcaption></figure>
   </div>
 
@@ -2052,6 +2052,44 @@ const gGain  = (c,gi)=>{ const G=GROUPS[gi]; if(G.bonus) return bonusCoef(c);
 const gAnom  = gi => GROUPS[gi].steps.some(i=>anomalous.includes(i));
 const gDate  = gi => GROUPS[gi].date;
 const gShortDate = gi => { const d=gDate(gi); if(!d) return null; const p=d[0].split('-'); return p[2]+'/'+p[1]; };
+/* Bandeau des trois phases, commun aux blocs 2 et 4 : mêmes teintes et même dessin
+   que le bloc 6a (et les blocs 7). En haut, une pastille par phase ; dans le cadre,
+   un voile très léger qui porte la phase jusqu'à l'axe. */
+function bandePhases(X, cw, mL, mR, W, mT, yB, M){
+  const anc = !isCur() && +selY < 2024;
+  const PH = [[0, G_J1 - 1, M ? 'Qualifs' : 'Qualifications', 'juil.–août', '--n4'],
+              [G_J1, G_KO - 1, anc ? 'Groupes' : (M ? 'Ligue' : 'Phase de ligue'), anc ? 'sept.–déc.' : 'sept.–janv.', '--fr'],
+              [G_KO, nG - 1, M ? 'Finale' : 'Phase finale', 'févr.–mai', '--n7']];
+  const hB = M ? 25 : 19, fs = M ? 13.5 : 10.5;
+  let s = '';
+  PH.forEach(([a, b, lab, mois, t]) => {
+    const x1 = Math.max(mL, X(a) - cw / 2), x2 = Math.min(W - mR, X(b) + cw / 2);
+    s += `<rect x="${(x1 + 1).toFixed(1)}" y="4" width="${(x2 - x1 - 2).toFixed(1)}" height="${hB}" rx="4" fill="var(${t})" opacity=".26"/>`
+      + `<text x="${((x1 + x2) / 2).toFixed(1)}" y="${(4 + hB / 2 + fs * .36).toFixed(1)}" text-anchor="middle" font-size="${fs}" font-weight="700" letter-spacing=".05em" fill="var(--ink-2)">${lab}${M ? '' : `<tspan font-weight="500" fill="var(--ink-3)"> · ${mois}</tspan>`}</text>`
+      + `<rect x="${(x1 + 1).toFixed(1)}" y="${mT}" width="${(x2 - x1 - 2).toFixed(1)}" height="${(yB - mT).toFixed(1)}" fill="var(${t})" opacity=".05"/>`;
+  });
+  return s;
+}
+/* « reste à jouer » : la saison en cours garde tout son axe, la suite est grisée */
+function resteAJouer(X, cw, mR, W, mT, yB, M){
+  if (!isCur()) return '';
+  const fg = [...Array(nG).keys()].find(gFuture); if (fg === undefined) return '';
+  return `<rect x="${(X(fg) - cw / 2).toFixed(1)}" y="${mT}" width="${(W - mR - X(fg) + cw / 2).toFixed(1)}" height="${(yB - mT).toFixed(1)}" fill="var(--surface-2)" opacity=".8"/>`
+    + `<text x="${((X(fg) + W - mR) / 2).toFixed(1)}" y="${mT + (M ? 20 : 16)}" text-anchor="middle" font-size="${M ? 15 : 11}" font-weight="600" fill="var(--ink-3)">reste à jouer</text>`;
+}
+/* point final : un peu plus gros que les marqueurs d'étape, pour dire « on en est là » */
+const pointFinal = (x, y, col, fr) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${fr ? 6.5 : 5.5}" fill="${col}" stroke="var(--surface)" stroke-width="2.5"/>`;
+/* étiquettes de fin de ligne, décollées ; « lim » : plafond (la bande des gains du bloc 4) */
+function etiquettesFin(items, X, LI, M, lim){
+  const GAP = M ? 19 : 14, L = items.map(o => ({ ...o, y: lim != null ? Math.min(o.y0, lim) : o.y0 })).sort((a, b) => a.y - b.y);
+  for (let i = 1; i < L.length; i++) if (L[i].y - L[i - 1].y < GAP) L[i].y = L[i - 1].y + GAP;
+  if (lim != null && L.length && L[L.length - 1].y > lim) { L[L.length - 1].y = lim; }
+  for (let i = L.length - 2; i >= 0; i--) if (L[i + 1].y - L[i].y < GAP) L[i].y = L[i + 1].y - GAP;
+  const lx = X(LI) + (M ? 12 : 13);
+  return L.map(l => { const col = `var(${SLOT[l.c]})`;
+    return (Math.abs(l.y - l.y0) > 1.5 ? `<path d="M ${(X(LI) + 6).toFixed(1)} ${l.y0.toFixed(1)} L ${(lx - 4).toFixed(1)} ${l.y.toFixed(1)}" stroke="${col}" stroke-width="1" fill="none" opacity=".5"/>` : '')
+      + `<text x="${lx.toFixed(1)}" y="${(l.y + (M ? 6 : 4)).toFixed(1)}" font-size="${M ? 16 : 11.5}" font-weight="${l.c === 'FRA' ? '700' : '600'}" font-family="IBM Plex Mono, monospace" fill="${col}" paint-order="stroke" stroke="var(--surface)" stroke-width="3.5">${l.c} ${l.t}</text>`; }).join('');
+}
 const lastRealG = Math.max(...[...Array(nG).keys()].filter(gi=>gHas(gi) && !gFuture(gi)));
 const gCum = (c,gi)=>{ const G=GROUPS[gi]; if(G.bonus) return bonusCoef(c);
   if(gi===lastRealG) return seasonNow(c);
@@ -2141,7 +2179,7 @@ function syncSeason(){
 
 const selL=new Set(TOP8);
 function drawL(){
-  const M=MOB(), W=M?520:1000, H=M?560:562, mL=M?44:58, mR=M?98:80, mT=22, mB=M?50:76, PAD=M?10:20;   // 16:9 au bureau
+  const M=MOB(), W=M?520:1000, H=M?560:562, mL=M?44:58, mR=M?98:80, mT=M?42:36, mB=M?50:76, PAD=M?10:20;   // 16:9 au bureau ; mêmes cotes au bloc 4
   const sel=[...TOP8].filter(c=>selL.has(c)&&hasSeason(c));
   const LI=lastIdx();
   computeLead();
@@ -2154,9 +2192,7 @@ function drawL(){
   const X=gi=>mL+PAD+(W-mL-mR-2*PAD)*gi/(nG-1), Y=v=>mT+(H-mT-mB)*(1-(v-sc.lo)/(sc.hi-sc.lo));
   const cw=(W-mL-mR-2*PAD)/(nG-1);
   let g=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
-  if(isCur()){ const fg=[...Array(nG).keys()].find(gFuture);
-    if(fg!==undefined) g+=`<rect x="${(X(fg)-cw/2).toFixed(1)}" y="${mT}" width="${(W-mR-X(fg)+cw/2).toFixed(1)}" height="${H-mT-mB}" fill="var(--surface-2)" opacity=".8"/>`
-      +`<text x="${((X(fg)+W-mR)/2).toFixed(1)}" y="${mT+16}" text-anchor="middle" font-size="${M?15:11}" font-weight="600" fill="var(--ink-3)">reste à jouer</text>`; }
+  g+=bandePhases(X,cw,mL,mR,W,mT,H-mB,M)+resteAJouer(X,cw,mR,W,mT,H-mB,M);
   sc.ticks.forEach(t=>{ g+=`<line x1="${mL}" y1="${Y(t).toFixed(1)}" x2="${W-mR}" y2="${Y(t).toFixed(1)}" stroke="var(--rule-soft)"/>`
     +`<text x="${mL-9}" y="${(Y(t)+4).toFixed(1)}" text-anchor="end" font-size="${M?15:11.5}" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${(gap&&t<0?'\u2212':'')+Math.abs(t).toLocaleString('fr-FR',{minimumFractionDigits:sc.dec,maximumFractionDigits:sc.dec})}</text>`; });
   if(gap) g+=`<line x1="${mL}" y1="${Y(0).toFixed(1)}" x2="${W-mR}" y2="${Y(0).toFixed(1)}" stroke="var(--ink-2)" stroke-width="1.5"/>`;
@@ -2166,23 +2202,15 @@ function drawL(){
     if(d && !M) g+=`<text x="${X(gi).toFixed(1)}" y="${H-mB+32}" text-anchor="middle" font-size="9" fill="var(--ink-3)">${d[1]}</text>`; }
   g+=`<line x1="${mL}" y1="${(H-mB).toFixed(1)}" x2="${W-mR}" y2="${(H-mB).toFixed(1)}" stroke="var(--ink-3)" stroke-width="1.5"/>`;
   g+=`<line x1="${mL}" y1="${mT}" x2="${mL}" y2="${(H-mB).toFixed(1)}" stroke="var(--ink-3)" stroke-width="1.5"/>`;
-  [[G_J1,'phase de ligue'],[G_KO,'phase finale']].forEach(([gi,lab])=>{ const x=X(gi)-cw/2;
-    g+=`<line x1="${x.toFixed(1)}" y1="${mT}" x2="${x.toFixed(1)}" y2="${H-mB}" stroke="var(--ink-3)" stroke-dasharray="3 3"/>`
-     + (M ? '' : `<text x="${(x+5).toFixed(1)}" y="${H-mB-6}" font-size="10" fill="var(--ink-3)">${lab}</text>`); });
   sel.forEach(c=>{ const col=`var(${SLOT[c]})`, fr=c==='FRA', v=series(c), raw=curve(c), pts=[];
     for(let gi=0;gi<=LI;gi++) if(v[gi]!=null) pts.push(`${X(gi).toFixed(1)},${Y(v[gi]).toFixed(1)}`);
     g+=`<polyline points="${pts.join(' ')}" fill="none" stroke="${col}" stroke-width="${fr?3.4:2}" stroke-linejoin="round" stroke-linecap="round"/>`;
     /* un point = une étape où la nation a marqué. En écart au leader la courbe
        peut descendre sur une étape gagnante : c'est le brut qui fait foi. */
     for(let gi=1;gi<=LI;gi++) if(v[gi]!=null&&raw[gi]!=null&&raw[gi-1]!=null&&raw[gi]>raw[gi-1]+1e-9)
-      g+=`<circle cx="${X(gi).toFixed(1)}" cy="${Y(v[gi]).toFixed(1)}" r="${fr?4:3.2}" fill="${col}" stroke="var(--surface)" stroke-width="2"/>`; });
-  const GAP=M?19:13, L=sel.map(c=>({c,y0:Y(series(c)[LI]),y:Y(series(c)[LI]),fr:c==='FRA'})).sort((x,y)=>x.y0-y.y0);
-  for(let i=1;i<L.length;i++) if(L[i].y-L[i-1].y<GAP) L[i].y=L[i-1].y+GAP;
-  for(let i=L.length-2;i>=0;i--) if(L[i+1].y-L[i].y<GAP) L[i].y=L[i+1].y-GAP;
-  const lx=X(LI)+11;
-  L.forEach(l=>{ const col=`var(${SLOT[l.c]})`;
-    if(Math.abs(l.y-l.y0)>1.5) g+=`<path d="M ${(X(LI)+3).toFixed(1)} ${l.y0.toFixed(1)} L ${(lx-6).toFixed(1)} ${l.y.toFixed(1)}" stroke="${col}" stroke-width="1" fill="none" opacity=".45"/>`;
-    g+=`<text x="${lx.toFixed(1)}" y="${(l.y+(M?6:4)).toFixed(1)}" font-size="${M?16:11.5}" font-weight="${l.fr?'700':'600'}" font-family="IBM Plex Mono, monospace" fill="${col}" paint-order="stroke" stroke="var(--surface)" stroke-width="3.5">${l.c} ${(v=>gap?(v<-0.05?'\u2212'+nf(Math.abs(v),1):'0,0'):nf(v,1))(series(l.c)[LI])}</text>`; });
+      g+=`<circle cx="${X(gi).toFixed(1)}" cy="${Y(v[gi]).toFixed(1)}" r="${fr?4:3.2}" fill="${col}" stroke="var(--surface)" stroke-width="2"/>`;
+    if(v[LI]!=null) g+=pointFinal(X(LI),Y(v[LI]),col,fr); });
+  g+=etiquettesFin(sel.map(c=>{ const v=series(c)[LI]; return {c, y0:Y(v), t: gap ? (v<-0.005?'\u2212'+nfx(Math.abs(v)):'0') : nfx(v)}; }), X, LI, M);
   g+=`<line id="guideL" x1="0" y1="${mT}" x2="0" y2="${H-mB}" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="2 3" opacity="0"/>`;
   g+=`</svg>`;
   document.getElementById('chartL').outerHTML = g.replace('<svg','<svg id="chartL" role="img" aria-label="Coefficient de saison cumulé, étape par étape"');
@@ -2273,89 +2301,86 @@ function chipsZ(){
     else { selZ.add(c); ordreZ.push(c); if (ordreZ.length > ZMAX) selZ.delete(ordreZ.shift()); }   // la plus ancienne cède sa place
     chipsZ(); drawZ(); };
 }
-let zCols = [];
+/* Même cadre que le bloc 2 (cotes, axe complet de la saison, bandeau des phases,
+   « reste à jouer », marqueurs, point final, étiquettes) : seuls s'ajoutent les
+   barres de gain et leur axe de droite. */
 function drawZ(){
-  const M = MOB(), W = M ? 520 : 1000, H = M ? 520 : 480, mL = M ? 34 : 58, mR = M ? 30 : 62, mT = 22, mB = M ? 46 : 70;
-  /* à droite : la place des étiquettes de fin de ligne. Téléphone : le sigle seul (la valeur est
-     dans la légende et au survol), pour rendre toute la largeur aux barres */
-  const PADL = M ? 8 : 30, PADR = M ? 40 : 92;
-  const gs = sGroups();
+  const M = MOB(), W = M ? 520 : 1000, H = M ? 560 : 562, mL = M ? 44 : 58, mR = M ? 98 : 80, mT = M ? 42 : 36, mB = M ? 50 : 76, PAD = M ? 10 : 20;
   const sel = TOP8.filter(c => selZ.has(c) && hasSeason(c));
   if (!sel.length) { document.getElementById('capZ').innerHTML = 'Aucune nation sélectionnée.'; return; }
-  const yB = H - mB, haut = yB - mT;
+  const LI = lastIdx(), yB = H - mB, haut = yB - mT, mono = 'IBM Plex Mono, monospace';
   /* gauche : cumul, sur toute la hauteur */
-  let hi = 0.5; sel.forEach(c => gs.forEach(gi => { const v = sCum(c, gi); if (v != null && v > hi) hi = v; }));
-  const sc = niceScale(0, hi * 1.06, 5), Y = v => mT + haut * (1 - (v - sc.lo) / (sc.hi - sc.lo));
-  /* droite : gain, tenu dans le bas du cadre */
-  const BANDE = 0.42;
-  let gmax = 0; sel.forEach(c => gs.forEach(gi => { if (!sIsBonusCol(gi)) gmax = Math.max(gmax, sGain(c, gi) || 0); }));
-  if (gmax <= 0) gmax = Math.max(0.1, ...sel.flatMap(c => gs.map(gi => sGain(c, gi) || 0)));
+  let hi = 0.5; sel.forEach(c => { for (let gi = 0; gi <= LI; gi++) { const v = sCum(c, gi); if (v != null && v > hi) hi = v; } });
+  const sc = niceScale(0, hi * 1.05, 7), Y = v => mT + haut * (1 - (v - sc.lo) / (sc.hi - sc.lo));
+  /* droite : gain, tenu dans le bas du cadre (42 % de la hauteur au plus) */
+  const BANDE = 0.42, yBande = yB - haut * BANDE;
+  let gmax = 0; sel.forEach(c => { for (let gi = 0; gi <= LI; gi++) if (!sIsBonusCol(gi)) gmax = Math.max(gmax, sGain(c, gi) || 0); });
+  if (gmax <= 0) gmax = Math.max(0.1, ...sel.map(c => sGain(c, 0) || 0));
   const scR = niceScale(0, gmax, 3), hR = scR.hi, YR = v => yB - haut * BANDE * Math.min(v, hR) / hR;
-  /* largeur des barres d'abord, puis la marge de gauche juste assez grande pour le
-     premier groupe : il ne doit jamais mordre sur l'axe */
-  const bw = Math.max(3, Math.min(18, (W - mL - mR - PADL - PADR) / Math.max(1, gs.length - 1) * (M ? 0.86 : 0.78) / sel.length));
-  const PL = Math.max(PADL, sel.length * bw / 2 + 4);
-  const X = k => mL + PL + (W - mL - mR - PL - PADR) * (gs.length < 2 ? .5 : k / (gs.length - 1));
-  const slot = (W - mL - mR - PL - PADR) / Math.max(1, gs.length - 1);
-  const fs = M ? 14 : 11, mono = 'IBM Plex Mono, monospace';
+  const X = gi => mL + PAD + (W - mL - mR - 2 * PAD) * gi / (nG - 1), cw = (W - mL - mR - 2 * PAD) / (nG - 1);
+  const bw = Math.max(2.5, Math.min(18, cw * (M ? 0.86 : 0.78) / sel.length));
   let g = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
+  g += bandePhases(X, cw, mL, mR, W, mT, yB, M) + resteAJouer(X, cw, mR, W, mT, yB, M);
   /* bande des gains : un léger fond pour dire « ici, l'autre échelle » */
-  g += `<rect x="${mL}" y="${(yB - haut * BANDE).toFixed(1)}" width="${W - mL - mR}" height="${(haut * BANDE).toFixed(1)}" fill="var(--band)" opacity=".55"/>`;
+  g += `<rect x="${mL}" y="${yBande.toFixed(1)}" width="${W - mL - mR}" height="${(haut * BANDE).toFixed(1)}" fill="var(--band)" opacity=".45"/>`;
   sc.ticks.forEach(t => { g += `<line x1="${mL}" y1="${Y(t).toFixed(1)}" x2="${W - mR}" y2="${Y(t).toFixed(1)}" stroke="var(--rule-soft)"/>`
-    + `<text x="${mL - (M ? 5 : 9)}" y="${(Y(t) + 4).toFixed(1)}" text-anchor="end" font-size="${M ? 13 : fs}" font-family="${mono}" fill="var(--ink-3)">${t.toLocaleString('fr-FR', { minimumFractionDigits: sc.dec, maximumFractionDigits: sc.dec })}</text>`; });
-  scR.ticks.filter(t => t > 0).forEach(t => { g += `<line x1="${W - mR - 5}" y1="${YR(t).toFixed(1)}" x2="${W - mR}" y2="${YR(t).toFixed(1)}" stroke="var(--ink-3)"/>`
-    + `<text x="${W - mR + (M ? 4 : 7)}" y="${(YR(t) + 4).toFixed(1)}" font-size="${M ? 12 : fs - 1}" font-family="${mono}" fill="var(--ink-3)">${t.toLocaleString('fr-FR', { minimumFractionDigits: scR.dec, maximumFractionDigits: scR.dec })}</text>`; });
-  g += `<text x="${M ? 2 : mL - 9}" y="${mT - 8}" text-anchor="${M ? 'start' : 'end'}" font-size="${M ? 12 : fs - 1}" font-weight="600" fill="var(--ink-3)">cumul</text>`
-    + `<text x="${W - mR + (M ? 2 : 7)}" y="${(yB - haut * BANDE - 10).toFixed(1)}" font-size="${M ? 12 : fs - 1}" font-weight="600" fill="var(--ink-3)">gain</text>`;
-  const pas = M ? Math.ceil(gs.length / 6) : 1;
-  gs.forEach((gi, k) => { const d = isCur() ? gDate(gi) : null;
-    if (k % pas && k !== gs.length - 1) return;
-    g += axLab(gi, X(k), yB + 18, 'var(--ink-2)', M ? 15 : 10.5);
-    if (d && !M) g += `<text x="${X(k).toFixed(1)}" y="${yB + 32}" text-anchor="middle" font-size="9" fill="var(--ink-3)">${d[1]}</text>`; });
+    + `<text x="${mL - 9}" y="${(Y(t) + 4).toFixed(1)}" text-anchor="end" font-size="${M ? 15 : 11.5}" font-family="${mono}" fill="var(--ink-3)">${t.toLocaleString('fr-FR', { minimumFractionDigits: sc.dec, maximumFractionDigits: sc.dec })}</text>`; });
+  scR.ticks.filter(t => t > 0).forEach(t => { g += `<line x1="${W - mR}" y1="${YR(t).toFixed(1)}" x2="${W - mR + 5}" y2="${YR(t).toFixed(1)}" stroke="var(--ink-3)"/>`
+    + `<text x="${W - mR + 8}" y="${(YR(t) + 4).toFixed(1)}" font-size="${M ? 14 : 11}" font-family="${mono}" fill="var(--ink-3)">${t.toLocaleString('fr-FR', { minimumFractionDigits: scR.dec, maximumFractionDigits: scR.dec })}</text>`; });
+  g += `<text x="${W - mR + 8}" y="${(yBande - 10).toFixed(1)}" font-size="${M ? 13 : 10.5}" font-weight="600" fill="var(--ink-3)">gain</text>`;
+  for (let gi = 0; gi < nG; gi++) { const d = isCur() ? gDate(gi) : null;
+    if (M && gi % 3 && gi !== nG - 1) continue;   // téléphone : un libellé sur trois, comme au bloc 2
+    g += axLab(gi, X(gi), yB + 18, isCur() && gAnom(gi) ? 'var(--c3)' : 'var(--ink-2)', M ? 15 : 10);
+    if (d && !M) g += `<text x="${X(gi).toFixed(1)}" y="${yB + 32}" text-anchor="middle" font-size="9" fill="var(--ink-3)">${d[1]}</text>`; }
   /* barres (échelle de droite) */
-  const etiq = !M && gs.length * sel.length <= 24;
+  const etiq = !M && (LI + 1) * sel.length <= 24;
+  let vals = '';   // valeurs des barres, posées après les lignes pour rester lisibles
+  const halo = 'paint-order="stroke" stroke="var(--surface)" stroke-width="3"';
   sel.forEach((c, si) => { const col = `var(${SLOT[c]})`;
-    gs.forEach((gi, k) => { const v = sGain(c, gi); if (!(v > 0.0005)) return;
-      const x = X(k) - (sel.length * bw) / 2 + si * bw, first = sIsBonusCol(gi), coupe = v > hR, y = YR(v);
-      g += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${(bw - 2).toFixed(1)}" height="${Math.max(1.5, yB - y).toFixed(1)}" fill="${col}" fill-opacity="${first ? 0.3 : 0.62}" ${first ? `stroke="${col}" stroke-dasharray="3 2"` : ''} rx="1.5"/>`;
-      if (coupe) g += `<path d="M${(x - 1).toFixed(1)} ${(y + 7).toFixed(1)} l${((bw) / 2).toFixed(1)} -4 l${((bw) / 2).toFixed(1)} 4" fill="none" stroke="var(--surface)" stroke-width="2.5"/>`
-        + `<text x="${(x + (bw - 2) / 2).toFixed(1)}" y="${(y - 5 - si * (fs + 1)).toFixed(1)}" text-anchor="middle" font-size="${fs - 2}" font-family="${mono}" fill="${col}">${nfx(v)}</text>`;
-      else if (etiq) g += `<text x="${(x + (bw - 2) / 2).toFixed(1)}" y="${(y - 4 - (si % 2) * 10).toFixed(1)}" text-anchor="middle" font-size="9.5" font-family="${mono}" fill="${col}">${nfx(v)}</text>`; }); });
-  /* lignes (échelle de gauche), par-dessus les barres */
-  const ends = sel.map(c => ({ c, y: Y(sCum(c, gs[gs.length - 1]) ?? 0) })).sort((a, b) => a.y - b.y);
-  for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < (M ? 18 : 15)) ends[i].y = ends[i - 1].y + (M ? 18 : 15);   // étiquettes décollées
-  sel.forEach(c => { const col = `var(${SLOT[c]})`, fr = c === 'FRA';
-    const pts = gs.map((gi, k) => `${X(k).toFixed(1)},${Y(sCum(c, gi) ?? 0).toFixed(1)}`).join(' ');
-    g += `<polyline points="${pts}" fill="none" stroke="var(--surface)" stroke-width="${fr ? 6.5 : 5.5}" stroke-linejoin="round" opacity=".9"/>`
-      + `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="${fr ? 3.2 : 2.4}" stroke-linejoin="round"/>`;
-    const yEnd = Y(sCum(c, gs[gs.length - 1]) ?? 0), lab = ends.find(e => e.c === c).y;
-    /* un marqueur par étape, comme au bloc 2 */
-    gs.forEach((gi, k) => { if (k < gs.length - 1) g += `<circle cx="${X(k).toFixed(1)}" cy="${Y(sCum(c, gi) ?? 0).toFixed(1)}" r="${fr ? 4 : 3.2}" fill="${col}" stroke="var(--surface)" stroke-width="2"/>`; });
-    g += `<circle cx="${X(gs.length - 1).toFixed(1)}" cy="${yEnd.toFixed(1)}" r="4.5" fill="${col}" stroke="var(--surface)" stroke-width="2"/>`
-      + `<text x="${(X(gs.length - 1) + (M ? 7 : 10)).toFixed(1)}" y="${(lab + (M ? 6 : 4)).toFixed(1)}" font-size="${M ? 15 : 12}" font-weight="${fr ? 700 : 600}" font-family="${mono}" fill="${col}">${M ? c : c + ' ' + nfx(sCum(c, gs[gs.length - 1]) ?? 0)}</text>`; });
+    for (let gi = 0; gi <= LI; gi++) { const v = sGain(c, gi); if (!(v > 0.0005)) continue;
+      const x = X(gi) - (sel.length * bw) / 2 + si * bw, first = sIsBonusCol(gi), coupe = v > hR, y = YR(v);
+      g += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(1.5, bw - 2).toFixed(1)}" height="${Math.max(1.5, yB - y).toFixed(1)}" fill="${col}" fill-opacity="${first ? 0.3 : 0.62}" ${first ? `stroke="${col}" stroke-dasharray="3 2"` : ''} rx="1.5"/>`;
+      if (coupe) g += `<path d="M${(x - 1).toFixed(1)} ${(y + 7).toFixed(1)} l${(bw / 2).toFixed(1)} -4 l${(bw / 2).toFixed(1)} 4" fill="none" stroke="var(--surface)" stroke-width="2.5"/>`
+        + ((vals += M ? '' : `<text x="${(x + (bw - 2) / 2).toFixed(1)}" y="${(y - 5 - si * 12).toFixed(1)}" text-anchor="middle" font-size="9.5" font-family="${mono}" fill="${col}" ${halo}>${nfx(v)}</text>`), '');
+      else if (etiq) vals += `<text x="${(x + (bw - 2) / 2).toFixed(1)}" y="${(y - 4 - (si % 2) * 10).toFixed(1)}" text-anchor="middle" font-size="9.5" font-family="${mono}" fill="${col}" ${halo}>${nfx(v)}</text>`; } });
   g += `<line x1="${mL}" y1="${yB}" x2="${W - mR}" y2="${yB}" stroke="var(--ink-3)" stroke-width="1.5"/>`
     + `<line x1="${mL}" y1="${mT}" x2="${mL}" y2="${yB}" stroke="var(--ink-3)" stroke-width="1.5"/>`
-    + `<line x1="${W - mR}" y1="${(yB - haut * BANDE).toFixed(1)}" x2="${W - mR}" y2="${yB}" stroke="var(--ink-3)" stroke-width="1.5"/>`;
-  /* zones de survol, une par étape */
-  zCols = gs;
-  gs.forEach((gi, k) => { g += `<rect x="${(X(k) - slot / 2).toFixed(1)}" y="${mT}" width="${slot.toFixed(1)}" height="${haut}" fill="transparent" data-k="${k}"/>`; });
+    + `<line x1="${W - mR}" y1="${yBande.toFixed(1)}" x2="${W - mR}" y2="${yB}" stroke="var(--ink-3)" stroke-width="1.5"/>`;
+  /* lignes (échelle de gauche), par-dessus les barres, avec un liseré pour s'en détacher */
+  sel.forEach(c => { const col = `var(${SLOT[c]})`, fr = c === 'FRA', v = curve(c), pts = [];
+    for (let gi = 0; gi <= LI; gi++) if (v[gi] != null) pts.push(`${X(gi).toFixed(1)},${Y(v[gi]).toFixed(1)}`);
+    g += `<polyline points="${pts.join(' ')}" fill="none" stroke="var(--surface)" stroke-width="${fr ? 7 : 5.5}" stroke-linejoin="round" stroke-linecap="round" opacity=".9"/>`
+      + `<polyline points="${pts.join(' ')}" fill="none" stroke="${col}" stroke-width="${fr ? 3.4 : 2}" stroke-linejoin="round" stroke-linecap="round"/>`;
+    /* un point = une étape où la nation a marqué (règle du bloc 2) */
+    for (let gi = 1; gi <= LI; gi++) if (v[gi] != null && v[gi - 1] != null && v[gi] > v[gi - 1] + 1e-9)
+      g += `<circle cx="${X(gi).toFixed(1)}" cy="${Y(v[gi]).toFixed(1)}" r="${fr ? 4 : 3.2}" fill="${col}" stroke="var(--surface)" stroke-width="2"/>`;
+    if (v[LI] != null) g += pointFinal(X(LI), Y(v[LI]), col, fr); });
+  g += vals;
+  /* en fin de saison les étiquettes passent dans la marge droite : on les garde
+     au-dessus de la bande des gains, pour ne pas croiser l'axe de droite */
+  g += etiquettesFin(sel.map(c => ({ c, y0: Y(sCum(c, LI) ?? 0), t: nfx(sCum(c, LI) ?? 0) })), X, LI, M, LI === nG - 1 ? yBande - 12 : null);
+  g += `<line id="guideZ" x1="0" y1="${mT}" x2="0" y2="${yB}" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="2 3" opacity="0"/>`;
+  /* zones de survol, une par étape jouée */
+  for (let gi = 0; gi <= LI; gi++) g += `<rect x="${(X(gi) - cw / 2).toFixed(1)}" y="${mT}" width="${cw.toFixed(1)}" height="${haut}" fill="transparent" data-k="${gi}" data-x="${X(gi).toFixed(1)}"/>`;
   g += `</svg>`;
   document.getElementById('chartZ').outerHTML = g.replace('<svg', '<svg id="chartZ" role="img" aria-label="Cumul et gain par étape, deux échelles"');
   const labZ = SEAS.find(x => x[0] === selY)[1];
-  document.getElementById('capZ').innerHTML = `Saison <b>${labZ}</b>${isCur() ? ', en cours' : ''}. Lignes : cumul de la saison (axe de gauche). Barres : ce que chaque étape a rapporté (axe de droite, adapté aux gains) ; barre hachurée : bonus d'entrée. ${sel.map(c => `${name(c)} <b>${nfx(sTotal(c))}</b>`).join(' · ')}.`;
+  document.getElementById('capZ').innerHTML = `Saison <b>${labZ}</b>${isCur() ? ', en cours ; la zone grisée reste à jouer' : ''}. Lignes : cumul de la saison (axe de gauche). Barres : ce que chaque étape a rapporté (axe de droite, adapté aux gains) ; barre hachurée : bonus d'entrée. ${sel.map(c => `${name(c)} <b>${nfx(sTotal(c))}</b>`).join(' · ')}.`;
 }
 /* survol : l'étape, puis pour chaque nation ce qu'elle a rapporté et où en est le cumul */
 (function(){
   const box = document.getElementById('boxZ'), tip = document.getElementById('tipZ'); if (!box || !tip) return;
+  const cacher = () => { tip.hidden = true; const gd = document.getElementById('guideZ'); if (gd) gd.setAttribute('opacity', '0'); };
   box.addEventListener('mousemove', ev => {
-    const r = ev.target.closest('#chartZ [data-k]'); if (!r) { tip.hidden = true; return; }
-    const gi = zCols[+r.dataset.k]; if (gi == null) return;
+    const r = ev.target.closest('#chartZ [data-k]'); if (!r) { cacher(); return; }
+    const gi = +r.dataset.k, gd = document.getElementById('guideZ');
+    if (gd) { gd.setAttribute('x1', r.dataset.x); gd.setAttribute('x2', r.dataset.x); gd.setAttribute('opacity', '1'); }
     const sel = TOP8.filter(c => selZ.has(c) && hasSeason(c));
     tip.innerHTML = `<div class="th">${GROUPS[gi].lab}${isCur() && gDate(gi) ? ' · ' + gDate(gi)[1] : ''}</div>`
       + sel.map(c => `<div class="tr"><i style="background:var(${SLOT[c]})"></i><span class="nm">${name(c)}</span><b>+${nfx(sGain(c, gi) || 0)}</b><s style="color:var(--ink-3)">cumul ${nfx(sCum(c, gi) ?? 0)}</s></div>`).join('');
     tip.hidden = false; placeTip(tip, ev);
   });
-  box.addEventListener('mouseleave', () => { tip.hidden = true; });
+  box.addEventListener('mouseleave', cacher);
 })();
 chipsZ();
 
