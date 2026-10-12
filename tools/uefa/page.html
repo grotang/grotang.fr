@@ -2251,7 +2251,7 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
    Une seule échelle écrasait les barres dès que la saison avançait : en fin de
    saison un cumul de 20 points réduit un gain de 0,3 à un trait. L'axe de droite
    s'adapte donc aux gains, et les barres sont tenues dans le bas du cadre (au plus
-   42 % de la hauteur) : les deux lectures coexistent sans se recouvrir.
+   48 % de la hauteur) : les deux lectures coexistent sans se recouvrir.
    Le bonus d'entrée (première colonne) ne fixe pas l'échelle : il vaut souvent
    plusieurs journées d'un coup. S'il dépasse, sa barre est coupée net et porte
    sa valeur. Trois nations au plus : au-delà, les barres groupées ne se lisent plus. */
@@ -2270,8 +2270,10 @@ function chipsZ(){
 }
 let zCols = [];
 function drawZ(){
-  const M = MOB(), W = M ? 520 : 1000, H = M ? 520 : 480, mL = M ? 46 : 58, mR = M ? 50 : 62, mT = 22, mB = M ? 46 : 70;
-  const PADL = M ? 18 : 30, PADR = M ? 70 : 92;          // à droite : la place des étiquettes de fin de ligne
+  const M = MOB(), W = M ? 520 : 1000, H = M ? 520 : 480, mL = M ? 34 : 58, mR = M ? 30 : 62, mT = 22, mB = M ? 46 : 70;
+  /* à droite : la place des étiquettes de fin de ligne. Téléphone : le sigle seul (la valeur est
+     dans la légende et au survol), pour rendre toute la largeur aux barres */
+  const PADL = M ? 8 : 30, PADR = M ? 40 : 92;
   const gs = sGroups();
   const sel = TOP8.filter(c => selZ.has(c) && hasSeason(c));
   if (!sel.length) { document.getElementById('capZ').innerHTML = 'Aucune nation sélectionnée.'; return; }
@@ -2280,22 +2282,26 @@ function drawZ(){
   let hi = 0.5; sel.forEach(c => gs.forEach(gi => { const v = sCum(c, gi); if (v != null && v > hi) hi = v; }));
   const sc = niceScale(0, hi * 1.06, 5), Y = v => mT + haut * (1 - (v - sc.lo) / (sc.hi - sc.lo));
   /* droite : gain, tenu dans le bas du cadre */
-  const BANDE = 0.42;
+  const BANDE = 0.48;
   let gmax = 0; sel.forEach(c => gs.forEach(gi => { if (!sIsBonusCol(gi)) gmax = Math.max(gmax, sGain(c, gi) || 0); }));
   if (gmax <= 0) gmax = Math.max(0.1, ...sel.flatMap(c => gs.map(gi => sGain(c, gi) || 0)));
   const scR = niceScale(0, gmax, 3), hR = scR.hi, YR = v => yB - haut * BANDE * Math.min(v, hR) / hR;
-  const X = k => mL + PADL + (W - mL - mR - PADL - PADR) * (gs.length < 2 ? .5 : k / (gs.length - 1));
-  const slot = (W - mL - mR - PADL - PADR) / Math.max(1, gs.length - 1), bw = Math.max(4, Math.min(M ? 16 : 18, slot * 0.78 / sel.length));
+  /* largeur des barres d'abord, puis la marge de gauche juste assez grande pour le
+     premier groupe : il ne doit jamais mordre sur l'axe */
+  const bw = Math.max(3, Math.min(18, (W - mL - mR - PADL - PADR) / Math.max(1, gs.length - 1) * (M ? 0.86 : 0.78) / sel.length));
+  const PL = Math.max(PADL, sel.length * bw / 2 + 4);
+  const X = k => mL + PL + (W - mL - mR - PL - PADR) * (gs.length < 2 ? .5 : k / (gs.length - 1));
+  const slot = (W - mL - mR - PL - PADR) / Math.max(1, gs.length - 1);
   const fs = M ? 14 : 11, mono = 'IBM Plex Mono, monospace';
   let g = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
   /* bande des gains : un léger fond pour dire « ici, l'autre échelle » */
   g += `<rect x="${mL}" y="${(yB - haut * BANDE).toFixed(1)}" width="${W - mL - mR}" height="${(haut * BANDE).toFixed(1)}" fill="var(--band)" opacity=".55"/>`;
   sc.ticks.forEach(t => { g += `<line x1="${mL}" y1="${Y(t).toFixed(1)}" x2="${W - mR}" y2="${Y(t).toFixed(1)}" stroke="var(--rule-soft)"/>`
-    + `<text x="${mL - 9}" y="${(Y(t) + 4).toFixed(1)}" text-anchor="end" font-size="${fs}" font-family="${mono}" fill="var(--ink-3)">${t.toLocaleString('fr-FR', { minimumFractionDigits: sc.dec, maximumFractionDigits: sc.dec })}</text>`; });
+    + `<text x="${mL - (M ? 5 : 9)}" y="${(Y(t) + 4).toFixed(1)}" text-anchor="end" font-size="${M ? 13 : fs}" font-family="${mono}" fill="var(--ink-3)">${t.toLocaleString('fr-FR', { minimumFractionDigits: sc.dec, maximumFractionDigits: sc.dec })}</text>`; });
   scR.ticks.filter(t => t > 0).forEach(t => { g += `<line x1="${W - mR - 5}" y1="${YR(t).toFixed(1)}" x2="${W - mR}" y2="${YR(t).toFixed(1)}" stroke="var(--ink-3)"/>`
-    + `<text x="${W - mR + 7}" y="${(YR(t) + 4).toFixed(1)}" font-size="${fs - 1}" font-family="${mono}" fill="var(--ink-3)">${t.toLocaleString('fr-FR', { minimumFractionDigits: scR.dec, maximumFractionDigits: scR.dec })}</text>`; });
-  g += `<text x="${mL - 9}" y="${mT - 8}" text-anchor="end" font-size="${fs - 1}" font-weight="600" fill="var(--ink-3)">cumul</text>`
-    + `<text x="${W - mR + 7}" y="${(yB - haut * BANDE - 10).toFixed(1)}" font-size="${fs - 1}" font-weight="600" fill="var(--ink-3)">gain</text>`;
+    + `<text x="${W - mR + (M ? 4 : 7)}" y="${(YR(t) + 4).toFixed(1)}" font-size="${M ? 12 : fs - 1}" font-family="${mono}" fill="var(--ink-3)">${t.toLocaleString('fr-FR', { minimumFractionDigits: scR.dec, maximumFractionDigits: scR.dec })}</text>`; });
+  g += `<text x="${M ? 2 : mL - 9}" y="${mT - 8}" text-anchor="${M ? 'start' : 'end'}" font-size="${M ? 12 : fs - 1}" font-weight="600" fill="var(--ink-3)">cumul</text>`
+    + `<text x="${W - mR + (M ? 2 : 7)}" y="${(yB - haut * BANDE - 10).toFixed(1)}" font-size="${M ? 12 : fs - 1}" font-weight="600" fill="var(--ink-3)">gain</text>`;
   const pas = M ? Math.ceil(gs.length / 6) : 1;
   gs.forEach((gi, k) => { const d = isCur() ? gDate(gi) : null;
     if (k % pas && k !== gs.length - 1) return;
@@ -2319,7 +2325,7 @@ function drawZ(){
       + `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="${fr ? 3.2 : 2.4}" stroke-linejoin="round"/>`;
     const yEnd = Y(sCum(c, gs[gs.length - 1]) ?? 0), lab = ends.find(e => e.c === c).y;
     g += `<circle cx="${X(gs.length - 1).toFixed(1)}" cy="${yEnd.toFixed(1)}" r="4.5" fill="${col}" stroke="var(--surface)" stroke-width="2"/>`
-      + `<text x="${(X(gs.length - 1) + 10).toFixed(1)}" y="${(lab + (M ? 6 : 4)).toFixed(1)}" font-size="${M ? 15 : 12}" font-weight="${fr ? 700 : 600}" font-family="${mono}" fill="${col}">${c} ${nfx(sCum(c, gs[gs.length - 1]) ?? 0)}</text>`; });
+      + `<text x="${(X(gs.length - 1) + (M ? 7 : 10)).toFixed(1)}" y="${(lab + (M ? 6 : 4)).toFixed(1)}" font-size="${M ? 15 : 12}" font-weight="${fr ? 700 : 600}" font-family="${mono}" fill="${col}">${M ? c : c + ' ' + nfx(sCum(c, gs[gs.length - 1]) ?? 0)}</text>`; });
   g += `<line x1="${mL}" y1="${yB}" x2="${W - mR}" y2="${yB}" stroke="var(--ink-3)" stroke-width="1.5"/>`
     + `<line x1="${mL}" y1="${mT}" x2="${mL}" y2="${yB}" stroke="var(--ink-3)" stroke-width="1.5"/>`
     + `<line x1="${W - mR}" y1="${(yB - haut * BANDE).toFixed(1)}" x2="${W - mR}" y2="${yB}" stroke="var(--ink-3)" stroke-width="1.5"/>`;
