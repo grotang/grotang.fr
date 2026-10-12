@@ -253,5 +253,8 @@ Gaufres (une case par match, dans l'ordre joué, le match au survol) : fichier �
 ## Rendement tour par tour (bloc 6a)
 
 Saisons closes : `archive/journees-archive.py` (pages « AV Spiele ») → `archive/journees-saisons.json`,
-recopié dans le bloc `JOUR` de la page. Saison en cours : points tirés du coefficient (gain de
-l'étape × diviseur), recalés sur le bilan V/N/D de PktNat pour l'été.
+recopié dans le bloc `JOUR` de la page. Saison en cours : matchs Wikipédia (été : `wiki/matchs-AAAA-AA.json` ;
+ligue et phase finale : `wiki/ligue-AAAA-AA.json`), servis par `build.mjs` dans les blocs `JEX` (été, ligue)
+et `KOV` (phase finale). Une nation n'est servie en exact pour une phase que si tous ses clubs y recoupent
+leur bilan officiel ; sinon, repli sur la reconstitution par le coefficient (gain de l'étape × diviseur,
+recalé sur PktNat pour l'été). Contrôle au 12/10 : 25 journées comparées, 0 écart de points entre les deux.

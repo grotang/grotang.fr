@@ -90,7 +90,27 @@ function phaseFinale(src) {
   const m = /^(\d{4})\/(\d{4})$/.exec(D.meta.season || '');
   const f = m && path.join(ROOT, `tools/uefa/wiki/ligue-${m[1]}-${m[2].slice(2)}.json`);
   const L = f && fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8'))[m[1]] || {} : {};
+  const fq = m && path.join(ROOT, `tools/uefa/wiki/matchs-${m[1]}-${m[2].slice(2)}.json`);
+  const Q = fq && fs.existsSync(fq) ? JSON.parse(fs.readFileSync(fq, 'utf8')).c || {} : {};
   const res = x => x[4] > x[5] ? 0 : x[4] === x[5] ? 1 : 2;
+  /* JEX : bilans exacts par nation, colonne par colonne, pour le 6a. Une nation
+     n'est servie en exact pour une phase (été / ligue) que si TOUS ses clubs y ont
+     une liste de matchs complète et identique au bilan officiel ; sinon le 6a garde
+     sa reconstitution par le coefficient pour cette phase. */
+  const jex = {}, Z5 = n => Array.from({ length: n }, () => [0, 0, 0]);
+  for (const [c, rows] of Object.entries(D.eff || {})) {
+    if (!rows.length || !rows.every(r => r.length >= 10)) continue;
+    let okQ = true, okL = true; const q = Z5(4), l = Z5(8);
+    for (const r of rows) {
+      const QW = (Q[c] || {})[r[0]] || [], tq = [0, 0, 0];
+      for (const x of QW) { const v = x[3] > x[4] ? 0 : x[3] === x[4] ? 1 : 2; tq[v]++; if (x[0] < 4) q[x[0]][v]++; }
+      if (tq[0] !== r[4] || tq[1] !== r[5] || tq[2] !== r[6]) okQ = false;
+      const LW = (L[c] || {})[r[0]] || [], tl = [0, 0, 0];
+      for (const x of LW) { tl[res(x)]++; if (x[0] < 8) l[x[0]][res(x)]++; }
+      if (tl[0] !== r[7] || tl[1] !== r[8] || tl[2] !== r[9]) okL = false;
+    }
+    if (okQ || okL) jex[c] = { q: okQ ? q : null, l: okL ? l : null };
+  }
   for (const [c, rows] of Object.entries(D.eff || {})) for (const r of rows) {
     if (r.length < 10) continue;
     const n = r[7] + r[8] + r[9];
@@ -109,13 +129,14 @@ function phaseFinale(src) {
     if (r[2] && complet) for (let j = 5 + der + 1; j <= 10; j++) row[j] = 9;   // sorti : après son dernier tour
     if (!r[2] && der === 4 && complet) row[10] = k;                            // finale jouée, toujours en lice : vainqueur
   }
-  return { kov, sk: SK };
+  return { kov, sk: SK, jex };
 }
 function buildUefa() {
   let src = read('tools/uefa/page.html');
   { const pf = phaseFinale(src);
     src = src.replace(/\/\*KOV_START\*\/[\s\S]*?\/\*KOV_END\*\//, () => `/*KOV_START*/const KOV = ${JSON.stringify(pf.kov)};/*KOV_END*/`)
-             .replace(/\/\*SANKEY_START\*\/[\s\S]*?\/\*SANKEY_END\*\//, () => `/*SANKEY_START*/const SANKEY = ${JSON.stringify(pf.sk)};/*SANKEY_END*/`); }
+             .replace(/\/\*SANKEY_START\*\/[\s\S]*?\/\*SANKEY_END\*\//, () => `/*SANKEY_START*/const SANKEY = ${JSON.stringify(pf.sk)};/*SANKEY_END*/`)
+             .replace(/\/\*JEX_START\*\/[\s\S]*?\/\*JEX_END\*\//, () => `/*JEX_START*/const JEX = ${JSON.stringify(pf.jex)};/*JEX_END*/`); }
   const cut = src.indexOf('</style>');
   if (cut < 0) throw new Error('page.html : bloc <style> introuvable');
   const head = src.slice(0, cut + 8);
