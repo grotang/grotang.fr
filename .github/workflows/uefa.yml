@@ -198,3 +198,10 @@ jobs:
         run: |
           gh workflow run pages.yml --ref main
           echo "Publication demandée à pages.yml."
+
+      # ALARME DE FRAÎCHEUR. Dernière étape, pour ne rien bloquer : si un soir de
+      # Coupe d'Europe est passé et que la source n'a toujours pas bougé, le passage
+      # de 7 h 12 (Paris) échoue ici, et GitHub envoie son e-mail « Run failed ».
+      # Une seule alerte par jour ; les passages du soir ne sonnent jamais.
+      - name: Alarme de fraîcheur
+        run: node tools/uefa/fraicheur.mjs
