@@ -58,6 +58,12 @@ const writeStable = (p, s, avant) => {
    sur la fin du bloc <style>, ce qui sépare proprement l'en-tête du corps. */
 /* page.html charge Google Fonts (elle doit rester autonome hors du site) ; en
    production, ces trois lignes cèdent la place aux polices auto-hébergées. */
+/* Nom du site pour Google (le « nom de site » affiché au-dessus du titre dans les
+   résultats) : déclaré par un bloc WebSite sur la page d'accueil, comme Google le
+   demande, et répété sur /uefa/. « grotang.fr » reste en nom alternatif. */
+const SITE_NOM = "L'observatoire du coefficient UEFA";
+const WEBSITE_LD = JSON.stringify({ '@context': 'https://schema.org', '@type': 'WebSite',
+  name: SITE_NOM, alternateName: ['grotang.fr', 'grotang'], url: 'https://grotang.fr/', inLanguage: 'fr' });
 function uefaHead(head) {
   const h = head.replace(/<title>[^<]*<\/title>\n?/, '').replace(/<link rel="preconnect" href="https:\/\/fonts\.(googleapis|gstatic)\.com"[^>]*>\n?/g, '')
     .replace(/<link rel="stylesheet" href="https:\/\/fonts\.googleapis\.com[^>]*>\n?/, '');
@@ -183,7 +189,7 @@ ${VERIF}
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="fr_FR">
-<meta property="og:site_name" content="grotang.fr">
+<meta property="og:site_name" content="${SITE_NOM}">
 <meta property="og:title" content="${seo.titre}">
 <meta property="og:description" content="${seo.desc}">
 <meta property="og:url" content="${seo.url}">
@@ -196,6 +202,7 @@ ${VERIF}
 <meta name="twitter:description" content="${seo.desc}">
 <meta name="twitter:image" content="https://grotang.fr/uefa/carte.png">
 <script type="application/ld+json">${jsonld}</script>
+<script type="application/ld+json">${WEBSITE_LD}</script>
 ${FAVICON}
 ${THEME_BOOT}
 ${FONTS}
@@ -328,8 +335,10 @@ const ACCUEIL = `<!doctype html>
 <head>
 <meta charset="utf-8">
 ${VERIF}
-<title>grotang.fr</title>
+<title>${SITE_NOM} — grotang.fr</title>
 ${FAVICON}
+<meta property="og:site_name" content="${SITE_NOM}">
+<script type="application/ld+json">${WEBSITE_LD}</script>
 <link rel="canonical" href="https://grotang.fr/uefa/">
 <meta http-equiv="refresh" content="0; url=/uefa/">
 <script>location.replace('/uefa/');</script>
