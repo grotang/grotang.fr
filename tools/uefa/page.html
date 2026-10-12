@@ -578,12 +578,19 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
     <p class="figc" id="barNote"></p>
   </div>
 
+  <div class="panel">
+    <div class="ptitle"><span class="no">2</span><h3>Évolution journée par journée</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="seg" role="group" aria-label="Lecture"><button type="button" id="l-cum" aria-pressed="true">Cumul</button><button type="button" id="l-gap" aria-pressed="false">Écart au leader</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSel" aria-label="Saison"></select></span></span></span></div>
+    <div class="chips" id="lchips"></div>
+    <figure><div class="chartbox big" id="boxL"><svg id="chartL" role="img" aria-label="Coefficient de saison cumulé, étape par étape"></svg><div class="tip" id="tipL" hidden></div></div>
+      <figcaption id="capL"></figcaption></figure>
+  </div>
+
   <div class="famille">
-  <div class="fhead"><span class="no">2</span><h3>D'où viennent les points</h3>
+  <div class="fhead"><span class="no">3</span><h3>D'où viennent les points</h3>
     <p>Le même total, découpé selon trois axes : la compétition, le club, la nature du point.</p></div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">2a</span><h3>Par compétition</h3>
+    <div class="ptitle"><span class="no">3a</span><h3>Par compétition</h3>
       <span class="sub"><span class="ctl"><span class="lb">Échelle</span><span class="seg" role="group" aria-label="Échelle"><button type="button" id="k-abs" aria-pressed="true">Points</button><button type="button" id="k-pct" aria-pressed="false">Part</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelK" aria-label="Saison"></select></span></span></span></div>
     <div class="klegend" id="kleg"></div>
     <div class="barswrap"><div class="bars" id="kbars"></div><div class="tip" id="tipK" hidden></div></div>
@@ -591,7 +598,7 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">2b</span><h3>Par club</h3>
+    <div class="ptitle"><span class="no">3b</span><h3>Par club</h3>
       <span class="sub"><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelC" aria-label="Saison"></select></span></span></span></div>
     <div class="klegend" id="cleg"></div>
     <div class="cl8" id="cl8"></div>
@@ -599,21 +606,14 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">2c</span><h3>Par type de point</h3>
+    <div class="ptitle"><span class="no">3c</span><h3>Par type de point</h3>
       <span class="sub"><span class="ctl"><span class="lb">Échelle</span><span class="seg" role="group" aria-label="Échelle"><button type="button" id="d-abs" aria-pressed="true">Points</button><button type="button" id="d-pct" aria-pressed="false">Part</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
         <button type="button" id="dn-top" aria-pressed="true">Les 8 premières</button><button type="button" id="dn-all" aria-pressed="false">Toutes</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelD" aria-label="Saison"></select></span></span></span></div>
     <div class="klegend" id="dleg"></div>
     <div class="barswrap"><div class="bscroll" id="dscroll"><div class="bars" id="dbars"></div></div><div class="tip" id="tipDec" hidden></div></div>
     <p class="figc" id="capDec"></p>
   </div>
-  </div><!-- /famille 2 -->
-
-  <div class="panel">
-    <div class="ptitle"><span class="no">3</span><h3>Journée par journée</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="seg" role="group" aria-label="Lecture"><button type="button" id="l-cum" aria-pressed="true">Cumul</button><button type="button" id="l-gap" aria-pressed="false">Écart au leader</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSel" aria-label="Saison"></select></span></span></span></div>
-    <div class="chips" id="lchips"></div>
-    <figure><div class="chartbox big" id="boxL"><svg id="chartL" role="img" aria-label="Coefficient de saison cumulé, étape par étape"></svg><div class="tip" id="tipL" hidden></div></div>
-      <figcaption id="capL"></figcaption></figure>
-  </div>
+  </div><!-- /famille 3 -->
 
   <div class="panel">
     <div class="ptitle"><span class="no">4</span><h3>Gain et cumul, même échelle</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">barres : gain de l'étape · lignes : cumul</span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelZ" aria-label="Saison"></select></span></span></span></div>
