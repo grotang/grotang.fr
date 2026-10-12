@@ -15,7 +15,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
-import { nav, navCSS, FAVICON, FAVICON_SVG, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF } from './chrome.mjs';
+import { nav, navCSS, FAVICON, FAVICON_SVG, MANIFEST, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF } from './chrome.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
@@ -399,6 +399,9 @@ const dateSitemap = (bal, avant, apres, sansHorodatage) => {
   return memeContenu && m ? m[1] : today;
 };
 /* polices auto-hébergées */
+/* icônes tirées du SVG (voir FAVICON dans chrome.mjs), servies à la racine */
+fs.mkdirSync(OUT, { recursive: true });
+for (const f of fs.readdirSync(path.join(ROOT, 'tools/icons'))) fs.copyFileSync(path.join(ROOT, 'tools/icons', f), path.join(OUT, f));
 for (const f of fs.readdirSync(path.join(ROOT, 'tools/fonts'))) {
   fs.mkdirSync(path.join(OUT, 'fonts'), { recursive: true });
   fs.copyFileSync(path.join(ROOT, 'tools/fonts', f), path.join(OUT, 'fonts', f));
@@ -456,6 +459,7 @@ const sizes = {
   'index.html': write('index.html', ACCUEIL),
   'robots.txt': write('robots.txt', ROBOTS),
   'favicon.svg': write('favicon.svg', FAVICON_SVG),
+  'site.webmanifest': write('site.webmanifest', MANIFEST),
   'sitemap.xml': write('sitemap.xml', sitemap(majUefa, majTennis)),
 };
 

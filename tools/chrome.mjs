@@ -196,4 +196,20 @@ export function nav(current) {
    ne pas se dissoudre sur un onglet blanc), le point en bleu France. Le bloc
    de lettres est centré et le point posé sur la ligne de base. */
 export const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x=".5" y=".5" width="31" height="31" rx="7" fill="#FFD400" stroke="#E5BC00"/><g transform="translate(0 .6)"><g fill="none" stroke="#0F141D" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.6" cy="13.4" r="3.9"/><path d="M13.5 9.4 V20.3 a3.9 3.9 0 0 1 -3.9 3.9 H7.2"/><path d="M19.2 6.6 V15 a2.6 2.6 0 0 0 2.6 2.6 H22.6"/><path d="M16.6 10.2 H22.4"/></g><circle cx="26.4" cy="16.65" r="2.4" fill="#1F5FD1"/></g></svg>`;
-export const FAVICON = `<link rel="icon" type="image/svg+xml" href="/favicon.svg">`;
+/* Le jeu complet, chacun pour son public :
+   - favicon.ico (16, 32, 48 px) : l'adresse que tout le monde essaie en premier, Google
+     compris, qui demande un carré multiple de 48 px ;
+   - favicon-96x96.png : la version nette pour Google et les écrans haute définition ;
+   - favicon.svg : la version vectorielle, parfaite à toutes les tailles, pour les
+     navigateurs qui la lisent ;
+   - apple-touch-icon.png (180 px, fond plein) : l'icône d'un raccourci sur iPhone ;
+   - site.webmanifest (192 et 512 px) : l'icône d'un raccourci sur Android.
+   Les images sont tirées du SVG (tools/icons/), une seule source de dessin. */
+export const FAVICON = `<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">`;
+export const MANIFEST = JSON.stringify({ name: "grotang.fr — l'observatoire du coefficient UEFA", short_name: 'grotang.fr',
+  start_url: '/uefa/', display: 'browser', background_color: '#FFD400', theme_color: '#FFD400',
+  icons: [{ src: '/icon-192.png', sizes: '192x192', type: 'image/png' }, { src: '/icon-512.png', sizes: '512x512', type: 'image/png' }] }, null, 2);
