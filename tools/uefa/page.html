@@ -2151,15 +2151,12 @@ function resteAJouer(X, cw, mR, W, mT, yB, M){
   return `<rect x="${(X(fg) - cw / 2).toFixed(1)}" y="${mT}" width="${(W - mR - X(fg) + cw / 2).toFixed(1)}" height="${(yB - mT).toFixed(1)}" fill="var(--surface-2)" opacity=".8"/>`
     + `<text x="${((X(fg) + W - mR) / 2).toFixed(1)}" y="${mT + (M ? 20 : 16)}" text-anchor="middle" font-size="${M ? 15 : 11}" font-weight="600" fill="var(--ink-3)">reste à jouer</text>`;
 }
-/* Téléphone : marges au plus juste. À gauche, la largeur des graduations ; à droite,
-   les étiquettes de fin seulement quand elles sortent du cadre (saison finie) — en
-   cours de saison elles sont dans la zone à jouer, la marge serait du vide. */
-const MONO_W = .6;   // largeur d'un caractère IBM Plex Mono, en fraction de la taille
-function margesMob(ticks, fin, droite){
-  const g = Math.max(...ticks.map(t => t.length)) * 15 * MONO_W + 14;
-  const d = Math.max(droite || 0, fin.length ? Math.max(...fin.map(t => t.length)) * 16 * MONO_W + 18 : 0, 8);
-  return [Math.ceil(g), Math.ceil(d)];
-}
+/* Téléphone : un cadre FIXE, le même pour toutes les saisons et les deux blocs (on
+   compare des formes de courbes : si le cadre bouge, l'œil perd ses repères). À
+   gauche, la place de « −2,5 » ; à droite, celle d'un sigle de trois lettres — la
+   valeur n'est pas écrite au bout de la ligne, elle est au survol et en légende —
+   ou de l'axe des gains au bloc 4, qui tient dans la même largeur. */
+const MOB_ML = 46, MOB_MR = 48;
 /* point final : un peu plus gros que les marqueurs d'étape, pour dire « on en est là » */
 const pointFinal = (x, y, col, fr) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${fr ? 6.5 : 5.5}" fill="${col}" stroke="var(--surface)" stroke-width="2.5"/>`;
 /* étiquettes de fin de ligne, décollées ; « lim » : plafond (la bande des gains du bloc 4) */
@@ -2171,7 +2168,7 @@ function etiquettesFin(items, X, LI, M, lim){
   const lx = X(LI) + (M ? 12 : 13);
   return L.map(l => { const col = `var(${SLOT[l.c]})`;
     return (Math.abs(l.y - l.y0) > 1.5 ? `<path d="M ${(X(LI) + 6).toFixed(1)} ${l.y0.toFixed(1)} L ${(lx - 4).toFixed(1)} ${l.y.toFixed(1)}" stroke="${col}" stroke-width="1" fill="none" opacity=".5"/>` : '')
-      + `<text x="${lx.toFixed(1)}" y="${(l.y + (M ? 6 : 4)).toFixed(1)}" font-size="${M ? 16 : 11.5}" font-weight="${l.c === 'FRA' ? '700' : '600'}" font-family="IBM Plex Mono, monospace" fill="${col}" paint-order="stroke" stroke="var(--surface)" stroke-width="3.5">${l.c} ${l.t}</text>`; }).join('');
+      + `<text x="${lx.toFixed(1)}" y="${(l.y + (M ? 6 : 4)).toFixed(1)}" font-size="${M ? 16 : 11.5}" font-weight="${l.c === 'FRA' ? '700' : '600'}" font-family="IBM Plex Mono, monospace" fill="${col}" paint-order="stroke" stroke="var(--surface)" stroke-width="3.5">${l.c}${M ? '' : ' ' + l.t}</text>`; }).join('');
 }
 const lastRealG = Math.max(...[...Array(nG).keys()].filter(gi=>gHas(gi) && !gFuture(gi)));
 const gCum = (c,gi)=>{ const G=GROUPS[gi]; if(G.bonus) return bonusCoef(c);
@@ -2274,8 +2271,7 @@ function drawL(){
   else { let hi=0.5; sel.forEach(c=>{const v=series(c); for(let i=0;i<=LI;i++) if(v[i]!=null&&v[i]>hi) hi=v[i];});
     sc = niceScale(0, hi*1.05, 7); }
   const txtFin = c => { const v=series(c)[LI]; return gap ? (v<-0.005?'\u2212'+nfx(Math.abs(v)):'0') : nfx(v); };
-  if(M) [mL, mR] = margesMob(sc.ticks.map(t=>(gap&&t<0?'-':'')+Math.abs(t).toFixed(sc.dec)),
-                             LI===nG-1 ? sel.map(c=>c+' '+txtFin(c)) : []);
+  if(M){ mL=MOB_ML; mR=MOB_MR; }
   const X=gi=>mL+PAD+(W-mL-mR-2*PAD)*gi/(nG-1), Y=v=>mT+(H-mT-mB)*(1-(v-sc.lo)/(sc.hi-sc.lo));
   const cw=(W-mL-mR-2*PAD)/(nG-1);
   let g=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
@@ -2303,19 +2299,21 @@ function drawL(){
   document.getElementById('chartL').outerHTML = g.replace('<svg','<svg id="chartL" role="img" aria-label="Coefficient de saison cumulé, étape par étape"');
   hoverL(sel, LI, X, Y, W, H, mL, mR, PAD);
   const lab=SEAS.find(x=>x[0]===selY)[1];
+  /* téléphone : les valeurs ne sont plus au bout des lignes, la légende les donne */
+  const totL = M ? ' ' + [...sel].sort((a,b)=>(series(b)[LI]??0)-(series(a)[LI]??0)).map(c=>`${name(c)} <b>${txtFin(c)}</b>`).join(' · ') + '.' : '';
   if(gap){
     const best = TOP8.filter(hasSeason).reduce((a,c)=> curve(c)[LI] > curve(a)[LI] ? c : a);
     const fv = series('FRA')[LI];
     document.getElementById('capL').innerHTML =
       `Saison <b>${lab}</b>, écart au leader : à chaque étape, la meilleure nation des huit est à zéro. `
-      + (fv != null ? `La France est à <b>${fv < -0.05 ? '\u2212'+nf(Math.abs(fv),2) : '0,00'}</b> de ${name(best)}.` : '');
+      + (fv != null ? `La France est à <b>${fv < -0.05 ? '\u2212'+nf(Math.abs(fv),2) : '0,00'}</b> de ${name(best)}.` : '') + totL;
     return;
   }
-  document.getElementById('capL').innerHTML = isCur()
+  document.getElementById('capL').innerHTML = (isCur()
     ? `Saison <b>${lab}</b>, en cours ; la zone grisée reste à jouer. <b>Entrée en lice</b> : bonus de participation (6 points par club de C1). <b>Rank bonus</b> : bonus de classement de la phase de ligue, versé fin janvier.`
     : `Saison <b>${lab}</b>, terminée. ${+selY<2024
         ? `Phase de groupes à six journées : J7 et J8 sont plates, et le bonus de classement n'existait pas.`
-        : `<b>Ini.</b> : bonus de participation. <b>Rank bonus</b> : bonus de classement de la phase de ligue.`}`;
+        : `<b>Ini.</b> : bonus de participation. <b>Rank bonus</b> : bonus de classement de la phase de ligue.`}`) + totL;
 }
 function hoverL(sel, LI, X, Y, W, H, mL, mR, PAD){
   const svg=document.getElementById('chartL'), box=document.getElementById('boxL'), tip=document.getElementById('tipL');
@@ -2405,9 +2403,7 @@ function drawZ(){
   let gmax = 0; sel.forEach(c => { for (let gi = 0; gi <= LI; gi++) if (!sIsBonusCol(gi)) gmax = Math.max(gmax, sGain(c, gi) || 0); });
   if (gmax <= 0) gmax = Math.max(0.1, ...sel.map(c => sGain(c, 0) || 0));
   const scR = niceScale(0, gmax, 3), hR = scR.hi, YR = v => yB - haut * BANDE * Math.min(v, hR) / hR;
-  /* à droite il faut de toute façon l'axe des gains (et son titre « gain ») */
-  if (M) [mL, mR] = margesMob(sc.ticks.map(t => t.toFixed(sc.dec)), LI === nG - 1 ? sel.map(c => c + ' ' + nfx(sCum(c, LI) ?? 0)) : [],
-                             Math.max(4, ...scR.ticks.map(t => t.toFixed(scR.dec).length)) * 14 * MONO_W + 12);
+  if (M) { mL = MOB_ML; mR = MOB_MR; }
   const X = gi => mL + PAD + (W - mL - mR - 2 * PAD) * gi / (nG - 1), cw = (W - mL - mR - 2 * PAD) / (nG - 1);
   const bw = Math.max(2.5, Math.min(18, cw * (M ? 0.86 : 0.78) / sel.length));
   let g = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
