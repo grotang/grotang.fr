@@ -634,18 +634,23 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
   </div>
   </div><!-- /famille 3 -->
 
+  <div class="famille">
+  <div class="fhead"><span class="no">4</span><h3>Ce que rapporte chaque étape</h3>
+    <p>Les mêmes gains, deux dessins : en lignes et barres pour trois nations, en matrice pour les huit.</p></div>
+
   <div class="panel">
-    <div class="ptitle"><span class="no">4</span><h3>Gain et cumul</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">lignes : cumul (axe de gauche) · barres : gain de l'étape (axe de droite)</span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelZ" aria-label="Saison"></select></span></span></span></div>
+    <div class="ptitle"><span class="no">4a</span><h3>Gain et cumul</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">lignes : cumul (axe de gauche) · barres : gain de l'étape (axe de droite)</span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelZ" aria-label="Saison"></select></span></span></span></div>
     <div class="chips" id="zchips"></div>
     <figure><div class="chartbox big" id="boxZ"><svg id="chartZ" role="img" aria-label="Cumul et gain par étape, deux échelles"></svg><div class="tip" id="tipZ" hidden></div></div>
       <figcaption id="capZ"></figcaption></figure>
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">5</span><h3>La matrice</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">aire du disque = coefficient gagné</span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelM" aria-label="Saison"></select></span></span></span></div>
+    <div class="ptitle"><span class="no">4b</span><h3>La matrice</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">aire du disque = coefficient gagné</span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelM" aria-label="Saison"></select></span></span></span></div>
     <div class="calwrap" id="boxM"><div class="chartbox"><svg id="mtx" role="img" aria-label="Matrice nations × étapes, aire proportionnelle au coefficient gagné"></svg></div><div class="tip" id="tipM" hidden></div></div>
     <p class="figc" id="mtxNote"></p>
   </div>
+  </div><!-- /famille 4 -->
 </section>
 
 <section>
@@ -2154,8 +2159,10 @@ function resteAJouer(X, cw, mR, W, mT, yB, M){
 }
 /* Téléphone : un cadre FIXE, le même pour toutes les saisons et les deux blocs (on
    compare des formes de courbes : si le cadre bouge, l'œil perd ses repères). À
-   gauche, la place de « −2,5 » ; à droite, celle d'un sigle de trois lettres — la
-   valeur n'est pas écrite au bout de la ligne, elle est au survol et en légende —
+   gauche, la place de « −2,5 » ; à droite, celle d'un sigle de trois lettres. En
+   saison finie, l'étiquette (dans la marge) se réduit au sigle — la valeur est au
+   survol et en légende ; en cours de saison, elle tient dans la zone à jouer et
+   garde sa valeur —
    ou de l'axe des gains au bloc 4, qui tient dans la même largeur. */
 const MOB_ML = 46, MOB_MR = 48;
 /* point final : un peu plus gros que les marqueurs d'étape, pour dire « on en est là » */
@@ -2169,7 +2176,7 @@ function etiquettesFin(items, X, LI, M, lim){
   const lx = X(LI) + (M ? 12 : 13);
   return L.map(l => { const col = `var(${SLOT[l.c]})`;
     return (Math.abs(l.y - l.y0) > 1.5 ? `<path d="M ${(X(LI) + 6).toFixed(1)} ${l.y0.toFixed(1)} L ${(lx - 4).toFixed(1)} ${l.y.toFixed(1)}" stroke="${col}" stroke-width="1" fill="none" opacity=".5"/>` : '')
-      + `<text x="${lx.toFixed(1)}" y="${(l.y + (M ? 6 : 4)).toFixed(1)}" font-size="${M ? 16 : 11.5}" font-weight="${l.c === 'FRA' ? '700' : '600'}" font-family="IBM Plex Mono, monospace" fill="${col}" paint-order="stroke" stroke="var(--surface)" stroke-width="3.5">${l.c}${M ? '' : ' ' + l.t}</text>`; }).join('');
+      + `<text x="${lx.toFixed(1)}" y="${(l.y + (M ? 6 : 4)).toFixed(1)}" font-size="${M ? 16 : 11.5}" font-weight="${l.c === 'FRA' ? '700' : '600'}" font-family="IBM Plex Mono, monospace" fill="${col}" paint-order="stroke" stroke="var(--surface)" stroke-width="3.5">${l.c}${M && LI === nG - 1 ? '' : ' ' + l.t}</text>`; }).join('');
 }
 const lastRealG = Math.max(...[...Array(nG).keys()].filter(gi=>gHas(gi) && !gFuture(gi)));
 const gCum = (c,gi)=>{ const G=GROUPS[gi]; if(G.bonus) return bonusCoef(c);
@@ -2220,7 +2227,7 @@ const syncL = ()=>{ document.getElementById('l-cum').setAttribute('aria-pressed'
 document.getElementById('l-cum').onclick = ()=>{ lMode='cum'; syncL(); };
 document.getElementById('l-gap').onclick = ()=>{ lMode='gap'; syncL(); };
 
-/* Les blocs 3, 4 et 5 lisent désormais la même saison. Trois accesseurs suffisent :
+/* Les blocs 3, 4a et 4b lisent désormais la même saison. Trois accesseurs suffisent :
    le reste du code ne sait plus si la saison est en cours ou archivée.
    - sCum  : coefficient de saison cumulé à l'étape
    - sGain : ce que l'étape a rapporté (pour une saison close, la différence des
@@ -2237,7 +2244,7 @@ const sTotal = c => { const v = curve(c); return v[lastIdx()] ?? 0; };
 const sIsBonusCol = gi => GROUPS[gi].bonus;
 
 /* Un seul état de saison, trois endroits pour le changer. Le lecteur qui passe en
-   2024/25 dans le bloc 3 et descend au bloc 5 ne retombe pas sur la saison en cours. */
+   2024/25 dans le bloc 3 et descend au bloc 4b ne retombe pas sur la saison en cours. */
 function mkSeasonCtl(id){
   const el = document.getElementById(id); if(!el) return;
   el.innerHTML = [...SEAS].reverse().map(([k,l]) =>
