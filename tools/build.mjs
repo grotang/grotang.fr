@@ -195,9 +195,13 @@ function buildUefa() {
      traîne : « coefficient UEFA France », « classement coefficient UEFA
      2026/2027 », « course à la 5e place ». D'où une description qui les
      contient sans les empiler. */
+  /* Titre lu par Google (13/10) : court (Google coupe vers 60 signes), les mots
+     tapés en tête, « évolution » dedans ; « 55 associations » passe en description.
+     La saison s'écrit « 2026/27 » et suit les données toute seule. */
+  const saisonC = String(meta.season).replace(/^(\d{4})\/\d{2}(\d{2})$/, '$1/$2');
   const seo = {
-    titre: `Coefficient UEFA ${meta.season} — classement des 55 associations`,
-    desc: `Coefficient UEFA ${meta.season} : classement des 55 associations, mis à jour chaque matin. D'où viennent les points, et où en est la France dans la course à la 5e place.`,
+    titre: `Coefficient UEFA ${saisonC} : classement et évolution`,
+    desc: `Coefficient UEFA ${saisonC} : le classement des 55 associations et son évolution journée par journée, mis à jour chaque matin. D'où viennent les points, et où en est la France dans la course à la 5e place.`,
     url: 'https://grotang.fr/uefa/',
   };
   /* dateModified au format ISO, à partir de « 17/09/2026 - 22:56 » */
@@ -216,7 +220,7 @@ function buildUefa() {
     license: 'https://creativecommons.org/licenses/by/4.0/',
     dateModified: isoMaj, temporalCoverage: '2022/2027',
     creator: { '@type': 'Organization', name: 'grotang.fr', url: 'https://grotang.fr/' },
-    keywords: ['coefficient UEFA', 'classement des associations', 'indice UEFA',
+    keywords: ['coefficient UEFA', 'évolution du coefficient UEFA', 'classement des associations', 'indice UEFA',
                'Ligue des Champions', 'places européennes', 'France'],
   });
 
