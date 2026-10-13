@@ -21,6 +21,9 @@
    Phase finale : les trois pages « knockout phase », lues de la même façon dès
    qu'elles existent (tirage de décembre) ; avant, on passe sans bruit.
 
+   Sortie : wiki/affiches-AAAA-AA.json (bloc 0) : { "AAAA": [[compétition, étape, date, heure,
+     club domicile, nation, club extérieur, nation, buts dom. | null, buts ext. | null]] },
+     seulement les matchs d'un club français, joués ou à venir.
    Sortie : wiki/ligue-AAAA-AA.json
      { "AAAA": { NAT: { club source: [[étape, compétition, club adverse, nation adverse, buts pour, buts contre, domicile]] } } }
      étape : 0…7 journées de ligue, 8 barrages KO, 9 huitièmes, 10 quarts, 11 demies, 12 finale
@@ -61,7 +64,7 @@ const proche = (a, b) => {
 const TOURS_KO = { 'Knockout phase play-offs': 0, 'Knockout round play-offs': 0, 'Round of 16': 1, 'Quarter-finals': 2, 'Semi-finals': 3, 'Final': 4 };
 export function lirePage(html, ko = false) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
-  const out = []; let j = -1, vus = 0;
+  const out = [], affiches = []; let j = -1, vus = 0;
   const equipe = th => {
     const img = th.querySelector('.flagicon img');
     const a = [...th.querySelectorAll('a')].find(x => !x.closest('.flagicon'));
@@ -79,10 +82,16 @@ export function lirePage(html, ko = false) {
     const h = el.querySelector('th.fhome'), a = el.querySelector('th.faway'), s = el.querySelector('th.fscore');
     if (!h || !a || !s) continue;
     const m = /^\s*(\d+)\s*[–-]\s*(\d+)/.exec(s.textContent);
+    /* l'affiche, jouée ou non : date (ISO caché du gabarit) et heure de Paris (la
+       page les donne en CET/CEST, l'heure locale suit entre parenthèses) */
+    const d = el.querySelector('.bday, .dtstart'), t = el.querySelector('.ftime');
+    const hm = t && /(\d{1,2}):(\d{2})/.exec(t.textContent);
+    affiches.push({ j, dom: equipe(h), ext: equipe(a), b: m ? [+m[1], +m[2]] : null,
+                    date: d ? d.textContent.trim().slice(0, 10) : null, heure: hm ? hm[1].padStart(2, '0') + ':' + hm[2] : null });
     if (!m) continue;                                   // pas encore joué (« v », heure…)
     out.push({ j, dom: equipe(h), ext: equipe(a), b: [+m[1], +m[2]] });
   }
-  return { matchs: out, cases: vus };
+  return { matchs: out, cases: vus, affiches };
 }
 
 /* nom Wikipédia → nom source, nation par nation */
@@ -142,7 +151,7 @@ export async function majLigue({ data, ici, log, pages = null }) {
   const carte = fs.existsSync(fCarte) ? JSON.parse(fs.readFileSync(fCarte, 'utf8')) : {};
   const eff = data.eff || {};
   const nomSource = rapprocheur(eff, carte);
-  const res = {}, doutes = [];
+  const res = {}, doutes = [], aff = [];
   let total = 0;
   for (let k = 0; k < 3; k++) for (const ko of [false, true]) {
     const titre = `${lab}_UEFA_${COMPS[k].replace(/ /g, '_')}_${ko ? 'knockout' : 'league'}_phase`;
@@ -150,7 +159,7 @@ export async function majLigue({ data, ici, log, pages = null }) {
        qu'elle manque, on passe sans bruit. Celle de la ligue, elle, est exigée. */
     let html = pages ? (Array.isArray(pages) ? (ko ? null : pages[k]) : (pages[k] || {})[ko ? 'ko' : 'ligue']) : await telecharge(titre);
     if (!html) { if (!ko && !pages) throw new Error(`${titre} : page introuvable`); continue; }
-    const { matchs, cases } = lirePage(html, ko);
+    const { matchs, cases, affiches } = lirePage(html, ko);
     if (!ko && cases < 100) throw new Error(`${titre} : ${cases} matchs au calendrier, la page a changé de forme`);
     if (ko && cases < 20) { log(`  ⚠ ${titre} : ${cases} matchs au calendrier, phase finale ignorée`); continue; }
     for (const x of matchs) {
@@ -162,6 +171,14 @@ export async function majLigue({ data, ici, log, pages = null }) {
       ((res[cd] = res[cd] || {})[sd] = res[cd][sd] || []).push([x.j, k, se, ce, x.b[0], x.b[1], 1]);
       ((res[ce] = res[ce] || {})[se] = res[ce][se] || []).push([x.j, k, sd, cd, x.b[1], x.b[0], 0]);
       total++;
+    }
+    /* les affiches des clubs français, jouées ou à venir (bloc 0, survol d'une journée) */
+    for (const x of affiches) {
+      const pays = e => code[ALIAS[e.pays] || e.pays] || code[ALIAS[e.drapeau] || e.drapeau];
+      const cd = pays(x.dom), ce = pays(x.ext);
+      if (cd !== 'FRA' && ce !== 'FRA') continue;
+      const nd = nomSource(x.dom.nom, cd, k) || x.dom.nom, ne = nomSource(x.ext.nom, ce, k) || x.ext.nom;
+      aff.push([k, x.j, x.date, x.heure, nd, cd, ne, ce, ...(x.b || [null, null])]);
     }
     log(`  Wikipédia ${(COMPS[k] + (ko ? ', phase finale' : '')).padEnd(31)} ${matchs.length} matchs joués sur ${cases}`);
   }
@@ -178,10 +195,16 @@ export async function majLigue({ data, ici, log, pages = null }) {
   log(`  recoupement avec la source : ${accord} clubs d'accord, ${ecart} en attente ou en écart (sans détail affiché)`);
   for (const d of [...new Set(doutes)]) log('  ⚠ ' + d);
   const tri = o => Object.fromEntries(Object.keys(o).sort().map(c => [c, Object.fromEntries(Object.keys(o[c]).sort().map(n => [n, o[c][n]]))]));
+  /* affiches françaises : fichier à part, réécrit seulement s'il change */
+  aff.sort((a, b) => a[0] - b[0] || a[1] - b[1] || String(a[2]).localeCompare(String(b[2])) || String(a[3]).localeCompare(String(b[3])) || a[4].localeCompare(b[4]));
+  const fa = path.join(ici, 'wiki', `affiches-${an}-${m[2].slice(2)}.json`), ta = JSON.stringify({ [an]: aff });
+  const affNeuf = ta !== (fs.existsSync(fa) ? fs.readFileSync(fa, 'utf8') : '');
+  if (affNeuf) fs.writeFileSync(fa, ta);
+  log(`  affiches françaises : ${aff.length}${affNeuf ? ', fichier mis à jour' : ', inchangées'}`);
   const texte = JSON.stringify({ [an]: tri(res) });
   const f = path.join(ici, 'wiki', `ligue-${an}-${m[2].slice(2)}.json`);
   const avant = fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '';
-  if (texte === avant) { log(`  matchs de ligue : ${total}, inchangés`); return false; }
+  if (texte === avant) { log(`  matchs de ligue : ${total}, inchangés`); return affNeuf; }
   fs.writeFileSync(f, texte);
   log(`  matchs de ligue : ${total}, fichier mis à jour`);
   return true;

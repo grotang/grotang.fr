@@ -131,8 +131,30 @@ function phaseFinale(src) {
   }
   return { kov, sk: SK, jex };
 }
+/* Les matchs des clubs français, journée par journée, pour le survol du bloc 0 :
+   « c:é » (compétition, étape 0…7 ligue, 8…12 phase finale) et « c:qN » (tour de
+   qualification N). Chaque match : [date, heure, domicile, nation, extérieur,
+   nation, buts dom., buts ext.] ; en qualifications la date est remplacée par
+   la manche (0 aller, 1 retour), la page connaît les dates des tours. */
+function affichesFR(src) {
+  const D = JSON.parse(src.slice(src.indexOf('/*DATA_START*/') + 14, src.indexOf('/*DATA_END*/')).replace(/^const D\s*=\s*/, '').replace(/;\s*$/, ''));
+  const m = /^(\d{4})\/(\d{4})$/.exec(D.meta.season || ''); if (!m) return {};
+  const suf = `${m[1]}-${m[2].slice(2)}`, out = {};
+  const fa = path.join(ROOT, `tools/uefa/wiki/affiches-${suf}.json`);
+  if (fs.existsSync(fa)) for (const [k, j, d, h, nd, cd, ne, ce, gd, ge] of JSON.parse(fs.readFileSync(fa, 'utf8'))[m[1]] || [])
+    (out[k + ':' + j] = out[k + ':' + j] || []).push([d, h, nd, cd, ne, ce, gd, ge]);
+  const fq = path.join(ROOT, `tools/uefa/wiki/matchs-${suf}.json`);
+  if (fs.existsSync(fq)) { const Q = JSON.parse(fs.readFileSync(fq, 'utf8'));
+    for (const [club, L] of Object.entries((Q.c || {}).FRA || {})) { const vu = {};
+      for (const [r, k, o, gf, ga, dom] of L) { if (r > 3) continue;
+        const leg = vu[r] = (vu[r] ?? -1) + 1, [on, oc] = Q.noms[o] || ['?', '?'];
+        (out[k + ':q' + r] = out[k + ':q' + r] || []).push(dom ? [leg, null, club, 'FRA', on, oc, gf, ga] : [leg, null, on, oc, club, 'FRA', ga, gf]); } } }
+  for (const v of Object.values(out)) v.sort((a, b) => String(a[0]).localeCompare(String(b[0])) || String(a[1]).localeCompare(String(b[1])));
+  return out;
+}
 function buildUefa() {
   let src = read('tools/uefa/page.html');
+  src = src.replace(/\/\*AFF_START\*\/[\s\S]*?\/\*AFF_END\*\//, () => `/*AFF_START*/const AFF = ${JSON.stringify(affichesFR(src))};/*AFF_END*/`);
   { const pf = phaseFinale(src);
     src = src.replace(/\/\*KOV_START\*\/[\s\S]*?\/\*KOV_END\*\//, () => `/*KOV_START*/const KOV = ${JSON.stringify(pf.kov)};/*KOV_END*/`)
              .replace(/\/\*SANKEY_START\*\/[\s\S]*?\/\*SANKEY_END\*\//, () => `/*SANKEY_START*/const SANKEY = ${JSON.stringify(pf.sk)};/*SANKEY_END*/`)

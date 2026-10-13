@@ -258,3 +258,11 @@ ligue et phase finale : `wiki/ligue-AAAA-AA.json`), servis par `build.mjs` dans 
 et `KOV` (phase finale). Une nation n'est servie en exact pour une phase que si tous ses clubs y recoupent
 leur bilan officiel ; sinon, repli sur la reconstitution par le coefficient (gain de l'étape × diviseur,
 recalé sur PktNat pour l'été). Contrôle au 12/10 : 25 journées comparées, 0 écart de points entre les deux.
+
+## Matchs des clubs français au survol du calendrier (bloc 0)
+
+- Source : les mêmes pages Wikipédia que le 6b (« league phase », puis « knockout phase » après le tirage), lues par `ligue-wiki.mjs` à chaque passage du robot.
+- On garde **toutes les affiches d'un club français**, jouées ou non : date (champ ISO caché du gabarit), heure de Paris (la page écrit l'heure CET/CEST), les deux clubs, le score s'il existe.
+- Fichier : `wiki/affiches-AAAA-AA.json`, réécrit seulement s'il change. `build.mjs` le range par journée dans `AFF` (« compétition:étape »), avec les tours de qualification tirés de `wiki/matchs-AAAA-AA.json` (« compétition:qN », manche aller ou retour ; les dates viennent de `QUAL`).
+- Ici, pas de recoupement avec le bilan officiel : c'est une liste d'affiches, pas un calcul de points. Le soir même, Wikipédia a souvent le score avant la source.
+- Phase finale : tant que la page n'existe pas, l'infobulle dit « Affiches connues après le tirage ».
