@@ -516,6 +516,42 @@ section > .famille + .panel{margin-top:22px}
 .pod.out{opacity:.5; text-decoration:line-through}
 
 /* ---------- sélecteur ---------- */
+/* 5 · Une idée ? — le seul bloc qui parle au lecteur plutôt que de lui montrer des chiffres */
+.idee{background:linear-gradient(135deg, var(--fr-soft), var(--surface) 62%); border-color:color-mix(in srgb, var(--fr) 28%, var(--rule))}
+.idee-grid{display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:28px; align-items:start}
+.idee-accroche{font-size:15.5px; line-height:1.5; color:var(--ink-2); margin:2px 0 14px; max-width:60ch; min-height:3em; transition:opacity .2s}
+.idee-accroche b{color:var(--ink)}
+.idee-sujets{margin-bottom:12px}
+.idee-sujets .lbl{font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); margin-right:4px}
+.chips.idee-sujets button{border-radius:999px}
+.chips.idee-sujets button[aria-pressed="true"]{background:var(--fr); border-color:var(--fr); color:#fff}
+.idee-lab{display:flex; justify-content:space-between; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); margin-bottom:5px}
+.idee-lab span{font-family:"IBM Plex Mono",monospace; font-weight:500; letter-spacing:0; text-transform:none}
+#ideeMsg{width:100%; box-sizing:border-box; resize:vertical; min-height:96px; font:inherit; font-size:14px; line-height:1.5; color:var(--ink);
+  background:var(--surface); border:1px solid var(--rule); border-radius:6px; padding:10px 12px; transition:border-color .15s, box-shadow .15s}
+#ideeMsg:focus{outline:none; border-color:var(--fr); box-shadow:0 0 0 3px color-mix(in srgb, var(--fr) 22%, transparent)}
+.idee-act{display:flex; flex-wrap:wrap; align-items:center; gap:10px 12px; margin-top:12px}
+.idee-go{appearance:none; border:0; cursor:pointer; font:inherit; font-size:14px; font-weight:700; color:#fff; background:var(--fr);
+  padding:10px 18px; border-radius:999px; box-shadow:0 4px 14px color-mix(in srgb, var(--fr) 35%, transparent); transition:transform .15s, box-shadow .15s}
+.idee-go span{display:inline-block; transition:transform .2s}
+.idee-go:hover{transform:translateY(-1px); box-shadow:0 6px 18px color-mix(in srgb, var(--fr) 45%, transparent)}
+.idee-go:hover span{transform:translateX(4px)}
+.idee-go:focus-visible, .idee-mail:focus-visible{outline:2px solid var(--fr); outline-offset:2px}
+.idee-ou{font-size:13px; color:var(--ink-3)}
+.idee-mail{appearance:none; cursor:pointer; font:inherit; display:inline-flex; align-items:center; gap:8px; background:var(--surface);
+  border:1px dashed var(--rule); border-radius:999px; padding:6px 6px 6px 12px; color:var(--ink); font-size:13.5px; font-weight:600; transition:border-color .15s}
+.idee-mail:hover{border-color:var(--fr)}
+.idee-cp{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--fr); background:var(--fr-soft); border-radius:999px; padding:3px 8px}
+.idee-cp.ok{color:#fff; background:var(--good)}
+.idee-note{font-size:12px; color:var(--ink-3); margin:10px 0 0}
+.idee-recent{border-left:2px solid color-mix(in srgb, var(--fr) 40%, var(--rule)); padding-left:16px}
+.idee-rt{font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); margin-bottom:8px}
+.idee-recent ol{list-style:none; margin:0; padding:0; display:grid; gap:9px}
+.idee-recent li{font-size:13px; line-height:1.4; color:var(--ink-2); display:grid; grid-template-columns:44px 1fr; gap:6px}
+.idee-recent time{font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--fr); font-weight:600; padding-top:1px}
+.idee-rf{margin-top:12px; font-size:13px; font-weight:600; color:var(--ink)}
+@media (max-width:760px){ .idee-grid{grid-template-columns:1fr; gap:20px} .idee-go{flex:1 1 100%; padding:12px 18px} }
+@media (prefers-reduced-motion:reduce){ .idee-go, .idee-go span, .idee-accroche{transition:none} }
 .chips{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; align-items:center}
 .chips button{appearance:none; font:inherit; font-size:12.5px; font-weight:600; padding:5px 11px; cursor:pointer;
   border:1px solid var(--rule); background:var(--surface); color:var(--ink-2); border-radius:2px}
@@ -651,6 +687,34 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
     <p class="figc" id="mtxNote"></p>
   </div>
   </div><!-- /famille 4 -->
+
+  <div class="panel idee" id="idee">
+    <div class="ptitle"><span class="no">5</span><h3>Une idée ?</h3></div>
+    <div class="idee-grid">
+      <div>
+        <p class="idee-accroche" id="ideeAccroche">Un graphique qui vous manque, un chiffre qui cloche, une nation à suivre de plus près ? <b>Ce site s'améliore avec ceux qui le lisent.</b></p>
+        <div class="chips idee-sujets" id="ideeSujets" role="group" aria-label="Sujet"><span class="lbl">C'est</span></div>
+        <label class="idee-lab" for="ideeMsg">Votre message <span id="ideeNb"></span></label>
+        <textarea id="ideeMsg" rows="4" maxlength="1500"></textarea>
+        <div class="idee-act">
+          <button type="button" class="idee-go" id="ideeGo">Envoyer par email <span aria-hidden="true">→</span></button>
+          <span class="idee-ou">ou écrivez à</span>
+          <button type="button" class="idee-mail" id="ideeMail" title="Copier l'adresse"><span id="ideeAdr">…</span><span class="idee-cp" id="ideeCp">copier</span></button>
+        </div>
+        <p class="idee-note">Le bouton ouvre votre messagerie, rien ne part sans vous. Réponse personnelle, pas de liste de diffusion.</p>
+      </div>
+      <aside class="idee-recent" aria-label="Changements récents">
+        <div class="idee-rt">Ça bouge en ce moment</div>
+        <ol>
+          <li><time>13/10</time>Les matchs des clubs français au survol du calendrier (bloc 0)</li>
+          <li><time>13/10</time>La matrice rejoint le bloc 4, aux couleurs des nations</li>
+          <li><time>12/10</time>Le bandeau des trois phases sur les courbes (blocs 2 et 4a)</li>
+          <li><time>12/10</time>Le rendement journée par journée depuis 2021/22 (bloc 6a)</li>
+        </ol>
+        <div class="idee-rf">La suivante sera peut-être la vôtre.</div>
+      </aside>
+    </div>
+  </div>
 </section>
 
 <section>
@@ -4665,4 +4729,52 @@ document.getElementById('anomaly').innerHTML = anomalous.length
   ? `<div class="warnbox"><p style="margin:0"><b>* Points hors grille.</b> La source impute déjà des points à l'étape « ${label(anomalous[0])} » alors que les journées précédentes de phase de ligue ne sont pas jouées : il s'agit de rencontres déjà disputées que la source ne rattache à aucune journée du calendrier (barrages de C4, notamment). Ces points sont bien comptés dans le coefficient total ; seule leur position sur l'axe du temps est approximative.</p></div>`
   : '';
 
+</script>
+
+<script>/* ---------- 5 · Une idée ? ----------
+   Pas de formulaire envoyé à un serveur : le bouton prépare un email (sujet et
+   début de message selon le thème choisi) et ouvre la messagerie du lecteur.
+   L'adresse est assemblée ici, pas écrite dans la page : les robots qui
+   ramassent les adresses pour le spam la trouvent moins facilement. */
+(function(){
+  const adr = ['tanguy.drouin', 'gmail.com'].join('@');
+  const $ = id => document.getElementById(id);
+  const msg = $('ideeMsg'), host = $('ideeSujets'); if (!msg || !host) return;
+  $('ideeAdr').textContent = adr;
+  const SUJETS = [
+    ['Une idée',    'Une idée de graphique, de lecture, de chiffre à suivre ? <b>Décrivez-la en deux lignes</b>, je regarde.',
+                    ['Et si on voyait la France face à chaque nation, saison après saison ?', 'Un bloc sur les clubs qui rapportent le plus par match ?', 'Pouvoir comparer deux saisons côte à côte ?']],
+    ['Une erreur',  'Un chiffre qui cloche, un club mal rangé, un score faux ? <b>Dites-moi où</b> : bloc, nation, journée.',
+                    ['Bloc 6b, la Belgique : il manque un match à la J3…', 'Le total de la Grèce ne colle pas avec celui de l’UEFA…']],
+    ['Ma nation',   'Votre pays mérite plus de place ? <b>Dites-moi ce que vous aimeriez y lire.</b>',
+                    ['Suivre le Portugal aussi finement que la France ?', 'Un zoom sur la course à la 5e place…']],
+    ['Juste bravo', 'Ça fait toujours plaisir, et ça dit ce qu’il faut garder. <b>Qu’est-ce qui vous sert le plus ?</b>',
+                    ['Le bloc 0, je le regarde chaque soir de match.', 'La projection, pour savoir où on finit.']]
+  ];
+  let choix = 0, ex = 0, timer = null;
+  host.insertAdjacentHTML('beforeend', SUJETS.map((x, i) => `<button type="button" data-i="${i}" aria-pressed="${i === 0}">${x[0]}</button>`).join(''));
+  const reduit = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* l'exemple du champ vide défile tout seul : on montre ce qu'on attend sans l'imposer */
+  const exemple = () => { const L = SUJETS[choix][2]; msg.placeholder = 'Par exemple : ' + L[ex % L.length]; ex++; };
+  const relance = () => { clearInterval(timer); exemple(); if (!reduit) timer = setInterval(() => { if (!msg.value && document.activeElement !== msg) exemple(); }, 3800); };
+  msg.addEventListener('input', () => { const n = msg.value.length; $('ideeNb').textContent = n ? `${n} / 1500` : ''; });
+  host.onclick = e => { const b = e.target.closest('button[data-i]'); if (!b) return;
+    choix = +b.dataset.i; ex = 0;
+    host.querySelectorAll('button[data-i]').forEach(x => x.setAttribute('aria-pressed', x === b));
+    const a = $('ideeAccroche'); a.style.opacity = 0;
+    setTimeout(() => { a.innerHTML = SUJETS[choix][1]; a.style.opacity = 1; }, reduit ? 0 : 160);
+    relance(); msg.focus({ preventScroll: true }); };
+  $('ideeGo').onclick = () => {
+    const sujet = `grotang.fr · ${SUJETS[choix][0]}`;
+    const corps = msg.value.trim() + '\n\n—\nEnvoyé depuis grotang.fr/uefa';
+    location.href = `mailto:${adr}?subject=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`;
+  };
+  $('ideeMail').onclick = () => {
+    const ok = () => { const c = $('ideeCp'); c.textContent = 'copiée ✓'; c.classList.add('ok');
+      setTimeout(() => { c.textContent = 'copier'; c.classList.remove('ok'); }, 1800); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(adr).then(ok, () => { location.href = 'mailto:' + adr; });
+    else location.href = 'mailto:' + adr;
+  };
+  relance();
+})();
 </script>
