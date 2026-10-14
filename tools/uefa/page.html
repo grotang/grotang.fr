@@ -424,11 +424,11 @@ section > .famille + .panel{margin-top:22px}
 .barrow .yseg.on{filter:brightness(1.12) saturate(1.15)}
 .barrow .yseg.wip{box-shadow:inset 2px 0 0 var(--surface)}
 /* Projection : ce qui reste à prendre d'ici la finale, dans la couleur de la
-   nation mais hachuré — une valeur à venir se hachure, une valeur acquise est
-   pleine (même grammaire que la page d'accueil). Le trait fin par-dessus dit
+   nation en teinte intermédiaire — trois intensités d'une même couleur : saisons
+   closes pâles, acquis plein, projection entre les deux (choix de GT du 14/10,
+   la hachure faisait « manque d'assurance »). Le trait fin par-dessus dit
    l'incertitude : 3 fois sur 5, la saison finit entre ses deux butées. */
-.barrow .pseg{height:100%; flex:none; background:repeating-linear-gradient(135deg, var(--pc) 0 2.4px, var(--pl) 2.4px 6px);
-  box-shadow:inset 2px 0 0 var(--surface); transition:filter .08s}
+.barrow .pseg{height:100%; flex:none; box-shadow:inset 2px 0 0 var(--surface); transition:filter .08s}
 .barrow .pseg.on{filter:brightness(1.08) saturate(1.15)}
 .barrow .rng{position:absolute; top:50%; height:2px; margin-top:-1px; background:var(--ink); opacity:.55; border-radius:1px}
 .barrow .rng::before, .barrow .rng::after{content:""; position:absolute; top:-4px; width:2px; height:10px; background:inherit; border-radius:1px}
@@ -1733,7 +1733,7 @@ let period = 5;                  // 'season', ou le nombre de saisons de la fen�
    les seuls points déjà acquis. La projection est celle du bloc 8 — médiane de
    200 000 saisons rejouées jusqu'à la finale sur le runner, six nombres par
    nation (5e, 20e, 50e, 80e, 95e centiles, meilleur cas). Elle ne remplace jamais
-   l'acquis : elle s'y AJOUTE, hachurée, et ne descend jamais en dessous. */
+   l'acquis : elle s'y AJOUTE, en teinte intermédiaire, et ne descend jamais en dessous. */
 let lectB = 'proj';
 const PQB = c => (typeof PRJ !== 'undefined' && PRJ && PRJ.q && PRJ.q.tir && PRJ.q.tir[c]) || null;
 const projOn = () => lectB === 'proj' && typeof PRJ !== 'undefined' && !!(PRJ && PRJ.q && PRJ.q.tir);
@@ -1748,13 +1748,14 @@ let porteeB='top';
    encre neutre, ce qui garde le groupe repérable au milieu du champ complet. */
 const jeuB = () => porteeB === 'top' ? TOP8 : ENGAGEES.map(n => n.c);
 const teinteB = c => SLOT[c] || '--ink-2';
-/* la part projetée d'une barre : hachure de l'acquis à la médiane, puis le trait
+/* la part projetée d'une barre : teinte intermédiaire de l'acquis à la médiane, puis le trait
    « 3 fois sur 5 » posé par-dessus (positionné en absolu sur la piste) */
 function projBar(c, base, max){
   const isS = period === 'season', F = isS ? FEN[5] : FEN[period];
   const clos = isS ? 0 : F.tot(BY[c]) - BY[c].y[4], [lo, med, hi] = projS(c), a = seasonNow(c);
-  const pc = toHex(base), pl = toHex(melange(base, toRGB(cssHex('--surface-2')), .30));
-  return `<div class="pseg" style="width:${larg((med - a) / max * 100)};--pc:${pc};--pl:${pl}"></div>`
+  /* teinte intermédiaire : entre le pâle des saisons closes et le plein de l'acquis */
+  const pm = toHex(melange(base, toRGB(cssHex('--surface')), .62));
+  return `<div class="pseg" style="width:${larg((med - a) / max * 100)};background:${pm}"></div>`
     + (hi - lo > 0.01 ? `<span class="rng" style="left:${larg((clos + lo) / max * 100)};width:${larg((hi - lo) / max * 100)}"><i style="left:${((med - lo) / (hi - lo) * 100).toFixed(1)}%"></i></span>` : '');
 }
 function drawBars(){
@@ -1838,7 +1839,7 @@ function drawBars(){
   majReserve();
   const posS=[...rows].sort((x,y)=>seasonNow(y)-seasonNow(x)).indexOf('FRA')+1;
   if (P) {
-    const hach = `background:repeating-linear-gradient(135deg,var(--ink-3) 0 2.4px,color-mix(in srgb,var(--ink-3) 30%,var(--surface-2)) 2.4px 6px)`;
+    const hach = `background:color-mix(in srgb,var(--ink-3) 62%,var(--surface))`;
     const legP = (isS ? '' : `<span class="bleg"><i style="background:color-mix(in srgb,var(--ink-3) 38%,var(--surface-2))"></i>${F.n - 1} saison${F.n > 2 ? 's' : ''} close${F.n > 2 ? 's' : ''}</span>`)
       + `<span class="bleg"><i style="background:var(--ink-3);width:14px"></i>saison en cours, acquis</span>`
       + `<span class="bleg"><i style="${hach}"></i>à venir, projection médiane</span>`
@@ -1850,7 +1851,7 @@ function drawBars(){
     else { const rp = rangP[fr], rr = F.rang(BY[fr]);
       t = (F.n === 5 ? `Classement à cinq ans, saison en cours projetée à sa fin : la France finirait <b>${rp}<sup>e</sup></b>` : `Socle de l'été ${2027 + (5 - F.n) - 1}, saison en cours projetée à sa fin : la France serait <b>${rp}<sup>e</sup></b>`)
         + (rp !== rr ? ` (${rr}<sup>e</sup> au réel acquis). ` : `, comme au réel acquis. `); }
-    t += `La partie hachurée est ce qui reste à prendre d'ici la finale : la médiane de ${nf((PRJ && PRJ.n) || 0, 0)} saisons rejouées (bloc 8). Le rond marque cette médiane, les butées encadrent 3 tirages sur 5. Les flèches comparent au réel acquis.`;
+    t += `La partie en teinte intermédiaire est ce qui reste à prendre d'ici la finale : la médiane de ${nf((PRJ && PRJ.n) || 0, 0)} saisons rejouées (bloc 8). Le rond marque cette médiane, les butées encadrent 3 tirages sur 5. Les flèches comparent au réel acquis.`;
     document.getElementById('barNote').innerHTML = legP + `Pastilles : un club engagé chacune, pleine tant qu'il est en lice, en creux une fois éliminé. ` + t;
     return;
   }
@@ -1902,7 +1903,7 @@ function drawBars(){
       const ligne = (lab, v, sty) => `<div class="tr"${sty ? ` style="${sty}"` : ''}><span class="nm">${lab}</span><b>${v}</b></div>`;
       tip.innerHTML = `<div class="th">${name(c)} · saison ${D.meta.season}</div>`
         + ligne(`<i style="background:${C};display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px"></i>Acquis`, nfx(a))
-        + ligne(`<i style="background:repeating-linear-gradient(135deg,${C} 0 2px,transparent 2px 4px);display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px"></i>Projection (médiane)`, nfx(med), 'color:var(--ink)')
+        + ligne(`<i style="background:color-mix(in srgb,${C} 62%,var(--surface));display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px"></i>Projection (médiane)`, nfx(med), 'color:var(--ink)')
         + ligne('3 fois sur 5', `${nfx(lo)} – ${nfx(hi)}`, 'opacity:.8')
         + ligne('9 fois sur 10', `${nfx(b5)} – ${nfx(h95)}`, 'opacity:.6')
         + `<div class="tfoot">Encore <b>+${nfx(med - a)}</b> à prendre d'ici la finale, en médiane.</div>`;
