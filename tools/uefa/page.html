@@ -2284,9 +2284,13 @@ let drawSv = () => {};   /* bloc 7c (écrémage), rempli plus bas */
 let drawCsHook = () => {};   /* bloc 7b (courbe de survie), rempli plus bas */
 let drawSk = () => {};   /* bloc 7d (Sankey), rempli plus bas (même raison) */
 
+/* Les blocs écrits à part (6a, 6b) ont leur propre état de saison : ils
+   s'abonnent ici pour suivre le sélecteur commun, et le pilotent à leur tour. */
+const SEASON_HOOKS = [];
 function syncSeason(){
   ['seasonSel','seasonSelZ','seasonSelM','seasonSelK','seasonSelC','seasonSelD','seasonSelS','seasonSelV','seasonSelB'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=selY; });
   drawK(); drawClubs(); drawDec(); drawL(); drawZ(); drawM(); drawSk(); drawSv(); drawCsHook();
+  SEASON_HOOKS.forEach(f => f());
 }
 
 const selL=new Set(TOP8);
@@ -3375,7 +3379,9 @@ const legende = segs => segs.map(s =>
   const syncR = () => { bRT.setAttribute('aria-pressed', porteeR === 'top'); bRA.setAttribute('aria-pressed', porteeR === 'all'); drawR(); };
   bRT.onclick = () => { porteeR = 'top'; syncR(); };
   bRA.onclick = () => { porteeR = 'all'; syncR(); };
-  sRS.onchange = () => { saisonR = +sRS.value; syncR(); };
+  /* 6a suit la saison commune à toute la page, et la change pour tous */
+  sRS.onchange = () => { selY = +sRS.value === COUR_R ? 'cur' : sRS.value; syncSeason(); };
+  SEASON_HOOKS.push(() => { saisonR = selY === 'cur' ? COUR_R : +selY; sRS.value = String(saisonR); syncR(); });
   syncR();
 
   /* ===================== 5d · fourchette de fin ===================== */
@@ -4613,7 +4619,11 @@ function bilanVND(cfg){
   bT.onclick = () => { portee = 'top'; sync(); };
   bA.onclick = () => { portee = 'all'; sync(); };
   sN.onchange = () => { if (sN.value) { portee = sN.value; sync(); } };
-  sS.onchange = () => { saison = sS.value; sync(); };
+  /* 6b suit la saison commune à toute la page, et la change pour tous ;
+     « Les 5 dernières » n'existe qu'ici, il ne touche pas aux autres blocs */
+  sS.onchange = () => { if (sS.value === '5') { saison = '5'; sync(); return; }
+    selY = sS.value === String(COUR) ? 'cur' : sS.value; syncSeason(); };
+  SEASON_HOOKS.push(() => { saison = selY === 'cur' ? String(COUR) : String(selY); sS.value = saison; sync(); });
   bO.onclick = () => { ouvert = true; bascule.clear(); sync(); };
   bF.onclick = () => { ouvert = false; bascule.clear(); sync(); };
   const plier = el => { if (seule()) return; const c = el.dataset.c; bascule.has(c) ? bascule.delete(c) : bascule.add(c); dessine(); };
