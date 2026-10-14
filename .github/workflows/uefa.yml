@@ -1,17 +1,23 @@
 name: Rafraîchissement UEFA
 
-# LE PASSAGE DU MATIN (le soir de match est couvert par uefa-soir.yml).
+# LES PASSAGES À HEURE FIXE (le soir de match est couvert par uefa-soir.yml).
 #
-# Depuis le 14/10/2026, ce robot ne tourne plus le soir. Les trois essais du
+# Depuis le 14/10/2026, ce robot n'est plus celui sur qui on compte le soir. Les trois essais du
 # soir partaient avec des heures de retard (le 13/10, celui de 23 h 38 est parti
 # à 2 h 33) : GitHub ne garantit pas l'heure de départ d'une tâche planifiée.
 # Le soir de match, c'est donc uefa-soir.yml qui travaille : il part tôt, reste
 # éveillé de 20 h 35 jusqu'à ce que tout soit à jour, et publie au fil de l'eau.
 #
-# Ici ne restent que deux passages le matin, en filet (si la veille du soir a
-# manqué quelque chose) et pour l'alarme de fraîcheur, qui ne sonne qu'à 7 h.
-# Cron ne parle qu'UTC et ignore le changement d'heure, d'où deux lignes :
+# Ici restent deux passages le matin, en filet (si la veille du soir a manqué
+# quelque chose) et pour l'alarme de fraîcheur, qui ne sonne qu'à 7 h. Et un
+# passage à 23 h 38, gardé à la demande de GT : s'il part à l'heure, tant mieux ;
+# s'il part en retard ou si la veille du soir a déjà tout déposé, il ne trouve
+# rien de neuf et sort sans rien écrire. Il ne coûte rien.
+# Cron ne parle qu'UTC et ignore le changement d'heure, d'où deux lignes par
+# rendez-vous :
 #
+#   38 21 UTC → 23 h 38 été · 22 h 38 hiver
+#   38 22 UTC → 00 h 38 été · 23 h 38 hiver
 #   12 05 UTC → 07 h 12 été · 06 h 12 hiver
 #   12 06 UTC → 08 h 12 été · 07 h 12 hiver
 #
@@ -24,6 +30,8 @@ name: Rafraîchissement UEFA
 # quelle heure ; la case « force » republie même sans données neuves.
 on:
   schedule:
+    - cron: '38 21 * * *'
+    - cron: '38 22 * * *'
     - cron: '12 5 * * *'
     - cron: '12 6 * * *'
   workflow_dispatch:
