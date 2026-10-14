@@ -1875,6 +1875,38 @@ function drawBars(){
   }
   document.getElementById('barNote').innerHTML = leg + pips + txt;
 }
+/* Infobulle du bloc 1 (voir le survol plus bas) */
+function tipBarre(c, foc){
+  const n = BY[c], isS = period === 'season', F = isS ? FEN[5] : FEN[period], P = projOn();
+  const C = `var(${teinteB(c)})`, a = seasonNow(c), [lo, med, hi, b5, h95] = projS(c);
+  const pas = (bg) => `<i style="background:${bg}"></i>`;
+  const ligne = (bg, lab, v, extra, sty) => `<div class="tr"${sty ? ` style="${sty}"` : ''}>${bg ? pas(bg) : '<i style="background:transparent"></i>'}<span class="nm">${lab}</span><b>${v}</b>${extra || ''}</div>`;
+  const pmix = `color-mix(in srgb, ${C} 62%, var(--surface))`, closMix = `color-mix(in srgb, ${C} 38%, var(--surface-2))`;
+  const detailEnCours = (sty) => P
+    ? ligne(C, 'dont acquis', nfx(a), '', sty || 'opacity:.8')
+      + ligne(pmix, 'à venir (médiane)', '+' + nfx(med - a), '', sty || 'opacity:.8')
+      + ligne('', '3 fois sur 5', `${nfx(lo)} – ${nfx(hi)}`, '', 'opacity:.6')
+      + ligne('', '9 fois sur 10', `${nfx(b5)} – ${nfx(h95)}`, '', 'opacity:.6')
+    : '';
+  if (isS) {
+    return `<div class="th">${name(c)} · saison ${D.meta.season}</div>`
+      + ligne(P ? pmix : C, P ? 'Projection de fin de saison' : 'Acquis', nfx(P ? med : a), '', 'color:var(--ink);font-weight:600')
+      + detailEnCours()
+      + `<div class="tfoot">${enVie(n)} clubs en lice sur ${engages(n)} engagés.</div>`;
+  }
+  const dep = 5 - F.n, clos = F.tot(n) - n.y[4], tot = P ? clos + med : F.tot(n);
+  const rangR = F.rang(n), rangP = P ? [...N].sort((x, y) => (F.tot(y) - y.y[4] + projS(y.c)[1]) - (F.tot(x) - x.y[4] + projS(x.c)[1])).findIndex(x => x.c === c) + 1 : rangR;
+  let h = `<div class="th">${name(c)} · ${F.n} dernières saisons</div>`
+    + `<div class="tsub">Total${P ? ' projeté' : ''} : <b style="color:var(--ink);font-family:'IBM Plex Mono',monospace">${nf(tot, 3)}</b> · ${rangP}<sup>e</sup>${P && rangP !== rangR ? ` (${rangR}<sup>e</sup> au réel)` : ''}</div>`;
+  for (let yi = dep; yi < 5; yi++) {
+    const wip = yi === 4, v = wip ? (P ? med : a) : n.y[yi], on = yi === foc;
+    h += ligne(wip ? (P ? pmix : C) : closMix,
+      `<span${on ? ' style="color:var(--ink);font-weight:600"' : ''}>${SEASONS[yi]}${wip ? ` <span style="color:var(--ink-3);font-weight:400">${P ? 'projetée' : 'en cours'}</span>` : ''}</span>`,
+      nfx(v), `<s style="color:var(--ink-3)">${Math.round(v / tot * 100)} %</s>`, on ? '' : 'opacity:.55');
+    if (wip && P && on) h += detailEnCours('opacity:.8');
+  }
+  return h;
+}
 /* Infobulle saison par saison, calquée sur celle du bloc 2a : même repérage du
    segment survolé, même mise en avant par filtre, même positionnement. Une seule
    mécanique d'infobulle à connaître sur toute la page.
@@ -1895,35 +1927,17 @@ function drawBars(){
       const c = tr.dataset.nat, pi = ev.target.closest('.pips i'), O = pi && ordreCases(c, false);
       tip.innerHTML = tipClubs(c, O && O[+pi.dataset.i] ? O[+pi.dataset.i].n : null); tip.hidden = false; placeTip(tip, ev); return;
     }
-    const pz = projOn() && ev.target.closest('.pseg, .rng, .fill, .yseg.wip');
-    if (pz) {
-      if (last) { last.classList.remove('on'); last = null; }
-      const pseg = pz.closest('.track').querySelector('.pseg'); if (pseg) { pseg.classList.add('on'); last = pseg; }
-      const c = pz.closest('.track').dataset.nat, a = seasonNow(c), [lo, med, hi, b5, h95] = projS(c), C = `var(${teinteB(c)})`;
-      const ligne = (lab, v, sty) => `<div class="tr"${sty ? ` style="${sty}"` : ''}><span class="nm">${lab}</span><b>${v}</b></div>`;
-      tip.innerHTML = `<div class="th">${name(c)} · saison ${D.meta.season}</div>`
-        + ligne(`<i style="background:${C};display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px"></i>Acquis`, nfx(a))
-        + ligne(`<i style="background:color-mix(in srgb,${C} 62%,var(--surface));display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px"></i>Projection (médiane)`, nfx(med), 'color:var(--ink)')
-        + ligne('3 fois sur 5', `${nfx(lo)} – ${nfx(hi)}`, 'opacity:.8')
-        + ligne('9 fois sur 10', `${nfx(b5)} – ${nfx(h95)}`, 'opacity:.6')
-        + `<div class="tfoot">Encore <b>+${nfx(med - a)}</b> à prendre d'ici la finale, en médiane.</div>`;
-      tip.hidden = false; placeTip(tip, ev); return;
-    }
-    const seg = ev.target.closest('.yseg');
-    if (!seg) { hide(); return; }
-    if (seg !== last) { if (last) last.classList.remove('on'); seg.classList.add('on'); last = seg; }
-    const c = seg.closest('.track').dataset.nat, n = BY[c], chaud = +seg.dataset.y;
-    const C = `var(${teinteB(c)})`;
-    tip.innerHTML = `<div class="th">${name(c)} · ${nf(n.t)} sur cinq saisons</div>`
-      + n.y.map((v, yi) => {
-          const wip = yi === 4;
-          const pastille = `<i style="background:${wip ? C : `color-mix(in srgb, ${C} 38%, var(--surface-2))`}"></i>`;
-          return `<div class="tr" style="${yi === chaud ? '' : 'opacity:.55'}">${pastille}`
-            + `<span class="nm"${yi === chaud ? ' style="color:var(--ink);font-weight:600"' : ''}>${SEASONS[yi]}`
-            + (wip ? ' <span style="color:var(--ink-3)">en cours</span>' : '') + `</span>`
-            + `<b>${nf(v, 2)}</b>`
-            + `<s style="color:var(--ink-3)">${nf(v / n.t * 100, 1)} %</s></div>`;
-        }).join('');
+    /* Une seule infobulle pour toute la barre : la fenêtre affichée (pas toujours
+       cinq saisons), son total — EXACT, au millième, le seul chiffre exact de
+       l'infobulle — puis chaque saison selon la charte (nfx). En projection, la
+       saison en cours est comptée à sa médiane et détaillée (acquis, fourchettes). */
+    const pz = ev.target.closest('.pseg, .rng, .fill, .yseg');
+    if (!pz) { hide(); return; }
+    const tr = pz.closest('.track'), c = tr.dataset.nat;
+    const ys = pz.closest('.yseg'), foc = ys ? +ys.dataset.y : 4;
+    const cible = ys || tr.querySelector('.pseg') || pz.closest('.fill');
+    if (cible !== last) { if (last) last.classList.remove('on'); if (cible) cible.classList.add('on'); last = cible; }
+    tip.innerHTML = tipBarre(c, foc);
     tip.hidden = false;
     /* L'infobulle est positionnée dans .barswrap, pas dans #bars : depuis que la
        liste peut défiler (vue à 55 nations), #bars glisse sous son cadre et se
