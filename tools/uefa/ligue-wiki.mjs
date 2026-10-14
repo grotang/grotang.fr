@@ -30,6 +30,7 @@
    Le fichier n'est réécrit que si son contenu change (pas d'horodatage dedans :
    pas de commit parasite). */
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { DOMParser } from 'linkedom';
 
@@ -81,7 +82,10 @@ export function lirePage(html, ko = false) {
     vus++;
     const h = el.querySelector('th.fhome'), a = el.querySelector('th.faway'), s = el.querySelector('th.fscore');
     if (!h || !a || !s) continue;
-    const m = /^\s*(\d+)\s*[–-]\s*(\d+)/.exec(s.textContent);
+    /* le tiret du score varie selon qui a saisi la page : demi-cadratin « 2–1 »,
+       trait d'union, ou signe moins « 0−2 » (U+2212, J2 de 2026/27 : les scores
+       de Lens et Lille passaient pour « pas encore joués »). On les accepte tous. */
+    const m = /^\s*(\d+)\s*[-–—−‒:]\s*(\d+)/.exec(s.textContent);
     /* l'affiche, jouée ou non : date (ISO caché du gabarit) et heure de Paris (la
        page les donne en CET/CEST, l'heure locale suit entre parenthèses) */
     const d = el.querySelector('.bday, .dtstart'), t = el.querySelector('.ftime');
@@ -152,6 +156,11 @@ export async function majLigue({ data, ici, log, pages = null }) {
   const eff = data.eff || {};
   const nomSource = rapprocheur(eff, carte);
   const res = {}, doutes = [], aff = [];
+  /* pour la veille du soir de match (soir.mjs) : combien de matchs de CE soir la
+     page montre déjà avec leur score. Le « soir » est la date de Paris d'il y a
+     six heures : à 1 h du matin, on parle encore de la veille. */
+  const SOIR = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(new Date(Date.now() - 6 * 3600e3));
+  const soir = { soir: SOIR, prevus: 0, joues: 0 };
   let total = 0;
   for (let k = 0; k < 3; k++) for (const ko of [false, true]) {
     const titre = `${lab}_UEFA_${COMPS[k].replace(/ /g, '_')}_${ko ? 'knockout' : 'league'}_phase`;
@@ -173,6 +182,7 @@ export async function majLigue({ data, ici, log, pages = null }) {
       total++;
     }
     /* les affiches des clubs français, jouées ou à venir (bloc 0, survol d'une journée) */
+    for (const x of affiches) if (x.date === SOIR) { soir.prevus++; if (x.b) soir.joues++; }
     for (const x of affiches) {
       const pays = e => code[ALIAS[e.pays] || e.pays] || code[ALIAS[e.drapeau] || e.drapeau];
       const cd = pays(x.dom), ce = pays(x.ext);
@@ -200,6 +210,8 @@ export async function majLigue({ data, ici, log, pages = null }) {
   const fa = path.join(ici, 'wiki', `affiches-${an}-${m[2].slice(2)}.json`), ta = JSON.stringify({ [an]: aff });
   const affNeuf = ta !== (fs.existsSync(fa) ? fs.readFileSync(fa, 'utf8') : '');
   if (affNeuf) fs.writeFileSync(fa, ta);
+  try { fs.writeFileSync(path.join(os.tmpdir(), 'grotang-soir.json'), JSON.stringify(soir)); } catch {}
+  if (soir.prevus) log(`  ce soir (${SOIR}) : ${soir.joues} match(s) sur ${soir.prevus} avec leur score sur Wikipédia`);
   log(`  affiches françaises : ${aff.length}${affNeuf ? ', fichier mis à jour' : ', inchangées'}`);
   const texte = JSON.stringify({ [an]: tri(res) });
   const f = path.join(ici, 'wiki', `ligue-${an}-${m[2].slice(2)}.json`);

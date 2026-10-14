@@ -1,0 +1,107 @@
+name: Soir de match UEFA
+
+# LA VEILLE DU SOIR DE MATCH.
+#
+# Les tâches planifiées de GitHub ne partent pas à l'heure : le 13/10/2026, le
+# passage prévu à 23 h 38 est parti à 2 h 33, celui de 16 h à 20 h 53. GitHub
+# l'écrit lui-même : en période de charge, les départs sont retardés, voire
+# sautés. Aucun réglage de l'heure ne règle ça.
+#
+# Donc on ne vise plus une heure : on part TÔT et on reste éveillé. Deux départs
+# dans l'après-midi (le second rattrape le premier s'il est sauté). Si ce n'est
+# pas un soir de match, la tâche s'arrête en quelques secondes. Sinon elle attend
+# 20 h 35 (Paris), puis toutes les dix minutes relit la source et Wikipédia,
+# dépose et publie dès qu'il y a du neuf — le score du match de 18 h 45 apparaît
+# vers 20 h 45, celui de 21 h vers 23 h — et s'arrête quand tout est à jour
+# (source datée du soir ET score de tous les matchs du soir sur Wikipédia), au
+# plus tard à 3 h 30. Même partie avec trois heures de retard, elle couvre la
+# soirée. Les passages du matin (uefa.yml) restent en filet.
+#
+# Coût : rien. Les minutes de GitHub Actions sont gratuites pour un dépôt public,
+# y compris celles où la tâche attend.
+#
+#   17 47 UTC → 19 h 47 été · 18 h 47 hiver
+#   47 19 UTC → 21 h 47 été · 20 h 47 hiver   (second départ, en filet)
+#
+# Lancée à la main (bouton « Run workflow ») : un tour tout de suite, puis la
+# veille continue si c'est un soir de match.
+on:
+  schedule:
+    - cron: '47 17 * * *'
+    - cron: '47 19 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+# Même file que le rafraîchissement du matin : jamais deux robots à la fois sur
+# page.html. Le second départ attend la fin du premier, constate que tout est à
+# jour, et s'arrête.
+concurrency:
+  group: uefa-refresh
+  cancel-in-progress: false
+
+jobs:
+  veille:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ce soir, y a-t-il match ?
+        id: match
+        run: |
+          # lancée à la main : on y va dans tous les cas (au moins un tour tout de suite)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || node tools/uefa/soir.mjs match; then echo "oui=true" >> "$GITHUB_OUTPUT"; else echo "oui=false" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/setup-node@v4
+        if: steps.match.outputs.oui == 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - if: steps.match.outputs.oui == 'true'
+        run: npm ci
+
+      - name: Navigateur
+        if: steps.match.outputs.oui == 'true'
+        run: npx playwright install --with-deps chromium
+
+      # La boucle. Chaque tour : relire (source + Wikipédia) ; s'il y a du neuf,
+      # fabriquer, projeter, tester, déposer, publier ; puis se demander si tout
+      # est à jour. Un tour raté (source injoignable, test rouge) n'arrête pas la
+      # veille : on retente dix minutes plus tard, rien de cassé n'est publié.
+      - name: Veiller jusqu'à ce que tout soit à jour
+        if: steps.match.outputs.oui == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -u
+          git config user.name  "grotang.fr (robot)"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          fin=$(( $(date +%s) + 340*60 ))
+          tour() {
+            git pull --rebase --quiet || true
+            node tools/uefa/refresh.mjs || { echo "relecture en échec, on retentera"; return; }
+            if [ -z "$(git status --porcelain)" ]; then echo "rien de neuf"; return; fi
+            node tools/build.mjs && node tools/uefa/projette.mjs 200000 && node tools/uefa/test-page.mjs public/uefa/index.html \
+              || { echo "fabrication ou test en échec : rien n'est déposé"; git checkout -- . ; git clean -fdq tools; return; }
+            STAND=$(node -p "JSON.parse(require('fs').readFileSync('tools/uefa/page.html','utf8').split('/*DATA_START*/')[1].split('/*DATA_END*/')[0].replace(/^const D\s*=\s*/,'').replace(/;\s*$/,'')).meta.lastUpdated")
+            if git diff --quiet HEAD -- tools/uefa/nations.json; then MSG="Soir de match : scores Wikipédia (source arrêtée au $STAND)"; else MSG="Coefficient UEFA : source arrêtée au $STAND"; fi
+            git add -A && git commit -qm "$MSG" && { git push || { git pull --rebase && git push; }; } \
+              && gh workflow run pages.yml --ref main && echo "Déposé et publié : $MSG"
+          }
+          # lancée à la main : un premier tour tout de suite, sans attendre 20 h 35
+          premier=${{ github.event_name == 'workflow_dispatch' }}
+          while :; do
+            if [ "$premier" != true ] && node tools/uefa/soir.mjs tot; then sleep 300; [ $(date +%s) -ge $fin ] && break; continue; fi
+            premier=false
+            echo "── $(TZ=Europe/Paris date +%H:%M) (Paris)"
+            tour
+            if node tools/uefa/soir.mjs fini; then echo "Tout est à jour : fin de la veille."; break; fi
+            if ! node tools/uefa/soir.mjs match; then echo "Pas un soir de match : un seul tour suffit."; break; fi
+            if node tools/uefa/soir.mjs tot; then echo "Lancée en journée : un tour fait, la veille du soir partira toute seule."; break; fi
+            if node tools/uefa/soir.mjs tard || [ $(date +%s) -ge $fin ]; then echo "Fin de la veille sans tout avoir : le passage du matin prendra le relais."; break; fi
+            sleep 600
+          done

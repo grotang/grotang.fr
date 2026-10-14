@@ -33,7 +33,7 @@ def equipe(cell):
     return re.sub(r'\s*\[[^\]]*\]\s*', ' ', c.get_text(' ', strip=True)).strip(), pays
 
 def score(t):
-    m = re.match(r'\s*(\d+)\s*[–-]\s*(\d+)', t)
+    m = re.match(r'\s*(\d+)\s*[-–—−‒:]\s*(\d+)', t)   # tous les tirets : « 2–1 », « 2-1 », « 0−2 » (signe moins)
     return (int(m.group(1)), int(m.group(2))) if m else None
 
 code = {n['n']: n['c'] for n in json.load(open(os.path.join(ICI, 'nations.json'), encoding='utf-8'))}

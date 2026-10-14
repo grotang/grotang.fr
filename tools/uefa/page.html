@@ -967,9 +967,9 @@ const SHORT = ["Entrée","Q1r","Q2a","Q2r","Q3a","Q3r","Ba","Br","J1","J2","J3",
 
 const CAL = {
   0:[['2026-09-08','8–10 sept.'],['2026-10-13','13–14 oct.'],['2026-10-20','20–21 oct.'],['2026-11-03','3–4 nov.'],
-     ['2026-11-24','24–25 nov.'],['2026-12-08','8–9 déc.'],['2027-01-19','19–20 janv.'],['2027-01-27','27 janv.']],
+     ['2026-11-24','24–25 nov.'],['2026-12-08','8–9 déc.'],['2027-01-19','19–20 janv.'],['2027-01-27','27 janv.','21h00']],   // J8 : multiplex, tout à 21 h
   1:[['2026-09-16','16–17 sept.'],['2026-10-15','15 oct.'],['2026-10-22','22 oct.'],['2026-11-05','5 nov.'],
-     ['2026-11-26','26 nov.'],['2026-12-10','10 déc.'],['2027-01-21','21 janv.'],['2027-01-28','28 janv.']],
+     ['2026-11-26','26 nov.'],['2026-12-10','10 déc.'],['2027-01-21','21 janv.'],['2027-01-28','28 janv.','21h00']],
   2:[['2026-10-15','15 oct.'],['2026-10-22','22 oct.'],['2026-11-05','5 nov.'],['2026-11-26','26 nov.'],
      ['2026-12-10','10 déc.'],['2026-12-17','17 déc.']]
 };
@@ -1108,7 +1108,7 @@ const clubsLigue = (c, k) => { const a = survAt(c, lendemain(CAL[k][0][0])); ret
 document.getElementById('eyebrow').textContent = "Saison " + D.meta.season + " · liste d'accès " + D.meta.allocationSeason;
 document.getElementById('foot').textContent =
   "Données relevées directement sur 5-jahres-wertung.de, site privé de Ralf Biniasz sans lien avec l'UEFA · instantané du "
-  + dmy(D.meta.lastUpdated) + " · page reconstruite automatiquement à 23 h 38 et 7 h 12.";
+  + dmy(D.meta.lastUpdated) + " · page reconstruite automatiquement les soirs de match, dès que les résultats tombent, et chaque matin à 7 h 12.";
 
 /* ================= LA SAISON ================= */
 const TOP8  = N.slice(0,8).map(n=>n.c);
@@ -1130,21 +1130,32 @@ const frDate = iso => dOf(iso).toLocaleDateString('fr-FR',{day:'numeric',month:'
 const KICKOFF = '18h45';
 /* Toutes les dates de match de la saison, phase de ligue et élimination directe
    confondues — le prochain rendez-vous peut être un huitième de finale. */
+/* Une « journée » n'est pas un jour : en C1 la J1 s'étale sur trois soirs (8–10 sept.),
+   les J2 à J7 sur deux (mardi, mercredi), la J8 sur un seul ; en phase finale de C1,
+   chaque manche se joue sur deux soirs aussi. On met donc CHAQUE SOIR dans l'agenda,
+   pas seulement le premier : sinon, le mercredi d'une journée de C1, la page
+   annonçait déjà la journée suivante (14/10 : « Prochain match J−1 C3 » alors que
+   Man City–PSG se jouait le soir même). Le nombre de soirs se lit dans le libellé
+   du calendrier (« 13–14 oct. » = deux soirs). */
+const isoOf = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const plusJours = (iso, n) => { const d = dOf(iso); d.setDate(d.getDate() + n); return isoOf(d); };
+const nSoirs = lab => { const m = /^(\d+)\s*[–-]\s*(\d+)/.exec(lab || ''); return m && +m[2] >= +m[1] ? +m[2] - +m[1] + 1 : 1; };
+const soirs = (iso, n, k, h, quoi) => Array.from({ length: n }, (_, j) => ({ iso: plusJours(iso, j), k, h, quoi: n > 1 ? `${quoi}, ${j + 1}${j ? 'e' : 'er'} soir sur ${n}` : quoi }));
 const AGENDA = [0,1,2].flatMap(k => [
-  ...CAL[k].map(([iso,,h], i) => ({ iso, k, h: h || KICKOFF, quoi: 'J' + (i+1) })),
-  ...KO[k].flatMap(([lab, a, r]) => r
-    ? [{ iso:a, k, h:KICKOFF, quoi:KOLAB[lab]+' aller' }, { iso:r, k, h:KICKOFF, quoi:KOLAB[lab]+' retour' }]
-    : [{ iso:a, k, h:KICKOFF, quoi:KOLAB[lab] }])
+  ...CAL[k].flatMap(([iso, lab, h], i) => soirs(iso, nSoirs(lab), k, h || KICKOFF, 'J' + (i+1))),
+  ...KO[k].flatMap(([lab, a, r]) => { const n = k === 0 ? 2 : 1;   // C1 : mardi et mercredi
+    return r ? [...soirs(a, n, k, KICKOFF, KOLAB[lab] + ' aller'), ...soirs(r, n, k, KICKOFF, KOLAB[lab] + ' retour')]
+             : soirs(a, 1, k, KICKOFF, KOLAB[lab]); })
 ]).sort((x,y) => x.iso < y.iso ? -1 : x.iso > y.iso ? 1 : x.k - y.k);
 
-const isoOf = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const ISO_TODAY = isoOf(TODAY);
 
 /* Un jour de match reste un jour de match jusqu'à minuit : on ne se cale pas sur
    `passe()` ici, sinon la bannière disparaîtrait à 18 h 45, pile au moment où les
    matchs commencent. Ailleurs dans la page, c'est bien le coup d'envoi qui fait
    foi — une journée disputée doit compter dès qu'elle est jouée. */
-const matchToday = AGENDA.find(m => m.iso === ISO_TODAY) || null;
+const matchesToday = AGENDA.filter(m => m.iso === ISO_TODAY);   // plusieurs compétitions le même soir (jeudi : C3 et C4)
+const matchToday = matchesToday[0] || null;
 const nextMatch  = AGENDA.find(m => !passe(m.iso) && m.iso !== ISO_TODAY) || null;
 const joursAvant = iso => Math.round((dOf(iso) - dOf(ISO_TODAY)) / 86400000);
 document.getElementById('stamp').innerHTML =
@@ -1169,8 +1180,8 @@ document.getElementById('stamp').innerHTML =
      parce qu'une heure à trois semaines de distance n'apprend rien. */
   (matchToday
     ? `<div class="next matchday"><b class="shout">Jour de match les enfants&nbsp;!</b>`
-      + `<b title="Premier coup d'envoi, heure de Paris">${matchToday.h}</b>`
-      + `<b class="comp" style="background:var(${KVAR[matchToday.k]})" title="${KNAME[matchToday.k]} · ${matchToday.quoi}">${KSHORT[matchToday.k]}</b></div>`
+      + `<b title="Premier coup d'envoi, heure de Paris">${matchesToday.map(m => m.h).sort()[0]}</b>`
+      + matchesToday.map(m => `<b class="comp" style="background:var(${KVAR[m.k]})" title="${KNAME[m.k]} · ${m.quoi}">${KSHORT[m.k]}</b>`).join('') + `</div>`
     : nextMatch
       ? `<div class="next">Prochain match <b title="${KNAME[nextMatch.k]} · ${nextMatch.quoi} · ${dmy(nextMatch.iso)}">J−${joursAvant(nextMatch.iso)}</b>`
         + `<b class="comp" style="background:var(${KVAR[nextMatch.k]})" title="${KNAME[nextMatch.k]}">${KSHORT[nextMatch.k]}</b></div>`

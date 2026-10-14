@@ -35,11 +35,14 @@ name: Rafraîchissement UEFA
 #   38 22 UTC → 00 h 38 été · 23 h 38 hiver   3e essai
 #   12 05 UTC → 07 h 12 été · 06 h 12 hiver   filet du matin
 #   12 06 UTC → 08 h 12 été · 07 h 12 hiver   filet du matin (heure d'hiver)
+#
+# 14/10/2026 : LES TROIS ESSAIS DU SOIR SONT RETIRÉS. Ils partaient avec des
+# heures de retard (le 13/10, celui de 23 h 38 est parti à 2 h 33). Le soir de
+# match est désormais couvert par uefa-soir.yml, qui part tôt et reste éveillé
+# jusqu'à ce que tout soit à jour. Restent ici les deux passages du matin, en
+# filet, et l'alarme de fraîcheur.
 on:
   schedule:
-    - cron: '38 21 * * *'
-    - cron: '58 21 * * *'
-    - cron: '38 22 * * *'
     - cron: '12 5 * * *'
     - cron: '12 6 * * *'
   workflow_dispatch:
