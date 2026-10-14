@@ -1,46 +1,27 @@
 name: Rafraîchissement UEFA
 
-# Deux rendez-vous par jour, en heure de Paris :
-#   23 h 38 — les matchs de C1, C3 et C4 sont finis, jahres a recalculé ;
-#   07 h 12 — la page est fraîche avant le réveil.
+# LE PASSAGE DU MATIN (le soir de match est couvert par uefa-soir.yml).
 #
-# Mais cron ne parle qu'UTC et ignore le changement d'heure. Chaque rendez-vous
-# demande donc deux lignes, une pour l'été et une pour l'hiver. Celle qui tombe à
-# côté ne coûte rien : le script compare les chiffres à ceux déjà publiés et sort
-# sans rien écrire s'ils n'ont pas bougé.
+# Depuis le 14/10/2026, ce robot ne tourne plus le soir. Les trois essais du
+# soir partaient avec des heures de retard (le 13/10, celui de 23 h 38 est parti
+# à 2 h 33) : GitHub ne garantit pas l'heure de départ d'une tâche planifiée.
+# Le soir de match, c'est donc uefa-soir.yml qui travaille : il part tôt, reste
+# éveillé de 20 h 35 jusqu'à ce que tout soit à jour, et publie au fil de l'eau.
 #
-#   38 21 UTC → 23 h 38 été   ·   22 h 38 hiver
-#   38 22 UTC → 00 h 38 été   ·   23 h 38 hiver
-#   12 05 UTC → 07 h 12 été   ·   06 h 12 hiver
-#   12 06 UTC → 08 h 12 été   ·   07 h 12 hiver
+# Ici ne restent que deux passages le matin, en filet (si la veille du soir a
+# manqué quelque chose) et pour l'alarme de fraîcheur, qui ne sonne qu'à 7 h.
+# Cron ne parle qu'UTC et ignore le changement d'heure, d'où deux lignes :
 #
-# En pratique ça donne deux tentatives le soir et deux le matin, quelle que soit
-# la saison — un vrai filet, puisque GitHub prévient que « some queued jobs may be
-# dropped » et qu'un passage a déjà été escamoté.
+#   12 05 UTC → 07 h 12 été · 06 h 12 hiver
+#   12 06 UTC → 08 h 12 été · 07 h 12 hiver
 #
 # La minute n'est jamais 00 : « High load times include the start of every hour. »
 #
-# ON NE REPUBLIE QUE S'IL Y A DU NEUF. Une republication quotidienne à vide a été
-# essayée puis retirée : elle ne changeait qu'un horodatage et noyait l'historique.
-# Le seul intérêt d'un passage est donc de déposer de vrais chiffres.
+# ON NE REPUBLIE QUE S'IL Y A DU NEUF : le script compare les chiffres à ceux
+# déjà publiés et sort sans rien écrire s'ils n'ont pas bougé.
 #
-# Reste à ne pas rater le soir de match. Le risque n'est pas le script — il tourne
-# en quinze secondes — mais GitHub, qui prévient que « some queued jobs may be
-# dropped » et qui en a déjà escamoté. La parade est le nombre d'essais : trois
-# dans l'heure qui suit la fin des matchs, puis deux le lendemain matin en filet.
-# Un passage qui ne trouve rien de neuf sort sans rien écrire et ne coûte rien.
-#
-#   38 21 UTC → 23 h 38 été · 22 h 38 hiver   1er essai, les matchs viennent de finir
-#   58 21 UTC → 23 h 58 été · 22 h 58 hiver   2e essai, vingt minutes plus tard
-#   38 22 UTC → 00 h 38 été · 23 h 38 hiver   3e essai
-#   12 05 UTC → 07 h 12 été · 06 h 12 hiver   filet du matin
-#   12 06 UTC → 08 h 12 été · 07 h 12 hiver   filet du matin (heure d'hiver)
-#
-# 14/10/2026 : LES TROIS ESSAIS DU SOIR SONT RETIRÉS. Ils partaient avec des
-# heures de retard (le 13/10, celui de 23 h 38 est parti à 2 h 33). Le soir de
-# match est désormais couvert par uefa-soir.yml, qui part tôt et reste éveillé
-# jusqu'à ce que tout soit à jour. Restent ici les deux passages du matin, en
-# filet, et l'alarme de fraîcheur.
+# Lancé à la main (« Run workflow ») : un passage tout de suite, à n'importe
+# quelle heure ; la case « force » republie même sans données neuves.
 on:
   schedule:
     - cron: '12 5 * * *'
