@@ -423,6 +423,19 @@ section > .famille + .panel{margin-top:22px}
 .barrow .yseg:last-child{box-shadow:none}
 .barrow .yseg.on{filter:brightness(1.12) saturate(1.15)}
 .barrow .yseg.wip{box-shadow:inset 2px 0 0 var(--surface)}
+/* Projection : ce qui reste à prendre d'ici la finale, dans la couleur de la
+   nation mais hachuré — une valeur à venir se hachure, une valeur acquise est
+   pleine (même grammaire que la page d'accueil). Le trait fin par-dessus dit
+   l'incertitude : 3 fois sur 5, la saison finit entre ses deux butées. */
+.barrow .pseg{height:100%; flex:none; background:repeating-linear-gradient(135deg, var(--pc) 0 2.4px, var(--pl) 2.4px 6px);
+  box-shadow:inset 2px 0 0 var(--surface); transition:filter .08s}
+.barrow .pseg.on{filter:brightness(1.08) saturate(1.15)}
+.barrow .rng{position:absolute; top:50%; height:2px; margin-top:-1px; background:var(--ink); opacity:.55; border-radius:1px}
+.barrow .rng::before, .barrow .rng::after{content:""; position:absolute; top:-4px; width:2px; height:10px; background:inherit; border-radius:1px}
+.barrow .rng::before{left:-1px} .barrow .rng::after{right:-1px}
+.barrow .rng i{position:absolute; top:-3px; width:8px; height:8px; margin-left:-4px; border-radius:50%; background:var(--surface); box-shadow:0 0 0 2px var(--ink)}
+.bleg{display:inline-flex; align-items:center; gap:6px; margin-right:16px; white-space:nowrap}
+.bleg i{display:inline-block; width:26px; height:10px; border-radius:2px}
 .barrow .seg{height:100%; box-shadow:inset -2px 0 0 var(--surface)}
 .barrow .seg:last-child{box-shadow:none}
 /* découpe club par club à l'intérieur d'une compétition : un filet clair, jamais
@@ -599,7 +612,8 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
   <div class="panel">
     <div class="ptitle"><span class="no">1</span><h3>Le classement</h3>
       <span class="sub"><span class="ctl"><span class="lb">Période</span><span class="seg" role="group" aria-label="Période"><button type="button" id="p-season" aria-pressed="true">Saison en cours</button></span><span class="sel"><select id="p-win" aria-label="Fenêtre de saisons">
-        <option value="" disabled hidden>X dernières saisons</option><option value="5">5 dernières saisons</option><option value="4">4 dernières saisons</option><option value="3">3 dernières saisons</option><option value="2">2 dernières saisons</option></select></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
+        <option value="" disabled hidden>X dernières saisons</option><option value="5">5 dernières saisons</option><option value="4">4 dernières saisons</option><option value="3">3 dernières saisons</option><option value="2">2 dernières saisons</option></select></span></span><span class="ctl"><span class="lb">Saison en cours</span><span class="seg" role="group" aria-label="Saison en cours : projection ou réel">
+        <button type="button" id="v-proj" aria-pressed="true" title="La saison en cours comptée à sa valeur de fin de saison projetée (médiane du bloc 8)">Projection</button><button type="button" id="v-reel" aria-pressed="false" title="La saison en cours comptée pour les seuls points déjà marqués">Réel acquis</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
         <button type="button" id="b-top" aria-pressed="true">Les 8 premières</button><button type="button" id="b-all" aria-pressed="false">Toutes</button></span></span></span></div>
     <div class="barswrap"><div class="bscroll" id="bscroll"><div class="bars" id="bars"></div></div><div class="tip" id="tipY" hidden></div></div>
     <p class="figc" id="barNote"></p>
@@ -1715,6 +1729,17 @@ const FEN = { 5: { n: 5, rang: n => n.r,       tot: n => n.t },
               3: { n: 3, rang: n => n.p[2],    tot: n => n.p[3] },
               2: { n: 2, rang: n => n.p[4],    tot: n => n.p[5] } };
 let period = 5;                  // 'season', ou le nombre de saisons de la fenêtre
+/* Lecture de la saison en cours : la projection de fin de saison (par défaut) ou
+   les seuls points déjà acquis. La projection est celle du bloc 8 — médiane de
+   200 000 saisons rejouées jusqu'à la finale sur le runner, six nombres par
+   nation (5e, 20e, 50e, 80e, 95e centiles, meilleur cas). Elle ne remplace jamais
+   l'acquis : elle s'y AJOUTE, hachurée, et ne descend jamais en dessous. */
+let lectB = 'proj';
+const PQB = c => (typeof PRJ !== 'undefined' && PRJ && PRJ.q && PRJ.q.tir && PRJ.q.tir[c]) || null;
+const projOn = () => lectB === 'proj' && typeof PRJ !== 'undefined' && !!(PRJ && PRJ.q && PRJ.q.tir);
+/* saison en cours projetée : [bas 3/5, médiane, haut 3/5, bas 9/10, haut 9/10], jamais sous l'acquis */
+const projS = c => { const a = seasonNow(c), q = PQB(c); if (!q) return [a, a, a, a, a];
+  return [q[1], q[2], q[3], q[0], q[4]].map(v => Math.max(a, v)); };
 let porteeB='top';
 /* Le périmètre par défaut reste les huit premières : c'est le sujet de la page,
    et ouvrir sur 55 lignes noierait la question. « Toutes » est là pour situer le
@@ -1723,25 +1748,47 @@ let porteeB='top';
    encre neutre, ce qui garde le groupe repérable au milieu du champ complet. */
 const jeuB = () => porteeB === 'top' ? TOP8 : ENGAGEES.map(n => n.c);
 const teinteB = c => SLOT[c] || '--ink-2';
+/* la part projetée d'une barre : hachure de l'acquis à la médiane, puis le trait
+   « 3 fois sur 5 » posé par-dessus (positionné en absolu sur la piste) */
+function projBar(c, base, max){
+  const isS = period === 'season', F = isS ? FEN[5] : FEN[period];
+  const clos = isS ? 0 : F.tot(BY[c]) - BY[c].y[4], [lo, med, hi] = projS(c), a = seasonNow(c);
+  const pc = toHex(base), pl = toHex(melange(base, toRGB(cssHex('--surface-2')), .30));
+  return `<div class="pseg" style="width:${larg((med - a) / max * 100)};--pc:${pc};--pl:${pl}"></div>`
+    + (hi - lo > 0.01 ? `<span class="rng" style="left:${larg((clos + lo) / max * 100)};width:${larg((hi - lo) / max * 100)}"><i style="left:${((med - lo) / (hi - lo) * 100).toFixed(1)}%"></i></span>` : '');
+}
 function drawBars(){
   const isS = period==='season';
   const F = isS ? FEN[5] : FEN[period];
   const dep = 5 - F.n;                                   // 1re saison affichée
-  const val = c => isS ? seasonNow(c) : F.tot(BY[c]);
+  const P = projOn();
+  const clos = c => isS ? 0 : F.tot(BY[c]) - BY[c].y[4];          // saisons closes de la fenêtre
+  const reel = c => isS ? seasonNow(c) : F.tot(BY[c]);
+  const val = c => P ? clos(c) + projS(c)[1] : reel(c);
+  const haut = c => P ? clos(c) + projS(c)[2] : val(c);
   const rows=[...jeuB()].sort((x,y)=>val(y)-val(x));
-  const max=Math.max(...rows.map(val));
+  const max=Math.max(...rows.map(haut));
+  /* rangs : en projection, recalculés sur les 55 (fenêtres) ; en réel, ceux de la source */
+  const rangP = (() => { if (!P || isS) return null; const L = [...N].sort((a, b) => val(b.c) - val(a.c)); const R = {}; L.forEach((n, i) => R[n.c] = i + 1); return R; })();
+  const ordreReel = [...jeuB()].sort((x,y)=>reel(y)-reel(x));
+  const rangOf = (c, i) => isS ? i + 1 : P ? rangP[c] : F.rang(BY[c]);
+  const rangReel = c => isS ? ordreReel.indexOf(c) + 1 : F.rang(BY[c]);
   document.getElementById('bscroll').classList.toggle('large', porteeB !== 'top');
   document.getElementById('bars').innerHTML = rows.map((c,i)=>{
     const n=BY[c];
     return `<div class="barrow${c==='FRA'?' me':''}">
-      <div class="nm"><span class="rk">${isS ? i+1 : F.rang(n)}.</span><b>${name(c)}</b>${
-        (!isS && F.n < 5) ? (() => { const d = n.r - F.rang(n);
+      <div class="nm"><span class="rk">${rangOf(c, i)}.</span><b>${name(c)}</b>${
+        P ? (() => { const d = rangReel(c) - rangOf(c, i);
+          /* en projection : les places gagnées ou perdues par rapport au réel acquis */
+          return d === 0 ? '' : `<span class="dlt ${d > 0 ? 'up' : 'down'}" title="${d > 0 ? '+' : ''}${d} place${Math.abs(d) > 1 ? 's' : ''} par rapport au réel acquis">${d > 0 ? '▲' : '▼'}${Math.abs(d)}</span>`;
+        })() : (!isS && F.n < 5) ? (() => { const d = n.r - F.rang(n);
           /* Le gain ou la perte de places par rapport au classement officiel :
              c'est la seule chose que cette vue apporte et que l'autre ne dit pas. */
           return d === 0 ? '' : `<span class="dlt ${d > 0 ? 'up' : 'down'}" title="${d > 0 ? '+' : ''}${d} place${Math.abs(d) > 1 ? 's' : ''} par rapport au classement à cinq ans">${d > 0 ? '▲' : '▼'}${Math.abs(d)}</span>`;
         })() : ''}</div>
       <div class="cnt">${pastilles(n)}</div>
-      <div class="track" data-nat="${c}">${totBout(c, val(c), max)}${isS
+      <div class="track" data-nat="${c}">${P
+        ? `<span class="tot" style="left:${larg(haut(c) / max * 100)}">${nfx(val(c))}</span>` : totBout(c, val(c), max)}${isS
         ? (() => {
             /* Vue « saison en cours » : tout est vivant, donc tout est en pleine
                couleur — exactement la teinte du segment de saison en cours de
@@ -1750,7 +1797,7 @@ function drawBars(){
                Pas de libellé dans la barre : le nombre de clubs est déjà en clair
                dans la colonne de droite, l'écrire deux fois n'apprend rien. */
             const base = toRGB(cssHex(teinteB(c)));
-            return `<div class="fill" style="width:${larg(val(c)/max*100)};background:${toHex(base)}"></div>`;
+            return `<div class="fill" style="width:${larg(reel(c)/max*100)};background:${toHex(base)}"></div>` + (P ? projBar(c, base, max) : '');
           })()
         : n.y.map((v, yi) => { const wip = yi === 4;
             if (yi < dep) return '';                     // saison hors fenêtre
@@ -1771,9 +1818,12 @@ function drawBars(){
               ? `<span style="color:${encre(fond, base)}">${SEASONS[yi].slice(2)}</span>` : '';
             return `<div class="yseg${wip ? ' wip' : ''}" data-y="${yi}" style="width:${larg(pc)};`
               + `background:${toHex(fond)}">${lab}</div>`;
-          }).join('')}</div>
+          }).join('') + (P ? projBar(c, toRGB(cssHex(teinteB(c))), max) : '')}</div>
       <div class="val num">${nf(val(c))}</div>
-      <div class="split num" title="${name(c)} · ${nf(val(c))} au millième">${isS
+      <div class="split num" title="${name(c)} · ${nf(val(c))} au millième">${P
+        ? (isS ? `${nfx(seasonNow(c))} acquis · <b style="font-weight:600;color:var(--ink-2)">+${nfx(projS(c)[1] - seasonNow(c))}</b> à venir`
+               : `${nfx(F.tot(n))} acquis · <b style="font-weight:600;color:var(--ink-2)">+${nfx(projS(c)[1] - seasonNow(c))}</b> à venir`)
+        : isS
         ? `${enVie(n)} en lice sur ${engages(n)} engagés`
         /* Un point, pas un plus. La précision variable interdit de promettre une
            addition : arrondir 98,52 à l'entier et 5,277 au dixième donne « 99 »
@@ -1787,6 +1837,23 @@ function drawBars(){
   const nR = rows.length;
   majReserve();
   const posS=[...rows].sort((x,y)=>seasonNow(y)-seasonNow(x)).indexOf('FRA')+1;
+  if (P) {
+    const hach = `background:repeating-linear-gradient(135deg,var(--ink-3) 0 2.4px,color-mix(in srgb,var(--ink-3) 30%,var(--surface-2)) 2.4px 6px)`;
+    const legP = (isS ? '' : `<span class="bleg"><i style="background:color-mix(in srgb,var(--ink-3) 38%,var(--surface-2))"></i>${F.n - 1} saison${F.n > 2 ? 's' : ''} close${F.n > 2 ? 's' : ''}</span>`)
+      + `<span class="bleg"><i style="background:var(--ink-3);width:14px"></i>saison en cours, acquis</span>`
+      + `<span class="bleg"><i style="${hach}"></i>à venir, projection médiane</span>`
+      + `<span class="bleg"><span style="position:relative;display:inline-block;width:30px;height:10px"><span style="position:absolute;left:0;right:0;top:4px;height:2px;background:var(--ink);opacity:.55"></span><span style="position:absolute;left:0;top:0;width:2px;height:10px;background:var(--ink);opacity:.55"></span><span style="position:absolute;right:0;top:0;width:2px;height:10px;background:var(--ink);opacity:.55"></span><span style="position:absolute;left:11px;top:1px;width:8px;height:8px;border-radius:50%;background:var(--surface);box-shadow:0 0 0 2px var(--ink);opacity:.8"></span></span>3 fois sur 5</span><br>`;
+    const rP = c => rangOf(c, rows.indexOf(c)), fr = 'FRA';
+    let t;
+    if (isS) { const rp = [...ENGAGEES.map(n => n.c)].sort((x, y) => val(y) - val(x)).indexOf(fr) + 1, rr = [...ENGAGEES.map(n => n.c)].sort((x, y) => reel(y) - reel(x)).indexOf(fr) + 1;
+      t = `Saison en cours projetée jusqu'à la finale : la France finirait <b>${rp}<sup>e</sup></b> sur 55${rp !== rr ? ` (${rr}<sup>e</sup> au réel acquis)` : ''}, à <b>${nfx(projS(fr)[1])}</b>. `; }
+    else { const rp = rangP[fr], rr = F.rang(BY[fr]);
+      t = (F.n === 5 ? `Classement à cinq ans, saison en cours projetée à sa fin : la France finirait <b>${rp}<sup>e</sup></b>` : `Socle de l'été ${2027 + (5 - F.n) - 1}, saison en cours projetée à sa fin : la France serait <b>${rp}<sup>e</sup></b>`)
+        + (rp !== rr ? ` (${rr}<sup>e</sup> au réel acquis). ` : `, comme au réel acquis. `); }
+    t += `La partie hachurée est ce qui reste à prendre d'ici la finale : la médiane de ${nf((PRJ && PRJ.n) || 0, 0)} saisons rejouées (bloc 8). Le rond marque cette médiane, les butées encadrent 3 tirages sur 5. Les flèches comparent au réel acquis.`;
+    document.getElementById('barNote').innerHTML = legP + `Pastilles : un club engagé chacune, pleine tant qu'il est en lice, en creux une fois éliminé. ` + t;
+    return;
+  }
   const leg = isS ? '' :
     `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:16px">`
     + `<i style="width:26px;height:10px;border-radius:2px;display:inline-block;`
@@ -1826,6 +1893,20 @@ function drawBars(){
       if (!tr) { hide(); return; }
       const c = tr.dataset.nat, pi = ev.target.closest('.pips i'), O = pi && ordreCases(c, false);
       tip.innerHTML = tipClubs(c, O && O[+pi.dataset.i] ? O[+pi.dataset.i].n : null); tip.hidden = false; placeTip(tip, ev); return;
+    }
+    const pz = projOn() && ev.target.closest('.pseg, .rng, .fill, .yseg.wip');
+    if (pz) {
+      if (last) { last.classList.remove('on'); last = null; }
+      const pseg = pz.closest('.track').querySelector('.pseg'); if (pseg) { pseg.classList.add('on'); last = pseg; }
+      const c = pz.closest('.track').dataset.nat, a = seasonNow(c), [lo, med, hi, b5, h95] = projS(c), C = `var(${teinteB(c)})`;
+      const ligne = (lab, v, sty) => `<div class="tr"${sty ? ` style="${sty}"` : ''}><span class="nm">${lab}</span><b>${v}</b></div>`;
+      tip.innerHTML = `<div class="th">${name(c)} · saison ${D.meta.season}</div>`
+        + ligne(`<i style="background:${C};display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px"></i>Acquis`, nfx(a))
+        + ligne(`<i style="background:repeating-linear-gradient(135deg,${C} 0 2px,transparent 2px 4px);display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px"></i>Projection (médiane)`, nfx(med), 'color:var(--ink)')
+        + ligne('3 fois sur 5', `${nfx(lo)} – ${nfx(hi)}`, 'opacity:.8')
+        + ligne('9 fois sur 10', `${nfx(b5)} – ${nfx(h95)}`, 'opacity:.6')
+        + `<div class="tfoot">Encore <b>+${nfx(med - a)}</b> à prendre d'ici la finale, en médiane.</div>`;
+      tip.hidden = false; placeTip(tip, ev); return;
     }
     const seg = ev.target.closest('.yseg');
     if (!seg) { hide(); return; }
@@ -1899,6 +1980,10 @@ function syncP(){
 }
 winSel.dataset.on = 'true';
 document.getElementById('b-top').onclick=()=>{porteeB='top';syncB();};
+const syncV = () => { document.getElementById('v-proj').setAttribute('aria-pressed', lectB === 'proj');
+  document.getElementById('v-reel').setAttribute('aria-pressed', lectB === 'reel'); drawBars(); };
+document.getElementById('v-proj').onclick = () => { lectB = 'proj'; syncV(); };
+document.getElementById('v-reel').onclick = () => { lectB = 'reel'; syncV(); };
 document.getElementById('b-all').onclick=()=>{porteeB='all';syncB();};
 function syncB(){ document.getElementById('b-top').setAttribute('aria-pressed',porteeB==='top');
   document.getElementById('b-all').setAttribute('aria-pressed',porteeB==='all'); drawBars(); }
