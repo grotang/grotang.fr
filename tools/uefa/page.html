@@ -654,7 +654,7 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">4b</span><h3>La matrice</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">aire du disque = coefficient gagné</span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelM" aria-label="Saison"></select></span></span></span></div>
+    <div class="ptitle"><span class="no">4b</span><h3>La matrice</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">aire du disque = coefficient gagné · 🏆 🥈 🥉 podium de l'étape</span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations"><button type="button" id="m-top" aria-pressed="true">Les 8 premières</button><button type="button" id="m-all" aria-pressed="false">Toutes</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelM" aria-label="Saison"></select></span></span></span></div>
     <div class="calwrap" id="boxM"><div class="chartbox"><svg id="mtx" role="img" aria-label="Matrice nations × étapes, aire proportionnelle au coefficient gagné"></svg></div><div class="tip" id="tipM" hidden></div></div>
     <p class="figc" id="mtxNote"></p>
   </div>
@@ -2132,13 +2132,13 @@ const isFuture = i => { const d=stepDate(i); return d ? !passe(d[0]) : false; };
 const GROUPS = (()=>{ const g=[{lab:'Entrée en lice',short:'Ini.',steps:[],bonus:true,date:null}];
   [['Q1','Q1',[0,1],true],['Q2','Q2',[2,3]],['Q3','Q3',[4,5]],['Barrages','Bar.',[6,7]]].forEach(([lab,sh,st,net])=>g.push({lab,short:sh,steps:st,net:!!net,date:null}));
   for(let k=0;k<8;k++) g.push({lab:'J'+(k+1),short:'J'+(k+1),steps:[8+k],date:CAL[0][k]});
-  g.push({lab:'Bonus de classement de la phase de ligue',short:'Rank bonus',steps:[],rank:true,date:null});
-  [['Barrages 8es','PO 8es','2027-02-16','16–17 févr.'],['8es de finale','8es','2027-03-09','9–10 mars'],
+  g.push({lab:'Bonus de classement de la phase de ligue',short:'Bonus classt',steps:[],rank:true,date:null});
+  [['Barrages à élimination directe','Barr. KO','2027-02-16','16–17 févr.'],['8es de finale','8es','2027-03-09','9–10 mars'],
    ['Quarts de finale','1/4','2027-04-06','6–7 avr.'],['Demi-finales','1/2','2027-04-27','27–28 avr.'],
    ['Finale','F','2027-06-05','5 juin']].forEach(([lab,sh,iso,txt])=>g.push({lab,short:sh,steps:[],date:[iso,txt]}));
   return g; })();
 const nG = GROUPS.length;
-const G_J1 = GROUPS.findIndex(g=>g.short==='J1'), G_KO = GROUPS.findIndex(g=>g.lab==='Barrages 8es');
+const G_J1 = GROUPS.findIndex(g=>g.short==='J1'), G_KO = GROUPS.findIndex(g=>g.short==='Barr. KO');
 /* Le bonus d'ENTRÉE, et lui seul : 6 points par club présent en phase de ligue
    de C1, divisés par les engagés. Il lisait auparavant le champ `b` de la
    source, qui est le bonus TOTAL — tout ce qui n'est pas un point de match.
@@ -2159,6 +2159,32 @@ const gShortDate = gi => { const d=gDate(gi); if(!d) return null; const p=d[0].s
 /* Bandeau des trois phases, commun aux blocs 2 et 4 : mêmes teintes et même dessin
    que le bloc 6a (et les blocs 7). En haut, une pastille par phase ; dans le cadre,
    un voile très léger qui porte la phase jusqu'à l'axe. */
+/* Avant 2024 : phase de GROUPES à six journées, et pas de bonus de classement.
+   Les colonnes J7, J8 et « Bonus classt » n'existaient pas : on les couvre d'une
+   zone hachurée qui le dit, plutôt que de laisser croire à deux journées sans
+   point. Utilisé par les blocs 2, 4a et 4b. */
+const colsAbsentes = () => (!isCur() && +selY < 2024)
+  ? GROUPS.map((g, i) => (g.short === 'J7' || g.short === 'J8' || g.rank) ? i : -1).filter(i => i >= 0) : [];
+const estAbsente = gi => colsAbsentes().includes(gi);
+function zoneAbsente(id, X, cw, yH, yB, M, yTexte){
+  const A = colsAbsentes(); if (!A.length) return '';
+  const x1 = X(A[0]) - cw / 2, x2 = X(A[A.length - 1]) + cw / 2, xm = (x1 + x2) / 2, w = x2 - x1;
+  let s = `<defs><pattern id="${id}" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">`
+    + `<line x1="0" y1="0" x2="0" y2="7" stroke="var(--ink-3)" stroke-width="1" opacity=".22"/></pattern></defs>`
+    + `<rect x="${(x1 + 1).toFixed(1)}" y="${yH}" width="${(w - 2).toFixed(1)}" height="${(yB - yH).toFixed(1)}" fill="var(--surface-2)" opacity=".92"/>`
+    + `<rect x="${(x1 + 1).toFixed(1)}" y="${yH}" width="${(w - 2).toFixed(1)}" height="${(yB - yH).toFixed(1)}" fill="url(#${id})"/>`;
+  const halo = 'paint-order="stroke" stroke="var(--surface-2)" stroke-width="4"';
+  if (M) {   // téléphone : la zone est étroite, le texte se lit de bas en haut
+    /* en bas de la zone : les courbes y passent rarement (le cumul a déjà monté) */
+    s += `<text transform="translate(${(xm + 5).toFixed(1)} ${(yB - 12).toFixed(1)}) rotate(-90)" text-anchor="start" font-size="13" font-weight="600" fill="var(--ink-3)" ${halo}>6 journées avant 2024</text>`;
+  } else {
+    const y0 = yTexte != null ? yTexte : yH + 22;
+    s += `<text x="${xm.toFixed(1)}" y="${y0.toFixed(1)}" text-anchor="middle" font-size="10" font-weight="700" letter-spacing=".04em" fill="var(--ink-2)" ${halo}>AVANT 2024</text>`
+      + `<text x="${xm.toFixed(1)}" y="${(y0 + 14).toFixed(1)}" text-anchor="middle" font-size="9.5" fill="var(--ink-3)" ${halo}>groupes à 6 journées,</text>`
+      + `<text x="${xm.toFixed(1)}" y="${(y0 + 26).toFixed(1)}" text-anchor="middle" font-size="9.5" fill="var(--ink-3)" ${halo}>sans bonus de classement</text>`;
+  }
+  return s;
+}
 function bandePhases(X, cw, mL, mR, W, mT, yB, M){
   const anc = !isCur() && +selY < 2024;
   const PH = [[0, G_J1 - 1, M ? 'Qualifs' : 'Qualifications', 'juil.–août', '--n4'],
@@ -2311,13 +2337,13 @@ function drawL(){
   const X=gi=>mL+PAD+(W-mL-mR-2*PAD)*gi/(nG-1), Y=v=>mT+(H-mT-mB)*(1-(v-sc.lo)/(sc.hi-sc.lo));
   const cw=(W-mL-mR-2*PAD)/(nG-1);
   let g=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
-  g+=bandePhases(X,cw,mL,mR,W,mT,H-mB,M)+resteAJouer(X,cw,mR,W,mT,H-mB,M);
+  g+=bandePhases(X,cw,mL,mR,W,mT,H-mB,M)+resteAJouer(X,cw,mR,W,mT,H-mB,M)+zoneAbsente('hachL',X,cw,mT,H-mB,M);
   sc.ticks.forEach(t=>{ g+=`<line x1="${mL}" y1="${Y(t).toFixed(1)}" x2="${W-mR}" y2="${Y(t).toFixed(1)}" stroke="var(--rule-soft)"/>`
     +`<text x="${mL-9}" y="${(Y(t)+4).toFixed(1)}" text-anchor="end" font-size="${M?15:11.5}" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${(gap&&t<0?'\u2212':'')+Math.abs(t).toLocaleString('fr-FR',{minimumFractionDigits:sc.dec,maximumFractionDigits:sc.dec})}</text>`; });
   if(gap) g+=`<line x1="${mL}" y1="${Y(0).toFixed(1)}" x2="${W-mR}" y2="${Y(0).toFixed(1)}" stroke="var(--ink-2)" stroke-width="1.5"/>`;
   for(let gi=0;gi<nG;gi++){ const d=isCur()?gDate(gi):null;
     if(M && gi%3 && gi!==nG-1) continue;   // téléphone : un libellé sur trois
-    g+=axLab(gi,X(gi),H-mB+18,isCur()&&gAnom(gi)?'var(--c3)':'var(--ink-2)',M?15:10);
+    g+=axLab(gi,X(gi),H-mB+18,estAbsente(gi)?'var(--rule)':isCur()&&gAnom(gi)?'var(--c3)':'var(--ink-2)',M?15:10);
     if(d && !M) g+=`<text x="${X(gi).toFixed(1)}" y="${H-mB+32}" text-anchor="middle" font-size="9" fill="var(--ink-3)">${d[1]}</text>`; }
   g+=`<line x1="${mL}" y1="${(H-mB).toFixed(1)}" x2="${W-mR}" y2="${(H-mB).toFixed(1)}" stroke="var(--ink-3)" stroke-width="1.5"/>`;
   g+=`<line x1="${mL}" y1="${mT}" x2="${mL}" y2="${(H-mB).toFixed(1)}" stroke="var(--ink-3)" stroke-width="1.5"/>`;
@@ -2346,10 +2372,10 @@ function drawL(){
     return;
   }
   document.getElementById('capL').innerHTML = (isCur()
-    ? `Saison <b>${lab}</b>, en cours ; la zone grisée reste à jouer. <b>Entrée en lice</b> : bonus de participation (6 points par club de C1). <b>Rank bonus</b> : bonus de classement de la phase de ligue, versé fin janvier.`
+    ? `Saison <b>${lab}</b>, en cours ; la zone grisée reste à jouer. <b>Entrée en lice</b> : bonus de participation (6 points par club de C1). <b>Bonus classt</b> : bonus de classement de la phase de ligue, versé fin janvier. <b>Barr. KO</b> : barrages à élimination directe, avant les 8es.`
     : `Saison <b>${lab}</b>, terminée. ${+selY<2024
-        ? `Phase de groupes à six journées : J7 et J8 sont plates, et le bonus de classement n'existait pas.`
-        : `<b>Ini.</b> : bonus de participation. <b>Rank bonus</b> : bonus de classement de la phase de ligue.`}`) + totL;
+        ? `Phase de groupes à six journées : J7, J8 et le bonus de classement n'existaient pas (zone hachurée).`
+        : `<b>Ini.</b> : bonus de participation. <b>Bonus classt</b> : bonus de classement de la phase de ligue. <b>Barr. KO</b> : barrages à élimination directe.`}`) + totL;
 }
 function hoverL(sel, LI, X, Y, W, H, mL, mR, PAD){
   const svg=document.getElementById('chartL'), box=document.getElementById('boxL'), tip=document.getElementById('tipL');
@@ -2443,7 +2469,7 @@ function drawZ(){
   const X = gi => mL + PAD + (W - mL - mR - 2 * PAD) * gi / (nG - 1), cw = (W - mL - mR - 2 * PAD) / (nG - 1);
   const bw = Math.max(2.5, Math.min(18, cw * (M ? 0.86 : 0.78) / sel.length));
   let g = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
-  g += bandePhases(X, cw, mL, mR, W, mT, yB, M) + resteAJouer(X, cw, mR, W, mT, yB, M);
+  g += bandePhases(X, cw, mL, mR, W, mT, yB, M) + resteAJouer(X, cw, mR, W, mT, yB, M) + zoneAbsente('hachZ', X, cw, mT, yB, M);
   /* bande des gains : un léger fond pour dire « ici, l'autre échelle » */
   g += `<rect x="${mL}" y="${yBande.toFixed(1)}" width="${W - mL - mR}" height="${(haut * BANDE).toFixed(1)}" fill="var(--band)" opacity=".45"/>`;
   sc.ticks.forEach(t => { g += `<line x1="${mL}" y1="${Y(t).toFixed(1)}" x2="${W - mR}" y2="${Y(t).toFixed(1)}" stroke="var(--rule-soft)"/>`
@@ -2453,7 +2479,7 @@ function drawZ(){
   g += `<text x="${W - mR + 8}" y="${(yBande - 10).toFixed(1)}" font-size="${M ? 13 : 10.5}" font-weight="600" fill="var(--ink-3)">gain</text>`;
   for (let gi = 0; gi < nG; gi++) { const d = isCur() ? gDate(gi) : null;
     if (M && gi % 3 && gi !== nG - 1) continue;   // téléphone : un libellé sur trois, comme au bloc 2
-    g += axLab(gi, X(gi), yB + 18, isCur() && gAnom(gi) ? 'var(--c3)' : 'var(--ink-2)', M ? 15 : 10);
+    g += axLab(gi, X(gi), yB + 18, estAbsente(gi) ? 'var(--rule)' : isCur() && gAnom(gi) ? 'var(--c3)' : 'var(--ink-2)', M ? 15 : 10);
     if (d && !M) g += `<text x="${X(gi).toFixed(1)}" y="${yB + 32}" text-anchor="middle" font-size="9" fill="var(--ink-3)">${d[1]}</text>`; }
   /* barres (échelle de droite) */
   const etiq = !M && (LI + 1) * sel.length <= 24;
@@ -2510,61 +2536,111 @@ chipsZ();
 </script>
 <script>/* Script découpé par bloc : entre deux scripts, le navigateur peut afficher et répondre au doigt — plus de longue tâche unique au chargement. */
 /* ---------- 5 · la matrice ---------- */
+let porteeM = 'top';
+/* Le podium de chaque étape : les trois nations qui y ont le plus gagné, parmi
+   TOUTES celles qu'on suit cette saison (55 en cours, les 16 de l'archive pour
+   les saisons closes) — même quand l'affichage se limite aux huit premières. Un
+   podium partagé (égalité) donne la même médaille. */
+/* (sauf le bonus d'entrée, qui récompense une présence, pas un résultat) */
+const MEDAILLE = ['🏆', '🥈', '🥉'], MED_NOM = ['1re', '2e', '3e'];
+const poolM = () => isCur() ? N.map(n => n.c) : Object.keys(HIST[selY] || {});
+function podiumM(){
+  const P = poolM(), out = {};
+  for (let gi = 0; gi < nG; gi++) {
+    if (sIsBonusCol(gi)) continue;   // le bonus d'entrée est un forfait, pas une performance : pas de podium
+    const L = P.map(c => [c, sGain(c, gi) || 0]).filter(x => x[1] > 0.0005).sort((a, b) => b[1] - a[1]);
+    let rang = 0;
+    L.forEach(([c, v], i) => { if (i === 0 || v < L[i - 1][1] - 1e-9) rang = i; if (rang < 3) (out[gi] = out[gi] || {})[c] = rang; });
+    if (out[gi]) out[gi].n = L.length;
+  }
+  return out;
+}
 function drawM(){
   /* l'ordre des lignes suit la saison affichée, pas la saison en cours :
      en 2024/25 l'Angleterre finit à 29,46, elle ne peut pas être en milieu de tableau. */
-  const M=MOB(), rows=TOP8S.filter(hasSeason).sort((a,b)=>sTotal(b)-sTotal(a)), W=1000, mL=M?92:104, mR=126, mT=78, rowH=34, H=mT+rows.length*rowH+18;
-  if(!rows.length) return;
-  const gs=[...Array(nG).keys()], mono='IBM Plex Mono, monospace';
-  const X=gi=>mL+(W-mL-mR)*(gi+0.5)/nG, cw=(W-mL-mR)/nG;
-  const yH=mT-6, yBas=mT+rows.length*rowH-4;   // cadre des lignes
-  const mx=Math.max(0.001, ...gs.map(gi=>Math.max(...rows.map(c=>sGain(c,gi)))));
-  const R=v=> v<=0?0:Math.max(2.4, Math.sqrt(v/mx)*(Math.min(cw,rowH)/2-2));
-  const totMax=Math.max(...rows.map(sTotal));
-  let g=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
+  const M = MOB(), W = 1000, mL = M ? 92 : 112, mR = 126, mT = 78, rowH = 40;
+  const base = porteeM === 'top' ? TOP8S : poolM();
+  const rows = base.filter(hasSeason).sort((a, b) => sTotal(b) - sTotal(a)), H = mT + rows.length * rowH + 14;
+  if (!rows.length) return;
+  const gs = [...Array(nG).keys()], mono = 'IBM Plex Mono, monospace', POD = podiumM(), LI = lastIdx();
+  const X = gi => mL + (W - mL - mR) * (gi + 0.5) / nG, cw = (W - mL - mR) / nG;
+  const yH = mT - 6, yBas = mT + rows.length * rowH - 4;   // cadre des lignes
+  const mx = Math.max(0.001, ...gs.map(gi => Math.max(...rows.map(c => sGain(c, gi) || 0))));
+  const RMAX = Math.min(cw, rowH - 12) / 2 - 1.5;
+  const R = v => v <= 0 ? 0 : Math.max(2.4, Math.sqrt(v / mx) * RMAX);
+  const totMax = Math.max(...rows.map(sTotal));
+  const col = c => SLOT[c] ? `var(${SLOT[c]})` : 'var(--ink-3)';
+  let g = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
   /* bandeau des trois phases, même dessin que les blocs 2, 4 et 6a ; le voile descend sur les lignes */
-  g+=bandePhases(X,cw,mL,mR,W,yH,yBas,false);
+  g += bandePhases(X, cw, mL, mR, W, yH, yBas, false);
   /* « reste à jouer » : même zone grisée que les blocs 2 et 4 */
-  const fg=isCur()?gs.find(gFuture):undefined;
-  if(fg!==undefined) g+=`<rect x="${(X(fg)-cw/2).toFixed(1)}" y="${yH}" width="${(W-mR-X(fg)+cw/2).toFixed(1)}" height="${(yBas-yH).toFixed(1)}" fill="var(--surface-2)" opacity=".8"/>`;
-  gs.forEach(gi=>{ const d=isCur()?gDate(gi):null;
-    g+=axLab(gi,X(gi),mT-34,isCur()&&gAnom(gi)?'var(--c3)':'var(--ink-2)',9.5);
-    if(d) g+=`<text x="${X(gi).toFixed(1)}" y="${mT-16}" text-anchor="middle" font-size="8" font-family="${mono}" fill="var(--ink-3)">${gShortDate(gi)}</text>`; });
-  g+=`<line x1="${mL-8}" y1="${yH}" x2="${W-mR}" y2="${yH}" stroke="var(--ink-3)" stroke-width="1.5"/>`;
-  g+=`<line x1="${mL-8}" y1="${yH}" x2="${mL-8}" y2="${yBas.toFixed(1)}" stroke="var(--ink-3)" stroke-width="1.5"/>`;
-  rows.forEach((c,ri)=>{ const y=mT+ri*rowH+rowH/2-6, fr=c==='FRA', col=`var(${SLOT[c]})`;
-    if(fr) g+=`<rect x="${mL-8}" y="${(y-rowH/2+2).toFixed(1)}" width="${(W-mR-mL+8).toFixed(1)}" height="${rowH-4}" fill="var(--fr-soft)"/>`;
-    /* la couleur de chaque nation, celle des blocs 2 et 4 */
-    g+=M ? `<text x="2" y="${(y+5).toFixed(1)}" font-size="14" font-weight="${fr?'700':'600'}" fill="${col}">${nomPays(c)}</text>`
-      : `<text x="${mL-14}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="12" font-weight="${fr?'700':'600'}" fill="${col}">${name(c)}</text>`;
-    gs.forEach(gi=>{ const v=sGain(c,gi), x=X(gi);
-      if(v<=0.0005) g+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.4" fill="var(--rule)"/>`;
-      /* bonus d'entrée : disque clair à bord pointillé, comme sa barre hachurée au bloc 4 */
-      else if(sIsBonusCol(gi)) g+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${R(v).toFixed(1)}" fill="${col}" fill-opacity=".28" stroke="${col}" stroke-width="1.3" stroke-dasharray="3 2"/>`;
-      else g+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${R(v).toFixed(1)}" fill="${col}" fill-opacity="${fr?0.9:0.75}"/>`;
-      if(!gFuture(gi) || !isCur()) g+=`<rect x="${(x-cw/2).toFixed(1)}" y="${(y-rowH/2).toFixed(1)}" width="${cw.toFixed(1)}" height="${rowH}" fill="transparent" data-c="${c}" data-g="${gi}"/>`; });
-    g+=`<rect x="${W-mR+8}" y="${(y-6).toFixed(1)}" width="${(58*sTotal(c)/totMax).toFixed(1)}" height="12" fill="${col}" fill-opacity="${fr?1:.8}" rx="1.5"/>`;
-    g+=`<text x="${W-4}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="11.5" font-family="${mono}" font-weight="${fr?'700':'600'}" fill="${col}">${nfx(sTotal(c))}</text>`; });
-  g+=`<text x="${W-mR+8}" y="${mT-30}" font-size="9.5" font-weight="700" letter-spacing=".05em" fill="var(--ink-2)">TOTAL</text>`;
-  g+=`</svg>`;
-  document.getElementById('mtx').outerHTML = g.replace('<svg','<svg id="mtx" role="img" aria-label="Matrice nations par tours, de l\'entrée en lice à la finale"');
-  { const m = document.getElementById('mtx'); glisser(m.parentNode, m, 900, mL); }
-  const labM = SEAS.find(x=>x[0]===selY)[1];
+  const fg = isCur() ? gs.find(gFuture) : undefined;
+  if (fg !== undefined) g += `<rect x="${(X(fg) - cw / 2).toFixed(1)}" y="${yH}" width="${(W - mR - X(fg) + cw / 2).toFixed(1)}" height="${(yBas - yH).toFixed(1)}" fill="var(--surface-2)" opacity=".8"/>`;
+  /* la dernière étape jouée, repérée : c'est là que se lit l'actualité */
+  if (isCur()) g += `<rect x="${(X(LI) - cw / 2 + 1).toFixed(1)}" y="${yH}" width="${(cw - 2).toFixed(1)}" height="${(yBas - yH).toFixed(1)}" fill="var(--fr)" opacity=".07"/>`;
+  g += zoneAbsente('hachM', X, cw, yH, yBas, false, yH + Math.min(60, (yBas - yH) / 2 - 10));
+  gs.forEach(gi => { const d = isCur() ? gDate(gi) : null, der = isCur() && gi === LI;
+    g += axLab(gi, X(gi), mT - 34, estAbsente(gi) ? 'var(--rule)' : der ? 'var(--fr)' : isCur() && gAnom(gi) ? 'var(--c3)' : 'var(--ink-2)', 9.5);
+    if (d) g += `<text x="${X(gi).toFixed(1)}" y="${mT - 16}" text-anchor="middle" font-size="8" font-family="${mono}" fill="${der ? 'var(--fr)' : 'var(--ink-3)'}"${der ? ' font-weight="700"' : ''}>${gShortDate(gi)}</text>`; });
+  g += `<line x1="${mL - 8}" y1="${yH}" x2="${W - mR}" y2="${yH}" stroke="var(--ink-3)" stroke-width="1.5"/>`;
+  g += `<line x1="${mL - 8}" y1="${yH}" x2="${mL - 8}" y2="${yBas.toFixed(1)}" stroke="var(--ink-3)" stroke-width="1.5"/>`;
+  rows.forEach((c, ri) => { const yc = mT + ri * rowH + rowH / 2 - 6, y = yc - 4, fr = c === 'FRA', k = col(c);
+    if (fr) g += `<rect x="${mL - 8}" y="${(yc - rowH / 2 + 2).toFixed(1)}" width="${(W - mR - mL + 8).toFixed(1)}" height="${rowH - 4}" fill="var(--fr-soft)"/>`;
+    else if (ri % 2 && porteeM !== 'top') g += `<rect x="${mL - 8}" y="${(yc - rowH / 2 + 2).toFixed(1)}" width="${(W - mR - mL + 8).toFixed(1)}" height="${rowH - 4}" fill="var(--band)" opacity=".5"/>`;
+    /* la couleur de chaque nation, celle des blocs 2 et 4 (les autres en gris) */
+    g += M ? `<text x="2" y="${(yc + 5).toFixed(1)}" font-size="14" font-weight="${fr ? '700' : '600'}" fill="${SLOT[c] ? k : 'var(--ink-2)'}">${nomPays(c)}</text>`
+      : `<text x="${mL - 14}" y="${(yc + 4).toFixed(1)}" text-anchor="end" font-size="12" font-weight="${fr ? '700' : '600'}" fill="${SLOT[c] ? k : 'var(--ink-2)'}">${name(c)}</text>`;
+    gs.forEach(gi => { if (estAbsente(gi)) return;
+      const v = sGain(c, gi) || 0, x = X(gi), rang = (POD[gi] || {})[c];
+      if (v <= 0.0005) { g += `<circle cx="${x.toFixed(1)}" cy="${yc.toFixed(1)}" r="1.4" fill="var(--rule)"/>`; }
+      else {
+        const r = R(v), yy = rang != null ? y : yc;
+        /* bonus d'entrée : disque clair à bord pointillé, comme sa barre hachurée au bloc 4 */
+        g += sIsBonusCol(gi)
+          ? `<circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="${r.toFixed(1)}" fill="${k}" fill-opacity=".28" stroke="${k}" stroke-width="1.3" stroke-dasharray="3 2"/>`
+          : `<circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="${r.toFixed(1)}" fill="${k}" fill-opacity="${fr ? 0.9 : SLOT[c] ? 0.75 : 0.5}"/>`;
+        /* le podium de l'étape : la médaille sur le disque, le gain dessous */
+        if (rang != null) {
+          g += `<text x="${(x + Math.max(r, 5) * 0.75 + 1).toFixed(1)}" y="${(yy - Math.max(r, 5) * 0.55 + 4).toFixed(1)}" text-anchor="middle" font-size="${rang === 0 ? 12 : 11}">${MEDAILLE[rang]}</text>`
+            + `<text x="${x.toFixed(1)}" y="${(yc + rowH / 2 - 4).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" font-family="${mono}" fill="${SLOT[c] ? k : 'var(--ink-2)'}" paint-order="stroke" stroke="var(--surface)" stroke-width="2.5">+${nfx(v)}</text>`;
+        }
+      }
+      if (!gFuture(gi) || !isCur()) g += `<rect x="${(x - cw / 2).toFixed(1)}" y="${(yc - rowH / 2).toFixed(1)}" width="${cw.toFixed(1)}" height="${rowH}" fill="transparent" data-c="${c}" data-g="${gi}"/>`; });
+    g += `<rect x="${W - mR + 8}" y="${(yc - 6).toFixed(1)}" width="${(58 * sTotal(c) / totMax).toFixed(1)}" height="12" fill="${k}" fill-opacity="${fr ? 1 : SLOT[c] ? .8 : .5}" rx="1.5"/>`;
+    g += `<text x="${W - 4}" y="${(yc + 4).toFixed(1)}" text-anchor="end" font-size="11.5" font-family="${mono}" font-weight="${fr ? '700' : '600'}" fill="${SLOT[c] ? k : 'var(--ink-2)'}">${nfx(sTotal(c))}</text>`; });
+  g += `<text x="${W - mR + 8}" y="${mT - 30}" font-size="9.5" font-weight="700" letter-spacing=".05em" fill="var(--ink-2)">TOTAL</text>`;
+  g += `</svg>`;
+  document.getElementById('mtx').outerHTML = g.replace('<svg', '<svg id="mtx" role="img" aria-label="Matrice nations par tours, de l\'entrée en lice à la finale, avec le podium de chaque étape"');
+  { const m = document.getElementById('mtx'), box = m.parentNode; glisser(box, m, 900, mL);
+    /* téléphone : on ouvre la matrice sur la dernière étape jouée (l'actualité), et
+       l'indice dit qu'on peut glisser des deux côtés */
+    if (M) { const k = 900 / W, i = box.previousElementSibling;
+      const caler = () => { box.scrollLeft = isCur() ? Math.max(0, X(LI) * k - mL * k - (box.clientWidth - mL * k) * 0.55) : 0;
+        if (i && i.classList.contains('glisse-indice')) { i.textContent = isCur() ? '← juillet · glissez des deux côtés · finale →' : 'Faites glisser pour voir la suite →';
+          requestAnimationFrame(() => requestAnimationFrame(() => i.classList.remove('vu'))); } };
+      requestAnimationFrame(caler); } }
+  const labM = SEAS.find(x => x[0] === selY)[1], nP = poolM().length;
   document.getElementById('mtxNote').innerHTML =
-    `Saison <b>${labM}</b>${isCur()?', en cours':''}. L'aire du disque porte le coefficient gagné ; le disque pointillé est le bonus de participation. `
-    + (isCur() ? `La zone grisée reste à jouer. ` : '') + `À droite, le total de la saison.`;
+    `Saison <b>${labM}</b>${isCur() ? ', en cours' : ''}. L'aire du disque porte le coefficient gagné ; le disque pointillé est le bonus de participation. `
+    + `🏆 🥈 🥉 : le podium de chaque étape, parmi les ${nP} nations ${isCur() ? 'engagées' : 'suivies pour cette saison'}, avec le gain dessous. `
+    + (isCur() ? `La colonne bleutée est la dernière étape jouée ; la zone grisée reste à jouer. ` : '') + `À droite, le total de la saison.`;
 }
-/* survol d'une case : l'étape, ce qu'elle a rapporté, où en est le cumul */
+/* survol d'une case : l'étape, ce qu'elle a rapporté, où en est le cumul, la place sur le podium */
 (function(){
   const box = document.getElementById('boxM'), tip = document.getElementById('tipM'); if (!box || !tip) return;
   const montre = ev => { const r = ev.target.closest && ev.target.closest('[data-g]'); if (!r) { tip.hidden = true; return; }
-    const c = r.dataset.c, gi = +r.dataset.g, v = sGain(c, gi) || 0;
+    const c = r.dataset.c, gi = +r.dataset.g, v = sGain(c, gi) || 0, P = podiumM()[gi] || {}, rang = P[c];
     tip.innerHTML = `<div class="th">${GROUPS[gi].lab}${isCur() && gDate(gi) ? ' · ' + gDate(gi)[1] : ''}</div>`
-      + `<div class="tr"><i style="background:var(${SLOT[c]})"></i><span class="nm">${name(c)}</span><b>${v > 0.0005 ? '+' + nfx(v) : '0'}</b><s style="color:var(--ink-3)">cumul ${nfx(sCum(c, gi) ?? 0)}</s></div>`;
+      + `<div class="tr"><i style="background:${SLOT[c] ? `var(${SLOT[c]})` : 'var(--ink-3)'}"></i><span class="nm">${name(c)}</span><b>${v > 0.0005 ? '+' + nfx(v) : '0'}</b><s style="color:var(--ink-3)">cumul ${nfx(sCum(c, gi) ?? 0)}</s></div>`
+      + (rang != null ? `<div class="tfoot">${MEDAILLE[rang]} ${MED_NOM[rang]} de l'étape sur ${P.n} nation${P.n > 1 ? 's' : ''} qui ont marqué</div>` : '');
     tip.hidden = false; placeTip(tip, ev); };
   box.addEventListener('mousemove', montre);
   box.addEventListener('click', montre);
   box.addEventListener('mouseleave', () => { tip.hidden = true; });
+  /* filtre Nations : les huit premières ou toutes */
+  const bT = document.getElementById('m-top'), bA = document.getElementById('m-all');
+  const sync = () => { bT.setAttribute('aria-pressed', porteeM === 'top'); bA.setAttribute('aria-pressed', porteeM === 'all'); drawM(); };
+  if (bT && bA) { bT.onclick = () => { porteeM = 'top'; sync(); }; bA.onclick = () => { porteeM = 'all'; sync(); }; }
 })();
 
 /* Les trois listes de saison, une fois tous les dessins définis. */
