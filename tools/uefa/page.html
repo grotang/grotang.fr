@@ -426,14 +426,10 @@ section > .famille + .panel{margin-top:22px}
 /* Projection : ce qui reste à prendre d'ici la finale, dans la couleur de la
    nation en teinte intermédiaire — trois intensités d'une même couleur : saisons
    closes pâles, acquis plein, projection entre les deux (choix de GT du 14/10,
-   la hachure faisait « manque d'assurance »). Le trait fin par-dessus dit
-   l'incertitude : 3 fois sur 5, la saison finit entre ses deux butées. */
+   la hachure faisait « manque d'assurance »). Les fourchettes d'incertitude
+   sont dans l'infobulle, pas sur la barre (15/10 : le trait alourdissait). */
 .barrow .pseg{height:100%; flex:none; box-shadow:inset 2px 0 0 var(--surface); transition:filter .08s}
 .barrow .pseg.on{filter:brightness(1.08) saturate(1.15)}
-.barrow .rng{position:absolute; top:50%; height:2px; margin-top:-1px; background:var(--ink); opacity:.55; border-radius:1px}
-.barrow .rng::before, .barrow .rng::after{content:""; position:absolute; top:-4px; width:2px; height:10px; background:inherit; border-radius:1px}
-.barrow .rng::before{left:-1px} .barrow .rng::after{right:-1px}
-.barrow .rng i{position:absolute; top:-3px; width:8px; height:8px; margin-left:-4px; border-radius:50%; background:var(--surface); box-shadow:0 0 0 2px var(--ink)}
 .bleg{display:inline-flex; align-items:center; gap:6px; margin-right:16px; white-space:nowrap}
 .bleg i{display:inline-block; width:26px; height:10px; border-radius:2px}
 .barrow .seg{height:100%; box-shadow:inset -2px 0 0 var(--surface)}
@@ -1755,8 +1751,9 @@ function projBar(c, base, max){
   const clos = isS ? 0 : F.tot(BY[c]) - BY[c].y[4], [lo, med, hi] = projS(c), a = seasonNow(c);
   /* teinte intermédiaire : entre le pâle des saisons closes et le plein de l'acquis */
   const pm = toHex(melange(base, toRGB(cssHex('--surface')), .62));
-  return `<div class="pseg" style="width:${larg((med - a) / max * 100)};background:${pm}"></div>`
-    + (hi - lo > 0.01 ? `<span class="rng" style="left:${larg((clos + lo) / max * 100)};width:${larg((hi - lo) / max * 100)}"><i style="left:${((med - lo) / (hi - lo) * 100).toFixed(1)}%"></i></span>` : '');
+  /* pas de trait de fourchette sur la barre (retiré le 15/10 : il alourdissait) ;
+     les fourchettes restent dans l'infobulle */
+  return `<div class="pseg" style="width:${larg((med - a) / max * 100)};background:${pm}"></div>`;
 }
 function drawBars(){
   const isS = period==='season';
@@ -1766,7 +1763,7 @@ function drawBars(){
   const clos = c => isS ? 0 : F.tot(BY[c]) - BY[c].y[4];          // saisons closes de la fenêtre
   const reel = c => isS ? seasonNow(c) : F.tot(BY[c]);
   const val = c => P ? clos(c) + projS(c)[1] : reel(c);
-  const haut = c => P ? clos(c) + projS(c)[2] : val(c);
+  const haut = c => val(c);
   const rows=[...jeuB()].sort((x,y)=>val(y)-val(x));
   const max=Math.max(...rows.map(haut));
   /* rangs : en projection, recalculés sur les 55 (fenêtres) ; en réel, ceux de la source */
@@ -1843,7 +1840,7 @@ function drawBars(){
     const legP = (isS ? '' : `<span class="bleg"><i style="background:color-mix(in srgb,var(--ink-3) 38%,var(--surface-2))"></i>${F.n - 1} saison${F.n > 2 ? 's' : ''} close${F.n > 2 ? 's' : ''}</span>`)
       + `<span class="bleg"><i style="background:var(--ink-3);width:14px"></i>saison en cours, acquis</span>`
       + `<span class="bleg"><i style="${hach}"></i>à venir, projection médiane</span>`
-      + `<span class="bleg"><span style="position:relative;display:inline-block;width:30px;height:10px"><span style="position:absolute;left:0;right:0;top:4px;height:2px;background:var(--ink);opacity:.55"></span><span style="position:absolute;left:0;top:0;width:2px;height:10px;background:var(--ink);opacity:.55"></span><span style="position:absolute;right:0;top:0;width:2px;height:10px;background:var(--ink);opacity:.55"></span><span style="position:absolute;left:11px;top:1px;width:8px;height:8px;border-radius:50%;background:var(--surface);box-shadow:0 0 0 2px var(--ink);opacity:.8"></span></span>3 fois sur 5</span><br>`;
+      + `<span style="color:var(--ink-3)">— survolez une barre pour les fourchettes</span><br>`;
     const rP = c => rangOf(c, rows.indexOf(c)), fr = 'FRA';
     let t;
     if (isS) { const rp = [...ENGAGEES.map(n => n.c)].sort((x, y) => val(y) - val(x)).indexOf(fr) + 1, rr = [...ENGAGEES.map(n => n.c)].sort((x, y) => reel(y) - reel(x)).indexOf(fr) + 1;
@@ -1851,7 +1848,7 @@ function drawBars(){
     else { const rp = rangP[fr], rr = F.rang(BY[fr]);
       t = (F.n === 5 ? `Classement à cinq ans, saison en cours projetée à sa fin : la France finirait <b>${rp}<sup>e</sup></b>` : `Socle de l'été ${2027 + (5 - F.n) - 1}, saison en cours projetée à sa fin : la France serait <b>${rp}<sup>e</sup></b>`)
         + (rp !== rr ? ` (${rr}<sup>e</sup> au réel acquis). ` : `, comme au réel acquis. `); }
-    t += `La partie en teinte intermédiaire est ce qui reste à prendre d'ici la finale : la médiane de ${nf((PRJ && PRJ.n) || 0, 0)} saisons rejouées (bloc 8). Le rond marque cette médiane, les butées encadrent 3 tirages sur 5. Les flèches comparent au réel acquis.`;
+    t += `La partie en teinte intermédiaire est ce qui reste à prendre d'ici la finale : la médiane de ${nf((PRJ && PRJ.n) || 0, 0)} saisons rejouées (bloc 8). Les flèches comparent au réel acquis.`;
     document.getElementById('barNote').innerHTML = legP + `Pastilles : un club engagé chacune, pleine tant qu'il est en lice, en creux une fois éliminé. ` + t;
     return;
   }
@@ -1931,7 +1928,7 @@ function tipBarre(c, foc){
        cinq saisons), son total — EXACT, au millième, le seul chiffre exact de
        l'infobulle — puis chaque saison selon la charte (nfx). En projection, la
        saison en cours est comptée à sa médiane et détaillée (acquis, fourchettes). */
-    const pz = ev.target.closest('.pseg, .rng, .fill, .yseg');
+    const pz = ev.target.closest('.pseg, .fill, .yseg');
     if (!pz) { hide(); return; }
     const tr = pz.closest('.track'), c = tr.dataset.nat;
     const ys = pz.closest('.yseg'), foc = ys ? +ys.dataset.y : 4;
