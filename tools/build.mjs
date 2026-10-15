@@ -142,7 +142,7 @@ function affichesFR(src) {
   const suf = `${m[1]}-${m[2].slice(2)}`, out = {};
   const fa = path.join(ROOT, `tools/uefa/wiki/affiches-${suf}.json`);
   if (fs.existsSync(fa)) for (const [k, j, d, h, nd, cd, ne, ce, gd, ge] of JSON.parse(fs.readFileSync(fa, 'utf8'))[m[1]] || [])
-    (out[k + ':' + j] = out[k + ':' + j] || []).push([d, h, nd, cd, ne, ce, gd, ge]);
+    if (cd === 'FRA' || ce === 'FRA') (out[k + ':' + j] = out[k + ':' + j] || []).push([d, h, nd, cd, ne, ce, gd, ge]);
   const fq = path.join(ROOT, `tools/uefa/wiki/matchs-${suf}.json`);
   if (fs.existsSync(fq)) { const Q = JSON.parse(fs.readFileSync(fq, 'utf8'));
     for (const [club, L] of Object.entries((Q.c || {}).FRA || {})) { const vu = {};
@@ -152,8 +152,34 @@ function affichesFR(src) {
   for (const v of Object.values(out)) v.sort((a, b) => String(a[0]).localeCompare(String(b[0])) || String(a[1]).localeCompare(String(b[1])));
   return out;
 }
+/* La semaine européenne (bloc 0b) : TOUS les matchs datés de la saison, toutes
+   nations. [date, heure, compétition, étape, domicile, nation, extérieur, nation,
+   buts dom., buts ext.] ; étape 0…7 ligue, 8…12 phase finale, « q0 »… « q3 » tours
+   de qualification (date du tour lue dans QUAL, heure inconnue). Ligue et phase
+   finale viennent de wiki/affiches (Wikipédia, joués et à venir) ; l'été, de
+   wiki/matchs (matchs joués, une seule fois : depuis le club qui reçoit). */
+function semaineEU(src) {
+  const D = JSON.parse(src.slice(src.indexOf('/*DATA_START*/') + 14, src.indexOf('/*DATA_END*/')).replace(/^const D\s*=\s*/, '').replace(/;\s*$/, ''));
+  const m = /^(\d{4})\/(\d{4})$/.exec(D.meta.season || ''); if (!m) return [];
+  const suf = `${m[1]}-${m[2].slice(2)}`, out = [];
+  const fa = path.join(ROOT, `tools/uefa/wiki/affiches-${suf}.json`);
+  if (fs.existsSync(fa)) for (const [k, j, d, h, nd, cd, ne, ce, gd, ge] of JSON.parse(fs.readFileSync(fa, 'utf8'))[m[1]] || [])
+    if (d) out.push([d, h, k, j, nd, cd, ne, ce, gd, ge]);
+  const qm = /const QUAL = (\{[\s\S]*?\n\});/.exec(src), QUAL = qm ? Function(`return (${qm[1]});`)() : null;
+  const fq = path.join(ROOT, `tools/uefa/wiki/matchs-${suf}.json`);
+  if (QUAL && fs.existsSync(fq)) { const Q = JSON.parse(fs.readFileSync(fq, 'utf8'));
+    for (const [nat, clubs] of Object.entries(Q.c || {})) for (const [club, L] of Object.entries(clubs)) { const vu = {};
+      for (const [r, k, o, gf, ga, dom] of L) { if (r > 3) continue;
+        const leg = vu[r] = (vu[r] ?? -1) + 1; if (!dom) continue;
+        const t = (QUAL[k] || [])[r]; if (!t) continue;
+        const [on, oc] = Q.noms[o] || ['?', '?'];
+        out.push([t[1 + Math.min(leg, 1)], null, k, 'q' + r, club, nat, on, oc, gf, ga]); } } }
+  out.sort((a, b) => String(a[0]).localeCompare(String(b[0])) || String(a[1]).localeCompare(String(b[1])) || a[2] - b[2]);
+  return out;
+}
 function buildUefa() {
   let src = read('tools/uefa/page.html');
+  src = src.replace(/\/\*SEM_START\*\/[\s\S]*?\/\*SEM_END\*\//, () => `/*SEM_START*/const SEM = ${JSON.stringify(semaineEU(src))};/*SEM_END*/`);
   src = src.replace(/\/\*AFF_START\*\/[\s\S]*?\/\*AFF_END\*\//, () => `/*AFF_START*/const AFF = ${JSON.stringify(affichesFR(src))};/*AFF_END*/`);
   { const pf = phaseFinale(src);
     src = src.replace(/\/\*KOV_START\*\/[\s\S]*?\/\*KOV_END\*\//, () => `/*KOV_START*/const KOV = ${JSON.stringify(pf.kov)};/*KOV_END*/`)

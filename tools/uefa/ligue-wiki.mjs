@@ -23,7 +23,7 @@
 
    Sortie : wiki/affiches-AAAA-AA.json (bloc 0) : { "AAAA": [[compétition, étape, date, heure,
      club domicile, nation, club extérieur, nation, buts dom. | null, buts ext. | null]] },
-     seulement les matchs d'un club français, joués ou à venir.
+     tous les matchs, joués ou à venir (bloc 0 : clubs français ; bloc 0b : la semaine).
    Sortie : wiki/ligue-AAAA-AA.json
      { "AAAA": { NAT: { club source: [[étape, compétition, club adverse, nation adverse, buts pour, buts contre, domicile]] } } }
      étape : 0…7 journées de ligue, 8 barrages KO, 9 huitièmes, 10 quarts, 11 demies, 12 finale
@@ -181,12 +181,13 @@ export async function majLigue({ data, ici, log, pages = null }) {
       ((res[ce] = res[ce] || {})[se] = res[ce][se] || []).push([x.j, k, sd, cd, x.b[1], x.b[0], 0]);
       total++;
     }
-    /* les affiches des clubs français, jouées ou à venir (bloc 0, survol d'une journée) */
+    /* toutes les affiches, jouées ou à venir, avec leur date : le bloc 0 (survol,
+       clubs français) et le bloc 0b (la semaine européenne, toutes nations) */
     for (const x of affiches) if (x.date === SOIR) { soir.prevus++; if (x.b) soir.joues++; }
     for (const x of affiches) {
       const pays = e => code[ALIAS[e.pays] || e.pays] || code[ALIAS[e.drapeau] || e.drapeau];
       const cd = pays(x.dom), ce = pays(x.ext);
-      if (cd !== 'FRA' && ce !== 'FRA') continue;
+      if (!cd || !ce) continue;
       const nd = nomSource(x.dom.nom, cd, k) || x.dom.nom, ne = nomSource(x.ext.nom, ce, k) || x.ext.nom;
       aff.push([k, x.j, x.date, x.heure, nd, cd, ne, ce, ...(x.b || [null, null])]);
     }
@@ -205,14 +206,14 @@ export async function majLigue({ data, ici, log, pages = null }) {
   log(`  recoupement avec la source : ${accord} clubs d'accord, ${ecart} en attente ou en écart (sans détail affiché)`);
   for (const d of [...new Set(doutes)]) log('  ⚠ ' + d);
   const tri = o => Object.fromEntries(Object.keys(o).sort().map(c => [c, Object.fromEntries(Object.keys(o[c]).sort().map(n => [n, o[c][n]]))]));
-  /* affiches françaises : fichier à part, réécrit seulement s'il change */
+  /* affiches : fichier à part, réécrit seulement s'il change */
   aff.sort((a, b) => a[0] - b[0] || a[1] - b[1] || String(a[2]).localeCompare(String(b[2])) || String(a[3]).localeCompare(String(b[3])) || a[4].localeCompare(b[4]));
   const fa = path.join(ici, 'wiki', `affiches-${an}-${m[2].slice(2)}.json`), ta = JSON.stringify({ [an]: aff });
   const affNeuf = ta !== (fs.existsSync(fa) ? fs.readFileSync(fa, 'utf8') : '');
   if (affNeuf) fs.writeFileSync(fa, ta);
   try { fs.writeFileSync(path.join(os.tmpdir(), 'grotang-soir.json'), JSON.stringify(soir)); } catch {}
   if (soir.prevus) log(`  ce soir (${SOIR}) : ${soir.joues} match(s) sur ${soir.prevus} avec leur score sur Wikipédia`);
-  log(`  affiches françaises : ${aff.length}${affNeuf ? ', fichier mis à jour' : ', inchangées'}`);
+  log(`  affiches (toutes nations) : ${aff.length}${affNeuf ? ', fichier mis à jour' : ', inchangées'}`);
   const texte = JSON.stringify({ [an]: tri(res) });
   const f = path.join(ici, 'wiki', `ligue-${an}-${m[2].slice(2)}.json`);
   const avant = fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '';
