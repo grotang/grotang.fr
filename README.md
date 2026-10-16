@@ -1,176 +1,142 @@
 # grotang.fr
 
-Deux tableaux de bord :
+**L'observatoire du coefficient UEFA.** Décortiqué, comparé, projeté.
+
+Un site statique, en français, qui suit le classement UEFA des associations (la course aux places européennes) et la place de la France dedans. Il se met à jour tout seul, chaque soir de match et chaque matin.
 
 | Page | Adresse | Données |
 |---|---|---|
-| Coefficient UEFA, journée par journée | `/uefa/` | reconstruites chaque matin |
-| Français au tableau principal (Grands Chelems) | `/tennis/` | figées, saisie manuelle |
+| Coefficient UEFA | [grotang.fr/uefa/](https://grotang.fr/uefa/) | relues automatiquement, plusieurs fois par jour en période de match |
+| Français en Grand Chelem | [grotang.fr/tennis/](https://grotang.fr/tennis/) | figées, saisie manuelle |
 
-## Comment ça marche
+---
 
-Il n'y a **aucune étape de build chez Netlify**. Netlify se contente de servir le
-dossier `public/` tel qu'il est dans ce dépôt (`netlify.toml` → `publish = "public"`,
-pas de `command`). Autrement dit : *ce qui est commité est ce qui est en ligne.*
+## La page UEFA, bloc par bloc
 
-C'est un choix, pas une facilité :
-
-- un déploiement ne peut pas échouer pour une raison de build (pas de `npm install`,
-  pas de version de Node qui change sous les pieds) ;
-- le `git diff` d'un commit montre littéralement ce qui change sur le site — y compris
-  les chiffres, puisqu'ils sont écrits dans le HTML ;
-- revenir en arrière, c'est revenir à un commit. Netlify garde en plus chaque
-  déploiement et sait en republier un ancien en un clic.
-
-## Le cycle quotidien
-
-Personne ne le déclenche : il tourne dans GitHub Actions, sans PC allumé et sans
-intervention.
-
-```
-5-jahres-wertung.de  →  GitHub Actions, 10 h  →  tools/uefa/page.html
-                                                       ↓  node tools/build.mjs
-                                                  public/**  →  commit  →  push
-                                                       ↓
-                                               Netlify publie (~30 s)
-```
-
-Le rafraîchissement ne réécrit qu'un bloc de `tools/uefa/page.html`, délimité par
-les sentinelles `/*DATA_START*/` … `/*DATA_END*/`. Le reste — mise en page,
-graphiques, historique des saisons closes dans `/*HIST_START*/` … `/*HIST_END*/` —
-ne bouge pas.
-
-Trois issues possibles, et une seule écrit quelque chose :
-
-| | |
+| Bloc | Ce qu'il montre |
 |---|---|
-| la source n'a pas bougé | rien n'est écrit, aucun commit |
-| nouvelles données, contrôles passés | commit, Netlify publie |
-| un contrôle échoue | **rien n'est écrit**, l'échec est visible dans l'onglet Actions, la page de la veille reste en ligne |
+| **0a** Où en est la saison | Calendrier réel des trois compétitions ; au survol, les matchs des clubs français (score, ou jour et heure s'ils sont à venir). |
+| **0b** La semaine européenne | Une ligne par nation, rangée par coefficient gagné par les matchs de la semaine (C1 mardi-mercredi, C3 et C4 jeudi). |
+| **1** Le classement | Saison en cours ou 5, 4, 3, 2 dernières saisons ; saison en cours au réel ou projetée à sa fin. |
+| **2** Évolution journée par journée | Cumul ou écart au leader, étape par étape, avec le bandeau des trois phases. |
+| **3a–3c** D'où viennent les points | Par compétition, par club, par type de point. |
+| **4a–4b** Ce que rapporte chaque étape | Gain et cumul (deux axes), matrice avec le podium de chaque étape. |
+| **5** Une idée ? | Contact. |
+| **6a–6b** Sur le terrain | Rendement (points par match) et bilan V/N/D, club par club. |
+| **7a–7d** Les clubs encore en vie | Qui reste, courbe de survie, écrémage, Sankey de la saison. |
+| **8** La projection | Fourchettes de fin de phase de ligue et de fin de saison. |
 
-Les contrôles sont détaillés dans `tools/uefa/SOURCES.md`. Le plus parlant vérifie
-le barème club par club sur les 463 engagés : `points = V_quali + 0,5 × N_quali +
-2 × V_phase + 1 × N_phase + bonus`. Une page fausse est pire qu'une page datée.
+Toutes les saisons depuis 2021/22 sont consultables ; un seul sélecteur de saison pilote tous les blocs.
 
-### Les horaires
+---
 
-Deux rendez-vous, en heure de Paris : **23 h 38**, quand les matchs européens sont
-finis et que la source a recalculé, et **07 h 12**, pour que la page soit fraîche
-au réveil.
+## D'où viennent les chiffres
 
-Cron ne parle qu'UTC et ignore le changement d'heure, donc chaque rendez-vous
-demande deux lignes — une par saison. En pratique :
-
-| UTC | été | hiver |
+| Source | Ce qu'on y prend | Comment |
 |---|---|---|
-| `38 21` | **23 h 38** | 22 h 38 |
-| `38 22` | 00 h 38 | **23 h 38** |
-| `12 5` | **07 h 12** | 06 h 12 |
-| `12 6` | 08 h 12 | **07 h 12** |
+| [5-jahres-wertung.de](https://www.5-jahres-wertung.de/) | Coefficients, bilans club par club, effectifs | Pages publiques uniquement, lues par le robot. L'espace membres (`/Memberbereich/` etc.) n'est jamais lu. |
+| [Wikipédia (en)](https://en.wikipedia.org/) | La liste des matchs : date, heure, score | Pages « league phase » et « knockout phase », lues par l'API Wikimédia avec un User-Agent identifié ; l'été, pages de qualifications enregistrées à la main. |
+| [kassiesa.net](https://kassiesa.net/uefa/) | Second calcul indépendant du classement, pour recouper | **Relevé manuel** : son `robots.txt` interdit les robots sur ses pages de données. Voir `tools/uefa/snapshot-kassiesa.js`. |
+| Archive maison | 5 saisons closes, 55 nations, match par match | `tools/uefa/archive/` |
 
-La ligne qui tombe à côté ne coûte rien : elle relit la source, voit que rien n'a
-bougé et sort sans écrire. Ça donne deux tentatives le soir et deux le matin, ce
-qui n'est pas du luxe — GitHub documente que les tâches planifiées peuvent être
-retardées et que « some queued jobs may be dropped ». C'est arrivé dès le premier
-passage automatique. Pour la même raison la minute n'est jamais `00` : « High load
-times include the start of every hour. »
+Un match Wikipédia n'est affiché dans les bilans que s'il recoupe le bilan officiel du club : si Wikipédia est en retard ou se trompe, la case reste sans détail, elle ne montre jamais un faux match.
 
-### L'hébergement
+Détail complet, pièges rencontrés et contrôles : [`tools/uefa/SOURCES.md`](tools/uefa/SOURCES.md).
 
-Le site est servi par **GitHub Pages**, depuis le dossier `public/` de ce dépôt,
-publié par `.github/workflows/pages.yml` à chaque commit qui touche ce dossier.
-Il n'y a toujours aucune étape de build distante : *ce qui est commité est ce qui
-est en ligne.*
+---
 
-Il a d'abord vécu chez Netlify. La bascule n'est pas un caprice : depuis leur
-tarification au crédit, **un déploiement de production coûte 15 crédits** sur les
-300 mensuels de l'offre gratuite, soit **20 déploiements par mois**, après quoi la
-publication est suspendue. Un site conçu pour se republier deux fois par jour, plus
-le travail de mise en forme, ne tient pas dans ce budget — la limite a été atteinte
-en trois semaines, dont une seule journée de design. GitHub Pages ne compte pas les
-déploiements d'un dépôt public.
-
-Ce qu'on a perdu au change, et qu'il faut savoir :
-
-- **les en-têtes HTTP personnalisés** (`X-Content-Type-Options`, `Referrer-Policy`,
-  `X-Frame-Options`, `Permissions-Policy`) : GitHub Pages ne permet pas de les
-  définir. Sans formulaire ni cookie sur le site, la perte est théorique, mais elle
-  est réelle ;
-- **le contrôle du cache** : Pages sert le HTML avec `max-age=600`, donc une page
-  peut rester dix minutes en cache après une publication. Pour une page rafraîchie
-  deux fois par jour, c'est sans conséquence ;
-- **le retour arrière en un clic** : Netlify gardait chaque déploiement et savait en
-  republier un ancien. Ici on revient en arrière par un `git revert`, ce qui est de
-  toute façon la source de vérité.
-
-`netlify.toml` reste dans le dépôt : il documente la configuration précédente et
-permettrait de revenir sans rien réécrire.
-
-### Le budget de déploiements (historique, Netlify)
-
-Netlify facture au crédit : **un déploiement de production coûte 15 crédits**, et le
-plan gratuit en donne 300 par mois. Soit **20 déploiements mensuels**, sans dépassement
-possible — au-delà, les sites de l'équipe sont mis en pause et les visiteurs voient
-« Site not available » jusqu'au cycle suivant. Ni le trafic ni la bande passante ne
-pèsent quoi que ce soit à cette échelle : le compteur, ici, compte les commits publiés.
-
-Deux garde-fous :
-
-- `netlify.toml` porte une commande `ignore` qui compare le commit publié au commit
-  courant. Si rien n'a changé sous `public/`, la construction est sautée — le signe de
-  vie mensuel, une correction dans `tools/`, une note dans ce fichier ne coûtent donc
-  rien. (La documentation Netlify ne dit pas explicitement qu'une construction sautée
-  n'est pas facturée ; à vérifier sur le compteur au prochain signe de vie.)
-- Le travail de mise en forme se pousse **groupé**, un commit par session, pas un par
-  modification. Le robot, lui, ne dépose que lorsque les chiffres bougent : en pleine
-  phase de ligue cela fait quatre à sept déploiements par mois, ce qui laisse de la
-  marge à condition de ne pas la gaspiller à côté.
-
-### Le signe de vie
-
-GitHub désactive les tâches planifiées d'un dépôt public resté 60 jours sans
-activité. Comme le robot ne dépose un commit que quand les chiffres bougent, la
-trêve estivale suffirait à faire couper la tâche — juste avant la reprise. Au bout
-de 30 jours de silence, il écrit donc la date du jour dans
-`tools/uefa/last-checked.txt` et la dépose. Le compteur repart avec un mois de
-marge et `public/` n'est pas touché : le site publié reste identique à l'octet
-près. En pleine saison ce commit n'apparaît jamais.
-
-## Arborescence
+## Comment le site se met à jour
 
 ```
-public/            ce qui est publié — ne pas éditer à la main
-  index.html         accueil (générée)
-  uefa/index.html    page UEFA (générée)
-  tennis/index.html  page tennis (générée)
-  404.html  robots.txt  sitemap.xml   (l'icône est incrustée dans les pages)
+5-jahres-wertung.de ─┐
+                     ├─► GitHub Actions ─► tools/uefa/page.html + tools/uefa/wiki/*.json ─► commit
+Wikipédia ───────────┘        (refresh.mjs)                                                    │
+                                                                                               ▼
+                                              GitHub Pages ◄── tools/build.mjs (pages.yml) ◄───┘
+```
+
+Rien n'est construit à la main : `public/` n'est **pas** dans le dépôt. Le robot ne touche qu'aux sources, et la page finie n'existe que le temps d'une publication.
+
+### Les robots (`.github/workflows/`)
+
+| Fichier | Quand | Rôle |
+|---|---|---|
+| `uefa-soir.yml` « Soir de match UEFA » | Part vers 19 h 47 (Paris), second départ vers 21 h 47 | Si c'est un soir de match, reste éveillé : dès 20 h 35, relit la source et Wikipédia **toutes les dix minutes**, dépose et publie dès qu'il y a du neuf, s'arrête quand tout est à jour (source datée du soir **et** score de tous les matchs du soir), au plus tard à 3 h 30. |
+| `uefa.yml` « Rafraîchissement UEFA » | 23 h 38 et 7 h 12 (Paris) | Passages à heure fixe, en filet. Porte l'**alarme de fraîcheur** (`tools/uefa/fraicheur.mjs`) : si un soir de match est passé et que la source n'a pas bougé, le passage de 7 h échoue et GitHub envoie un e-mail. |
+| `pages.yml` « Publication GitHub Pages » | À chaque commit sur `tools/**`, ou appelé par les robots | Fabrique le site (`node tools/build.mjs`) et le publie. |
+
+Pourquoi une veille plutôt qu'une heure fixe : GitHub ne garantit pas l'heure de départ d'une tâche planifiée. Le 13/10/2026, le passage prévu à 23 h 38 est parti à 2 h 33. Une tâche qui part tôt et reste éveillée couvre la soirée même partie en retard. Les minutes d'Actions sont gratuites pour un dépôt public, y compris celles où la tâche attend.
+
+Cron ne parle qu'UTC et ignore le changement d'heure : chaque rendez-vous fixe a deux lignes, une pour l'été, une pour l'hiver ; celle qui tombe à côté ne trouve rien de neuf et sort sans rien écrire. La minute n'est jamais `00` (« High load times include the start of every hour »).
+
+### Les garde-fous
+
+Une page fausse est pire qu'une page en retard. Le pire scénario voulu est un site daté, jamais un site cassé.
+
+- **`npm run test:extract`** : la lecture de la source doit redonner les chiffres d'une capture validée à la main. Si la source change de forme, le rafraîchissement ne tourne même pas.
+- **Contrôles de `refresh.mjs`** : somme des clubs ÷ clubs engagés = coefficient, barème des bonus, recollement des cinq saisons. Un contrôle en échec : rien n'est écrit.
+- **`npm run test:page`** : ouvre la page fabriquée dans un vrai navigateur et vérifie une quinzaine de faits (aucune erreur JavaScript, tous les blocs remplis, aucun « NaN », total à 5 ans = somme des saisons, engagés − éliminés = encore en lice). Un échec bloque le dépôt.
+- **Alarme de fraîcheur** : voir plus haut.
+- **Recoupement kassiesa** : signalant, jamais bloquant. Un désaccord s'affiche sur la page.
+
+### La projection
+
+200 000 saisons rejouées sur le runner GitHub (`tools/uefa/projette.mjs`), avec le code de simulation de la page elle-même : une seule version du modèle. La graine est la date des données, donc à données égales le résultat est identique et ne crée pas de commit parasite. La page ne reçoit que six nombres par nation et par horizon.
+
+---
+
+## Carte du dépôt
+
+```
 tools/
-  build.mjs          génère tout public/
-  index.mjs          gabarit de l'accueil
-  chrome.mjs         barre de navigation et jeu de couleurs partagés
-  tennis.src.html    source de la page tennis, figée
+  build.mjs              fabrique public/ à partir des sources (pages, icônes, sitemap, données injectées)
+  chrome.mjs             barre de navigation, thème clair/sombre, favicon, communs aux pages
+  tennis.src.html        page tennis
+  icons/, fonts/         icônes du site, polices auto-hébergées
   uefa/
-    page.html        source de la page UEFA ; seul son bloc de données est réécrit
-    refresh.mjs      va lire la source, contrôle, réécrit, relance le build
-    extract.mjs      lecture pure des quatre pages → objet ; aucun accès réseau
-    test-extract.mjs test de non-régression hors ligne
-    names.json       code pays → nom de la nation
-    club-aliases.json  quelques noms de clubs francisés
-    nations.json     chiffres des vignettes de l'accueil
-    fixtures/        capture réelle des pages sources + sortie attendue
-    SOURCES.md       d'où vient chaque champ, et les pièges
-.github/workflows/uefa.yml   la tâche de 10 h
-netlify.toml       publication, redirections, en-têtes
+    page.html            LA page UEFA : HTML, CSS, JS et blocs de données entre sentinelles
+    refresh.mjs          relit la source, contrôle, réécrit le bloc DATA de page.html
+    extract.mjs          lecture des pages de 5-jahres-wertung
+    ligue-wiki.mjs       lecture des pages Wikipédia (matchs, affiches)
+    soir.mjs             questions de la veille du soir de match (est-ce un soir de match ? tout est-il à jour ?)
+    fraicheur.mjs        alarme de fraîcheur
+    projette.mjs         projection sur le runner
+    crosscheck.mjs       recoupement avec un relevé kassiesa
+    snapshot-kassiesa.js relevé kassiesa, à coller dans la console du navigateur
+    test-extract.mjs     test de lecture de la source
+    test-page.mjs        test de non-régression de la page
+    wiki/                matchs et affiches de la saison en cours (relus par le robot)
+    archive/             saisons closes
+    SOURCES.md           sources, pièges, contrôles
 ```
 
-## À la main
+### Les blocs de données dans `page.html`
 
-```sh
+Les données vivent dans la page, entre sentinelles `/*NOM_START*/ … /*NOM_END*/`. Le robot ne réécrit que `DATA` (et `PRJ` pour la projection) ; `build.mjs` remplit au moment de publier ceux qui dérivent des fichiers `wiki/` (`KOV`, `JEX`, `AFF`, `SEM`, `SANKEY`). Les autres (`HIST`, `JOUR`, `VND`…) sont l'archive des saisons closes et ne bougent pas.
+
+### Conventions d'affichage
+
+- Coefficients : un entier à partir de 30, une décimale de 5 à 30, deux décimales sous 5. Seuls les totaux en infobulle sont exacts (au millième).
+- Une couleur par nation, la même dans tous les blocs ; la France en bleu.
+- Une valeur acquise est pleine, une valeur à venir est plus claire.
+
+---
+
+## Travailler en local
+
+```
 npm ci
-npm run test:extract     # contrôle hors ligne, une seconde
-npm run refresh:dry      # va lire la source, contrôle, n'écrit rien
-npm run refresh          # écrit et régénère public/
-npm run build            # régénère public/ sans toucher aux données
+npm run build                     # fabrique public/
+npm run test:page                 # teste public/uefa/index.html
+npm run refresh:dry               # relit la source sans rien écrire
 ```
 
-Une seule dépendance, `linkedom`, pour lire du HTML côté Node.
+Node 20 ou plus. Playwright sert à la projection et au test.
+
+---
+
+## Licence
+
+Les calculs, graphiques et textes du site sont sous licence [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) : reprise libre, à condition de citer grotang.fr. Les résultats de matchs sont des faits et ne sont à personne. Chiffres non officiels : l'UEFA fait foi.
+
+Contact : voir le bloc « Une idée ? » sur [grotang.fr/uefa/](https://grotang.fr/uefa/).
