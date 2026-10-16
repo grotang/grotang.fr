@@ -135,8 +135,12 @@ Node 20 ou plus. Playwright sert à la projection et au test.
 
 ---
 
-## Licence
+## Droits
 
-Les calculs, graphiques et textes du site sont sous licence [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) : reprise libre, à condition de citer grotang.fr. Les résultats de matchs sont des faits et ne sont à personne. Chiffres non officiels : l'UEFA fait foi.
+© 2026 Tanguy Drouin — grotang.fr. **Tous droits réservés.**
+
+Le dépôt est public pour être lisible, pas pour être repris. Le code, la mise en page, les graphiques et les textes sont protégés par le droit d'auteur ; aucune licence de réutilisation n'est accordée. Pour toute reprise, même partielle, demandez d'abord par écrit.
+
+Les résultats de matchs et les coefficients sont des faits, ils ne sont à personne. Chiffres non officiels : l'UEFA fait foi.
 
 Contact : voir le bloc « Une idée ? » sur [grotang.fr/uefa/](https://grotang.fr/uefa/).
