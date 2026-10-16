@@ -66,18 +66,6 @@ h1{font-size:clamp(30px,4.8vw,48px); font-weight:600; line-height:1.04; letter-s
   padding:1px 6px; border-radius:999px; line-height:1.5}
 .stamp .shout{font-size:14.5px; font-weight:700; letter-spacing:.01em; color:var(--fr)}
 .stamp .matchday{gap:8px}
-/* recoupement : un point, un mot, un lien. Il doit se lire sans effort
-   quand tout va bien, et se voir quand ça ne va pas. */
-.xchk{display:inline-flex; align-items:center; gap:6px; margin-top:3px; padding-top:5px;
-  border-top:1px solid var(--rule-soft); font-size:11.5px; color:var(--ink-3)}
-.xchk .dot{width:7px; height:7px; border-radius:50%; flex:none; background:var(--good)}
-.xchk.is-mineur .dot{background:var(--n4)} .xchk.is-ecart .dot{background:var(--bad)}
-.xchk.is-vieux .dot{background:var(--ink-3)}
-.xchk b{color:var(--ink-2); font-weight:600}
-.xchk.is-ecart b{color:var(--bad)}
-.xchk a{color:inherit; text-decoration:underline; text-underline-offset:2px;
-  text-decoration-color:var(--rule)}
-.xchk a:hover{color:var(--ink)}
 /* le relevé complet, replié par défaut : présent pour qui vérifie,
    silencieux pour qui lit. */
 .xfold{margin:10px 0 0; border:1px solid var(--rule-soft); border-radius:3px; background:var(--surface-2)}
@@ -225,9 +213,6 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
     border:1px solid var(--rule); border-radius:3px; min-height:40px; width:100%; margin:10px 0 2px; cursor:pointer}
   /* En-tete : bloc de fraicheur aligne a droite, une info par ligne (comme au bureau). */
   .mast{gap:14px}
-  .stamp .xchk a{padding:8px 0}
-  .stamp .xchk{font-size:11px; justify-content:flex-end; text-align:right}
-  .stamp .xchk .dot{align-self:flex-start; margin-top:5px}
 }
 /* 6b : bilan V/N/D. Teintes par phase, de la plus pâle à la plus intense :
    qualifications, ligue (ou groupes), phase finale — écart volontairement léger,
@@ -877,7 +862,7 @@ footer .droits{margin-top:8px; color:var(--ink-2)}
 
 <section>
   <div class="notes">
-    <h3>Méthode, source et limites</h3>
+    <h3>Méthode &amp; source</h3>
     <div id="anomaly"></div>
     <div id="xchkNote"></div>
     <p><b>Le calcul.</b> Coefficient de saison = points des clubs ÷ clubs engagés. Classement = somme des cinq dernières saisons. Qualifications : victoire 1, nul 0,5. Phase de ligue : victoire 2, nul 1. Bonus : participation (6 points par club de C1), classement de la phase de ligue, tours de la phase finale.</p>
@@ -1286,42 +1271,13 @@ document.getElementById('stamp').innerHTML =
 /* Régime signalant, décidé explicitement : un désaccord ne retire pas la page,
    il s'affiche. Un site qui montre où ses deux sources divergent est plus
    crédible qu'un site qui n'en montre qu'une — et le lecteur expert le sait.
-   Le relevé est hebdomadaire et manuel : kassiesa n'est joignable ni depuis les
-   runners GitHub ni depuis le bac à sable. Au-delà de dix jours le badge vire au
-   gris : un accord vieux de trois semaines ne dit plus rien de la page du jour. */
+   Le relevé est hebdomadaire et manuel : le robots.txt de kassiesa interdit
+   tout relevé automatique. */
 (function(){
-  const badge = document.createElement('div');
+  /* Rien de kassiesa dans l'en-tête, jamais (décision de GT, 16/10/2026) :
+     le recoupement se lit uniquement ici, dans « Méthode & source ». */
   const note  = document.getElementById('xchkNote');
-  const stamp = document.getElementById('stamp');
-  if (typeof XCHK === 'undefined' || !XCHK) {
-    badge.className = 'xchk is-vieux';
-    return;
-  }
-  const jours = Math.round((dOf(ISO_TODAY) - dOf(XCHK.at)) / 86400000);
-  /* Seuil a 30 jours et non 10 : le releve est MANUEL — l'instantane kassiesa
-     se prend au navigateur, il n'y a aucune automatisation derriere. Alerter au
-     bout de dix jours revenait a afficher « a refaire » en permanence, ce qui
-     est le meilleur moyen de ne plus le lire du tout. Un mois correspond a ce
-     que la procedure actuelle permet reellement de tenir. */
-  const vieux = jours > 30;
-  const etat  = vieux ? 'vieux' : XCHK.verdict;
-  const quand = jours <= 0 ? "aujourd'hui" : jours === 1 ? 'hier' : 'il y a ' + jours + ' jours';
-  const mot = {
-    ok:     '<b>' + XCHK.pays + ' pays, accord complet</b>',
-    mineur: '<b>' + XCHK.ecarts.length + ' écart' + (XCHK.ecarts.length > 1 ? 's' : '') + ' mineur' + (XCHK.ecarts.length > 1 ? 's' : '') + '</b>',
-    ecart:  '<b>désaccord sur ' + XCHK.ecarts.length + ' valeur' + (XCHK.ecarts.length > 1 ? 's' : '') + '</b>',
-  }[XCHK.verdict];
-
-  badge.className = 'xchk is-' + etat;
-  badge.innerHTML = '<span class="dot"></span><span>Recoupé avec '
-    + '<a href="' + XCHK.srcUrl + '" target="_blank" rel="noopener">' + XCHK.src + '</a> '
-    + quand + ' — ' + mot + '</span>';
-  /* En-tête : le badge ne s'affiche plus que s'il y a un VRAI désaccord, récent
-     (décision de GT, 16/10/2026 : un « recoupé il y a 30 jours » en tête de page
-     affaiblit plus qu'il ne rassure). L'accord se lit dans « Méthode, source et
-     limites », en bas de page. */
-  if (XCHK.verdict === 'ecart' && !vieux) stamp.appendChild(badge);
-
+  if (typeof XCHK === 'undefined' || !XCHK) return;
   if (!note) return;
   const lignes = XCHK.ecarts.map(e =>
     '<tr class="' + (e.gros ? 'gros' : '') + '"><td>' + (FRNAME[e.p] || e.p) + '</td><td>' + e.quoi
