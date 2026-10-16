@@ -14,7 +14,7 @@
 
 
 
-# Pour update le json sur notre PC, depuis GitHub (là où est la source)
+# GT comm : pour update le json sur notre PC, depuis GitHub (là où est la source)
 # Lignes de commandes dans terminal powershell:
 # cd "C:\Users\tangu\Documents\Claude\2026.09 grotang.fr\grotang.fr"
 # git pull
@@ -28,7 +28,7 @@
 
 P <- list(
 
-  NSIM    = 100,   # Volume de saisons simulees.
+  NSIM    = 10000,  # Volume de saisons simulees.
                     # 20000 si on veut lire le 99.75e centile sans bruit.
 
   SIGMA   = 0.12,   # CHOC DE FORME DE LA NATION DE TETE. Tire une fois par
