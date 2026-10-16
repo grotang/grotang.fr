@@ -468,8 +468,18 @@ section > .famille + .panel{margin-top:22px}
 .semnav button{min-width:30px; font-size:14px; line-height:1}
 .semnav .semlab{min-width:118px; font-size:12.5px; cursor:default}
 .semnav button:disabled{opacity:.35; cursor:default}
-.semmeta{margin:-4px 0 12px; font-size:13px; color:var(--ink-2)}
+.semmeta{display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin:-4px 0 12px; font-size:13px; color:var(--ink-2)}
 .semmeta b{color:var(--ink)}
+/* la semaine regardée : sa phase (même teinte que le bandeau des blocs 2 et 4a) et ses compétitions */
+.semfil{display:inline-grid; grid-template-columns:repeat(3,auto); gap:3px}
+.semfil span{font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; padding:3px 9px; border-radius:3px; color:var(--ink-3); background:var(--surface-2); cursor:default}
+.semfil span.on{color:var(--ink); background:color-mix(in srgb, var(--phc) 30%, transparent); box-shadow:inset 0 -2px 0 var(--phc)}
+.semks{display:inline-flex; gap:4px}
+.semks span{font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:999px; border:1px solid var(--k); color:#fff; background:var(--k); cursor:default; white-space:nowrap}
+.semks span small{font-size:9.5px; font-weight:500; opacity:.88; margin-left:3px}
+:root[data-theme="dark"] .semks span:not(.off){color:#0E1420}
+.semks span.off{background:transparent; color:var(--ink-3); border-color:var(--rule); font-weight:600}
+@media (max-width:760px){ .semtxt{flex-basis:100%} }
 .semwrap{position:relative}
 .semlist{display:grid}
 .semrow{display:grid; grid-template-columns:26px minmax(110px,150px) minmax(0,1fr) minmax(150px,230px) 92px; gap:12px; align-items:center;
@@ -671,7 +681,7 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
   <div class="panel" id="semPanel">
     <div class="ptitle"><span class="no">0b</span><h3>La semaine européenne</h3>
       <span class="sub"><span class="ctl"><span class="lb">Semaine</span><span class="seg semnav" role="group" aria-label="Semaine"><button type="button" id="sem-prev" aria-label="Semaine précédente">‹</button><button type="button" id="sem-lab" class="semlab" aria-pressed="true"></button><button type="button" id="sem-next" aria-label="Semaine suivante">›</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations"><button type="button" id="sem-top" aria-pressed="true">Les 8 premières</button><button type="button" id="sem-all" aria-pressed="false">Toutes</button></span></span></span></div>
-    <p class="semmeta" id="semMeta"></p>
+    <div class="semmeta"><span class="semfil" id="semFil" aria-label="Phase"></span><span class="semks" id="semKs" aria-label="Compétitions"></span><span class="semtxt" id="semMeta"></span></div>
     <div class="semwrap" id="semBox"><div class="semlist" id="semList"></div><div class="tip tipsem" id="tipSem" hidden></div></div>
     <p class="figc" id="semNote"></p>
   </div>
@@ -4987,6 +4997,7 @@ document.getElementById('anomaly').innerHTML = anomalous.length
   const jourL = s => new Date(s + 'T12:00:00Z').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
   const etape = (k, j) => typeof j === 'string' ? ['1er tour de qualification', '2e tour de qualification', '3e tour de qualification', 'Barrages de qualification'][+j.slice(1)]
     : j < 8 ? `Journée ${j + 1}` : ['Barrages à élimination directe', 'Huitièmes de finale', 'Quarts de finale', 'Demi-finales', 'Finale'][j - 8];
+  const etC = j => typeof j === 'string' ? ['1er t.', '2e t.', '3e t.', 'Barr.'][+j.slice(1)] : j < 8 ? 'J' + (j + 1) : ['Barr. KO', '8es', 'Quarts', 'Demies', 'Finale'][j - 8];
   const joue = m => m[8] != null;
   const pts = (m, home) => { if (!joue(m)) return 0; const [a, b] = home ? [m[8], m[9]] : [m[9], m[8]], q = typeof m[3] === 'string';
     return a > b ? (q ? 1 : 2) : a === b ? (q ? .5 : 1) : 0; };
@@ -5028,6 +5039,15 @@ document.getElementById('anomaly').innerHTML = anomalous.length
     document.getElementById('sem-prev').disabled = iSem === 0;
     document.getElementById('sem-next').disabled = iSem >= CLES.length - 1;
     const enCours = nF > 0 && nJ > 0;
+    /* phase et compétitions de la semaine regardée */
+    const phs = new Set(SEMS[k].map(m => typeof m[3] === 'string' ? 0 : m[3] < 8 ? 1 : 2));
+    document.getElementById('semFil').innerHTML = [['Qualifs', 'Qualifications', '--n4'], ['Ligue', 'Phase de ligue', '--fr'], ['Finale', 'Phase finale', '--n7']]
+      .map(([c, l, v], p) => `<span class="${phs.has(p) ? 'on' : ''}" style="--phc:var(${v})" title="${l}${phs.has(p) ? ' : cette semaine' : ''}">${c}</span>`).join('');
+    document.getElementById('semKs').innerHTML = [0, 1, 2].map(kk => {
+      const L = SEMS[k].filter(m => m[2] === kk), C = 'C' + [1, 3, 4][kk];
+      if (!L.length) return `<span class="off" title="${KN[kk]} : pas de match cette semaine">${C}</span>`;
+      const E = [...new Set(L.map(m => JSON.stringify(m[3])))].map(x => JSON.parse(x));
+      return `<span style="--k:var(${KVAR[kk]})" title="${KN[kk]} · ${E.map(j => etape(kk, j)).join(', ')} · ${L.length} match${L.length > 1 ? 's' : ''}">${C}<small>${E.map(etC).join('–')}</small></span>`; }).join('');
     document.getElementById('semMeta').innerHTML = `<b>${nJ}</b> match${nJ > 1 ? 's' : ''} joué${nJ > 1 ? 's' : ''}${nF ? ` · <b>${nF}</b> à venir` : ''} · ${nN} nation${nN > 1 ? 's' : ''} ont joué${enCours ? ' · <b style="color:var(--fr)">semaine en cours</b>' : ''}`;
     list.innerHTML = `<div class="semrow hd"><span></span><span>Nation</span><span>Matchs de la semaine</span><span>Coefficient gagné</span><span style="text-align:right">Bilan</span></div>`
       + (rows.length ? rows.map((t, i) => { const col = SLOT[t.c] ? `var(${SLOT[t.c]})` : 'var(--ink-3)';
