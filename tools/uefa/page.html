@@ -4360,11 +4360,20 @@ const legende = segs => segs.map(s =>
   const kMax = () => { const B = Object.values(baseV()); let m = 0;
     for (let k = 1; k <= NK; k++) if (B.some(L => L.some(r => enJeu(r[k])))) m = k;
     return m; };
-  /* Résistance : la part moyenne de l'effectif encore en lice, tour après tour
-     (l'aire sous la courbe de survie). C'est l'ordre des lignes. */
-  const lignesV = () => { const km = kMax();
-    return natsV().map(c => { const s = serieNat(c); return { c, s, a: s.slice(1, km + 1).reduce((x, y) => x + y, 0) / s[0] / Math.max(1, km) }; })
-      .sort((p, q) => q.a - p.a || q.s[0] - p.s[0] || name(p.c).localeCompare(name(q.c), 'fr')); };
+  /* L'ordre des lignes : le meilleur parcours d'abord. Un club vaut le dernier
+     tour qu'il a joué, puis le niveau de la compétition où il l'a joué (C1, puis
+     C3, puis C4) : le vainqueur de la C1 passe devant celui de la C3, qui passe
+     devant celui de la C4, qui passe devant le finaliste de la C1. Une nation
+     vaut son meilleur club ; à égalité, son deuxième, puis son troisième… */
+  const parcours = r => { for (let k = 10; k >= 0; k--) if (enJeu(r[k])) return [k, r[k]]; return [-1, 9]; };
+  const vsClub = (a, b) => b[0] - a[0] || a[1] - b[1];
+  const clubsTries = c => (baseV()[c] || []).map(parcours).sort(vsClub);
+  const lignesV = () => natsV().map(c => ({ c, s: serieNat(c), p: clubsTries(c) }))
+    .sort((P, Q) => { for (let i = 0; i < Math.max(P.p.length, Q.p.length); i++) {
+        if (!P.p[i]) return 1; if (!Q.p[i]) return -1; const d = vsClub(P.p[i], Q.p[i]); if (d) return d; }
+      return name(P.c).localeCompare(name(Q.c), 'fr'); });
+  /* dans une ligne, les clubs dans le même ordre : le meilleur parcours à gauche */
+  const vsLigne = (a, b) => vsClub(parcours(a.s), parcours(b.s));
 
   /* Téléphone : la même carte, construite en grille HTML et non plus en dessin.
      La colonne des noms est une vraie colonne figée (position sticky) : elle ne
@@ -4387,7 +4396,7 @@ const legende = segs => segs.map(s =>
     h += `<div class="nm hd"></div>` + COLS.map((lab, k) => `<div class="ch${sep(k)}${k > km ? ' futur' : ''}"><b>${lab}</b><span>${k > km ? 'à venir' : tot(k)}</span></div>`).join('');
     N.forEach(o => {
       const fr = o.c === 'FRA', me = fr ? ' me' : '';
-      const R = B[o.c].map(r => ({ s: r.slice(0, 11), n: r[11] })).sort((a, b) => b.s.filter(v => v !== 9).length - a.s.filter(v => v !== 9).length);
+      const R = B[o.c].map(r => ({ s: r.slice(0, 11), n: r[11] })).sort(vsLigne);
       h += `<div class="nm${me}" title="${name(o.c)}">${NOM_COURT[o.c] || name(o.c)}</div>`;
       for (let k = 0; k < NC2; k++) {
         if (k > km) { h += `<div class="cell${sep(k)}${me}"></div>`; continue; }
@@ -4444,7 +4453,7 @@ const legende = segs => segs.map(s =>
       if (fr) g += `<rect x="4" y="${y}" width="${W - 8}" height="${rh}" rx="3" fill="var(--fr-soft)"/>`;
       g += `<text x="${mL - 8}" y="${y + 11}" text-anchor="end" font-size="11" font-weight="${fr ? 700 : 400}" fill="${fr ? 'var(--ink)' : 'var(--ink-2)'}">${name(o.c)}</text>`;
       // les clubs de la nation, du plus long parcours au plus court : chacun garde sa place d'une colonne à l'autre
-      const R = B[o.c].map(r => ({ s: r.slice(0, 11), n: r[11] })).sort((a, b) => b.s.filter(v => v !== 9).length - a.s.filter(v => v !== 9).length);
+      const R = B[o.c].map(r => ({ s: r.slice(0, 11), n: r[11] })).sort(vsLigne);
       const dx = Math.min(10, (cw - 8) / Math.max(1, R.length)), rad = Math.min(4, dx / 2 - .4), yy = y + rh / 2;
       for (let k = 0; k <= km; k++) {
         const vivants = R.filter(r => r.s[k] !== 9);
@@ -4474,7 +4483,7 @@ const legende = segs => segs.map(s =>
     document.getElementById('capSurv').innerHTML =
       `<b>${lab}</b> · une bille par club : pleine s'il joue le tour (C1 bleu, C3 orange, C4 vert), pâle s'il n'est pas encore entré, grise s'il est éliminé. `
       + (km >= 10 ? `${nat(9)} nations ont un club en finale. ` : '')
-      + `Nations rangées par résistance` + (pos >= 0 ? ` ; la France est ${pos + 1}<sup>e</sup> sur ${N.length}.` : '.');
+      + `Nations rangées par leur meilleur club : le tour le plus loin, puis la compétition (C1, puis C3, puis C4) ; à égalité, le club suivant` + (pos >= 0 ? ` ; la France est ${pos + 1}<sup>${pos ? 'e' : 're'}</sup> sur ${N.length}.` : '.');
   }
 
   /* ---------- 7b · la courbe de survie ----------
@@ -4802,6 +4811,10 @@ function bilanVND(cfg){
     const tous = ENGAGEES.map(n => n.c).filter(c => Dn[c]);
     const nats = portee === 'top' ? TOP8.filter(c => Dn[c]) : portee === 'all' ? tous.concat(Object.keys(Dn).filter(c => !tous.includes(c))) : (Dn[portee] ? [portee] : []);
     const agg = c => Dn[c].reduce((a, x) => a.map((v, i) => add(v, x.p[i])), [Z(), Z(), Z()]);
+    /* comme le 6a : les nations rangées par leur rendement, % des points pris décroissant
+       (à égalité, celle qui a joué le plus de matchs) */
+    const cle = c => { const T = tot(agg(c)); return [pct(T) == null ? -1 : (T[0] + T[1] / 2) / nb(T), nb(T)]; };
+    nats.sort((a, b) => { const A = cle(a), B = cle(b); return B[0] - A[0] || B[1] - A[1]; });
     const vu = c => seule() || (ouvert !== bascule.has(c));
     const anc = saison !== '5' && +saison < 2024;
     const COLS = ['Qualifications', anc ? 'Groupes' : 'Ligue', 'Phase finale', 'Global'];
