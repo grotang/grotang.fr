@@ -1295,8 +1295,6 @@ document.getElementById('stamp').innerHTML =
   const stamp = document.getElementById('stamp');
   if (typeof XCHK === 'undefined' || !XCHK) {
     badge.className = 'xchk is-vieux';
-    badge.innerHTML = '<span class="dot"></span><span>Recoupement : pas encore relevé</span>';
-    stamp.appendChild(badge);
     return;
   }
   const jours = Math.round((dOf(ISO_TODAY) - dOf(XCHK.at)) / 86400000);
@@ -1317,8 +1315,12 @@ document.getElementById('stamp').innerHTML =
   badge.className = 'xchk is-' + etat;
   badge.innerHTML = '<span class="dot"></span><span>Recoupé avec '
     + '<a href="' + XCHK.srcUrl + '" target="_blank" rel="noopener">' + XCHK.src + '</a> '
-    + quand + ' — ' + mot + (vieux ? ' <span title="Relevé hebdomadaire ; celui-ci date">·&nbsp;à&nbsp;refaire</span>' : '') + '</span>';
-  stamp.appendChild(badge);
+    + quand + ' — ' + mot + '</span>';
+  /* En-tête : le badge ne s'affiche plus que s'il y a un VRAI désaccord, récent
+     (décision de GT, 16/10/2026 : un « recoupé il y a 30 jours » en tête de page
+     affaiblit plus qu'il ne rassure). L'accord se lit dans « Méthode, source et
+     limites », en bas de page. */
+  if (XCHK.verdict === 'ecart' && !vieux) stamp.appendChild(badge);
 
   if (!note) return;
   const lignes = XCHK.ecarts.map(e =>
