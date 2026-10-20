@@ -478,7 +478,15 @@ section > .famille + .panel{margin-top:22px}
 .semrow .nm span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .semrow.me .nm{color:var(--fr)}
 .semrow .md{font-size:15px; flex:none}
-.spills{display:flex; flex-wrap:wrap; gap:5px 4px}
+.spills{display:flex; flex-wrap:wrap; gap:5px 4px; align-items:center}
+.spills .sj{display:inline-flex; flex-wrap:wrap; gap:5px 4px}
+/* une colonne par soir, alignée d'une nation à l'autre, jour en en-tête */
+.sgA{display:grid; column-gap:22px; align-items:center}
+.sgA > .sj{position:relative}
+.sgA > .sj + .sj::before{content:""; position:absolute; left:-12px; top:-9px; bottom:-9px; border-left:1px dashed var(--rule)}
+.hdA > span{white-space:nowrap}
+@media (max-width:760px){ .sgA{column-gap:14px} .sgA > .sj + .sj::before{left:-8px} .sgA .sp{width:22px; height:22px; font-size:10px} .sgA > .sj{gap:4px 3px} }
+.semrow.semj{display:none}
 .sp{width:24px; height:24px; border-radius:5px; display:grid; place-items:center; font:700 11px/1 "IBM Plex Mono",monospace; color:#fff;
   position:relative; cursor:pointer; transition:transform .12s, box-shadow .12s}
 .sp::after{content:""; position:absolute; left:4px; right:4px; bottom:-4px; height:2.5px; border-radius:2px; background:var(--k)}
@@ -521,6 +529,8 @@ section > .famille + .panel{margin-top:22px}
   .semrow .sgain{grid-column:2 / -1; order:5}
   .semrow .sbil{order:3}
   .semrow.hd{display:none}
+  .semrow.semj{display:grid; border:0; padding:0 8px 2px; font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-3)}
+  .semrow.semj:hover{background:none}
   .semnav .semlab{min-width:100px}
 }
 /* ---------- effectifs : une case par club engagé ---------- */
@@ -5065,12 +5075,22 @@ document.getElementById('anomaly').innerHTML = anomalous.length
         ? `<b>${nJ}</b> match${nJ > 1 ? 's' : ''} joué${nJ > 1 ? 's' : ''}${nF ? ` · <b>${nF}</b> à venir` : ''} · ${nN} nation${nN > 1 ? 's' : ''} ${nN > 1 ? 'ont' : 'a'} joué`
         : `<b>${nF}</b> match${nF > 1 ? 's' : ''} à venir`)
       + (enCours ? ' · <b style="color:var(--fr)">semaine en cours</b>' : '');
-    list.innerHTML = `<div class="semrow hd"><span></span><span>Nation</span><span>Matchs de la semaine</span><span>Coefficient gagné</span><span style="text-align:right">Bilan</span></div>`
+    const JOURS = [...new Set(SEMS[k].map(m => m[0]))].sort();
+    const jourL = d => new Date(d + 'T12:00:00Z').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', timeZone: 'UTC' });
+    const maxJ = JOURS.map(d => Math.max(1, ...rows.map(t => t.M.filter(([m]) => m[0] === d).length)));
+    const pw = MOB() ? 25 : 28, COLW = maxJ.map(n => (n * pw - (pw - 24)) + 'px').join(' ');
+    /* les soirs de la semaine en en-tête de colonne (au téléphone : une ligne à part, l'en-tête étant masqué) */
+    const hdM = `<span class="sgA hdA" style="grid-template-columns:${COLW}">${JOURS.map(d => `<span>${jourL(d)}</span>`).join('')}</span>`;
+    list.innerHTML = `<div class="semrow hd"><span></span><span>Nation</span><span>${hdM}</span><span>Coefficient gagné</span><span style="text-align:right">Bilan</span></div>`
+      + `<div class="semrow semj"><span></span><span class="spills">${hdM}</span></div>`
       + (rows.length ? rows.map((t, i) => { const col = SLOT[t.c] ? `var(${SLOT[t.c]})` : 'var(--ink-3)';
         const md = t.g > 0 && t.rang <= 3 ? `<span class="md">${['🏆', '🥈', '🥉'][t.rang - 1]}</span>` : '';
-        const pills = t.M.map(([m, home], j) => joue(m)
+        const pill = ([m, home], j) => joue(m)
           ? `<span class="sp ${res(m, home)}" style="--k:var(${KVAR[m[2]]})" data-r="${i}" data-j="${j}">${res(m, home).toUpperCase()}</span>`
-          : `<span class="sp f" style="--k:var(${KVAR[m[2]]})" data-r="${i}" data-j="${j}">${m[1] ? m[1].slice(0, 2) + 'h' : '·'}</span>`).join('');
+          : `<span class="sp f" style="--k:var(${KVAR[m[2]]})" data-r="${i}" data-j="${j}">${m[1] ? m[1].slice(0, 2) + 'h' : '·'}</span>`;
+        const parJour = JOURS.map(d => t.M.map((x, j) => [x, j]).filter(([x]) => x[0][0] === d));
+        /* une colonne par soir de match, alignée d'une nation à l'autre */
+        const pills = `<span class="sgA" style="grid-template-columns:${COLW}">` + parJour.map(L => `<span class="sj">${L.map(([x, j]) => pill(x, j)).join('')}</span>`).join('') + '</span>';
         return `<div class="semrow${t.c === 'FRA' ? ' me' : ''}"><span class="rk">${t.v + t.n + t.d ? t.rang : '–'}</span>`
           + `<span class="nm" data-r="${i}"><i style="background:${col}"></i><span>${name(t.c)}</span>${md}</span>`
           + `<span class="spills">${pills}</span>`
