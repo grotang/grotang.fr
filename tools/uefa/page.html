@@ -1043,7 +1043,7 @@ const FRNAME = {ENG:"Angleterre",ITA:"Italie",ESP:"Espagne",GER:"Allemagne",FRA:
 const name = c => FRNAME[c] || c;
 
 const QL = ["Entrée en lice (bonus C1 + Q1 aller)","Q1 retour","Q2 aller","Q2 retour","Q3 aller","Q3 retour","Barrages aller","Barrages retour"];
-const ML = ["J1 C1/C3","J2 C1/C3 · J1 C4","J3 C1/C3 · J2 C4","J4 C1/C3 · J3 C4","J5 C1/C3 · J4 C4","J6 C1/C3 · J5 C4","J7 C1/C3 · J6 C4","J8 C1/C3"];
+const ML = ["J1","J2","J3","J4","J5","J6","J7 C1/C3","J8 C1/C3"];
 const SHORT = ["Entrée","Q1r","Q2a","Q2r","Q3a","Q3r","Ba","Br","J1","J2","J3","J4","J5","J6","J7","J8"];
 
 const CAL = {
@@ -1118,9 +1118,37 @@ const lastPlayed = (()=>{ let last = nStepsQ - 1;
 const LATE = Object.fromEntries(N.map(n=>{
   const e = rawStep(n.c, nSteps-1)[0] - rawStep(n.c, lastPlayed)[0];
   return [n.c, Math.abs(e) > 1e-6 ? +e.toFixed(6) : 0]; }));
-const step = (c,i)=>{ const r = rawStep(c,i), e = LATE[c] || 0;
-  if(!e || i > lastPlayed) return r;
-  return [ +(r[0] + e).toFixed(6), i === 0 ? +(r[1] + e).toFixed(6) : r[1], r[2] ]; };
+/* La source range les journées par SEMAINE, pas par journée de compétition :
+   sa colonne « J2 » contient la J2 de C1 et de C3, mais la J1 de C4 (jouée la
+   semaine de la J2 de C1), et ainsi de suite jusqu'à la J6 de C4, rangée en
+   « J7 ». Sur nos axes, une étape est une JOURNÉE : la victoire de Monaco à
+   Sofia (J1 de C4) doit compter en J1. On redescend donc d'une colonne les
+   points de C4, lus match par match sur Wikipédia (bloc SEM).
+   Garde-fou : on ne déplace la J de C4 que si la colonne de la source qui la
+   contient tombe juste avec les matchs Wikipédia (C1 et C3 de la journée
+   suivante + C4) — sinon la source reste telle quelle pour cette nation et
+   cette journée. Le total ne bouge jamais : on déplace, on n'ajoute rien.
+   Les saisons closes (HIST) sont déjà rangées par journée de compétition. */
+const C4SHIFT = (() => {
+  const out = {}; if (typeof SEM === 'undefined' || !SEM.length) return out;
+  const W = {};
+  for (const m of SEM) { if (typeof m[3] !== 'number' || m[3] > 7 || m[8] == null) continue;
+    for (const [c, a, b] of [[m[5], m[8], m[9]], [m[7], m[9], m[8]]]) {
+      const w = W[c] = W[c] || [0, 1, 2].map(() => new Array(8).fill(0));
+      w[m[2]][m[3]] += a > b ? 2 : a === b ? 1 : 0; } }
+  for (const n of N) { const w = W[n.c]; if (!w) continue;
+    const d = n.divisor ?? (QUALS[n.c] ? QUALS[n.c].e : null); if (!d) continue;
+    const sft = new Array(8).fill(0);
+    for (let j = 0; j < 6; j++) { if (!w[2][j]) continue;
+      const col = nStepsQ + j + 1; if (col > lastPlayed) continue;
+      const attendu = (w[0][j + 1] + w[1][j + 1] + w[2][j]) / d;
+      if (Math.abs(rawStep(n.c, col)[1] - attendu) < 0.002) sft[j] = w[2][j] / d; }
+    if (sft.some(Boolean)) out[n.c] = sft; }
+  return out; })();
+const step = (c,i)=>{ const r = rawStep(c,i), e = LATE[c] || 0, S = C4SHIFT[c];
+  if((!e && !S) || i > lastPlayed) return r;
+  const mi = i - nStepsQ, sh = S && mi >= 0 ? S[mi] || 0 : 0, shP = S && mi >= 1 ? S[mi - 1] || 0 : 0;
+  return [ +(r[0] + e + sh).toFixed(6), +(r[1] + (i === 0 ? e : 0) + sh - shP).toFixed(6), r[2] ]; };
 const label = i => i < nStepsQ ? QL[i] : ML[i-nStepsQ];
 const base = c => BY[c].t - BY[c].y[4];           // socle des 4 saisons antérieures
 const seasonAt = (c,i)=> step(c,i)[0] - base(c);  // coefficient de saison cumulé (exact, sans accumulation d'arrondis)
