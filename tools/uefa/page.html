@@ -2095,10 +2095,9 @@ function drawK(){
       const lastOfK = i===k.findLastIndex(z=>z>0);
       inK.forEach((x,j)=>{
         const wc = (kMode==='abs' ? (x.p/div)/max : x.p/(tot*div)) * 100;
-        /* la piste fait environ 620 px : en dessous de ~4,5 % un sigle de trois
-           lettres ne tient pas, on le laisse à l'infobulle plutôt que de le rogner. */
-        const sg = shortClub(x.n);
-        const lab = wc >= (sg.length > 3 ? 5.6 : 4.2) ? `<span>${sg}</span>` : '';
+        /* le sigle est posé partout, puis retiré après rendu s'il ne tient pas en
+           entier (voir plus bas) : jamais de sigle rogné, le club reste au survol. */
+        const lab = `<span>${shortClub(x.n)}</span>`;
         segs += `<div class="cseg${!lastOfK && j===inK.length-1?' kend':''}" data-c="${c}" data-i="${ci++}"`
              +  ` style="width:${wc.toFixed(3)}%;background:var(${KVAR[i]})">${lab}</div>`;
       });
@@ -2111,6 +2110,10 @@ function drawK(){
       <div class="val num">${kMode==='abs'?nf(tot):'100 %'}</div>
       <div class="split num">${split}</div>
     </div>`;}).join('');
+  /* Un sigle s'affiche en entier ou pas du tout : la largeur d'une case dépend
+     de l'écran, on mesure donc après rendu (même règle que le bloc 4). */
+  document.querySelectorAll('#kbars .cseg > span').forEach(sp => {
+    if (sp.scrollWidth > sp.parentElement.clientWidth - 8) sp.remove(); });
   const labK = SEAS.find(x=>x[0]===selY)[1];
   if(!isCur()){
     document.getElementById('kNote').innerHTML =
@@ -3126,7 +3129,7 @@ if (MOB()) setTimeout(() => document.querySelectorAll('.tscroll').forEach(t => {
   addEventListener('resize', () => {
     if (window.innerWidth === lw) return;
     lw = window.innerWidth;
-    clearTimeout(t); t = setTimeout(drawClubs, 150);
+    clearTimeout(t); t = setTimeout(() => { drawClubs(); drawK(); }, 150);
   });
 })();
 
@@ -4979,9 +4982,15 @@ document.getElementById('anomaly').innerHTML = anomalous.length
   /* les semaines : lundi → matchs */
   const SEMS = {}; for (const m of SEM) (SEMS[lundi(m[0])] = SEMS[lundi(m[0])] || []).push(m);
   const CLES = Object.keys(SEMS).sort();
-  const today = iso(new Date());
-  const jouees = CLES.filter(k => SEMS[k].some(joue));
-  let iSem = Math.max(0, CLES.indexOf(jouees.length ? jouees[jouees.length - 1] : CLES[0]));
+  /* Semaine affichée à l'ouverture : la semaine EN COURS (lundi 0 h, heure de
+     Paris), dès qu'elle a des matchs, joués ou à venir. Une semaine sans match
+     (trêve, fin de saison) cède la place à la dernière semaine où des matchs
+     ont été joués. */
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  const cetteSem = lundi(today);
+  const jouees = CLES.filter(k => k <= cetteSem && SEMS[k].some(joue));
+  let iSem = CLES.includes(cetteSem) ? CLES.indexOf(cetteSem)
+    : jouees.length ? CLES.indexOf(jouees[jouees.length - 1]) : 0;
   let portee = 'top';
   const libSem = k => { const L = SEMS[k].map(m => m[0]).sort(), a = L[0], b = L[L.length - 1];
     const fa = new Date(a + 'T12:00:00Z'), fb = new Date(b + 'T12:00:00Z'), mo = d => d.toLocaleDateString('fr-FR', { month: 'short', timeZone: 'UTC' });
@@ -5011,7 +5020,7 @@ document.getElementById('anomaly').innerHTML = anomalous.length
     document.getElementById('sem-lab').textContent = libSem(k);
     document.getElementById('sem-prev').disabled = iSem === 0;
     document.getElementById('sem-next').disabled = iSem >= CLES.length - 1;
-    const enCours = nF > 0 && nJ > 0;
+    const enCours = k === cetteSem;
     /* phase et compétitions de la semaine regardée */
     const phs = new Set(SEMS[k].map(m => typeof m[3] === 'string' ? 0 : m[3] < 8 ? 1 : 2));
     document.getElementById('semFil').innerHTML = [['Qualifs', 'Qualifications', '--n4'], ['Ligue', 'Phase de ligue', '--fr'], ['Finale', 'Phase finale', '--n7']]
@@ -5021,7 +5030,10 @@ document.getElementById('anomaly').innerHTML = anomalous.length
       if (!L.length) return '';
       const E = [...new Set(L.map(m => JSON.stringify(m[3])))].map(x => JSON.parse(x));
       return `<span style="--k:var(${KVAR[kk]})" title="${KN[kk]} · ${E.map(j => etape(kk, j)).join(', ')} · ${L.length} match${L.length > 1 ? 's' : ''}"><i></i><b>${C}</b>${E.map(etC).join('–')}</span>`; }).join('');
-    document.getElementById('semMeta').innerHTML = `<b>${nJ}</b> match${nJ > 1 ? 's' : ''} joué${nJ > 1 ? 's' : ''}${nF ? ` · <b>${nF}</b> à venir` : ''} · ${nN} nation${nN > 1 ? 's' : ''} ont joué${enCours ? ' · <b style="color:var(--fr)">semaine en cours</b>' : ''}`;
+    document.getElementById('semMeta').innerHTML = (nJ
+        ? `<b>${nJ}</b> match${nJ > 1 ? 's' : ''} joué${nJ > 1 ? 's' : ''}${nF ? ` · <b>${nF}</b> à venir` : ''} · ${nN} nation${nN > 1 ? 's' : ''} ${nN > 1 ? 'ont' : 'a'} joué`
+        : `<b>${nF}</b> match${nF > 1 ? 's' : ''} à venir`)
+      + (enCours ? ' · <b style="color:var(--fr)">semaine en cours</b>' : '');
     list.innerHTML = `<div class="semrow hd"><span></span><span>Nation</span><span>Matchs de la semaine</span><span>Coefficient gagné</span><span style="text-align:right">Bilan</span></div>`
       + (rows.length ? rows.map((t, i) => { const col = SLOT[t.c] ? `var(${SLOT[t.c]})` : 'var(--ink-3)';
         const md = t.g > 0 && t.rang <= 3 ? `<span class="md">${['🏆', '🥈', '🥉'][t.rang - 1]}</span>` : '';
