@@ -3263,9 +3263,26 @@ const legende = segs => segs.map(s =>
         joué. On lit donc l'effectif archivé au lendemain de la 1re journée. */
   const clubsK = c => [0, 1, 2].map(k => clubsLigue(c, k));
   const div    = c => divisor(BY[c]) || 1;
-  /* matchs de phase de ligue déjà disputés : un club = un match par journée */
-  const matchs = c => clubsK(c).reduce((a, n, k) => a + n * jouees(k), 0);
-  const matchsRestants = c => clubsK(c).reduce((a, n, k) => a + n * (totJ(k) - jouees(k)), 0);
+  /* Matchs de phase de ligue déjà disputés, CLUB PAR CLUB.
+     Bug corrigé le 20/10/2026 : on comptait « un match par club et par journée
+     commencée ». Or une journée de C1 s'étale sur deux soirs : le mardi soir,
+     la J3 comptait pour jouée chez TOUS les clubs, y compris ceux qui ne
+     jouaient que le mercredi. Leur match n'était ni dans l'acquis ni dans la
+     simulation : il disparaissait, et la projection baissait — la France après
+     la victoire du PSG, la Belgique sans avoir joué. On lit donc le nombre de
+     matchs de chaque club dans le bilan de la source (D.eff, le même relevé que
+     l'acquis) ; à défaut, on retombe sur le calendrier. */
+  const jouesClubs = (c, k) => {
+    const n = clubsK(c)[k], E = (D.eff || {})[c];
+    if (E && E.length && E.every(r => r.length >= 10)) {
+      const L = E.filter(r => r[1] === k).map(r => Math.min(totJ(k), r[7] + r[8] + r[9]));
+      if (L.length === n) return L;
+    }
+    return Array(n).fill(jouees(k));
+  };
+  const sommeJ = L => L.reduce((a, b) => a + b, 0);
+  const matchs = c => [0, 1, 2].reduce((a, k) => a + sommeJ(jouesClubs(c, k)), 0);
+  const matchsRestants = c => [0, 1, 2].reduce((a, k) => a + clubsK(c)[k] * totJ(k) - sommeJ(jouesClubs(c, k)), 0);
 
   const jTot = jouees(0) + jouees(1) + jouees(2);
 
@@ -3809,6 +3826,10 @@ const legende = segs => segs.map(s =>
     if (SIMS) return SIMS;
     const rnd = tirages();
     const CH = [0,1,2].map(k => N.flatMap(n => Array.from({length: n.a[k] || 0}, () => n.c)));
+    /* journées restantes de CHAQUE club (voir jouesClubs) : un club qui joue le
+       mercredi garde son match de la journée tant qu'il ne l'a pas joué */
+    const RESTE = [0,1,2].map(k => N.flatMap(n => { const a = n.a[k] || 0, L = jouesClubs(n.c, k);
+      return Array.from({length: a}, (_, i) => JTOT[k] - (L.length === a ? L[i] : jouees(k))); }));
     if (CH.some(cl => cl.length !== 36)) { SIMS = {}; return SIMS; }   // champ incomplet : on ne projette pas
     /* Force de base, club par club : celle de l'association, plus un ecart de
        rang a l'interieur de son contingent. Le contingent est ordonne C1, puis
@@ -3903,7 +3924,7 @@ const legende = segs => segs.map(s =>
         for (let i = 0; i < cl.length; i++) dst[i] = src[i] + Z[cl[i]]; }
       const { PW: PWz } = rendement();
       for (let k = 0; k < 3; k++) {
-        const cl = CH[k], f = FZ[k], pw = PWz[k], nj = JTOT[k], reste = nj - jouees(k);
+        const cl = CH[k], f = FZ[k], pw = PWz[k], nj = JTOT[k], RK = RESTE[k];
         const add  = (i, v) => { gain[cl[i]] = (gain[cl[i]] || 0) + v; };
         const addL = (i, v) => { addL0(i, v); add(i, v); };
         const addL0 = (i, v) => { gainL[cl[i]] = (gainL[cl[i]] || 0) + v; };
@@ -3915,7 +3936,7 @@ const legende = segs => segs.map(s =>
              journées déjà jouées sont dans les chiffres acquis.
            Mélanger les deux double-compterait la journée du 8 septembre. */
         const pts = cl.map((_, i) => { let p = 0; for (let j = 0; j < nj; j++) p += match(i); return p; });
-        for (let i = 0; i < cl.length; i++) { let p = 0; for (let j = 0; j < reste; j++) p += match(i); addL(i, p); }
+        for (let i = 0; i < cl.length; i++) { let p = 0; for (let j = 0; j < RK[i]; j++) p += match(i); addL(i, p); }
         const ord = [...cl.keys()].sort((a, b) => (pts[b] - pts[a]) || (f[b] - f[a]) || (rnd() - 0.5));
         ord.forEach((i, r) => { const v = rankBonus(k, r + 1); addL(i, v); ctrl.rb[k] += v; });
         /* Un tour de phase finale : les manches sont jouées, chacune distribue ses
