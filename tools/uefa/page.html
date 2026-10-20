@@ -3567,7 +3567,9 @@ const legende = segs => segs.map(s =>
       for (let i = 0; i < nC; i++) {
         const X = cx(i), x = L[i];
         if (!x) { s += `<circle cx="${X.toFixed(1)}" cy="${Y.toFixed(1)}" r="1.6" fill="var(--ink-3)" opacity="${i > fin ? '.25' : '.45'}"/>`; continue; }
-        const v = x.p / x.m, r = rad(v), t = v >= 1 ? 'var(--good)' : 'var(--bad)';
+        /* trois verdicts, pas un dégradé (la taille du disque porte déjà la valeur) :
+           rouge sous 0,8 · gris de 0,8 à 1,2 · vert à partir de 1,2 */
+        const v = x.p / x.m, r = rad(v), t = v < 0.8 ? 'var(--bad)' : v < 1.2 ? '#8B95A3' : 'var(--good)';
         if (r > 0) s += `<circle cx="${X.toFixed(1)}" cy="${Y.toFixed(1)}" r="${r.toFixed(1)}" fill="${t}" opacity=".26"/>`
                      + `<circle cx="${X.toFixed(1)}" cy="${Y.toFixed(1)}" r="${r.toFixed(1)}" fill="none" stroke="${t}" stroke-width="1.3" opacity=".9"/>`;
         s += `<text x="${X.toFixed(1)}" y="${(Y + 3.5).toFixed(1)}" text-anchor="middle" font-size="${cellW < 48 ? 9.5 : 10.5}" font-weight="600" font-family="IBM Plex Mono, monospace" fill="${r > 0 ? 'var(--ink)' : 'var(--bad)'}">${nfx(v)}</text>`
@@ -3588,7 +3590,7 @@ const legende = segs => segs.map(s =>
 
     const fra = rows.indexOf('FRA'), best = rows[0];
     document.getElementById('capRdt').innerHTML =
-      `Points par match, qualifications comprises (victoire 2, nul 1) : <b>1,00 = un nul par match</b>. `
+      `Points par match, qualifications comprises (victoire 2, nul 1) : <b>1,00 = un nul par match</b>. Disque <b style="color:var(--bad)">rouge</b> sous 0,8 · <b style="color:#8B95A3">gris</b> de 0,8 à 1,2 · <b style="color:var(--good)">vert</b> à partir de 1,2. `
       + (best ? (fra >= 0 && rows.length > 1 ? `La France est <b>${fra + 1}<sup style="line-height:0">e</sup> sur ${rows.length}</b> avec ${nfx(cu('FRA'))}, ` : '')
         + (rows.length > 1 ? `${leNom(best)} ${/^les /i.test(leNom(best)) ? 'mènent' : 'mène'} avec ${nfx(cu(best))}. ` : '') : '')
       + (an === COUR_R ? (Object.keys(JEX).length ? 'Saison en cours : matchs relevés sur Wikipédia et recoupés avec le bilan officiel' : 'Saison en cours : points tirés du coefficient')
