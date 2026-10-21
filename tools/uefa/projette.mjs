@@ -25,6 +25,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright';
 
@@ -58,6 +59,23 @@ if (!nations) { console.error('projection vide : champ de competition incomplet,
    phase finale par compétition, 45/30/15 de bonus de tour, 75/75/42 de bonus de
    rang. À cent mille tirages ils doivent tomber au centième. */
 if (R.ecarts && R.ecarts.length) { console.error('controles de conservation en echec :', R.ecarts.join(' · ')); process.exit(1); }
+
+/* Contrôle des matchs restants (voir simule() dans page.html) : en cas d'écart,
+   la projection n'est PAS mise à jour — elle garde sa dernière valeur juste —
+   mais la page, elle, est publiée. Le drapeau laissé dans le dossier temporaire
+   fait échouer la dernière étape du robot, APRÈS la publication : GitHub envoie
+   alors son e-mail « Run failed ». */
+const DRAPEAU = path.join(os.tmpdir(), 'grotang-projection-bloquee.txt');
+const cal = R.calendrier || { bloque: [], tolere: [] };
+for (const t of cal.tolere) console.log('controle des matchs restants, ecart tolere :', t);
+if (cal.bloque.length) {
+  const txt = 'Projection non mise a jour : ' + cal.bloque.join(' · ');
+  console.log('::warning::' + txt);
+  fs.writeFileSync(DRAPEAU, txt + '\n');
+  execFileSync(process.execPath, [path.join(RACINE, 'tools/build.mjs')], { stdio: 'inherit' });
+  process.exit(0);
+}
+if (fs.existsSync(DRAPEAU)) fs.unlinkSync(DRAPEAU);
 
 const src = fs.readFileSync(PAGE, 'utf8');
 const a = src.indexOf(SENT[0]), b = src.indexOf(SENT[1]);

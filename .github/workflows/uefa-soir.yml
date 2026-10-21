@@ -105,3 +105,12 @@ jobs:
             if node tools/uefa/soir.mjs tard || [ $(date +%s) -ge $fin ]; then echo "Fin de la veille sans tout avoir : le passage du matin prendra le relais."; break; fi
             sleep 600
           done
+
+      # ALARME DE PROJECTION. Le contrôle des matchs restants (projette.mjs) a vu
+      # un écart : la projection n'a pas été mise à jour, mais la page, elle, est
+      # publiée. On échoue ICI, en toute fin, pour que GitHub envoie son e-mail
+      # « Run failed » sans avoir rien empêché.
+      - name: Alarme de projection
+        if: ${{ !cancelled() && steps.match.outputs.oui == 'true' }}
+        run: |
+          node -e "const fs=require('fs'),f=require('path').join(require('os').tmpdir(),'grotang-projection-bloquee.txt'); if(fs.existsSync(f)){console.log('::error::'+fs.readFileSync(f,'utf8').trim()); process.exit(1)} console.log('Controle des matchs restants : OK')"
