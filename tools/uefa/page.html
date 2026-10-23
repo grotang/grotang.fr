@@ -3805,16 +3805,17 @@ const legende = segs => segs.map(s =>
      ancienneté, et la saison en cours monte au fil des résultats.
          avancement a = part des matchs de phase de ligue déjà joués (0 → 1)
          saison en cours  0 % → 40 %   (0,40 × a)
-         2025/26         40 % → 20 %
-         2024/25         30 % → 20 %
-         2023/24         20 % → 10 %
-         2022/23         10 %
-     Le total fait toujours 100 %. Les saisons passées forment la force
+         2025/26         40 % → 24 %
+         2024/25         30 % → 18 %
+         2023/24         20 % → 12 %
+         2022/23         10 % →  6 %
+     L'historique garde sa forme 40/30/20/10 ; il est réduit en bloc à mesure
+     que la saison en cours monte (GT, 23/10/2026). Le total fait toujours 100 %. Les saisons passées forment la force
      « historique » (chaque saison rapportée à la moyenne des nations cette
      saison-là, pour neutraliser le changement de format de 2024/25) ; la saison
      en cours entre par le rendement réel de la nation (points de phase de ligue
      par match), au poids 0,40 × a. Remplace KPSEUDO (w = m / (m + 56)). */
-  const POIDS_DEB = [10, 20, 30, 40], POIDS_FIN = [10, 10, 20, 20], POIDS_COUR = 40;   // 22/23, 23/24, 24/25, 25/26 ; en %
+  const POIDS_HIST = [10, 20, 30, 40], POIDS_COUR = 40;   // 22/23, 23/24, 24/25, 25/26 (forme figée) ; saison en cours en fin de phase ; en %
   /* NULS SELON L'ÉCART DE NIVEAU (23/10/2026). Archive 2023–2026, 1 473 matchs :
      22 % de nuls entre nations proches, 13,5 % quand l'écart de force dépasse 1.
      Taux de nul d'un match = NUL_MAX × exp(−NUL_PENTE × écart). PNUL (0,20) reste
@@ -3946,11 +3947,11 @@ const legende = segs => segs.map(s =>
        C3, puis C4 — la meilleure approximation du rang domestique disponible.
        L'ecart est centre, la force moyenne de la nation ne bouge donc pas. */
     /* avancement de la phase de ligue (part des matchs joués) et force historique
-       pondérée de chaque nation (POIDS_DEB → POIDS_FIN) */
+       pondérée de chaque nation (forme POIDS_HIST figée) */
     const AVANC = CAL ? 1 - CAL.reduce((a, C) => a + C.rest, 0) / (2 * 18 * (JTOT[0] + JTOT[1] + JTOT[2]))
                       : [0, 1, 2].reduce((a, k) => a + jouees(k) * 18, 0) / (18 * (JTOT[0] + JTOT[1] + JTOT[2]));
     const AV = Math.min(1, Math.max(0, AVANC));
-    const PO = POIDS_DEB.map((d, i) => d + (POIDS_FIN[i] - d) * AV), POS = PO.reduce((a, b) => a + b, 0);
+    const PO = POIDS_HIST.slice(), POS = PO.reduce((a, b) => a + b, 0);
     const MOYS = [0, 1, 2, 3].map(i => { const v = N.map(n => n.y[i]).filter(x => x > 0); return v.reduce((a, b) => a + b, 0) / Math.max(1, v.length); });
     const FH = {};
     for (const n of N) { const h = [0, 1, 2, 3].reduce((a, i) => a + PO[i] * (n.y[i] || 0) / MOYS[i], 0) / POS;

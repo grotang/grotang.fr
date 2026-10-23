@@ -37,7 +37,8 @@
 #    tires au hasard), et la forme de la saison compte aussi dans les duels.
 # 7. Le choc de forme (SIGMA) fond a mesure que les resultats reels pesent.
 # 8. Force des nations : saisons ponderees par anciennete (POIDS_*), la saison en
-#    cours monte de 0 a 40 % ; nuls selon l'ecart de niveau ; egalites au sort.
+#    cours monte de 0 a 40 %, l'historique 40/30/20/10 reduit en bloc ;
+#    nuls selon l'ecart de niveau ; egalites au sort.
 
 
 # ----------------------------- PARAMETRES -----------------------------------
@@ -82,12 +83,12 @@ P <- list(
                     # matchs : domicile 49.2 %, nul 20.1 %, exterieur 30.7 %.
                     # Hors nuls, le club qui recoit gagne 61.5 % : HOME ~ 0.54-0.58
                     # retrouve ce taux ; 0.57 retenu (GT, 23/10/2026). HOME = 0 : neutre.
-  # POIDS DES SAISONS (decision de GT, 23/10/2026), en %, du debut a la fin de
-  # la phase de ligue, au prorata des matchs deja joues (avancement a, 0 -> 1) :
-  #   saison en cours 0 -> 40 | 2025/26 40 -> 20 | 2024/25 30 -> 20
-  #   2023/24 20 -> 10 | 2022/23 10. Total toujours 100. Remplace KPSEUDO.
-  POIDS_DEB  = c(10, 20, 30, 40),   # 2022/23, 2023/24, 2024/25, 2025/26 au debut
-  POIDS_FIN  = c(10, 10, 20, 20),   # les memes en fin de phase de ligue
+  # POIDS DES SAISONS (decision de GT, 23/10/2026), en %. La saison en cours
+  # monte de 0 a 40 au prorata des matchs deja joues (avancement a, 0 -> 1).
+  # L'historique garde sa forme 40/30/20/10 et est reduit en bloc : en fin de
+  # phase de ligue, 2025/26 24 | 2024/25 18 | 2023/24 12 | 2022/23 6.
+  # Total toujours 100. Remplace KPSEUDO.
+  POIDS_HIST = c(10, 20, 30, 40),   # 2022/23, 2023/24, 2024/25, 2025/26 (forme figee)
   POIDS_COUR = 40,                  # saison en cours en fin de phase de ligue
   # NULS SELON L'ECART DE NIVEAU : p(nul) = NUL_MAX x exp(-NUL_PENTE x ecart).
   # Archive 2023-2026 : 22 % entre nations proches, 13.5 % au-dela d'un ecart de 1.
@@ -262,7 +263,7 @@ simuler <- function(NA_, AF, P) {
   # avancement de la phase de ligue et force historique ponderee (saisons
   # rapportees a la moyenne des nations de leur annee : neutralise le format 2024/25)
   AV <- min(1, sum(sapply(C, function(x) sum(x$mj))) / (2 * 18 * sum(JTOT)))
-  PO <- P$POIDS_DEB + (P$POIDS_FIN - P$POIDS_DEB) * AV
+  PO <- P$POIDS_HIST
   yy <- t(sapply(NA_, function(x) { v <- x$y; if (length(v) < 4) c(v, rep(0, 4 - length(v)))[1:4] else v[1:4] }))
   rownames(yy) <- code
   moy <- apply(yy, 2, function(v) mean(v[v > 0]))
