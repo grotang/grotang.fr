@@ -35,6 +35,7 @@
 #    de ligue pour les clubs du pays choisi (CLUBS_PAYS).
 # 6. Phase finale : le vrai tableau UEFA, fixe par le classement (avant : duels
 #    tires au hasard), et la forme de la saison compte aussi dans les duels.
+# 7. Le choc de forme (SIGMA) fond a mesure que les resultats reels pesent (KPSEUDO).
 
 
 # ----------------------------- PARAMETRES -----------------------------------
@@ -276,7 +277,10 @@ simuler <- function(NA_, AF, P) {
   PTSM <- lapply(1:3, function(k) numeric(length(suivis[[k]])))
 
   for (s in seq_len(P$NSIM)) {
-    z <- setNames(sigma_n * rnorm(length(code)), code)
+    # Lien SIGMA - KPSEUDO : l'humeur de la saison se voit deja en partie dans les
+    # resultats reels (poids w = m/(m+KPSEUDO)) ; on ne tire au sort que la part
+    # encore inconnue : ampleur x racine(1 - w).
+    z <- setNames(sigma_n * sqrt(1 - w_nat) * rnorm(length(code)), code)
     gain <- setNames(rep(0, length(code)), code)
 
     for (k in 1:3) {

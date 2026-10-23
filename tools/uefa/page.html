@@ -4017,7 +4017,13 @@ const legende = segs => segs.map(s =>
          et par les trois compétitions. C'est le partage qui compte — c'est lui
          qui fait qu'une bonne année française est une bonne année pour les sept
          clubs à la fois, et donc qui ouvre la queue de la distribution. */
-      const Z = {}; for (const n of N) Z[n.c] = sigmaNat[n.c] * gauss();
+      /* Lien SIGMA – KPSEUDO (23/10/2026) : la bonne ou mauvaise année d'un pays
+         se voit déjà, en partie, dans ses résultats réels, que KPSEUDO intègre avec
+         le poids w. Il ne reste donc à tirer au sort que la part encore inconnue :
+         ampleur × racine(1 − w). France à 26 % de poids : 86 % de l'ampleur ; fin
+         de phase de ligue (50 %) : 71 %. Sans ce lien, l'humeur de la saison était
+         comptée deux fois (une fois observée, une fois retirée au sort). */
+      const Z = {}; for (const n of N) Z[n.c] = sigmaNat[n.c] * Math.sqrt(1 - (WPO[n.c] || 0)) * gauss();
       for (let k = 0; k < 3; k++) { const cl = CH[k], src = F[k], dst = FZ[k];
         for (let i = 0; i < cl.length; i++) dst[i] = src[i] + Z[cl[i]]; }
       const { PW: PWz } = rendement();
