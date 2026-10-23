@@ -68,7 +68,7 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -91,7 +91,8 @@ jobs:
       # gabarit qui ne touche pas les données.
       # Chromium sert deux fois : a la projection, puis au test.
       - name: Navigateur
-        run: npx playwright install --with-deps chromium
+        timeout-minutes: 8
+        run: bash tools/navigateur.sh
 
       - name: Relire la source et reconstruire
         id: refresh

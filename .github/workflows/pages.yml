@@ -61,7 +61,8 @@ jobs:
 
       # La carte de partage (og:image) se photographie dans un vrai navigateur.
       - name: Navigateur
-        run: npx playwright install --with-deps chromium
+        timeout-minutes: 8
+        run: bash tools/navigateur.sh
 
       - name: Carte de partage
         run: node tools/uefa/carte.mjs

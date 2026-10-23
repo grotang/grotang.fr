@@ -3730,14 +3730,20 @@ const legende = segs => segs.map(s =>
      beaucoup plus de tirages avant publication (voir tools/uefa/projette.mjs)
      et n'incruste que les quantiles. La valeur ci-dessous ne sert plus qu'au
      filet, quand la page tourne sans bloc PRJ. */
-  const BETA = 1.15, GAMMA = 1.10, PNUL = 0.20;   /* PNUL : 0,24 jusqu'au 23/10/2026 ; 0,20 = taux de nuls de l'archive (1 656 matchs de phase de groupes / de ligue, 2021–2026) */
+  /* Calage du 23/10/2026 sur l'archive 2023/24 – 2025/26, force des nations connue
+     AVANT chaque saison (pas le coefficient actuel, qui contient déjà ces résultats) :
+     BETA mesuré 1,05 (fourchette plausible 0,90 – 1,20) → 1,10 retenu (ancien 1,15) ;
+     GAMMA mesuré 0,70 (0,40 – 1,00) → 0,70 (ancien 1,10 : la phase finale, entre bons
+     clubs, dépend peu du niveau du pays). Valeurs à recaler avec la force par club. */
+  const BETA = 1.10, GAMMA = 0.70, PNUL = 0.20;   /* PNUL : 0,24 jusqu'au 23/10/2026 ; 0,20 = taux de nuls de l'archive (1 656 matchs de phase de groupes / de ligue, 2021–2026) */
   /* HOME — avantage du terrain en phase de ligue (moteur calendrier). Calé sur
      les 1 656 matchs de phase de groupes / de ligue de l'archive (2021/22 à
      2025/26) : domicile 49,2 %, nul 20,1 %, extérieur 30,7 %. Hors nuls, le
-     club qui reçoit gagne 61,5 % des matchs ; à BETA = 1,15 et à écart de force
-     des nations pris en compte, il faut HOME = 0,54 pour retrouver ce taux.
+     club qui reçoit gagne 61,5 % des matchs ; à écart de force des nations pris
+     en compte, il faut HOME ≈ 0,54 à 0,58 selon la mesure de la force (0,58 avec
+     la force connue AVANT chaque saison). Retenu : 0,57 (GT, 23/10/2026).
      En phase finale, l'aller-retour l'équilibre : il n'y est pas appliqué. */
-  const HOME = 0.54;
+  const HOME = 0.57;
   let NSIM = 2000;
   /* SIGMA — choc de forme nationale. Tire UNE fois par nation et par saison
      simulee, ajoute a la force de TOUS ses clubs. C'est ce qui manquait : le

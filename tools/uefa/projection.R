@@ -39,7 +39,7 @@
 
 P <- list(
 
-  NSIM    = 10000,  # Volume de saisons simulees.
+  NSIM    = 1000,  # Volume de saisons simulees.
                     # 20000 si on veut lire le 99.75e centile sans bruit.
 
   SIGMA   = 0.12,   # CHOC DE FORME DE LA NATION DE TETE. Tire une fois par
@@ -66,17 +66,17 @@ P <- list(
                     # nation ne bouge pas. DELTA = 0 : tous les clubs d'un pays
                     # sont identiques.
 
-  BETA    = 1.15,   # POIDS DE L'ECART DE FORCE dans un match de phase de ligue.
+  BETA    = 1.10,   # POIDS DE L'ECART DE FORCE dans un match de phase de ligue.
                     # La force d'une nation = log de son coefficient a 5 ans.
                     # Hors nuls, chance de gagner = sig(BETA x ecart de force + HOME).
                     # BETA = 0 : tout le monde se vaut ; plus BETA est grand,
                     # plus le favori gagne souvent.
-  GAMMA   = 1.10,   # idem pour un duel de phase finale
+  GAMMA   = 0.70,   # idem pour un duel de phase finale
   PNUL    = 0.20,   # taux de nul, identique pour tout le monde (archive : 20.1 %)
-  HOME    = 0.54,   # AVANTAGE DU TERRAIN, phase de ligue. Archive 2021-2026, 1656
+  HOME    = 0.57,   # AVANTAGE DU TERRAIN, phase de ligue. Archive 2021-2026, 1656
                     # matchs : domicile 49.2 %, nul 20.1 %, exterieur 30.7 %.
-                    # Hors nuls, le club qui recoit gagne 61.5 % : HOME = 0.54
-                    # retrouve ce taux a BETA = 1.15. HOME = 0 : terrain neutre.
+                    # Hors nuls, le club qui recoit gagne 61.5 % : HOME ~ 0.54-0.58
+                    # retrouve ce taux ; 0.57 retenu (GT, 23/10/2026). HOME = 0 : neutre.
   KPSEUDO = 56,     # la saison en cours pese w = m/(m+KPSEUDO) dans la force.
                     # Cale pour valoir la moitie en fin de phase de ligue.
 
