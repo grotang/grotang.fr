@@ -1,6 +1,6 @@
 # ============================================================================
 #  PROJECTION DU COEFFICIENT UEFA PAR ASSOCIATION  -  MONTE-CARLO
-#  Replique du modele de grotang.fr, bloc 8.
+#  Replique du modele de grotang.fr, bloc 8 (moteur "calendrier", 23/10/2026).
 #
 #  ENCODAGE : ce fichier est en ASCII pur, sans aucun caractere accentue,
 #  pour s'ouvrir a l'identique en CP1252, en UTF-8 et dans R quel que soit
@@ -9,19 +9,30 @@
 #  Aucune dependance : R de base uniquement.
 #  Usage :  Rscript projection.R            (parametres ci-dessous)
 #           Rscript projection.R --sigma 0.30 --nsim 5000
+#
+#  Ancienne version (adversaire moyen, classement retire au sort depuis zero) :
+#  tools/uefa/_old/projection.R
 # ============================================================================
 
 
-
-
-# GT comm : pour update le json sur notre PC, depuis GitHub (là où est la source)
+# GT comm : pour update les json sur notre PC, depuis GitHub (la ou est la source)
 # Lignes de commandes dans terminal powershell:
 # cd "C:\Users\tangu\Documents\Claude\2026.09 grotang.fr\grotang.fr"
 # git pull
 
 
-
-
+# ----------------------------- CE QUI A CHANGE -------------------------------
+# 1. Les VRAIES affiches de la phase de ligue (fichier wiki/affiches-AAAA-AA.json,
+#    releve par le robot sur Wikipedia) : Juventus - Rennes se joue a Turin,
+#    Italie contre France, avec l'avantage du terrain (HOME).
+# 2. Le classement de la phase de ligue part des points REELS de chaque club
+#    (bareme UEFA 3/1/0), auxquels s'ajoutent les seules affiches restantes.
+#    Un meme tirage sert au classement ET au coefficient.
+# 3. Plus de parametre JOUEES a tenir a la main : les matchs joues se lisent
+#    club par club dans le fichier des affiches (un match avec un score est joue).
+# 4. PNUL passe de 0.24 a 0.20 (taux de nuls de l'archive).
+# 5. En sortie, en plus des nations : les probabilites de classement en phase
+#    de ligue pour les clubs du pays choisi (CLUBS_PAYS).
 
 
 # ----------------------------- PARAMETRES -----------------------------------
@@ -55,9 +66,17 @@ P <- list(
                     # nation ne bouge pas. DELTA = 0 : tous les clubs d'un pays
                     # sont identiques.
 
-  BETA    = 1.15,   # pente logistique en phase de ligue
-  GAMMA   = 1.10,   # pente logistique en duel de phase finale
-  PNUL    = 0.24,   # taux de nul, identique pour tout le monde
+  BETA    = 1.15,   # POIDS DE L'ECART DE FORCE dans un match de phase de ligue.
+                    # La force d'une nation = log de son coefficient a 5 ans.
+                    # Hors nuls, chance de gagner = sig(BETA x ecart de force + HOME).
+                    # BETA = 0 : tout le monde se vaut ; plus BETA est grand,
+                    # plus le favori gagne souvent.
+  GAMMA   = 1.10,   # idem pour un duel de phase finale
+  PNUL    = 0.20,   # taux de nul, identique pour tout le monde (archive : 20.1 %)
+  HOME    = 0.54,   # AVANTAGE DU TERRAIN, phase de ligue. Archive 2021-2026, 1656
+                    # matchs : domicile 49.2 %, nul 20.1 %, exterieur 30.7 %.
+                    # Hors nuls, le club qui recoit gagne 61.5 % : HOME = 0.54
+                    # retrouve ce taux a BETA = 1.15. HOME = 0 : terrain neutre.
   KPSEUDO = 56,     # la saison en cours pese w = m/(m+KPSEUDO) dans la force.
                     # Cale pour valoir la moitie en fin de phase de ligue.
 
@@ -75,15 +94,18 @@ P <- list(
   # LOCAL, sur ce PC : rien n'est telecharge, rien ne va chercher sur GitHub.
   # Si tu deplaces le depot, c'est la seule ligne a changer.
   # (Barres obliques normales, pas d'antislash : R les prefere sous Windows.)
+  # Les affiches sont lues a cote : wiki/affiches-2026-27.json.
   FICHIER = "C:/Users/tangu/Documents/Claude/2026.09 grotang.fr/grotang.fr/tools/uefa/nations.json",
-  JOUEES  = c(1, 1, 0),        # journees de phase de ligue deja disputees, C1/C3/C4
+  SAISON  = "2026",            # cle de la saison dans le fichier des affiches
   SORTIE  = "projection_uefa.csv",
-  FOCUS   = c("ENG","ESP","ITA","GER","FRA","POR","NED","BEL","DEN")
+  FOCUS   = c("ENG","ESP","ITA","GER","FRA","POR","NED","BEL","DEN"),
+  CLUBS_PAYS = "FRA"           # probabilites de classement : les clubs de ce pays
 )
 
 # bareme fixe, pas des parametres : ce sont les regles UEFA 2024/25
 JTOT  <- c(8, 8, 6)        # journees de phase de ligue par competition
 KOBON <- c(1.5, 1, 0.5)    # bonus par tour de phase finale atteint
+KNOM  <- c("C1", "C3", "C4")
 
 arg <- commandArgs(TRUE)
 if (length(arg) >= 2) for (i in seq(1, length(arg) - 1, by = 2)) {
@@ -91,7 +113,7 @@ if (length(arg) >= 2) for (i in seq(1, length(arg) - 1, by = 2)) {
 }
 
 # --------------------------- LECTURE DES DONNEES ----------------------------
-# Lecteur JSON minimal : jsonlite n'est pas garanti present, et le fichier a
+# Lecteur JSON minimal : jsonlite n'est pas garanti present, et les fichiers ont
 # une forme connue et stable. On extrait ce dont on a besoin, rien de plus.
 
 # Filet de secours, au cas ou le chemin ci-dessus ne serait plus bon : on
@@ -127,7 +149,7 @@ trouver_fichier <- function(nom) {
 lire_nations <- function(chemin) {
   chemin <- trouver_fichier(chemin)
   cat(sprintf("lecture de %s\n", chemin))
-  txt <- paste(readLines(chemin, warn = FALSE), collapse = "")
+  txt <- paste(readLines(chemin, warn = FALSE, encoding = "UTF-8"), collapse = "")
   blocs <- regmatches(txt, gregexpr("\\{[^{}]*\\}", txt))[[1]]
   champ_n <- function(b, nom) {
     m <- regmatches(b, regexpr(paste0('"', nom, '"\\s*:\\s*-?[0-9.]+'), b))
@@ -156,6 +178,25 @@ lire_nations <- function(chemin) {
   out
 }
 
+# Les affiches : [competition (0/1/2), journee, "date", "heure", "domicile",
+# "NAT", "exterieur", "NAT", buts dom | null, buts ext | null]. On ne garde que
+# la phase de ligue (journee numerique). Un match avec un score est joue.
+lire_affiches <- function(chemin_nations, saison) {
+  d <- dirname(trouver_fichier(chemin_nations))
+  fic <- list.files(file.path(d, "wiki"), pattern = paste0("^affiches-", saison, "-[0-9]{2}\\.json$"), full.names = TRUE)
+  if (!length(fic)) stop(sprintf("\n  Affiches introuvables : %s/wiki/affiches-%s-AA.json\n", d, saison), call. = FALSE)
+  cat(sprintf("lecture de %s\n", fic[1]))
+  txt <- paste(readLines(fic[1], warn = FALSE, encoding = "UTF-8"), collapse = "")
+  re <- '\\[([0-9]+),([0-9]+),"([0-9-]+)","([^"]*)","([^"]*)","([A-Z]{3})","([^"]*)","([A-Z]{3})",(null|[0-9]+),(null|[0-9]+)\\]'
+  m <- regmatches(txt, gregexpr(re, txt))[[1]]
+  if (!length(m)) stop("\n  Aucune affiche de phase de ligue lue.\n", call. = FALSE)
+  x <- do.call(rbind, lapply(m, function(s) regmatches(s, regexec(re, s))[[1]][-1]))
+  num <- function(v) suppressWarnings(as.numeric(ifelse(v == "null", NA, v)))
+  data.frame(k = as.integer(x[, 1]) + 1, j = as.integer(x[, 2]) + 1, date = x[, 3], heure = x[, 4],
+             dom = x[, 5], cd = x[, 6], ext = x[, 7], ce = x[, 8],
+             bd = num(x[, 9]), be = num(x[, 10]), stringsAsFactors = FALSE)
+}
+
 # ------------------------------- MODELE -------------------------------------
 
 sig <- function(x) 1 / (1 + exp(-x))
@@ -165,7 +206,30 @@ bonus_rang <- function(k, r) {
   if (k == 3) { if (r >= 9) 0.125 * (25 - r) else 2 + 0.25 * (9 - r) } else 0.25 * (25 - r)
 }
 
-simuler <- function(NA_, P) {
+# Chaque competition : ses 36 clubs, leur nation, leurs points reels (3/1/0),
+# leurs matchs joues, et les affiches restantes (sans score).
+preparer <- function(AF, eff) {
+  lapply(1:3, function(k) {
+    a <- AF[AF$k == k, ]
+    if (nrow(a) != 18 * JTOT[k]) stop(sprintf("\n  %s : %d affiches au lieu de %d.\n", KNOM[k], nrow(a), 18 * JTOT[k]), call. = FALSE)
+    clubs <- unique(c(rbind(a$dom, a$ext)))
+    nat   <- setNames(c(a$cd, a$ce), c(a$dom, a$ext))[clubs]
+    if (length(clubs) != 36) stop(sprintf("\n  %s : %d clubs au lieu de 36.\n", KNOM[k], length(clubs)), call. = FALSE)
+    cnt <- table(nat)
+    for (cc in names(cnt)) if (!(cc %in% rownames(eff)) || eff[cc, k] != cnt[[cc]])
+      stop(sprintf("\n  %s : %d club(s) %s dans les affiches, pas le meme nombre dans nations.json.\n", KNOM[k], cnt[[cc]], cc), call. = FALSE)
+    joue <- !is.na(a$bd)
+    h <- match(a$dom, clubs); e <- match(a$ext, clubs)
+    pd <- ifelse(a$bd > a$be, 3, ifelse(a$bd == a$be, 1, 0))      # points du classement, matchs joues
+    pe <- ifelse(a$be > a$bd, 3, ifelse(a$bd == a$be, 1, 0))
+    reel <- tabulate(rep(h[joue], pd[joue]), 36) + tabulate(rep(e[joue], pe[joue]), 36)
+    mj   <- tabulate(h[joue], 36) + tabulate(e[joue], 36)
+    list(clubs = clubs, nat = unname(nat), reel = reel, mj = mj,
+         h = h[!joue], e = e[!joue])
+  })
+}
+
+simuler <- function(NA_, AF, P) {
   gr <- if (is.na(P$GRAINE)) sample.int(.Machine$integer.max, 1) else P$GRAINE
   cat(sprintf("graine %d\n", gr))
   set.seed(gr)
@@ -178,26 +242,24 @@ simuler <- function(NA_, P) {
   names(tt) <- names(tp) <- names(lp) <- names(dv) <- code
   rownames(eff) <- code
 
-  # plateau de chaque competition : un vecteur de codes nation, 36 par competition
-  CH <- lapply(1:3, function(k) rep(code, times = eff[, k]))
-  stopifnot(all(sapply(CH, length) == 36))
+  C <- preparer(AF, eff)
+  for (k in 1:3) cat(sprintf("%s : %d matchs joues, %d a jouer\n", KNOM[k], sum(C[[k]]$mj) / 2, length(C[[k]]$h)))
 
-  # force de base : nation + ecart de rang dans le contingent, centre
+  # force de base : nation + ecart de rang dans le contingent (C1, C3, C4), centre
   tot <- rowSums(eff)
   j   <- setNames(rep(0, length(code)), code)
   F0  <- lapply(1:3, function(k) numeric(36))
-  for (k in 1:3) for (i in seq_along(CH[[k]])) {
-    cc <- CH[[k]][i]
+  for (k in 1:3) for (i in 1:36) {
+    cc <- C[[k]]$nat[i]
     F0[[k]][i] <- log(tt[cc]) + P$DELTA * ((tot[cc] - 1) / 2 - j[cc])
     j[cc] <- j[cc] + 1
   }
 
-  # rendement observe cette saison, et son poids : hors de la boucle
-  m_nat <- as.vector(eff %*% P$JOUEES); names(m_nat) <- code
+  # rendement observe cette saison (points de phase de ligue par match) et son poids
+  m_nat <- setNames(rep(0, length(code)), code)
+  for (k in 1:3) { s <- tapply(C[[k]]$mj, C[[k]]$nat, sum); m_nat[names(s)] <- m_nat[names(s)] + s }
   obs_n <- ifelse(m_nat > 0, lp / pmax(m_nat, 1), 0)
   w_nat <- ifelse(m_nat > 0, m_nat / (m_nat + P$KPSEUDO), 0)
-  OBS <- lapply(1:3, function(k) obs_n[CH[[k]]])
-  WPO <- lapply(1:3, function(k) w_nat[CH[[k]]])
 
   # choc propre a chaque nation, indexe sur son niveau
   sigma_n <- pmin(P$SCAP, P$SIGMA * (max(tt[!is.na(dv)]) / pmax(1, tt)) ^ P$LAMBDA)
@@ -206,30 +268,43 @@ simuler <- function(NA_, P) {
   vivants <- code[!is.na(dv)]
   res <- matrix(0, nrow = P$NSIM, ncol = length(vivants), dimnames = list(NULL, vivants))
   ctrl <- c(ko = 0, part = 0, rang = 0)
+  # probabilites de classement : les clubs du pays CLUBS_PAYS
+  suivis <- lapply(1:3, function(k) which(C[[k]]$nat == P$CLUBS_PAYS))
+  RANG <- lapply(1:3, function(k) matrix(0, nrow = length(suivis[[k]]), ncol = 36))
+  PTSM <- lapply(1:3, function(k) numeric(length(suivis[[k]])))
 
   for (s in seq_len(P$NSIM)) {
     z <- setNames(sigma_n * rnorm(length(code)), code)
     gain <- setNames(rep(0, length(code)), code)
 
     for (k in 1:3) {
-      cl <- CH[[k]]; f <- F0[[k]] + z[cl]
+      Ck <- C[[k]]; cl <- Ck$nat; f <- F0[[k]] + z[cl]
       e  <- 2 * sig(P$BETA * (f - mean(f)))
-      e  <- (1 - WPO[[k]]) * e + WPO[[k]] * OBS[[k]]
+      e  <- (1 - w_nat[cl]) * e + w_nat[cl] * obs_n[cl]
       e  <- e / mean(e)                       # conservation : 1 point par match
       pw <- pmax(0, (e - P$PNUL) / 2)
+      # force effective face au champ, puis les vraies affiches restantes
+      q  <- pmin(0.99, pmax(0.01, pw / (1 - P$PNUL)))
+      se <- log(q / (1 - q)) / P$BETA
 
-      tire <- function(n) {                   # n matchs par club, points marques
-        u <- matrix(runif(36 * n), nrow = 36)
-        rowSums((u < pw) * 2 + (u >= pw & u < pw + P$PNUL) * 1)
+      pts <- Ck$reel
+      if (length(Ck$h)) {
+        ph <- (1 - P$PNUL) * sig(P$BETA * (se[Ck$h] - se[Ck$e]) + P$HOME)
+        u  <- runif(length(ph))
+        rh <- ifelse(u < ph, 2, ifelse(u < ph + P$PNUL, 1, 0)); re <- 2 - rh
+        # classement : bareme 3 / 1 / 0
+        pts <- pts + tabulate(rep(Ck$h, ifelse(rh == 2, 3, rh)), 36) + tabulate(rep(Ck$e, ifelse(re == 2, 3, re)), 36)
+        # coefficient : 2 / 1 / 0
+        g <- tapply(c(rh, re), c(cl[Ck$h], cl[Ck$e]), sum)
+        gain[names(g)] <- gain[names(g)] + g
       }
-      pts   <- tire(JTOT[k])                  # saison complete : sert a classer
-      reste <- JTOT[k] - P$JOUEES[k]
-      if (reste > 0) { g <- tire(reste)
-        for (i in 1:36) gain[cl[i]] <- gain[cl[i]] + g[i] }
 
       ord <- order(-pts, -f, runif(36))       # classement de la phase de ligue
       for (r in 1:36) { v <- bonus_rang(k, r)
         gain[cl[ord[r]]] <- gain[cl[ord[r]]] + v; ctrl["rang"] <- ctrl["rang"] + v }
+      if (length(suivis[[k]])) { rg <- match(suivis[[k]], ord)
+        RANG[[k]][cbind(seq_along(rg), rg)] <- RANG[[k]][cbind(seq_along(rg), rg)] + 1
+        PTSM[[k]] <- PTSM[[k]] + pts[suivis[[k]]] }
 
       duel <- function(pool, manches) {       # un tour : les manches sont jouees
         p <- sample(pool); out <- integer(0)
@@ -241,7 +316,7 @@ simuler <- function(NA_, P) {
             if (u < pa) sa <- sa + 2 else if (u < pa + P$PNUL) { sa <- sa + 1; sb <- sb + 1 } else sb <- sb + 2 }
           gain[cl[a]] <<- gain[cl[a]] + sa; gain[cl[b]] <<- gain[cl[b]] + sb
           ctrl["ko"] <<- ctrl["ko"] + sa + sb
-          out <- c(out, if (sa > sb) a else if (sb > sa) b else if (runif(1) < 0.5) a else b)
+          out <- c(out, if (sa > sb) a else if (sb > sa) b else if (runif(1) < sig(P$GAMMA * (f[a] - f[b]))) a else b)
         }
         out
       }
@@ -253,17 +328,23 @@ simuler <- function(NA_, P) {
     }
     res[s, ] <- (tp[vivants] + gain[vivants]) / dv[vivants]
   }
-  list(res = res, ctrl = ctrl / P$NSIM)
+  clubs <- do.call(rbind, lapply(1:3, function(k) if (length(suivis[[k]])) {
+    d <- data.frame(competition = KNOM[k], club = C[[k]]$clubs[suivis[[k]]], pts_actuels = C[[k]]$reel[suivis[[k]]],
+                    pts_attendus = PTSM[[k]] / P$NSIM, stringsAsFactors = FALSE)
+    cbind(d, setNames(as.data.frame(RANG[[k]] / P$NSIM), paste0("r", 1:36)))
+  }))
+  list(res = res, ctrl = ctrl / P$NSIM, clubs = clubs)
 }
 
 # -------------------------------- SORTIE ------------------------------------
 
 NA_ <- lire_nations(P$FICHIER)
-cat(sprintf("%d associations lues\n", length(NA_)))
-cat(sprintf("sigma(tete) = %.2f   lambda = %.1f   delta = %.2f   beta = %.2f   gamma = %.2f   p(nul) = %.2f   %d saisons\n\n",
-            P$SIGMA, P$LAMBDA, P$DELTA, P$BETA, P$GAMMA, P$PNUL, P$NSIM))
+AF  <- lire_affiches(P$FICHIER, P$SAISON)
+cat(sprintf("%d associations lues, %d affiches de phase de ligue\n", length(NA_), nrow(AF)))
+cat(sprintf("sigma(tete) = %.2f   lambda = %.1f   delta = %.2f   beta = %.2f   gamma = %.2f   p(nul) = %.2f   home = %.2f   %d saisons\n\n",
+            P$SIGMA, P$LAMBDA, P$DELTA, P$BETA, P$GAMMA, P$PNUL, P$HOME, P$NSIM))
 
-S <- simuler(NA_, P)
+S <- simuler(NA_, AF, P)
 R <- S$res
 
 qs <- c(0.05, 0.20, 0.50, 0.80, 0.95)
@@ -287,13 +368,13 @@ tab$nation <- rownames(tab)
 tab$ecart  <- tab$p95 - tab$p05
 tab <- tab[order(-tab$med), c("nation", "p05", "p20", "med", "p80", "p95", "p9975", "ecart")]
 
-cat("--- SYNTHESE, nations suivies -------------------------------------------\n")
+cat("\n--- SYNTHESE, nations suivies -------------------------------------------\n")
 f <- tab[tab$nation %in% P$FOCUS, ]
 print(format(f, digits = 3, nsmall = 2), row.names = FALSE)
 
 cat("\n--- DISPERSION -----------------------------------------------------------\n")
 cat(sprintf("etendue 5e-95e, mediane des nations suivies : %.2f point de coefficient\n", median(f$ecart)))
-cat(sprintf("etendue 5e-95e, mediane des 53 associations : %.2f\n", median(tab$ecart)))
+cat(sprintf("etendue 5e-95e, mediane des %d associations : %.2f\n", nrow(tab), median(tab$ecart)))
 cat(sprintf("ecart-type entre nations (de leurs medianes) : %.2f\n", sd(tab$med)))
 
 cat("\n--- DUELS, probabilite que la ligne finisse devant la colonne ------------\n")
@@ -301,6 +382,17 @@ duo <- P$FOCUS[P$FOCUS %in% colnames(R)]
 M <- outer(duo, duo, Vectorize(function(a, b) if (a == b) NA else mean(R[, a] > R[, b])))
 dimnames(M) <- list(duo, duo)
 print(round(100 * M))
+
+if (!is.null(S$clubs)) {
+  cat(sprintf("\n--- CLASSEMENT DE PHASE DE LIGUE, clubs %s (en %%) ------------------------\n", P$CLUBS_PAYS))
+  K <- S$clubs; rk <- as.matrix(K[, paste0("r", 1:36)])
+  vue <- data.frame(comp = K$competition, club = K$club, pts = K$pts_actuels,
+                    attendus = round(K$pts_attendus, 1),
+                    top8 = round(100 * rowSums(rk[, 1:8, drop = FALSE]), 1),
+                    barrages = round(100 * rowSums(rk[, 9:24, drop = FALSE]), 1),
+                    elimine = round(100 * rowSums(rk[, 25:36, drop = FALSE]), 1))
+  print(vue, row.names = FALSE)
+}
 
 # Attendus, par saison et pour les TROIS competitions cumulees :
 #   phase finale   3 x 90  = 270 points  (45 matchs par competition, 2 points chacun)
@@ -318,3 +410,8 @@ verif("bonus de classement distribues",    S$ctrl["rang"], 192)
 sortie <- file.path(dirname(trouver_fichier(P$FICHIER)), P$SORTIE)
 write.csv(tab, sortie, row.names = FALSE)
 cat(sprintf("\n%d lignes ecrites dans %s\n", nrow(tab), sortie))
+if (!is.null(S$clubs)) {
+  sortie2 <- sub("\\.csv$", paste0("_classement_", P$CLUBS_PAYS, ".csv"), sortie)
+  write.csv(S$clubs, sortie2, row.names = FALSE)
+  cat(sprintf("probabilites de classement ecrites dans %s\n", sortie2))
+}

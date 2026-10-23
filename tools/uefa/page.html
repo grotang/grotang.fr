@@ -3730,7 +3730,14 @@ const legende = segs => segs.map(s =>
      beaucoup plus de tirages avant publication (voir tools/uefa/projette.mjs)
      et n'incruste que les quantiles. La valeur ci-dessous ne sert plus qu'au
      filet, quand la page tourne sans bloc PRJ. */
-  const BETA = 1.15, GAMMA = 1.10, PNUL = 0.24;
+  const BETA = 1.15, GAMMA = 1.10, PNUL = 0.20;   /* PNUL : 0,24 jusqu'au 23/10/2026 ; 0,20 = taux de nuls de l'archive (1 656 matchs de phase de groupes / de ligue, 2021–2026) */
+  /* HOME — avantage du terrain en phase de ligue (moteur calendrier). Calé sur
+     les 1 656 matchs de phase de groupes / de ligue de l'archive (2021/22 à
+     2025/26) : domicile 49,2 %, nul 20,1 %, extérieur 30,7 %. Hors nuls, le
+     club qui reçoit gagne 61,5 % des matchs ; à BETA = 1,15 et à écart de force
+     des nations pris en compte, il faut HOME = 0,54 pour retrouver ce taux.
+     En phase finale, l'aller-retour l'équilibre : il n'y est pas appliqué. */
+  const HOME = 0.54;
   let NSIM = 2000;
   /* SIGMA — choc de forme nationale. Tire UNE fois par nation et par saison
      simulee, ajoute a la force de TOUS ses clubs. C'est ce qui manquait : le
@@ -3825,7 +3832,59 @@ const legende = segs => segs.map(s =>
   function simule(){
     if (SIMS) return SIMS;
     const rnd = tirages();
-    const CH = [0,1,2].map(k => N.flatMap(n => Array.from({length: n.a[k] || 0}, () => n.c)));
+    /* MOTEUR « CALENDRIER » (23/10/2026). Avant, chaque club jouait ses matchs
+       restants contre un adversaire MOYEN de sa compétition, et le classement
+       de la phase de ligue était retiré au sort depuis zéro. Désormais :
+       - les 36 clubs de chaque compétition et leurs VRAIES affiches viennent du
+         calendrier Wikipédia (bloc SEM) : Juventus–Rennes se joue à Turin,
+         Italie contre France, avec l'avantage du terrain (HOME) ;
+       - le classement part des points RÉELS de chaque club (bilan de la source,
+         D.eff), auxquels s'ajoutent seulement les affiches restantes simulées ;
+       - un même tirage sert au classement ET au coefficient : plus de double
+         tirage.
+       Un match restant pour un club = au-delà de son nombre de matchs joués
+       dans la source, ses affiches étant prises dans l'ordre des dates. Si le
+       calendrier est incomplet ou ne colle pas aux effectifs, retour à l'ancien
+       moteur (adversaire moyen), sans rien casser. */
+    const kickM = m => { const [y, mo, d] = m[0].split('-').map(Number), [h, mi] = (m[1] || '21:00').split(':').map(Number); return new Date(y, mo - 1, d, h, mi); };
+    const CAL = (() => {
+      if (typeof SEM === 'undefined' || !SEM.length) return null;
+      const E = D.eff || {}, out = [];
+      for (let k = 0; k < 3; k++) {
+        const FX = SEM.filter(m => m[2] === k && typeof m[3] === 'number');
+        if (FX.length !== 18 * JTOT[k]) return null;
+        const idx = new Map(), clubs = [];
+        const ajoute = (n, c) => { if (!idx.has(n)) { idx.set(n, clubs.length); clubs.push({ n, c }); } };
+        FX.forEach(m => { ajoute(m[4], m[5]); ajoute(m[6], m[7]); });
+        if (clubs.length !== 36 || clubs.some(x => !BY[x.c])) return null;
+        const cnt = {}; clubs.forEach(x => cnt[x.c] = (cnt[x.c] || 0) + 1);
+        if (Object.entries(cnt).some(([c, v]) => (BY[c].a[k] || 0) !== v)) return null;
+        const ligne = x => (E[x.c] || []).find(r => r[0] === x.n && r[1] === k && r.length >= 10);
+        const real = new Float64Array(36), pl = clubs.map(x => { const r = ligne(x); return r ? Math.min(JTOT[k], r[7] + r[8] + r[9]) : -1; });
+        /* points DU CLASSEMENT : barème UEFA de la phase de ligue, 3 la victoire,
+           1 le nul (le coefficient, lui, compte 2 et 1) */
+        clubs.forEach((x, i) => { const r = ligne(x); if (r) real[i] = 3 * r[7] + r[8]; });
+        const fx = FX.map(m => ({ h: idx.get(m[4]), a: idx.get(m[6]), t: kickM(m), sc: m[8] != null ? [m[8], m[9]] : null, remH: false, remA: false }));
+        const parClub = clubs.map(() => []);
+        fx.forEach((f, j) => { parClub[f.h].push(j); parClub[f.a].push(j); });
+        parClub.forEach(L => L.sort((p, q) => fx[p].t - fx[q].t));
+        parClub.forEach((L, i) => L.forEach((j, r) => {
+          const f = fx[j], dom = f.h === i;
+          let reste;
+          if (pl[i] >= 0) reste = r >= pl[i];                        // bilan de la source : la référence
+          else {                                                     // à défaut : score Wikipédia, sinon la date
+            reste = !f.sc && f.t >= ASOF;
+            if (f.sc) { const [g1, g2] = dom ? f.sc : [f.sc[1], f.sc[0]]; real[i] += g1 > g2 ? 3 : g1 === g2 ? 1 : 0; }
+          }
+          if (reste) { if (dom) f.remH = true; else f.remA = true; }
+        }));
+        const pos = clubs.map(x => { const i = (E[x.c] || []).findIndex(r => r[0] === x.n && r[1] === k); return i < 0 ? 99 : i; });
+        const live = fx.filter(f => f.remH || f.remA);
+        out.push({ clubs, cl: clubs.map(x => x.c), pos, real, live, rest: live.reduce((a, f) => a + f.remH + f.remA, 0) });
+      }
+      return out;
+    })();
+    const CH = CAL ? CAL.map(x => x.cl) : [0,1,2].map(k => N.flatMap(n => Array.from({length: n.a[k] || 0}, () => n.c)));
     /* journées restantes de CHAQUE club (voir jouesClubs) : un club qui joue le
        mercredi garde son match de la journée tant qu'il ne l'a pas joué */
     const RESTE = [0,1,2].map(k => N.flatMap(n => { const a = n.a[k] || 0, L = jouesClubs(n.c, k);
@@ -3849,7 +3908,7 @@ const legende = segs => segs.map(s =>
         if (F.length !== 18 * JTOT[k]) continue;                      // calendrier incomplet : pas de contrôle
         const sur = F.filter(m => kick(m) > ASOF).length;
         const flou = F.filter(m => kick(m) <= ASOF && kick(m).getTime() + 135 * 60e3 > ASOF.getTime()).length;
-        const modele = RESTE[k].reduce((a, b) => a + b, 0), lo = 2 * sur, hi = 2 * (sur + flou);
+        const modele = CAL ? CAL[k].rest : RESTE[k].reduce((a, b) => a + b, 0), lo = 2 * sur, hi = 2 * (sur + flou);
         const msg = `C${[1, 3, 4][k]} : ${modele} matchs-club restants pour le modèle, ${lo === hi ? lo : lo + ' à ' + hi} pour le calendrier`;
         if (modele < lo - 2 || modele > hi + 2) calendrier.bloque.push(msg);
         else if (modele < lo || modele > hi) calendrier.tolere.push(msg + ' (un match reporté ?)');
@@ -3866,7 +3925,12 @@ const legende = segs => segs.map(s =>
       const tot = (n.a[0]||0) + (n.a[1]||0) + (n.a[2]||0);
       rangNat[n.c] = { tot, j: 0 };
     }
-    for (let k = 0; k < 3; k++) for (let i = 0; i < CH[k].length; i++) {
+    /* ordre du contingent : C1, puis C3, puis C4 ; dans une compétition, l'ordre
+       du bilan de la source (moteur calendrier) */
+    const ordre = [];
+    for (let k = 0; k < 3; k++) for (let i = 0; i < CH[k].length; i++) ordre.push([k, i, CAL ? CAL[k].pos[i] : i]);
+    ordre.sort((p, q) => p[0] - q[0] || p[2] - q[2]);
+    for (const [k, i] of ordre) {
       const c = CH[k][i], r = rangNat[c];
       F[k][i] = force(c) + DELTA * ((r.tot - 1) / 2 - r.j);
       r.j++;
@@ -3906,6 +3970,9 @@ const legende = segs => segs.map(s =>
     const FZ = [0,1,2].map(k => new Float64Array(CH[k].length));
     const EB = [0,1,2].map(k => new Float64Array(CH[k].length));
     const PB = [0,1,2].map(k => new Float64Array(CH[k].length));
+    const SE = [0,1,2].map(k => new Float64Array(CH[k].length));
+    /* probabilités de classement en phase de ligue, club par club (moteur calendrier) */
+    const RANG = [0,1,2].map(k => new Float64Array(CH[k].length * CH[k].length)), PTSM = [0,1,2].map(k => new Float64Array(CH[k].length));
     const rendement = () => {
       for (let k = 0; k < 3; k++) {
         const f = FZ[k], nC = f.length, w = CHW[k], o = CHO[k], e = EB[k], pw = PB[k];
@@ -3960,9 +4027,25 @@ const legende = segs => segs.map(s =>
            - seules les journées RESTANTES sont créditées en points, puisque les
              journées déjà jouées sont dans les chiffres acquis.
            Mélanger les deux double-compterait la journée du 8 septembre. */
-        const pts = cl.map((_, i) => { let p = 0; for (let j = 0; j < nj; j++) p += match(i); return p; });
-        for (let i = 0; i < cl.length; i++) { let p = 0; for (let j = 0; j < RK[i]; j++) p += match(i); addL(i, p); }
+        let pts;
+        if (CAL) {
+          /* force effective de chaque club face au champ (choc et forme compris),
+             puis les vraies affiches restantes, avec l'avantage du terrain */
+          const C = CAL[k], se = SE[k];
+          for (let i = 0; i < cl.length; i++) { const q = Math.min(0.99, Math.max(0.01, pw[i] / (1 - PNUL))); se[i] = Math.log(q / (1 - q)) / BETA; }
+          pts = Float64Array.from(C.real);
+          for (const g of C.live) {
+            const ph = (1 - PNUL) * sig(BETA * (se[g.h] - se[g.a]) + HOME), u = rnd();
+            const rh = u < ph ? 2 : u < ph + PNUL ? 1 : 0, ra = 2 - rh;
+            if (g.remH) { pts[g.h] += rh === 2 ? 3 : rh; addL(g.h, rh); }        // classement 3/1/0, coefficient 2/1/0
+            if (g.remA) { pts[g.a] += ra === 2 ? 3 : ra; addL(g.a, ra); }
+          }
+        } else {
+          pts = cl.map((_, i) => { let p = 0; for (let j = 0; j < nj; j++) { const r = match(i); p += r === 2 ? 3 : r; } return p; });
+          for (let i = 0; i < cl.length; i++) { let p = 0; for (let j = 0; j < RK[i]; j++) p += match(i); addL(i, p); }
+        }
         const ord = [...cl.keys()].sort((a, b) => (pts[b] - pts[a]) || (f[b] - f[a]) || (rnd() - 0.5));
+        if (CAL) { const nC = cl.length; ord.forEach((i, r) => { RANG[k][i * nC + r]++; PTSM[k][i] += pts[i]; }); }
         ord.forEach((i, r) => { const v = rankBonus(k, r + 1); addL(i, v); ctrl.rb[k] += v; });
         /* Un tour de phase finale : les manches sont jouées, chacune distribue ses
            deux points, et le qualifié est celui qui en a pris le plus. Rien n'est
@@ -4002,7 +4085,21 @@ const legende = segs => segs.map(s =>
       if (Math.abs(v - attendu[f][k]) > 0.01) ecarts.push(`${f} C${[1,3,4][k]} ${nf(v,2)} ≠ ${attendu[f][k]}`);
     }
     const mFRA = matchs('FRA');
-    SIMS = { tir, ligue, codes, ecarts, calendrier, wFRA: mFRA / (mFRA + KPSEUDO), mFRA };
+    /* Pronostic 1N2 de chaque affiche restante, sans choc de forme : la force de
+       chaque club telle que le modèle la voit aujourd'hui (nation, rang dans le
+       contingent, forme de la saison), plus l'avantage du terrain. */
+    const pronos = [];
+    if (CAL) {
+      for (let k = 0; k < 3; k++) { const src = F[k], dst = FZ[k]; for (let i = 0; i < dst.length; i++) dst[i] = src[i]; }
+      const { PW: P0 } = rendement();
+      for (let k = 0; k < 3; k++) {
+        const C = CAL[k], se = C.clubs.map((_, i) => { const q = Math.min(0.99, Math.max(0.01, P0[k][i] / (1 - PNUL))); return Math.log(q / (1 - q)) / BETA; });
+        for (const g of C.live) { const ph = (1 - PNUL) * sig(BETA * (se[g.h] - se[g.a]) + HOME);
+          pronos.push({ k, dom: C.clubs[g.h].n, ext: C.clubs[g.a].n, t: g.t, p: [+ph.toFixed(3), PNUL, +(1 - PNUL - ph).toFixed(3)] }); }
+      }
+    }
+    const rangs = CAL ? CAL.map((C, k) => C.clubs.map((x, i) => ({ k, n: x.n, c: x.c, pts: PTSM[k][i] / NSIM, p: Array.from(RANG[k].subarray(i * 36, i * 36 + 36), v => v / NSIM) }))).flat() : [];
+    SIMS = { tir, ligue, codes, ecarts, calendrier, pronos, rangs, moteur: CAL ? 'calendrier' : 'moyen', wFRA: mFRA / (mFRA + KPSEUDO), mFRA };
     return SIMS;
   }
   const quant = (a, p) => { const v = Float64Array.from(a).sort(); return v[Math.min(v.length - 1, Math.floor(p * v.length))]; };
@@ -4058,7 +4155,7 @@ const legende = segs => segs.map(s =>
        veut. Il vit dans la page parce que le modele doit rester en UN SEUL
        exemplaire — une copie dans un module a part aurait diverge au premier
        parametre change. */
-    window.__projette = (n) => {
+    window.__projette = (n, opts) => {
       NSIM = n; SIMS = null;
       const S = simule();
       const q = {};
@@ -4070,7 +4167,7 @@ const legende = segs => segs.map(s =>
       const dv = {}, F = S.tir && S.tir.FRA;
       if (F) for (const c of S.codes) { const a = S.tir[c]; if (!a || c === 'FRA') continue;
         let k = 0; for (let i = 0; i < a.length; i++) if (a[i] > F[i]) k++; dv[c] = +(k / a.length).toFixed(4); }
-      return { n, q, dv, ecarts: S.ecarts, calendrier: S.calendrier, maj: D.meta.lastUpdated };
+      return { n, q, dv, ecarts: S.ecarts, calendrier: S.calendrier, moteur: S.moteur, pronos: (S.pronos || []).map(x => [x.k, x.dom, x.ext, x.p[0], x.p[2]]), ...(opts && opts.rangs ? { rangs: S.rangs } : {}), maj: D.meta.lastUpdated };
     };
 
     /* Toutes les nations par defaut : la projection est le bloc ou l'on vient
