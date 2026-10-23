@@ -33,6 +33,8 @@
 # 4. PNUL passe de 0.24 a 0.20 (taux de nuls de l'archive).
 # 5. En sortie, en plus des nations : les probabilites de classement en phase
 #    de ligue pour les clubs du pays choisi (CLUBS_PAYS).
+# 6. Phase finale : le vrai tableau UEFA, fixe par le classement (avant : duels
+#    tires au hasard), et la forme de la saison compte aussi dans les duels.
 
 
 # ----------------------------- PARAMETRES -----------------------------------
@@ -306,25 +308,43 @@ simuler <- function(NA_, AF, P) {
         RANG[[k]][cbind(seq_along(rg), rg)] <- RANG[[k]][cbind(seq_along(rg), rg)] + 1
         PTSM[[k]] <- PTSM[[k]] + pts[suivis[[k]]] }
 
-      duel <- function(pool, manches) {       # un tour : les manches sont jouees
-        p <- sample(pool); out <- integer(0)
-        for (i in seq(1, length(p), by = 2)) {
-          a <- p[i]; b <- p[i + 1]
-          pa <- (1 - P$PNUL) * sig(P$GAMMA * (f[a] - f[b]))
-          sa <- 0; sb <- 0
-          for (g in seq_len(manches)) { u <- runif(1)
-            if (u < pa) sa <- sa + 2 else if (u < pa + P$PNUL) { sa <- sa + 1; sb <- sb + 1 } else sb <- sb + 2 }
-          gain[cl[a]] <<- gain[cl[a]] + sa; gain[cl[b]] <<- gain[cl[b]] + sb
-          ctrl["ko"] <<- ctrl["ko"] + sa + sb
-          out <- c(out, if (sa > sb) a else if (sb > sa) b else if (runif(1) < sig(P$GAMMA * (f[a] - f[b]))) a else b)
-        }
-        out
+      # Un duel de phase finale : les manches sont jouees, le qualifie est celui
+      # qui a pris le plus de points (a egalite : prolongation / tirs au but,
+      # penches vers le plus fort). Force : la force effective `se`, forme de la
+      # saison comprise (avant le 23/10/2026 : le seul niveau de la nation).
+      duel <- function(a, b, manches) {
+        pa <- (1 - P$PNUL) * sig(P$GAMMA * (se[a] - se[b]))
+        sa <- 0; sb <- 0
+        for (g in seq_len(manches)) { u <- runif(1)
+          if (u < pa) sa <- sa + 2 else if (u < pa + P$PNUL) { sa <- sa + 1; sb <- sb + 1 } else sb <- sb + 2 }
+        gain[cl[a]] <<- gain[cl[a]] + sa; gain[cl[b]] <<- gain[cl[b]] + sb
+        ctrl["ko"] <<- ctrl["ko"] + sa + sb
+        if (sa > sb) a else if (sb > sa) b else if (runif(1) < sig(P$GAMMA * (se[a] - se[b]))) a else b
       }
-      lot <- c(ord[1:8], duel(ord[9:24], 2))  # barrages : aucun bonus de tour
-      for (t in 1:4) {                        # 8es, quarts, demies, finale
-        for (i in lot) { gain[cl[i]] <- gain[cl[i]] + KOBON[k]; ctrl["part"] <- ctrl["part"] + 1 }
-        lot <- duel(lot, if (t == 4) 1 else 2)
+      bonus <- function(L) for (i in L) { gain[cl[i]] <<- gain[cl[i]] + KOBON[k]; ctrl["part"] <<- ctrl["part"] + 1 }
+      # LE TABLEAU UEFA (format 2024/25), fixe par le classement de la phase de ligue :
+      #  barrages 9e-10e contre 23e-24e, 11e-12e / 21e-22e, 13e-14e / 19e-20e, 15e-16e / 17e-18e ;
+      #  8es : tetes 1-2 contre le bloc 15e-18e, 3-4 / 13e-20e, 5-6 / 11e-22e, 7-8 / 9e-24e ;
+      #  1er et 2e dans deux moities differentes (idem 3/4, 5/6, 7/8) ;
+      #  quarts : tete 1-2 contre tete 7-8, tete 3-4 contre tete 5-6 ; puis demies, finale.
+      deux  <- function(x, y) if (runif(1) < 0.5) c(x, y) else c(y, x)
+      blocs <- list(c(9, 10, 23, 24), c(11, 12, 21, 22), c(13, 14, 19, 20), c(15, 16, 17, 18))
+      qual  <- lapply(blocs, function(b) { u <- deux(ord[b[3]], ord[b[4]]); c(duel(ord[b[1]], u[1], 2), duel(ord[b[2]], u[2], 2)) })
+      tetes <- list(c(1, 2, 4), c(3, 4, 3), c(5, 6, 2), c(7, 8, 1))   # deux tetes de serie, bloc de barragistes
+      bonus(c(ord[1:8], unlist(qual)))                                 # les 16 clubs des 8es
+      moitie <- list(integer(4), integer(4))
+      for (ti in 1:4) {
+        tdc <- tetes[[ti]]; w <- deux(qual[[tdc[3]]][1], qual[[tdc[3]]][2]); h <- if (runif(1) < 0.5) 1 else 2
+        moitie[[h]][ti]     <- duel(ord[tdc[1]], w[1], 2)
+        moitie[[3 - h]][ti] <- duel(ord[tdc[2]], w[2], 2)
       }
+      fin <- integer(2)
+      for (h in 1:2) {
+        M <- moitie[[h]]; bonus(M)
+        q1 <- duel(M[1], M[4], 2); q2 <- duel(M[2], M[3], 2)
+        bonus(c(q1, q2)); fin[h] <- duel(q1, q2, 2)
+      }
+      bonus(fin); duel(fin[1], fin[2], 1)
     }
     res[s, ] <- (tp[vivants] + gain[vivants]) / dv[vivants]
   }
