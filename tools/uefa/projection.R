@@ -35,7 +35,9 @@
 #    de ligue pour les clubs du pays choisi (CLUBS_PAYS).
 # 6. Phase finale : le vrai tableau UEFA, fixe par le classement (avant : duels
 #    tires au hasard), et la forme de la saison compte aussi dans les duels.
-# 7. Le choc de forme (SIGMA) fond a mesure que les resultats reels pesent (KPSEUDO).
+# 7. Le choc de forme (SIGMA) fond a mesure que les resultats reels pesent.
+# 8. Force des nations : saisons ponderees par anciennete (POIDS_*), la saison en
+#    cours monte de 0 a 40 % ; nuls selon l'ecart de niveau ; egalites au sort.
 
 
 # ----------------------------- PARAMETRES -----------------------------------
@@ -80,8 +82,17 @@ P <- list(
                     # matchs : domicile 49.2 %, nul 20.1 %, exterieur 30.7 %.
                     # Hors nuls, le club qui recoit gagne 61.5 % : HOME ~ 0.54-0.58
                     # retrouve ce taux ; 0.57 retenu (GT, 23/10/2026). HOME = 0 : neutre.
-  KPSEUDO = 56,     # la saison en cours pese w = m/(m+KPSEUDO) dans la force.
-                    # Cale pour valoir la moitie en fin de phase de ligue.
+  # POIDS DES SAISONS (decision de GT, 23/10/2026), en %, du debut a la fin de
+  # la phase de ligue, au prorata des matchs deja joues (avancement a, 0 -> 1) :
+  #   saison en cours 0 -> 40 | 2025/26 40 -> 20 | 2024/25 30 -> 20
+  #   2023/24 20 -> 10 | 2022/23 10. Total toujours 100. Remplace KPSEUDO.
+  POIDS_DEB  = c(10, 20, 30, 40),   # 2022/23, 2023/24, 2024/25, 2025/26 au debut
+  POIDS_FIN  = c(10, 10, 20, 20),   # les memes en fin de phase de ligue
+  POIDS_COUR = 40,                  # saison en cours en fin de phase de ligue
+  # NULS SELON L'ECART DE NIVEAU : p(nul) = NUL_MAX x exp(-NUL_PENTE x ecart).
+  # Archive 2023-2026 : 22 % entre nations proches, 13.5 % au-dela d'un ecart de 1.
+  NUL_MAX   = 0.22,
+  NUL_PENTE = 0.24,
 
   GRAINE  = NA,                # NA : une graine differente a chaque lancer, donc
                                # une vraie nouvelle simulation a chaque fois.
@@ -176,7 +187,7 @@ lire_nations <- function(chemin) {
     out[[length(out) + 1]] <- list(
       c = c3, t = champ_n(b, "t"), tp = champ_n(b, "tp"),
       lp = champ_n(b, "lp"), div = champ_n(b, "divisor"),
-      a = a[1:3])
+      a = a[1:3], y = champ_v(b, "y"))
   }
   out
 }
@@ -248,13 +259,25 @@ simuler <- function(NA_, AF, P) {
   C <- preparer(AF, eff)
   for (k in 1:3) cat(sprintf("%s : %d matchs joues, %d a jouer\n", KNOM[k], sum(C[[k]]$mj) / 2, length(C[[k]]$h)))
 
+  # avancement de la phase de ligue et force historique ponderee (saisons
+  # rapportees a la moyenne des nations de leur annee : neutralise le format 2024/25)
+  AV <- min(1, sum(sapply(C, function(x) sum(x$mj))) / (2 * 18 * sum(JTOT)))
+  PO <- P$POIDS_DEB + (P$POIDS_FIN - P$POIDS_DEB) * AV
+  yy <- t(sapply(NA_, function(x) { v <- x$y; if (length(v) < 4) c(v, rep(0, 4 - length(v)))[1:4] else v[1:4] }))
+  rownames(yy) <- code
+  moy <- apply(yy, 2, function(v) mean(v[v > 0]))
+  FH  <- log(pmax(0.02, as.vector((yy / matrix(moy, nrow(yy), 4, byrow = TRUE)) %*% PO) / sum(PO)))
+  names(FH) <- code
+  cat(sprintf("avancement de la phase de ligue : %.0f %%   poids 22/23-25/26 : %s   saison en cours : %.0f %%\n",
+              100 * AV, paste(round(PO * (100 - P$POIDS_COUR * AV) / sum(PO)), collapse = " / "), P$POIDS_COUR * AV))
+
   # force de base : nation + ecart de rang dans le contingent (C1, C3, C4), centre
   tot <- rowSums(eff)
   j   <- setNames(rep(0, length(code)), code)
   F0  <- lapply(1:3, function(k) numeric(36))
   for (k in 1:3) for (i in 1:36) {
     cc <- C[[k]]$nat[i]
-    F0[[k]][i] <- log(tt[cc]) + P$DELTA * ((tot[cc] - 1) / 2 - j[cc])
+    F0[[k]][i] <- FH[cc] + P$DELTA * ((tot[cc] - 1) / 2 - j[cc])
     j[cc] <- j[cc] + 1
   }
 
@@ -262,7 +285,7 @@ simuler <- function(NA_, AF, P) {
   m_nat <- setNames(rep(0, length(code)), code)
   for (k in 1:3) { s <- tapply(C[[k]]$mj, C[[k]]$nat, sum); m_nat[names(s)] <- m_nat[names(s)] + s }
   obs_n <- ifelse(m_nat > 0, lp / pmax(m_nat, 1), 0)
-  w_nat <- ifelse(m_nat > 0, m_nat / (m_nat + P$KPSEUDO), 0)
+  w_nat <- ifelse(m_nat > 0, P$POIDS_COUR / 100 * AV, 0)
 
   # choc propre a chaque nation, indexe sur son niveau
   sigma_n <- pmin(P$SCAP, P$SIGMA * (max(tt[!is.na(dv)]) / pmax(1, tt)) ^ P$LAMBDA)
@@ -277,8 +300,8 @@ simuler <- function(NA_, AF, P) {
   PTSM <- lapply(1:3, function(k) numeric(length(suivis[[k]])))
 
   for (s in seq_len(P$NSIM)) {
-    # Lien SIGMA - KPSEUDO : l'humeur de la saison se voit deja en partie dans les
-    # resultats reels (poids w = m/(m+KPSEUDO)) ; on ne tire au sort que la part
+    # Lien SIGMA - poids de la saison : l'humeur de la saison se voit deja en partie
+    # dans les resultats reels (poids w) ; on ne tire au sort que la part
     # encore inconnue : ampleur x racine(1 - w).
     z <- setNames(sigma_n * sqrt(1 - w_nat) * rnorm(length(code)), code)
     gain <- setNames(rep(0, length(code)), code)
@@ -295,9 +318,10 @@ simuler <- function(NA_, AF, P) {
 
       pts <- Ck$reel
       if (length(Ck$h)) {
-        ph <- (1 - P$PNUL) * sig(P$BETA * (se[Ck$h] - se[Ck$e]) + P$HOME)
+        dl <- se[Ck$h] - se[Ck$e]; pn <- P$NUL_MAX * exp(-P$NUL_PENTE * abs(dl))
+        ph <- (1 - pn) * sig(P$BETA * dl + P$HOME)
         u  <- runif(length(ph))
-        rh <- ifelse(u < ph, 2, ifelse(u < ph + P$PNUL, 1, 0)); re <- 2 - rh
+        rh <- ifelse(u < ph, 2, ifelse(u < ph + pn, 1, 0)); re <- 2 - rh
         # classement : bareme 3 / 1 / 0
         pts <- pts + tabulate(rep(Ck$h, ifelse(rh == 2, 3, rh)), 36) + tabulate(rep(Ck$e, ifelse(re == 2, 3, re)), 36)
         # coefficient : 2 / 1 / 0
@@ -305,7 +329,7 @@ simuler <- function(NA_, AF, P) {
         gain[names(g)] <- gain[names(g)] + g
       }
 
-      ord <- order(-pts, -f, runif(36))       # classement de la phase de ligue
+      ord <- order(-pts, runif(36))           # classement ; egalite de points : tirage au sort
       for (r in 1:36) { v <- bonus_rang(k, r)
         gain[cl[ord[r]]] <- gain[cl[ord[r]]] + v; ctrl["rang"] <- ctrl["rang"] + v }
       if (length(suivis[[k]])) { rg <- match(suivis[[k]], ord)
@@ -317,10 +341,11 @@ simuler <- function(NA_, AF, P) {
       # penches vers le plus fort). Force : la force effective `se`, forme de la
       # saison comprise (avant le 23/10/2026 : le seul niveau de la nation).
       duel <- function(a, b, manches) {
-        pa <- (1 - P$PNUL) * sig(P$GAMMA * (se[a] - se[b]))
+        pn <- P$NUL_MAX * exp(-P$NUL_PENTE * abs(se[a] - se[b]))
+        pa <- (1 - pn) * sig(P$GAMMA * (se[a] - se[b]))
         sa <- 0; sb <- 0
         for (g in seq_len(manches)) { u <- runif(1)
-          if (u < pa) sa <- sa + 2 else if (u < pa + P$PNUL) { sa <- sa + 1; sb <- sb + 1 } else sb <- sb + 2 }
+          if (u < pa) sa <- sa + 2 else if (u < pa + pn) { sa <- sa + 1; sb <- sb + 1 } else sb <- sb + 2 }
         gain[cl[a]] <<- gain[cl[a]] + sa; gain[cl[b]] <<- gain[cl[b]] + sb
         ctrl["ko"] <<- ctrl["ko"] + sa + sb
         if (sa > sb) a else if (sb > sa) b else if (runif(1) < sig(P$GAMMA * (se[a] - se[b]))) a else b
@@ -365,8 +390,8 @@ simuler <- function(NA_, AF, P) {
 NA_ <- lire_nations(P$FICHIER)
 AF  <- lire_affiches(P$FICHIER, P$SAISON)
 cat(sprintf("%d associations lues, %d affiches de phase de ligue\n", length(NA_), nrow(AF)))
-cat(sprintf("sigma(tete) = %.2f   lambda = %.1f   delta = %.2f   beta = %.2f   gamma = %.2f   p(nul) = %.2f   home = %.2f   %d saisons\n\n",
-            P$SIGMA, P$LAMBDA, P$DELTA, P$BETA, P$GAMMA, P$PNUL, P$HOME, P$NSIM))
+cat(sprintf("sigma(tete) = %.2f   lambda = %.1f   delta = %.2f   beta = %.2f   gamma = %.2f   p(nul) moyen = %.2f (max %.2f)   home = %.2f   %d saisons\n\n",
+            P$SIGMA, P$LAMBDA, P$DELTA, P$BETA, P$GAMMA, P$PNUL, P$NUL_MAX, P$HOME, P$NSIM))
 
 S <- simuler(NA_, AF, P)
 R <- S$res

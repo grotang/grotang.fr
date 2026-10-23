@@ -3789,7 +3789,8 @@ const legende = segs => segs.map(s =>
     const m = {}; for (const n of N) m[n.c] = Math.min(SCAP, SIGMA * Math.pow(tete / Math.max(1, n.t), LAMBDA));
     return m;
   })();
-  /* Poids de la saison en cours dans la force d'un club.
+  /* [Historique — remplacé le 23/10/2026 par les POIDS DÉGRESSIFS, voir simule().]
+     Poids de la saison en cours dans la force d'un club.
      Première version : zéro. La force valait le coefficient à cinq ans, point,
      et ce que le pays faisait CETTE saison n'entrait nulle part — une nation qui
      venait de perdre ses six premiers matchs était projetée comme si de rien.
@@ -3799,7 +3800,27 @@ const legende = segs => segs.map(s =>
      KPSEUDO calé pour que la saison en cours vaille la moitié une fois la phase
      de ligue terminée. En clair : aujourd'hui elle compte pour une dizaine de
      pour cent, en janvier pour la moitié. */
-  const KPSEUDO = 56;
+  /* POIDS DES SAISONS (décision de GT, 23/10/2026). La force d'une nation n'est
+     plus son coefficient à 5 ans « à plat » : chaque saison pèse selon son
+     ancienneté, et la saison en cours monte au fil des résultats.
+         avancement a = part des matchs de phase de ligue déjà joués (0 → 1)
+         saison en cours  0 % → 40 %   (0,40 × a)
+         2025/26         40 % → 20 %
+         2024/25         30 % → 20 %
+         2023/24         20 % → 10 %
+         2022/23         10 %
+     Le total fait toujours 100 %. Les saisons passées forment la force
+     « historique » (chaque saison rapportée à la moyenne des nations cette
+     saison-là, pour neutraliser le changement de format de 2024/25) ; la saison
+     en cours entre par le rendement réel de la nation (points de phase de ligue
+     par match), au poids 0,40 × a. Remplace KPSEUDO (w = m / (m + 56)). */
+  const POIDS_DEB = [10, 20, 30, 40], POIDS_FIN = [10, 10, 20, 20], POIDS_COUR = 40;   // 22/23, 23/24, 24/25, 25/26 ; en %
+  /* NULS SELON L'ÉCART DE NIVEAU (23/10/2026). Archive 2023–2026, 1 473 matchs :
+     22 % de nuls entre nations proches, 13,5 % quand l'écart de force dépasse 1.
+     Taux de nul d'un match = NUL_MAX × exp(−NUL_PENTE × écart). PNUL (0,20) reste
+     le taux moyen, utilisé pour situer un club face au champ. */
+  const NUL_MAX = 0.22, NUL_PENTE = 0.24;
+  const pnul = d => NUL_MAX * Math.exp(-NUL_PENTE * Math.abs(d));
 
   /* Barème de classement de phase de ligue (2024/25 →) : les places 24 à 1
      rapportent 0,25 point par rang gravi en C1 et en C3 ; en C4, 0,125 de la 24e
@@ -3807,7 +3828,6 @@ const legende = segs => segs.map(s =>
   const rankBonus = (k, r) => r > 24 ? 0
     : (k === 2 ? (r >= 9 ? 0.125 * (25 - r) : 2 + 0.25 * (9 - r)) : 0.25 * (25 - r));
   const sig = x => 1 / (1 + Math.exp(-x));
-  const force = c => Math.log(BY[c].t);
 
   /* Générateur déterministe : deux visiteurs du même jour doivent voir les mêmes
      chiffres, et un écart d'un jour à l'autre doit venir des résultats, jamais du
@@ -3925,6 +3945,16 @@ const legende = segs => segs.map(s =>
        rang a l'interieur de son contingent. Le contingent est ordonne C1, puis
        C3, puis C4 — la meilleure approximation du rang domestique disponible.
        L'ecart est centre, la force moyenne de la nation ne bouge donc pas. */
+    /* avancement de la phase de ligue (part des matchs joués) et force historique
+       pondérée de chaque nation (POIDS_DEB → POIDS_FIN) */
+    const AVANC = CAL ? 1 - CAL.reduce((a, C) => a + C.rest, 0) / (2 * 18 * (JTOT[0] + JTOT[1] + JTOT[2]))
+                      : [0, 1, 2].reduce((a, k) => a + jouees(k) * 18, 0) / (18 * (JTOT[0] + JTOT[1] + JTOT[2]));
+    const AV = Math.min(1, Math.max(0, AVANC));
+    const PO = POIDS_DEB.map((d, i) => d + (POIDS_FIN[i] - d) * AV), POS = PO.reduce((a, b) => a + b, 0);
+    const MOYS = [0, 1, 2, 3].map(i => { const v = N.map(n => n.y[i]).filter(x => x > 0); return v.reduce((a, b) => a + b, 0) / Math.max(1, v.length); });
+    const FH = {};
+    for (const n of N) { const h = [0, 1, 2, 3].reduce((a, i) => a + PO[i] * (n.y[i] || 0) / MOYS[i], 0) / POS;
+      FH[n.c] = Math.log(Math.max(h, 0.02)); }
     const rangNat = {};
     const F = CH.map(() => []);
     for (const n of N) {
@@ -3938,7 +3968,7 @@ const legende = segs => segs.map(s =>
     ordre.sort((p, q) => p[0] - q[0] || p[2] - q[2]);
     for (const [k, i] of ordre) {
       const c = CH[k][i], r = rangNat[c];
-      F[k][i] = force(c) + DELTA * ((r.tot - 1) / 2 - r.j);
+      F[k][i] = FH[c] + DELTA * ((r.tot - 1) / 2 - r.j);
       r.j++;
     }
     /* Rendement attendu par match : logistique sur l'écart de force, puis
@@ -3964,7 +3994,7 @@ const legende = segs => segs.map(s =>
     const OBS = {}, WPO = {};
     for (const n of N) { const m = matchs(n.c);
       OBS[n.c] = m ? part(n.c).ligue * divisor(n) / m : 0;
-      WPO[n.c] = m ? m / (m + KPSEUDO) : 0; }
+      WPO[n.c] = m ? POIDS_COUR / 100 * AV : 0; }
     const CHW = CH.map(cl => cl.map(c => WPO[c]));
     const CHO = CH.map(cl => cl.map(c => OBS[c]));
 
@@ -4018,7 +4048,7 @@ const legende = segs => segs.map(s =>
          qui fait qu'une bonne année française est une bonne année pour les sept
          clubs à la fois, et donc qui ouvre la queue de la distribution. */
       /* Lien SIGMA – KPSEUDO (23/10/2026) : la bonne ou mauvaise année d'un pays
-         se voit déjà, en partie, dans ses résultats réels, que KPSEUDO intègre avec
+         se voit déjà, en partie, dans ses résultats réels, que POIDS_COUR intègre avec
          le poids w. Il ne reste donc à tirer au sort que la part encore inconnue :
          ampleur × racine(1 − w). France à 26 % de poids : 86 % de l'ampleur ; fin
          de phase de ligue (50 %) : 71 %. Sans ce lien, l'humeur de la saison était
@@ -4050,8 +4080,8 @@ const legende = segs => segs.map(s =>
           const C = CAL[k];
           pts = Float64Array.from(C.real);
           for (const g of C.live) {
-            const ph = (1 - PNUL) * sig(BETA * (se[g.h] - se[g.a]) + HOME), u = rnd();
-            const rh = u < ph ? 2 : u < ph + PNUL ? 1 : 0, ra = 2 - rh;
+            const dl = se[g.h] - se[g.a], pn = pnul(dl), ph = (1 - pn) * sig(BETA * dl + HOME), u = rnd();
+            const rh = u < ph ? 2 : u < ph + pn ? 1 : 0, ra = 2 - rh;
             if (g.remH) { pts[g.h] += rh === 2 ? 3 : rh; addL(g.h, rh); }        // classement 3/1/0, coefficient 2/1/0
             if (g.remA) { pts[g.a] += ra === 2 ? 3 : ra; addL(g.a, ra); }
           }
@@ -4059,7 +4089,10 @@ const legende = segs => segs.map(s =>
           pts = cl.map((_, i) => { let p = 0; for (let j = 0; j < nj; j++) { const r = match(i); p += r === 2 ? 3 : r; } return p; });
           for (let i = 0; i < cl.length; i++) { let p = 0; for (let j = 0; j < RK[i]; j++) p += match(i); addL(i, p); }
         }
-        const ord = [...cl.keys()].sort((a, b) => (pts[b] - pts[a]) || (f[b] - f[a]) || (rnd() - 0.5));
+        /* égalité de points : tirage au sort (décision de GT, 23/10/2026 ; la
+           différence de buts est inconnue, la force n'a pas à trancher) */
+        const alea = cl.map(() => rnd());
+        const ord = [...cl.keys()].sort((a, b) => (pts[b] - pts[a]) || (alea[a] - alea[b]));
         if (CAL) { const nC = cl.length; ord.forEach((i, r) => { RANG[k][i * nC + r]++; PTSM[k][i] += pts[i]; }); }
         ord.forEach((i, r) => { const v = rankBonus(k, r + 1); addL(i, v); ctrl.rb[k] += v; });
         /* Un duel de phase finale : les manches sont jouées, chacune distribue ses
@@ -4069,10 +4102,10 @@ const legende = segs => segs.map(s =>
            Force utilisée : la force effective `se` (forme de la saison comprise,
            depuis le 23/10/2026 ; avant, le seul niveau de la nation). */
         const duel = (a, b, manches) => {
-          const pa = (1 - PNUL) * sig(GAMMA * (se[a] - se[b]));
+          const pn = pnul(se[a] - se[b]), pa = (1 - pn) * sig(GAMMA * (se[a] - se[b]));
           let sa = 0, sb = 0;
           for (let g = 0; g < manches; g++) { const u = rnd();
-            if (u < pa) sa += 2; else if (u < pa + PNUL) { sa++; sb++; } else sb += 2; }
+            if (u < pa) sa += 2; else if (u < pa + pn) { sa++; sb++; } else sb += 2; }
           add(a, sa); add(b, sb); ctrl.koM[k] += sa + sb;
           return sa > sb ? a : sb > sa ? b : (rnd() < sig(GAMMA * (se[a] - se[b])) ? a : b);
         };
@@ -4136,12 +4169,12 @@ const legende = segs => segs.map(s =>
       const { PW: P0 } = rendement();
       for (let k = 0; k < 3; k++) {
         const C = CAL[k], se = C.clubs.map((_, i) => { const q = Math.min(0.99, Math.max(0.01, P0[k][i] / (1 - PNUL))); return Math.log(q / (1 - q)) / BETA; });
-        for (const g of C.live) { const ph = (1 - PNUL) * sig(BETA * (se[g.h] - se[g.a]) + HOME);
-          pronos.push({ k, dom: C.clubs[g.h].n, ext: C.clubs[g.a].n, t: g.t, p: [+ph.toFixed(3), PNUL, +(1 - PNUL - ph).toFixed(3)] }); }
+        for (const g of C.live) { const dl = se[g.h] - se[g.a], pn = pnul(dl), ph = (1 - pn) * sig(BETA * dl + HOME);
+          pronos.push({ k, dom: C.clubs[g.h].n, ext: C.clubs[g.a].n, t: g.t, p: [+ph.toFixed(3), +pn.toFixed(3), +(1 - pn - ph).toFixed(3)] }); }
       }
     }
     const rangs = CAL ? CAL.map((C, k) => C.clubs.map((x, i) => ({ k, n: x.n, c: x.c, pts: PTSM[k][i] / NSIM, p: Array.from(RANG[k].subarray(i * 36, i * 36 + 36), v => v / NSIM) }))).flat() : [];
-    SIMS = { tir, ligue, codes, ecarts, calendrier, pronos, rangs, moteur: CAL ? 'calendrier' : 'moyen', wFRA: mFRA / (mFRA + KPSEUDO), mFRA };
+    SIMS = { tir, ligue, codes, ecarts, calendrier, pronos, rangs, moteur: CAL ? 'calendrier' : 'moyen', wFRA: mFRA ? POIDS_COUR / 100 * AV : 0, mFRA, avancement: AV };
     return SIMS;
   }
   const quant = (a, p) => { const v = Float64Array.from(a).sort(); return v[Math.min(v.length - 1, Math.floor(p * v.length))]; };
