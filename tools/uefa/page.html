@@ -5010,7 +5010,7 @@ const legende = segs => segs.map(s =>
    France et ses voisins de classement ; pointillé bleu = le niveau de la France.
    Couleurs d'identité des huit premières (comme le bloc 3), neutre sinon. */
 (function(){
-  const Y = +String(D.meta.season).slice(0, 4) + 1, f2 = v => nf(v, 2);
+  const Y = +String(D.meta.season).slice(0, 4) + 1, f2 = nfx;   // charte des décimales (nfx), comme partout
   const col = c => `var(${SLOT[c] || '--ink-3'})`;
   const part = c => BY[c].y[0], pris = c => BY[c].y[4];
   const proj = c => { try { return projS(c)[1]; } catch (e) { return pris(c); } };
