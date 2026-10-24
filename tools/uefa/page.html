@@ -629,18 +629,53 @@ section > .famille + .panel{margin-top:22px}
 .chips .brk{flex-basis:100%; height:0; margin:0}
 
 /* ---------- tables ---------- *//* ---------- tables ---------- */
-.dkey{font-size:14px; line-height:1.55; background:var(--surface-2); border-left:3px solid var(--fr); padding:9px 13px; margin:0 0 12px}
-.drow{display:grid; grid-template-columns:120px 1fr 120px 170px; gap:12px; align-items:center; padding:6px 0; border-bottom:1px solid var(--rule); font-size:13.5px}
+.dsp{margin-top:16px}
+.seg button:disabled{opacity:.38; cursor:default}
+.dkey{font-size:14px; line-height:1.55; background:var(--surface-2); border-left:3px solid var(--fr); padding:9px 13px; margin:0 0 14px}
+.dhero{display:grid; grid-template-columns:1.25fr 1fr 1fr; gap:14px; margin:2px 0 18px; align-items:stretch}
+.dhero .dk{font-size:15px; line-height:1.55; align-self:center; padding-right:6px}
+.dcard{--c:var(--ink-3); border:1px solid var(--rule); border-top:4px solid var(--c); border-radius:4px; padding:12px 14px 11px;
+  background:linear-gradient(180deg, color-mix(in srgb,var(--c) 11%,var(--surface)) 0%, var(--surface) 70%)}
+.dcard .dn{display:flex; justify-content:space-between; align-items:baseline; font-weight:700; font-size:14px}
+.dcard .dn span{font-weight:400; font-size:12px; color:var(--ink-3)}
+.dcard .big{font-family:"IBM Plex Mono",monospace; font-size:32px; font-weight:600; line-height:1.05; margin:8px 0 0; letter-spacing:-.02em}
+.dcard .big.ok{color:var(--good)}
+.dcard .bl{font-size:12px; color:var(--ink-3); margin-bottom:9px}
+.dcard .trk{height:9px; margin-bottom:9px}
+.dcard .vd{font-size:12.5px; color:var(--ink-2)}
+.trk{position:relative; height:16px}
+.trk .due,.trk .prj,.trk .got{position:absolute; left:0; top:0; bottom:0; border-radius:3px}
+.trk{background:color-mix(in srgb,var(--ink-3) 6%,transparent); border-radius:3px}
+.trk .due{z-index:2; border:1.5px dashed color-mix(in srgb,var(--ink) 55%,transparent); border-right:3px solid var(--ink); background:transparent}
+.trk .prj{background:color-mix(in srgb,var(--c) 38%,var(--surface))}
+.trk .got{background:var(--c)}
+.drow{--c:var(--ink-3); display:grid; grid-template-columns:118px 1fr 112px 150px; gap:12px; align-items:center; padding:7px 0; border-bottom:1px solid var(--rule); font-size:13.5px}
 .drow:last-child{border-bottom:0}
-.drow .trk{position:relative; height:14px}
-.drow .due,.drow .got{position:absolute; left:0; top:0; bottom:0; border-radius:2px}
-.drow .due{border:1px dashed color-mix(in srgb,var(--ink-3) 60%,transparent); background:color-mix(in srgb,var(--ink-3) 9%,var(--surface))}
-.drow .got{background:color-mix(in srgb,var(--ink-3) 48%,var(--surface))}
-.drow.me{font-weight:700} .drow.me .got{background:var(--fr)} .drow.me .due{background:var(--fr-soft); border-color:color-mix(in srgb,var(--fr) 55%,transparent)}
+.drow .nmd{display:flex; align-items:center; gap:7px} .drow .nmd i{width:8px; height:8px; border-radius:50%; background:var(--c); flex:none}
+.drow.me{font-weight:700; background:linear-gradient(90deg, var(--fr-soft), transparent 60%)}
 .drow .dv{text-align:right; color:var(--ink-2); font-size:12.5px}
-.drow .dr{font-size:12.5px; color:var(--ink-2)} .drow .dr b{color:var(--ink)} .drow .dr b.ok{color:var(--good)}
+.chip{display:inline-block; padding:2px 8px; border-radius:10px; font-family:"IBM Plex Mono",monospace; font-size:12px; font-weight:600; white-space:nowrap}
+.chip.g{background:color-mix(in srgb,var(--good) 14%,var(--surface)); color:var(--good)}
+.chip.b{background:color-mix(in srgb,var(--bad) 13%,var(--surface)); color:var(--bad)}
+.drow .vt{font-size:12px; color:var(--ink-3)}
 .dleg{display:inline-flex; align-items:center; gap:6px; margin-right:16px} .dleg i{width:22px; height:10px; border-radius:2px; display:inline-block}
-@media (max-width:700px){ .drow{grid-template-columns:84px 1fr 96px; row-gap:2px; font-size:13px} .drow .dr{grid-column:2/4; font-size:12px} }
+.ete{display:grid; grid-template-columns:repeat(4,1fr); gap:20px}
+.ete .ec{min-width:0} .ete .ec.tot{border-left:1px solid var(--rule); padding-left:18px}
+.ete .eh{display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid var(--rule); padding-bottom:6px; margin-bottom:8px}
+.ete .eh b{font-size:14px} .ete .eh span{font-size:11.5px; color:var(--ink-3)}
+.erow{--c:var(--ink-3); display:grid; grid-template-columns:76px 1fr 54px; gap:6px; align-items:center; font-size:12.5px; padding:4px 0 2px}
+.erow .eb{position:relative; height:13px; background:var(--surface-2); border-radius:2px}
+.erow .eb div{position:absolute; left:0; top:0; bottom:0; background:color-mix(in srgb,var(--c) 70%,var(--surface)); border-radius:2px}
+.erow .eb s{position:absolute; top:-3px; bottom:-3px; border-left:2px dotted var(--fr); text-decoration:none}
+.erow.me{font-weight:700} .erow.me .eb div{background:var(--fr)}
+.erow .ev{text-align:right; font-family:"IBM Plex Mono",monospace; font-size:12px}
+.erow .ed{grid-column:2/4; font-size:11.5px; margin:-1px 0 3px}
+.erow .ed.g{color:var(--good)} .erow .ed.b{color:var(--bad)}
+@media (max-width:900px){ .ete{grid-template-columns:1fr 1fr} .ete .ec.tot{border-left:0; padding-left:0} }
+@media (max-width:700px){ .dhero{grid-template-columns:1fr 1fr} .dhero .dk{grid-column:1/-1; font-size:14px}
+  .dcard .big{font-size:26px}
+  .drow{grid-template-columns:90px 1fr 74px; row-gap:3px; font-size:13px} .drow .dv{grid-column:2/3; text-align:left; font-size:11.5px} .drow .dr{grid-column:3/4; grid-row:1/3; text-align:right} .drow .vt{display:none}
+  .ete{grid-template-columns:1fr} }
 .tscroll{overflow-x:auto; border:1px solid var(--rule); border-radius:3px; background:var(--surface)}
 table{border-collapse:collapse; width:100%; font-size:13.5px}
 th,td{padding:7px 10px; text-align:right; white-space:nowrap; border-bottom:1px solid var(--rule-soft)}
@@ -717,7 +752,7 @@ footer .legal{margin-top:3px; font-size:11px}
     <div class="ptitle"><span class="no">3</span><h3>Le classement</h3>
       <span class="sub"><span class="ctl"><span class="lb">Période</span><span class="seg" role="group" aria-label="Période"><button type="button" id="p-season" aria-pressed="true">Saison en cours</button></span><span class="sel"><select id="p-win" aria-label="Fenêtre de saisons">
         <option value="" disabled hidden>X dernières saisons</option><option value="5">5 dernières saisons</option><option value="4">Après l'été 2027</option><option value="3">Après l'été 2028</option><option value="2">Après l'été 2029</option></select></span></span><span class="ctl"><span class="lb">Saison en cours</span><span class="seg" role="group" aria-label="Saison en cours : projection ou réel">
-        <button type="button" id="v-proj" aria-pressed="true" title="La saison en cours comptée à sa valeur de fin de saison projetée (médiane du bloc 8)">Projection</button><button type="button" id="v-reel" aria-pressed="false" title="La saison en cours comptée pour les seuls points déjà marqués">Réel acquis</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
+        <button type="button" id="v-proj" aria-pressed="true" title="La saison en cours comptée à sa valeur de fin de saison projetée (médiane du bloc 8)">Projection</button><button type="button" id="v-reel" aria-pressed="false" title="La saison en cours comptée pour les seuls points déjà marqués">Réel acquis</button><button type="button" id="v-sans" aria-pressed="false" title="Sans la saison en cours : le socle seul, les saisons closes de la fenêtre">Socle seul</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
         <button type="button" id="b-top" aria-pressed="true">Les 8 premières</button><button type="button" id="b-all" aria-pressed="false">Toutes</button></span></span></span></div>
     <div class="barswrap"><div class="bscroll" id="bscroll"><div class="bars" id="bars"></div></div><div class="tip" id="tipY" hidden></div></div>
     <p class="figc" id="barNote"></p>
@@ -878,12 +913,19 @@ footer .legal{margin-top:3px; font-size:11px}
 <section>
   <div class="shead">
     <h2><span class="no">10</span>Les points à défendre</h2>
-    <p>Chaque été, la saison la plus ancienne sort du calcul. Ses points sont à « défendre » : la saison en cours doit au moins les remplacer.</p>
+    <p>Chaque été, la plus ancienne des cinq saisons sort du calcul. Ses points sont à « défendre » : la saison en cours doit au moins les remplacer.</p>
   </div>
   <div class="panel">
-    <p class="dkey" id="defKey"></p>
+    <div class="ptitle"><span class="no">10a</span><h3 id="defT">Cet été</h3><span class="sub">ce qui sort, ce qui est déjà repris, ce que promet la projection</span></div>
+    <div class="dhero" id="defHero"></div>
     <div id="defRows"></div>
     <p class="figc" id="defLeg"></p>
+  </div>
+  <div class="panel dsp">
+    <div class="ptitle"><span class="no">10b</span><h3>Le duel des étés</h3><span class="sub">ce que chacun perdra aux trois prochains étés, avant de jouer</span></div>
+    <p class="dkey" id="eteKey"></p>
+    <div class="ete" id="eteCols"></div>
+    <p class="figc" id="eteLeg"></p>
   </div>
 </section>
 
@@ -1874,23 +1916,29 @@ function drawBars(){
   const F = isS ? FEN[5] : FEN[period];
   const dep = 5 - F.n;                                   // 1re saison affichée
   const P = projOn();
+  /* « Socle seul » (24/10/2026, demande de GT) : la fenêtre sans la saison en
+     cours — ce qui est déjà en banque. Rangs recalculés sur les 55 ; les flèches
+     comparent au réel acquis (saison en cours comprise). */
+  const S = lectB === 'sans' && !isS;
   const clos = c => isS ? 0 : F.tot(BY[c]) - BY[c].y[4];          // saisons closes de la fenêtre
   const reel = c => isS ? seasonNow(c) : F.tot(BY[c]);
-  const val = c => P ? clos(c) + projS(c)[1] : reel(c);
+  const val = c => P ? clos(c) + projS(c)[1] : S ? clos(c) : reel(c);
   const haut = c => val(c);
   const rows=[...jeuB()].sort((x,y)=>val(y)-val(x));
   const max=Math.max(...rows.map(haut));
   /* rangs : en projection, recalculés sur les 55 (fenêtres) ; en réel, ceux de la source */
-  const rangP = (() => { if (!P || isS) return null; const L = [...N].sort((a, b) => val(b.c) - val(a.c)); const R = {}; L.forEach((n, i) => R[n.c] = i + 1); return R; })();
+  const rangP = (() => { if (!(P || S) || isS) return null; const L = [...N].sort((a, b) => val(b.c) - val(a.c)); const R = {}; L.forEach((n, i) => R[n.c] = i + 1); return R; })();
   const ordreReel = [...jeuB()].sort((x,y)=>reel(y)-reel(x));
-  const rangOf = (c, i) => isS ? i + 1 : P ? rangP[c] : F.rang(BY[c]);
+  const rangOf = (c, i) => isS ? i + 1 : (P || S) ? rangP[c] : F.rang(BY[c]);
   const rangReel = c => isS ? ordreReel.indexOf(c) + 1 : F.rang(BY[c]);
   document.getElementById('bscroll').classList.toggle('large', porteeB !== 'top');
   document.getElementById('bars').innerHTML = rows.map((c,i)=>{
     const n=BY[c];
     return `<div class="barrow${c==='FRA'?' me':''}">
       <div class="nm"><span class="rk">${rangOf(c, i)}.</span><b>${name(c)}</b>${
-        P ? (() => { const d = rangReel(c) - rangOf(c, i);
+        S ? (() => { const d = F.rang(n) - rangP[c];
+          return d === 0 ? '' : `<span class="dlt ${d > 0 ? 'up' : 'down'}" title="${d > 0 ? '+' : ''}${d} place${Math.abs(d) > 1 ? 's' : ''} par rapport au réel acquis, saison en cours comprise">${d > 0 ? '▲' : '▼'}${Math.abs(d)}</span>`;
+        })() : P ? (() => { const d = rangReel(c) - rangOf(c, i);
           /* en projection : les places gagnées ou perdues par rapport au réel acquis */
           return d === 0 ? '' : `<span class="dlt ${d > 0 ? 'up' : 'down'}" title="${d > 0 ? '+' : ''}${d} place${Math.abs(d) > 1 ? 's' : ''} par rapport au réel acquis">${d > 0 ? '▲' : '▼'}${Math.abs(d)}</span>`;
         })() : (!isS && F.n < 5) ? (() => { const d = n.r - F.rang(n);
@@ -1913,6 +1961,7 @@ function drawBars(){
           })()
         : n.y.map((v, yi) => { const wip = yi === 4;
             if (yi < dep) return '';                     // saison hors fenêtre
+            if (S && wip) return '';                     // socle seul : la saison en cours n'est pas comptée
             const base = toRGB(cssHex(teinteB(c)));
             const fond = wip ? base : melange(base, toRGB(cssHex('--surface-2')), .38);
             const pc = v / max * 100;
@@ -1935,6 +1984,7 @@ function drawBars(){
       <div class="split num" title="${name(c)} · ${nf(val(c))} au millième">${P
         ? (isS ? `${nfx(seasonNow(c))} acquis · <b style="font-weight:600;color:var(--ink-2)">+${nfx(projS(c)[1] - seasonNow(c))}</b> à venir`
                : `${nfx(F.tot(n))} acquis · <b style="font-weight:600;color:var(--ink-2)">+${nfx(projS(c)[1] - seasonNow(c))}</b> à venir`)
+        : S ? `${nfx(val(c))} en banque · ${nfx(n.y[4])} en cours, non compté`
         : isS
         ? `${enVie(n)} en lice sur ${engages(n)} engagés`
         /* Un point, pas un plus. La précision variable interdit de promettre une
@@ -1975,6 +2025,15 @@ function drawBars(){
     + `<span style="color:var(--ink-3)">— survolez une barre pour le détail saison par saison</span><br>`;
   const pips = `Pastilles : un club engagé chacune, pleine tant qu'il est en lice, en creux une fois éliminé. `;
   let txt;
+  if (S) {
+    const fr = BY.FRA, rs = rangP.FRA, rr = F.rang(fr), sorties = SEASONS.slice(0, 5 - F.n);
+    const ete = +String(D.meta.season).slice(0, 4) + 1 + (4 - F.n);
+    txt = (F.n === 5 ? `Le socle : les quatre saisons closes, sans la saison en cours. `
+                     : `Le socle de l'été ${ete} : ce qui restera en banque une fois ${sorties.join(', ')} sortie${sorties.length > 1 ? 's' : ''}, sans la saison en cours. `)
+      + `La France y est <b>${rs}<sup>e</sup></b>${rs !== rr ? ` (${rr}<sup>e</sup> en comptant la saison en cours)` : `, comme en comptant la saison en cours`}. Les flèches disent ce que la saison en cours fait gagner ou perdre.`;
+    document.getElementById('barNote').innerHTML = `<span class="bleg"><i style="background:color-mix(in srgb,var(--ink-3) 38%,var(--surface-2))"></i>${F.n - 1} saison${F.n > 2 ? 's' : ''} close${F.n > 2 ? 's' : ''} : le socle</span><br>` + pips + txt;
+    return;
+  }
   if (isS) txt = `Coefficient de la saison en cours : la France est ${posS}<sup>e</sup> sur ${nR}. À ce stade, ce rang avantage les nations passées par les qualifications.`;
   else if (F.n === 5) txt = `Somme des cinq dernières saisons : c'est ce total qui fixe les places européennes. Le segment vif est la saison en cours.`;
   else {
@@ -2089,6 +2148,8 @@ winSel.onchange = () => { period = +winSel.value; syncP(); };
 function syncP(){
   const isS = period === 'season';
   document.getElementById('p-season').setAttribute('aria-pressed', isS);
+  const bS = document.getElementById('v-sans'); bS.disabled = isS;
+  if (isS && lectB === 'sans') { lectB = 'reel'; document.getElementById('v-reel').setAttribute('aria-pressed', true); bS.setAttribute('aria-pressed', false); }
   winSel.dataset.on = String(!isS);
   /* La liste doit refléter l'état, sinon elle ment ET elle se bloque : en mode
      « saison en cours » elle continuait d'afficher « 5 dernières saisons », et
@@ -2112,9 +2173,11 @@ function syncP(){
 winSel.dataset.on = 'true';
 document.getElementById('b-top').onclick=()=>{porteeB='top';syncB();};
 const syncV = () => { document.getElementById('v-proj').setAttribute('aria-pressed', lectB === 'proj');
-  document.getElementById('v-reel').setAttribute('aria-pressed', lectB === 'reel'); drawBars(); };
+  document.getElementById('v-reel').setAttribute('aria-pressed', lectB === 'reel');
+  document.getElementById('v-sans').setAttribute('aria-pressed', lectB === 'sans'); drawBars(); };
 document.getElementById('v-proj').onclick = () => { lectB = 'proj'; syncV(); };
 document.getElementById('v-reel').onclick = () => { lectB = 'reel'; syncV(); };
+document.getElementById('v-sans').onclick = () => { lectB = 'sans'; syncV(); };
 document.getElementById('b-all').onclick=()=>{porteeB='all';syncB();};
 function syncB(){ document.getElementById('b-top').setAttribute('aria-pressed',porteeB==='top');
   document.getElementById('b-all').setAttribute('aria-pressed',porteeB==='all'); drawBars(); }
@@ -4936,35 +4999,68 @@ const legende = segs => segs.map(s =>
 
 </script>
 <script>/* Script découpé par bloc : entre deux scripts, le navigateur peut afficher et répondre au doigt — plus de longue tâche unique au chargement. */
-/* ---------- 10 · les points à défendre (24/10/2026, remplace « Ce que la France emporte ») ----------
-   Chaque été, la plus ancienne des cinq saisons sort du calcul. Ce qu'elle
-   pesait est « à défendre » par la saison en cours (comme les points ATP).
-   Ligne par nation : cadre pointillé = ce qui sort ; barre pleine = déjà pris
-   cette saison. Les 10 premières du classement à cinq ans. Rien n'est simulé. */
+/* ---------- 10 · les points à défendre (24/10/2026, refait le même jour) ----------
+   Chaque été, la plus ancienne des cinq saisons sort du calcul : ses points sont
+   « à défendre » par la saison en cours (comme les points ATP).
+   10a : cet été. Cadre pointillé = ce qui sort (le trait plein au bout, la barre
+   à franchir) ; plein = déjà pris ; teinte = ce qu'ajoute la projection médiane
+   (bloc 9). Pastille = solde projeté en juillet : vert, la saison qui sort est
+   remplacée ; rouge, la nation recule.
+   10b : les trois prochains étés, sans aucun match futur : ce que perdront la
+   France et ses voisins de classement ; pointillé bleu = le niveau de la France.
+   Couleurs d'identité des huit premières (comme le bloc 3), neutre sinon. */
 (function(){
-  const rows = N.slice(0, 10), Y = +String(D.meta.season).slice(0, 4) + 1, S0 = SEASONS[0];
-  const f2 = v => nf(v, 2), part = c => BY[c].y[0], pris = c => BY[c].y[4];
-  const max = Math.max(...rows.map(n => Math.max(part(n.c), pris(n.c))));
-  const pc = v => (v / max * 100).toFixed(2) + '%';
-  document.getElementById('defRows').innerHTML = rows.map(n => { const c = n.c, d = part(c), g = pris(c), r = d - g;
-    return `<div class="drow${c === 'FRA' ? ' me' : ''}"><div>${name(c)}</div>`
-      + `<div class="trk"><div class="due" style="width:${pc(d)}"></div><div class="got" style="width:${pc(g)}"></div></div>`
+  const Y = +String(D.meta.season).slice(0, 4) + 1, f2 = v => nf(v, 2);
+  const col = c => `var(${SLOT[c] || '--ink-3'})`;
+  const part = c => BY[c].y[0], pris = c => BY[c].y[4];
+  const proj = c => { try { return projS(c)[1]; } catch (e) { return pris(c); } };
+  const solde = c => proj(c) - part(c);
+  const chip = v => `<span class="chip ${v >= 0 ? 'g' : 'b'}">${v >= 0 ? '+' : '−'}${f2(Math.abs(v))}</span>`;
+  const iF = N.indexOf(BY.FRA), V = (N[iF + 1] || N[iF - 1]).c;
+  document.getElementById('defT').textContent = `Juillet ${Y} : ${SEASONS[0]} sort du calcul`;
+  /* --- en-tête : la phrase, puis la France et son poursuivant face à face --- */
+  const carte = c => { const d = part(c), g = pris(c), r = d - g, pj = proj(c), m = Math.max(d, pj);
+    const w = v => (v / m * 100).toFixed(1) + '%';
+    return `<div class="dcard" style="--c:${col(c)}"><div class="dn">${name(c)}<span>${N.indexOf(BY[c]) + 1}<sup>e</sup></span></div>`
+      + (r > 0 ? `<div class="big">${f2(r)}</div><div class="bl">à prendre pour remplacer ${f2(d)}</div>`
+               : `<div class="big ok">+${f2(-r)}</div><div class="bl">déjà au-delà des ${f2(d)} qui sortent</div>`)
+      + `<div class="trk"><div class="due" style="width:${w(d)}"></div><div class="prj" style="width:${w(pj)}"></div><div class="got" style="width:${w(g)}"></div></div>`
+      + `<div class="vd">Projection en juillet : ${chip(solde(c))}</div></div>`; };
+  const e = part('FRA') - part(V);
+  const cmp = Math.abs(e) < 1 ? 'presque autant. La course se joue sur cette saison'
+    : e > 0 ? `${f2(e)} de moins que la France, qui doit compenser cette saison` : `${f2(-e)} de plus que la France : avantage France`;
+  document.getElementById('defHero').innerHTML = `<div class="dk">En juillet ${Y}, <b>la France perdra ${f2(part('FRA'))}, ${leNom(V)} ${f2(part(V))}</b> : ${cmp}.</div>`
+    + carte('FRA') + carte(V);
+  /* --- les dix premières --- */
+  const rows = N.slice(0, 10), mx = Math.max(...rows.map(n => Math.max(part(n.c), proj(n.c))));
+  const pc = v => (v / mx * 100).toFixed(2) + '%';
+  document.getElementById('defRows').innerHTML = rows.map(n => { const c = n.c, d = part(c), g = pris(c), pj = proj(c);
+    return `<div class="drow${c === 'FRA' ? ' me' : ''}" style="--c:${col(c)}"><div class="nmd"><i></i>${name(c)}</div>`
+      + `<div class="trk"><div class="due" style="width:${pc(d)}"></div><div class="prj" style="width:${pc(pj)}"></div><div class="got" style="width:${pc(g)}"></div></div>`
       + `<div class="dv num">${f2(g)} / ${f2(d)}</div>`
-      + `<div class="dr">${r > 0 ? `<b>${f2(r)}</b> à prendre` : `<b class="ok">+${f2(-r)}</b> déjà gagné`}</div></div>`; }).join('');
-  /* la phrase clé : la France face à la nation juste derrière elle */
-  const fr = BY.FRA, iF = N.indexOf(fr), v = N[iF + 1] || N[iF - 1];
-  const dF = part('FRA'), dV = part(v.c), e = dF - dV, rF = dF - pris('FRA');
-  const cmp = Math.abs(e) < 1 ? `presque autant. La course se joue donc sur cette saison`
-    : e > 0 ? `${f2(e)} de moins que la France : à elle de le compenser cette saison`
-    : `${f2(-e)} de plus que la France : un avantage pour elle`;
-  document.getElementById('defKey').innerHTML = `En juillet ${Y}, la saison ${S0} sort du calcul. `
-    + `<b>La France y perdra ${f2(dF)}, ${leNom(v.c)} (${N.indexOf(v) + 1}<sup>e</sup>) ${f2(dV)} : ${cmp}.</b> `
-    + (rF > 0 ? `La France a déjà repris ${f2(pris('FRA'))} ; il lui reste ${f2(rF)} à prendre pour ne pas reculer.`
-              : `La France a déjà repris ${f2(pris('FRA'))} : sa saison ${S0} est déjà remplacée (+${f2(-rF)}).`);
+      + `<div class="dr">${chip(solde(c))} <span class="vt">en juillet</span></div></div>`; }).join('');
+  const nOk = rows.filter(n => solde(n.c) >= 0).length;
   document.getElementById('defLeg').innerHTML =
-    `<span class="dleg"><i style="border:1px dashed color-mix(in srgb,var(--ink-3) 60%,transparent);background:color-mix(in srgb,var(--ink-3) 9%,var(--surface))"></i>points qui sortent en juillet ${Y} (${S0})</span>`
-    + `<span class="dleg"><i style="background:color-mix(in srgb,var(--ink-3) 48%,var(--surface))"></i>déjà pris cette saison (${D.meta.season})</span><br>`
-    + `Le classement une fois ${S0} sortie : bloc 3, Période « Après l'été ${Y} ».`;
+    `<span class="dleg"><i style="border:1px dashed var(--ink-2);border-right:2px solid var(--ink-2)"></i>sort en juillet (${SEASONS[0]}) : la barre à franchir</span>`
+    + `<span class="dleg"><i style="background:var(--ink-3)"></i>déjà pris (${D.meta.season})</span>`
+    + `<span class="dleg"><i style="background:color-mix(in srgb,var(--ink-3) 38%,var(--surface))"></i>à venir, projection médiane</span><br>`
+    + `Pastille : solde projeté en juillet (saison en cours projetée − saison qui sort). ${nOk} des 10 premières remplaceraient leur saison ${SEASONS[0]}. `
+    + `Le classement une fois ${SEASONS[0]} sortie : bloc 3, Période « Après l'été ${Y} ».`;
+  /* --- 10b : le duel des étés --- */
+  const voisins = [N[iF - 1], BY.FRA, N[iF + 1], N[iF + 2], N[iF + 3]].filter(Boolean).map(n => n.c);
+  const etes = [0, 1, 2].map(i => ({ t: `Juillet ${Y + i}`, s: `sort ${SEASONS[i]}`, v: c => BY[c].y[i] }));
+  etes.push({ t: 'Les trois étés', s: 'cumul', v: c => BY[c].y[0] + BY[c].y[1] + BY[c].y[2], tot: true });
+  document.getElementById('eteCols').innerHTML = etes.map(E => { const m = Math.max(...voisins.map(E.v)), fr = E.v('FRA');
+    return `<div class="ec${E.tot ? ' tot' : ''}"><div class="eh"><b>${E.t}</b><span>${E.s}</span></div>` + voisins.map(c => { const v = E.v(c), dv = v - fr;
+      return `<div class="erow${c === 'FRA' ? ' me' : ''}" style="--c:${col(c)}"><div>${name(c)}</div>`
+        + `<div class="eb"><div style="width:${(v / m * 100).toFixed(1)}%"></div>${c === 'FRA' ? '' : `<s style="left:${(fr / m * 100).toFixed(1)}%"></s>`}</div>`
+        + `<div class="ev">−${f2(v)}</div>`
+        + (c === 'FRA' ? '' : `<div class="ed ${dv > 0 ? 'g' : 'b'}">${dv > 0 ? `perd ${f2(dv)} de plus` : `perd ${f2(-dv)} de moins`}</div>`) + `</div>`; }).join('') + `</div>`; }).join('');
+  const T = c => BY[c].y[0] + BY[c].y[1] + BY[c].y[2], h = T('FRA') - T(V);
+  document.getElementById('eteKey').innerHTML = `Sur les trois prochains étés, la France perdra <b>${f2(T('FRA'))}</b>, ${leNom(V)} <b>${f2(T(V))}</b>. `
+    + (h > 0 ? `Avant même de jouer, la France part avec <b>${f2(h)} points de handicap</b> sur ${leNom(V)}` : `Avant même de jouer, la France garde <b>${f2(-h)} points d'avance</b> sur ${leNom(V)}`)
+    + ` : ses saisons fortes sortiront plus tôt.`;
+  document.getElementById('eteLeg').innerHTML = `Rien n'est simulé : seulement les saisons déjà jouées qui sortiront du calcul. Pointillé bleu = ce que perd la France le même été. « Perd de plus » = bon pour la France.`;
 })();
 
 </script>
