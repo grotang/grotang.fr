@@ -935,7 +935,7 @@ footer .legal{margin-top:3px; font-size:11px}
   <div class="panel">
     <div class="ptitle" id="projection"><span class="no">9</span><h3>La projection</h3>
       <span class="sub"><span class="ctl"><span class="lb">Horizon</span><span class="seg" role="group" aria-label="Horizon">
-        <button type="button" id="h-ligue" aria-pressed="false">Fin de phase de ligue</button><button type="button" id="h-saison" aria-pressed="true">Fin de saison</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
+        <button type="button" id="h-ligue" aria-pressed="false">Fin de phase de ligue</button><button type="button" id="h-saison" aria-pressed="true">Fin de saison</button><button type="button" id="h-5ans" aria-pressed="false">À 5 ans</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
         <button type="button" id="j-top" aria-pressed="false">Les 8 premières</button><button type="button" id="j-all" aria-pressed="true">Toutes</button></span></span></span></div>
     <figure>
       <div class="chartbox" id="boxPrj"><svg id="chartPrj" role="img" aria-label="Projection du coefficient de saison"></svg><div class="tip" id="tipPrj" hidden></div></div>
@@ -4496,9 +4496,9 @@ const legende = segs => segs.map(s =>
         + li('médiane', '· 1 fois sur 2', r.cen, true)
         + li('20<sup style="line-height:0">e</sup> centile', '· 1 fois sur 5 en dessous', r.p20)
         + li('5<sup style="line-height:0">e</sup> centile', '· 1 fois sur 20 en dessous', r.p05);
-      const quoi = horizon === 'ligue' ? `coefficient ${SEASONS[4]} à la fin de la phase de ligue` : `coefficient ${SEASONS[4]} en fin de saison`;
+      const quoi = horizon === 'ligue' ? `coefficient ${SEASONS[4]} à la fin de la phase de ligue` : horizon === '5ans' ? `classement à cinq ans, ${SEASONS[4]} projetée à sa fin` : `coefficient ${SEASONS[4]} en fin de saison`;
       const y = BY[r.c].y, tot = y[0] + y[1] + y[2] + y[3] + r.cen;
-      const pied = `déjà ${nfx(r.acq)} acquis · ` + (horizon === 'ligue'
+      const pied = horizon === '5ans' ? `aujourd'hui : ${nfx(BY[r.c].t)}, ${BY[r.c].r}<sup>e</sup>` : `déjà ${nfx(r.acq)} acquis · ` + (horizon === 'ligue'
         ? `${r.r} match${r.r > 1 ? 's' : ''} restant${r.r > 1 ? 's' : ''}`
         : `total à 5 ans projeté : ${nfx(tot)}`);
       return `<div class="th">${name(r.c)}</div><div class="tsub">${quoi}</div>` + boite + repere + `<div class="tfoot">${pied}</div>`;
@@ -4522,8 +4522,17 @@ const legende = segs => segs.map(s =>
       tipP.style.top = (boxP.scrollTop + Math.max(4, Math.min(br.height - th - 4, py - th / 2))) + 'px';
     });
 
+    /* Horizon « À 5 ans » (25/10/2026) : le classement à cinq ans, quatre
+       saisons closes (fixes) + la saison en cours simulée. Les repères sont ceux
+       de « Fin de saison » décalés du socle de chaque nation : seule la saison
+       en cours est aléatoire. Rangs : PRJ.rgFR / PRJ.devFR (dans le tirage). */
+    const socle = c => { const y = BY[c].y; return y[0] + y[1] + y[2] + y[3]; };
+    const a5 = rows => rows.map(r => { const b = socle(r.c);
+      return { ...r, acq: BY[r.c].t, p05: r.p05 + b, p20: r.p20 + b, cen: r.cen + b, p80: r.p80 + b, p95: r.p95 + b, haut: r.haut + b }; })
+      .sort((a, b) => b.cen - a.cen);
     function dessine(){
-    const rows = lignes(horizon === 'ligue' ? 'ligue' : 'tir');
+    const rows = horizon === '5ans' ? a5(lignes('tir')) : lignes(horizon === 'ligue' ? 'ligue' : 'tir');
+    const vf = v => horizon === '5ans' ? nfx(v) : nf(v, 1);
     if (!rows.length) return;
     /* Deux libellés au-dessus du graphe, sur deux lignes distinctes : le titre
        d'axe et « portée de la France » se chevauchaient dès que la bande bleue
@@ -4535,21 +4544,21 @@ const legende = segs => segs.map(s =>
        distribution, et le graphe cesse de traîner une moitié gauche vide. */
     const loV = Math.min(...rows.map(r => r.p05)) * 0.94;
     const hiV = Math.max(...rows.map(r => r.p95)) * 1.03;
-    const sc = niceScale(loV, hiV, 9)   /* 9 intervalles : à 6, le pas tombait sur 5 et l'axe courait jusqu'à 25 pour un maximum de 21 */;
+    const sc = niceScale(loV, hiV, M && horizon === '5ans' ? 5 : 9)   /* 9 intervalles : à 6, le pas tombait sur 5 et l'axe courait jusqu'à 25 pour un maximum de 21 */;
     const X = v => mL + (W - mL - mR) * ((v - sc.lo) / (sc.hi - sc.lo));
     let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
     /* La colonne de droite reçoit un en-tête et un fond, sinon on ne devine pas
        qu'elle donne le total à 5 ans (ou les matchs restants). */
     { const bw = M ? 58 : 76, fz = M ? 14 : 11;
       s += `<rect x="${W - bw}" y="${mT - 44}" width="${bw}" height="${H - mB - mT + 48}" rx="4" fill="var(--surface-2)"/>`
-      + `<text x="${W - 6}" y="${mT - (M ? 29 : 27)}" text-anchor="end" font-size="${fz}" font-weight="700" fill="var(--ink-2)">${horizon === 'ligue' ? 'matchs' : 'total'}</text>`
-      + `<text x="${W - 6}" y="${mT - (M ? 12 : 13)}" text-anchor="end" font-size="${fz}" font-weight="700" fill="var(--ink-2)">${horizon === 'ligue' ? 'restants' : 'à 5 ans'}</text>`; }
+      + `<text x="${W - 6}" y="${mT - (M ? 29 : 27)}" text-anchor="end" font-size="${fz}" font-weight="700" fill="var(--ink-2)">${horizon === 'ligue' ? 'matchs' : horizon === '5ans' ? 'rang' : 'total'}</text>`
+      + `<text x="${W - 6}" y="${mT - (M ? 12 : 13)}" text-anchor="end" font-size="${fz}" font-weight="700" fill="var(--ink-2)">${horizon === 'ligue' ? 'restants' : horizon === '5ans' ? 'actuel' : 'à 5 ans'}</text>`; }
     /* bande de survol : une ligne s'éclaire sous le doigt ou la souris */
     s += `<rect id="hlPrj" x="2" y="0" width="${W - 4}" height="${rowH}" rx="4" fill="var(--ink)" opacity="0"/>`;
     sc.ticks.forEach(v => s += `<line x1="${X(v).toFixed(1)}" y1="${mT - 8}" x2="${X(v).toFixed(1)}" y2="${H - mB + 4}" stroke="var(--rule-soft)"/>`
       + `<text x="${X(v).toFixed(1)}" y="${H - mB + 20}" text-anchor="middle" font-size="${M ? 14 : 11}" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${nf(v, sc.dec)}</text>`);
-    s += `<text x="${mL}" y="${mT - 32}" font-size="${M ? 13 : 11}" font-weight="600" fill="var(--ink-3)">coefficient ${horizon === 'ligue' ? 'de saison ' : 'saison '}${horizon === 'ligue'
-      ? 'à la fin de la phase de ligue' : 'pleine'}</text>`;
+    s += `<text x="${mL}" y="${mT - 32}" font-size="${M ? 13 : 11}" font-weight="600" fill="var(--ink-3)">${horizon === '5ans' ? 'classement à cinq ans, saison en cours projetée à sa fin' : `coefficient ${horizon === 'ligue' ? 'de saison ' : 'saison '}${horizon === 'ligue'
+      ? 'à la fin de la phase de ligue' : 'pleine'}`}</text>`;
     /* La question n'est pas « où finit la France » mais « qui peut encore la
        doubler ». La bande couvre son intervalle à 90 %, du 5e au 95e centile :
        à 60 % elle excluait des nations qui la doublent une fois sur sept, ce qui
@@ -4575,8 +4584,8 @@ const legende = segs => segs.map(s =>
       s += `<circle cx="${X(r.cen).toFixed(1)}" cy="${y.toFixed(1)}" r="${fr ? 6 : 5}" fill="${c0}" stroke="var(--surface)" stroke-width="1.5"></circle>`;
       /* Téléphone : la croix du meilleur scénario tombait sur le chiffre de la
          France ; on décale le chiffre juste après la croix. */
-      const xl = M && fr ? Math.max(X(r.p95) + 10, X(Math.min(r.haut, sc.hi)) + 12) : X(r.p95) + 10;
-      s += `<text x="${xl.toFixed(1)}" y="${(y + 4).toFixed(1)}" font-size="${M ? 15.5 : 11.5}" font-weight="${fr ? 700 : 500}" font-family="IBM Plex Mono, monospace" fill="${fr ? 'var(--fr)' : 'var(--ink-3)'}">${nf(r.cen, 1)}</text>`;
+      const xl = (M || horizon === '5ans') && fr ? Math.max(X(r.p95) + 10, X(Math.min(r.haut, sc.hi)) + 12) : X(r.p95) + 10;   /* à 5 ans, la croix tombe sur le chiffre aussi sur ordinateur */
+      s += `<text x="${xl.toFixed(1)}" y="${(y + 4).toFixed(1)}" font-size="${M ? 15.5 : 11.5}" font-weight="${fr ? 700 : 500}" font-family="IBM Plex Mono, monospace" fill="${fr ? 'var(--fr)' : 'var(--ink-3)'}">${vf(r.cen)}</text>`;
       /* La croix du meilleur scénario, France seule. Elle sort du même tirage
          que l'éventail, elle tombe donc juste à droite du 95e centile et tient
          dans l'axe — le chevron de repli ne sert plus que si un jour elle en
@@ -4593,7 +4602,7 @@ const legende = segs => segs.map(s =>
           + (hors ? `<path d="M${(xm+8).toFixed(1)} ${(y-4).toFixed(1)} l4 4 l-4 4" fill="none" stroke="var(--fr)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>` : '')
           + `</g>`;
       }
-      s += `<text x="${(W - 6).toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="${M ? 14 : 10.5}" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)" opacity=".85">${horizon === 'ligue' ? `${r.r} m.` : `${nfx(BY[r.c].t - r.acq + r.cen)}`}</text>`;
+      s += `<text x="${(W - 6).toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="${M ? 14 : 10.5}" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)" opacity=".85">${horizon === 'ligue' ? `${r.r} m.` : horizon === '5ans' ? `${BY[r.c].r}<tspan font-size="${M ? 10 : 8}" dy="${M ? -6 : -4}">e</tspan>` : `${nfx(BY[r.c].t - r.acq + r.cen)}`}</text>`;
     });
     document.getElementById('chartPrj').outerHTML = (s + '</svg>').replace('<svg', '<svg id="chartPrj"');
     survolPrj(rows, { W, H, mT, rowH });
@@ -4610,7 +4619,7 @@ const legende = segs => segs.map(s =>
       + `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">${jeton(22,5,.22,'3px')}<span>9 fois sur 10 &nbsp;(5<sup style="line-height:0">e</sup>–95<sup style="line-height:0">e</sup> centile)</span></span>`
       + `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px">${jeton(22,11,.34,'5px')}<span>3 fois sur 5 &nbsp;(20<sup style="line-height:0">e</sup>–80<sup style="line-height:0">e</sup>)</span></span>`
       + `<span style="display:inline-flex;align-items:center;gap:5px">${jeton(9,9,1,'50%')}médiane`
-      + (horizon === 'saison' ? ` · colonne de droite : total à 5 ans projeté` : ` · colonne de droite : matchs restants`) + `</span>`
+      + (horizon === 'saison' ? ` · colonne de droite : total à 5 ans projeté` : horizon === '5ans' ? ` · colonne de droite : rang aujourd'hui` : ` · colonne de droite : matchs restants`) + `</span>`
       /* La croix n'est explicite que si on la nomme : sans cette mention, un
          signe bleu isolé à droite de l'axe ne veut rien dire pour un lecteur
          qui ne survole pas. La valeur y figure, puisque la croix est souvent
@@ -4619,7 +4628,7 @@ const legende = segs => segs.map(s =>
       + `<i style="width:11px;height:11px;flex:none;position:relative;display:inline-block">`
       + `<i style="position:absolute;left:0;top:5px;width:11px;height:1.6px;background:var(--fr);border-radius:1px;transform:rotate(45deg)"></i>`
       + `<i style="position:absolute;left:0;top:5px;width:11px;height:1.6px;background:var(--fr);border-radius:1px;transform:rotate(-45deg)"></i></i>`
-      + `meilleur scénario de la France : ${nf((rows.find(r => r.c === 'FRA') || {}).haut || 0, 1)} &nbsp;(1 tirage sur 400)</span></p>`;
+      + `meilleur scénario de la France : ${vf((rows.find(r => r.c === 'FRA') || {}).haut || 0)} &nbsp;(1 tirage sur 400)</span></p>`;
 
     /* Le poids réellement donné à la saison en cours, écrit en clair : c'est la
        première question qu'on se pose devant une projection, et la réponse bouge
@@ -4629,6 +4638,7 @@ const legende = segs => segs.map(s =>
     const poids = '';
 
     if (horizon === 'saison') { capSaison(rows, fr, leg, poids, S); return; }
+    if (horizon === '5ans') { cap5ans(rows, fr, leg); return; }
 
     const croise  = fr ? rows.filter(r => r.c !== 'FRA' && r.p95 >= fr.p05 && r.p05 <= fr.p95) : [];
     const dessus  = fr ? rows.filter(r => r.p05 > fr.p95) : [];
@@ -4639,6 +4649,21 @@ const legende = segs => segs.map(s =>
             + (croise.length ? `${croise.length} nation${croise.length > 1 ? 's' : ''} peu${croise.length > 1 ? 'vent' : 't'} encore la croiser. ` : '') : '')
       + `Sans la phase finale : « saison pleine » l'inclut.`;
 
+    function cap5ans(rows, fr, leg){
+      const RG = PRJ && PRJ.rgFR, DEV = PRJ && PRJ.devFR;
+      const pc = v => v === 0 ? 'jamais' : v < .001 ? '< 0,1 %' : v < .01 ? nf(v * 100, 1) + ' %' : Math.round(v * 100) + ' %';
+      let rangs = '';
+      if (RG) { const mx = Math.max(...RG), cur = RG.indexOf(mx) + 1;
+        const ks = RG.map((v, k) => ({ k: k + 1, v })).filter(x => x.v > 0 || x.k === cur - 1);
+        rangs = `Elle finit <b>${cur}<sup>e</sup> dans ${pc(mx)}</b> des tirages (`
+          + ks.filter(x => x.k !== cur).map(x => `${x.k}<sup>e</sup> ${pc(x.v)}`).join(', ') + `). `; }
+      const ord = [...N].sort((a, b) => a.r - b.r), i = ord.findIndex(n => n.c === 'FRA');
+      const derr = DEV ? ord.slice(i + 1).filter(n => (DEV[n.c] || 0) >= .005).map(n => `${name(n.c)} ${pc(DEV[n.c])}`) : [];
+      document.getElementById('capPrj').innerHTML = leg
+        + `${nf(nSaisons(),0)} saisons complètes rejouées ; à chacune, le classement à cinq ans des 55 : quatre saisons closes, plus la saison en cours. `
+        + (fr ? `<b>France</b> : médiane <b>${nfx(fr.cen)}</b>, entre ${nfx(fr.p05)} et ${nfx(fr.p95)} neuf fois sur dix. ` : '')
+        + rangs + (derr.length ? `Peut la doubler : ${derr.join(', ')}.` : '');
+    }
     function capSaison(rows, fr, leg, poids, S){
       const med = c => S ? (S.tir && S.tir[c] ? quant(S.tir[c], .50) : null) : (PRJ.q.tir[c] ? PRJ.q.tir[c][2] : null);
       const rang = (() => {                       // rang à 5 ans avec la médiane de chacun
@@ -4663,11 +4688,12 @@ const legende = segs => segs.map(s =>
         + ((S || PRJ).ecarts && (S || PRJ).ecarts.length ? ` <b style="color:var(--s2)">Contrôle en échec :</b> ${(S || PRJ).ecarts.join(' · ')}.` : '');
     }
     }
-    const bL = document.getElementById('h-ligue'), bS = document.getElementById('h-saison');
+    const bL = document.getElementById('h-ligue'), bS = document.getElementById('h-saison'), b5 = document.getElementById('h-5ans');
     const syncH = () => { bL.setAttribute('aria-pressed', horizon === 'ligue');
-      bS.setAttribute('aria-pressed', horizon === 'saison'); dessine(); };
+      bS.setAttribute('aria-pressed', horizon === 'saison'); b5.setAttribute('aria-pressed', horizon === '5ans'); dessine(); };
     bL.onclick = () => { horizon = 'ligue';  syncH(); };
     bS.onclick = () => { horizon = 'saison'; syncH(); };
+    b5.onclick = () => { horizon = '5ans';  syncH(); };
     const bJT = document.getElementById('j-top'), bJA = document.getElementById('j-all');
     const syncJ = () => { bJT.setAttribute('aria-pressed', porteeP === 'top');
       bJA.setAttribute('aria-pressed', porteeP === 'all');
