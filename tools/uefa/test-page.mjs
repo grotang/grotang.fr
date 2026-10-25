@@ -102,7 +102,7 @@ bloquant('aucune erreur JavaScript', vraies.length === 0, vraies.slice(0, 3).joi
 const vu = await page.evaluate(() => {
   const plein = s => { const e = document.querySelector(s); return !!e && (e.children.length > 0 || (e.textContent || '').trim().length > 0); };
   const BLOCS = ['#cal', '#bars', '#kbars', '#cl8', '#dbars', '#chartL', '#chartZ', '#mtx',
-                 '#chartRdt', '#vlist', '#chartSurv', '#chartPrj', '#defHero', '#defRows', '#eteCols'];   // bloc 10 refait le 24/10/2026 (ex-#tProj)
+                 '#chartRdt', '#vlist', '#chartSurv', '#chartPrj', '#defHero', '#defRows', '#eteCols', '#mini'];   // bloc 10 refait le 24/10/2026 (ex-#tProj) ; #mini = mini-classement sous l'en-tête (25/10)
   const txt = document.body.innerText;
   const fr = [...document.querySelectorAll('#chartPrj text')].map(t => t.textContent);
   return {

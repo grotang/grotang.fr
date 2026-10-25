@@ -705,6 +705,22 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
 footer p{margin:0}
 footer .droits{margin-top:8px; color:var(--ink-2)}
 footer .legal{margin-top:3px; font-size:11px}
+/* Mini-classement sous l'en-tête : la France et ses deux voisins de chaque côté */
+.mini{margin:18px 0 34px; max-width:340px}
+.mini table{width:100%; border-collapse:collapse; font-size:13.5px}
+.mini td{padding:5px 0; border-bottom:1px solid var(--rule-soft); text-align:left; background:none !important; height:auto}
+.mini tr:first-child td{border-top:1px solid var(--rule)}
+.mini tr:last-child td{border-bottom:1px solid var(--rule)}
+.mini td.r{width:34px; color:var(--ink-3); font-size:12px}
+.mini td.d{width:18px}
+.mini td.d i{display:inline-block; width:9px; height:9px; border-radius:2px; vertical-align:middle}
+.mini td.t,.mini td.e{font-family:"IBM Plex Mono",monospace; font-size:12.5px; text-align:right; font-variant-numeric:tabular-nums}
+.mini td.t{width:70px; color:var(--ink)}
+.mini td.e{width:70px; color:var(--ink-3)}
+.mini tr.fr td{font-weight:700; color:var(--ink)}
+.mini .p{margin-top:8px; font-size:12.5px; color:var(--ink-3)}
+.mini .p a{color:var(--n1); text-decoration:none; font-weight:700}
+.mini .p a:hover{text-decoration:underline}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
 
@@ -721,6 +737,8 @@ footer .legal{margin-top:3px; font-size:11px}
     <div class="stamp" id="stamp"></div>
   </div>
 </header>
+
+<div class="mini" id="mini" aria-label="La France et ses voisins au classement"></div>
 
 <section>
   <div class="shead">
@@ -899,7 +917,7 @@ footer .legal{margin-top:3px; font-size:11px}
     <p>Où le coefficient de chaque nation peut encore aller.</p>
   </div>
   <div class="panel">
-    <div class="ptitle"><span class="no">9</span><h3>La projection</h3>
+    <div class="ptitle" id="projection"><span class="no">9</span><h3>La projection</h3>
       <span class="sub"><span class="ctl"><span class="lb">Horizon</span><span class="seg" role="group" aria-label="Horizon">
         <button type="button" id="h-ligue" aria-pressed="false">Fin de phase de ligue</button><button type="button" id="h-saison" aria-pressed="true">Fin de saison</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
         <button type="button" id="j-top" aria-pressed="false">Les 8 premières</button><button type="button" id="j-all" aria-pressed="true">Toutes</button></span></span></span></div>
@@ -952,8 +970,8 @@ footer .legal{margin-top:3px; font-size:11px}
     <div id="xchkNote"></div>
     <p><b>Le calcul.</b> Coefficient de saison = points des clubs ÷ clubs engagés. Classement = somme des cinq dernières saisons. Qualifications : victoire 1, nul 0,5. Phase de ligue : victoire 2, nul 1. Bonus : participation (6 points par club de C1), classement de la phase de ligue, tours de la phase finale.</p>
     <p><b>Les conventions.</b> Les points d'un club comptent dans sa compétition actuelle (reversé de C1 en C3 : il compte en C3). Un club n'est éliminé qu'à sa dernière défaite, toutes compétitions confondues.</p>
-    <p><b>La projection.</b> Sauce maison secrète.</p>
-    <p><b>Les sources.</b> <a href="https://eurocoeff.com/" target="_blank" rel="noopener">eurocoeff.com</a> (licence CC BY 4.0), construit à partir de <a href="https://www.5-jahres-wertung.de/" target="_blank" rel="noopener">5-jahres-wertung.de</a> ; parcours club par club relevés dans les tableaux de confrontations. Chiffres non officiels : l'UEFA fait foi. Chaque publication est vérifiée et bloquée au moindre écart.</p>
+    <p><b>La projection.</b> Modèle maison, 200 000 saisons simulées. La recette reste en cuisine.</p>
+    <p><b>Les sources.</b> <a href="https://www.5-jahres-wertung.de/" target="_blank" rel="noopener">5-jahres-wertung.de</a>, relu chaque matin et chaque soir de match : classement, coefficients, bilan de chaque club. Wikipédia (en) : matchs, affiches et tableaux de confrontations, pour les dates et le parcours club par club. Chiffres non officiels : l'UEFA fait foi. Chaque publication est vérifiée et bloquée au moindre écart.</p>
   </div>
 </section>
 
@@ -1430,6 +1448,27 @@ document.getElementById('stamp').innerHTML =
   }
 })();
 
+</script>
+<script>
+/* ---------- mini-classement sous l'en-tête (25/10/2026) ---------- */
+/* La France, les deux nations au-dessus et les deux en dessous : rang, total à
+   cinq ans, écart à la France. Puis, si la projection la fournit (PRJ.rgFR,
+   calculée par __projette), la part des saisons simulées où la France finit à
+   son rang actuel, avec un lien vers le bloc 9. */
+(function () {
+  const el = document.getElementById('mini'); if (!el) return;
+  const ord = [...N].sort((a, b) => a.r - b.r), F = BY.FRA, i = ord.findIndex(n => n.c === 'FRA');
+  if (!F || i < 0) return;
+  const col = c => `var(${SLOT[c] || '--ink-3'})`;
+  const rows = ord.slice(Math.max(0, i - 2), i + 3).map(n =>
+    `<tr class="${n.c === 'FRA' ? 'fr' : ''}"><td class="r">${n.r}<sup>e</sup></td><td class="d"><i style="background:${col(n.c)}"></i></td>`
+    + `<td>${name(n.c)}</td><td class="t">${nfx(n.t)}</td>`
+    + `<td class="e">${n.c === 'FRA' ? '' : (n.t > F.t ? '+' : '−') + nfx(Math.abs(n.t - F.t))}</td></tr>`).join('');
+  const rg = typeof PRJ !== 'undefined' && PRJ && PRJ.rgFR;
+  const p = rg && rg[F.r - 1] != null ? Math.round(rg[F.r - 1] * 100) : null;
+  el.innerHTML = `<table>${rows}</table>`
+    + (p != null ? `<div class="p">Fin de saison : <a href="#projection">${F.r}<sup>e</sup> dans ${p} % des simulations →</a></div>` : '');
+})();
 </script>
 <script>/* Script découpé par bloc : entre deux scripts, le navigateur peut afficher et répondre au doigt — plus de longue tâche unique au chargement. */
 /* ---------- 0 · où en est la saison ---------- */
@@ -2012,7 +2051,7 @@ function drawBars(){
     else { const rp = rangP[fr], rr = F.rang(BY[fr]);
       t = (F.n === 5 ? `Classement à cinq ans, saison en cours projetée à sa fin : la France finirait <b>${rp}<sup>e</sup></b>` : `Socle de l'été ${+String(D.meta.season).slice(0, 4) + 1 + (4 - F.n)}, saison en cours projetée à sa fin : la France serait <b>${rp}<sup>e</sup></b>`)
         + (rp !== rr ? ` (${rr}<sup>e</sup> au réel acquis). ` : `, comme au réel acquis. `); }
-    t += `La partie en teinte intermédiaire est ce qui reste à prendre d'ici la finale : la médiane de ${nf((PRJ && PRJ.n) || 0, 0)} saisons rejouées (bloc 8). Les flèches comparent au réel acquis.`;
+    t += `La partie en teinte intermédiaire est ce qui reste à prendre d'ici la finale : la médiane de ${nf((PRJ && PRJ.n) || 0, 0)} saisons rejouées (bloc 9). Les flèches comparent au réel acquis.`;
     document.getElementById('barNote').innerHTML = legP + `Pastilles : un club engagé chacune, pleine tant qu'il est en lice, en creux une fois éliminé. ` + t;
     return;
   }
@@ -4337,7 +4376,19 @@ const legende = segs => segs.map(s =>
       const dv = {}, F = S.tir && S.tir.FRA;
       if (F) for (const c of S.codes) { const a = S.tir[c]; if (!a || c === 'FRA') continue;
         let k = 0; for (let i = 0; i < a.length; i++) if (a[i] > F[i]) k++; dv[c] = +(k / a.length).toFixed(4); }
-      return { n, q, dv, ecarts: S.ecarts, calendrier: S.calendrier, moteur: S.moteur, pronos: (S.pronos || []).map(x => [x.k, x.dom, x.ext, x.p[0], x.p[2]]), ...(opts && opts.rangs ? { rangs: S.rangs } : {}), maj: D.meta.lastUpdated };
+      /* Rang final de la France au classement à cinq ans, DANS chaque tirage :
+         quatre saisons closes (fixes) + saison en cours simulée, pour les 55.
+         rgFR[k] = part des saisons où la France finit (k+1)e (10e et au-delà
+         regroupés). Lu par le mini-classement sous l'en-tête. */
+      let rgFR = null;
+      if (F) { const base = {};
+        for (const c of S.codes) { const y = BY[c] && BY[c].y; base[c] = y ? y[0] + y[1] + y[2] + y[3] : 0; }
+        const cpt = new Array(10).fill(0);
+        for (let i = 0; i < F.length; i++) { const f = base.FRA + F[i]; let k = 1;
+          for (const c of S.codes) if (c !== 'FRA' && S.tir[c] && base[c] + S.tir[c][i] > f) k++;
+          cpt[Math.min(k, 10) - 1]++; }
+        rgFR = cpt.map(v => +(v / F.length).toFixed(4)); }
+      return { n, q, dv, rgFR, ecarts: S.ecarts, calendrier: S.calendrier, moteur: S.moteur, pronos: (S.pronos || []).map(x => [x.k, x.dom, x.ext, x.p[0], x.p[2]]), ...(opts && opts.rangs ? { rangs: S.rangs } : {}), maj: D.meta.lastUpdated };
     };
 
     /* Toutes les nations par defaut : la projection est le bloc ou l'on vient
