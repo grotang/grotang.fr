@@ -4,6 +4,7 @@
  * Entrées   : tools/uefa/page.html  (page UEFA, reconstruite chaque matin)
  *             tools/tennis.src.html + tools/tennis/data.json (page tennis, relue chaque jour)
  *             tools/uefa/nations.json (chiffres des vignettes de l'accueil)
+ *             tools/eco/page.html + tools/eco/data.json (page économie, relue chaque lundi)
  * Sortie    : public/  — exactement ce que Netlify publie, sans build côté Netlify.
  *
  * Le site n'a volontairement aucune étape de build distante : ce script tourne ici,
@@ -16,6 +17,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { nav, navCSS, FAVICON, FAVICON_SVG, MANIFEST, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF } from './chrome.mjs';
+import { buildEco } from './eco/page.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
@@ -438,10 +440,11 @@ ${FAVICON}
    censé dire quand le contenu a bougé. Annoncer une modification quotidienne
    d'une page qui n'a pas bougé depuis une semaine, c'est le genre de signal
    qu'ils apprennent vite à ignorer. */
-const sitemap = (dUefa, dTennis) => `<?xml version="1.0" encoding="UTF-8"?>
+const sitemap = (dUefa, dTennis, dEco) => `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://grotang.fr/uefa/</loc><lastmod>${dUefa}</lastmod></url>
   <url><loc>https://grotang.fr/tennis/</loc><lastmod>${dTennis}</lastmod></url>
+  <url><loc>https://grotang.fr/economie/</loc><lastmod>${dEco}</lastmod></url>
 </urlset>
 `;
 
@@ -465,6 +468,7 @@ a{color:var(--hi);font-weight:600;margin-top:14px;display:inline-block}</style>
 const lire = f => { try { return fs.readFileSync(path.join(OUT, f), 'utf8'); } catch { return null; } };
 const PRECEDENT = lire('uefa/index.html');
 const PREC_TENNIS = lire('tennis/index.html');
+const PREC_ECO = lire('economie/index.html');
 const PREC_SITEMAP = lire('sitemap.xml');
 /* La carte de partage n'est pas fabriquee ici mais par tools/uefa/carte.mjs,
    apres la projection. Le grand menage l'effacerait a chaque construction :
@@ -475,6 +479,7 @@ const CARTE = ['uefa/carte.png', 'uefa/carte.sig'].map(f => {
 fs.rmSync(OUT, { recursive: true, force: true });
 const uefa = buildUefa();
 const tennis = buildTennis();
+const eco = buildEco();
 const today = new Date().toISOString().slice(0, 10);
 
 /* `lastmod` d'une page : la date du jour si son contenu a change, sinon celle
@@ -513,6 +518,8 @@ const majUefa   = dateGit('tools/uefa/page.html', ...COMMUN)
   || dateSitemap('/uefa/',   PRECEDENT,   uefa.html,   true);
 const majTennis = dateGit('tools/tennis.src.html', 'tools/tennis/data.json', ...COMMUN)
   || dateSitemap('/tennis/', PREC_TENNIS, tennis.html, false);
+const majEco    = dateGit('tools/eco/page.html', 'tools/eco/data.json', 'tools/eco/page.mjs', ...COMMUN)
+  || dateSitemap('/economie/', PREC_ECO, eco.html, false);
 
 /* Matchs club par club (bloc 6b, survol des gaufres) : fichier à part, chargé
    seulement quand on déplie une nation — inutile d'alourdir la page pour tous.
@@ -544,12 +551,13 @@ const sizes = {
   'uefa/matchs.json': write('uefa/matchs.json', MATCHS),
   'uefa/index.html': writeStable('uefa/index.html', uefa.html, PRECEDENT),
   'tennis/index.html': write('tennis/index.html', tennis.html),
+  'economie/index.html': write('economie/index.html', eco.html),
   '404.html': write('404.html', NOTFOUND),
   'index.html': write('index.html', ACCUEIL),
   'robots.txt': write('robots.txt', ROBOTS),
   'favicon.svg': write('favicon.svg', FAVICON_SVG),
   'site.webmanifest': write('site.webmanifest', MANIFEST),
-  'sitemap.xml': write('sitemap.xml', sitemap(majUefa, majTennis)),
+  'sitemap.xml': write('sitemap.xml', sitemap(majUefa, majTennis, majEco)),
 };
 
 for (const [f, n] of Object.entries(sizes)) console.log(String(n).padStart(7), f);

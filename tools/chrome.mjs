@@ -164,6 +164,7 @@ export const navCSS = `
 export const PAGES = [
   { href: '/uefa/',   label: 'Coefficient UEFA', key: 'uefa' },
   { href: '/tennis/', label: 'Français en Grand Chelem', key: 'tennis' },
+  { href: '/economie/', label: 'Argent public', key: 'eco' },
 ];
 
 /* Le coq, dessiné pour le site (pas un logo existant) : queue dressée aux

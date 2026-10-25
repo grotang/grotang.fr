@@ -8,6 +8,7 @@ Un site statique, en français, qui suit le classement UEFA des associations (la
 |---|---|---|
 | Coefficient UEFA | [grotang.fr/uefa/](https://grotang.fr/uefa/) | relues automatiquement, plusieurs fois par jour en période de match |
 | Français en Grand Chelem | [grotang.fr/tennis/](https://grotang.fr/tennis/) | tour par tour, relues sur Wikipédia trois fois par jour |
+| Argent public | [grotang.fr/economie/](https://grotang.fr/economie/) | comptes des administrations publiques, relus chez Eurostat chaque lundi |
 
 ---
 
@@ -27,6 +28,23 @@ Un site statique, en français, qui suit le classement UEFA des associations (la
 | **8** La projection | Fourchettes de fin de phase de ligue et de fin de saison. |
 
 Toutes les saisons depuis 2021/22 sont consultables ; un seul sélecteur de saison pilote tous les blocs.
+
+---
+
+## La page économie, bloc par bloc
+
+« Où va l'argent public ? » : recettes et dépenses des administrations publiques (État et organismes centraux, Sécurité sociale, collectivités locales), de 1995 à la dernière année publiée. Un sélecteur d'année et un sélecteur d'unité (milliards €, % du PIB, € par habitant, sur 100 € de dépense) pilotent toute la page.
+
+| Bloc | Ce qu'il montre |
+|---|---|
+| En-tête | Dépenses, recettes, déficit, dette ; la phrase « sur 100 € de dépense publique… ». |
+| **1** Le circuit | Sankey recettes + emprunt → dépenses → 10 politiques (COFOG) ou 9 natures ; un clic ouvre une politique : ses sous-postes, qui la porte, son évolution en % du PIB. |
+| **2** Impôt par impôt | TVA, IR-CSG, IS, cotisations, taxes foncières… |
+| **3–4** Qui dépense | Les trois administrations ; les soldes empilés depuis 1995 (le déficit est celui de l'État). |
+| **5–6** Trente ans | Dépenses et recettes en % du PIB ; ce qui a grossi ou fondu depuis 1995, par politique ou sous-poste. |
+| **7–8** La France et ses voisins | Écart avec 11 comparaisons (zone euro, UE, 9 pays), par politique ou sous-poste ; la dépense en % du PIB depuis 1995. |
+
+Sources : Eurostat `gov_10a_main`, `gov_10a_exp`, `gov_10a_taxag`, `gov_10dd_edpt1`, `nama_10_gdp`, `nama_10_pe` (API publique, JSON-stat). Trois « dernières années » coexistent : grands agrégats (`der`), ventilation par fonction (`derF`, environ un an plus tard), détail des impôts (`derT`). Contrôles bloquants dans `tools/eco/eurostat.mjs` : recettes = Σ composantes, dépenses = Σ natures, solde = R − D (31 ans × 4 secteurs), chaque fonction = Σ sous-fonctions, détail fiscal ≈ agrégat (< 1 %), ratio au PIB recalculé = ratio publié. Écart connu et toléré (≤ 0,5 %) : le tableau COFOG n'est pas republié à chaque révision des agrégats (2024 : 1 671,8 contre 1 672,7 Md€).
 
 ---
 
@@ -64,6 +82,7 @@ Rien n'est construit à la main : `public/` n'est **pas** dans le dépôt. Le ro
 | `uefa-soir.yml` « Soir de match UEFA » | Part vers 19 h 47 (Paris), second départ vers 21 h 47 | Si c'est un soir de match, reste éveillé : dès 20 h 35, relit la source et Wikipédia **toutes les dix minutes**, dépose et publie dès qu'il y a du neuf, s'arrête quand tout est à jour (source datée du soir **et** score de tous les matchs du soir), au plus tard à 3 h 30. |
 | `uefa.yml` « Rafraîchissement UEFA » | 23 h 38 et 7 h 12 (Paris) | Passages à heure fixe, en filet. Porte l'**alarme de fraîcheur** (`tools/uefa/fraicheur.mjs`) : si un soir de match est passé et que la source n'a pas bougé, le passage de 7 h échoue et GitHub envoie un e-mail. |
 | `tennis.yml` « Rafraîchissement tennis » | 7 h 47, 14 h 47, 20 h 47 UTC | Relit sur Wikipédia les tableaux de l'année en cours (`tools/tennis/refresh.mjs`), après un contrôle sur une édition close (Roland-Garros 2025). Ne dépose `tools/tennis/data.json` que si un chiffre a bougé, puis appelle `pages.yml`. |
+| `eco.yml` « Rafraîchissement économie » | Lundi 6 h 23 UTC | Relit Eurostat (`tools/eco/refresh.mjs`), contrôle, ne dépose `tools/eco/data.json` que si un chiffre a bougé, puis appelle `pages.yml`. |
 | `pages.yml` « Publication GitHub Pages » | À chaque commit sur `tools/**`, ou appelé par les robots | Fabrique le site (`node tools/build.mjs`) et le publie. |
 
 Pourquoi une veille plutôt qu'une heure fixe : GitHub ne garantit pas l'heure de départ d'une tâche planifiée. Le 13/10/2026, le passage prévu à 23 h 38 est parti à 2 h 33. Une tâche qui part tôt et reste éveillée couvre la soirée même partie en retard. Les minutes d'Actions sont gratuites pour un dépôt public, y compris celles où la tâche attend.
@@ -93,6 +112,14 @@ tools/
   build.mjs              fabrique public/ à partir des sources (pages, icônes, sitemap, données injectées)
   chrome.mjs             barre de navigation, thème clair/sombre, favicon, communs aux pages
   tennis.src.html        page tennis (données injectées depuis tennis/data.json)
+  eco/
+    page.html            page économie (données injectées depuis eco/data.json)
+    page.mjs             fabrication de la page (appelée par build.mjs)
+    eurostat.mjs         lecture de l'API Eurostat et contrôles
+    refresh.mjs          relit Eurostat, contrôle, réécrit data.json
+    format.mjs           mise en forme de data.json (une série par ligne)
+    test-eco.mjs         test sans réseau de data.json
+    data.json            comptes publics 1995 → dernière année (réécrit par le robot)
   tennis/
     data.json            Français par tour, chaque Grand Chelem depuis 1968 (réécrit par le robot)
     wiki.mjs             lecture d'un tableau Wikipédia (sans dépendance)

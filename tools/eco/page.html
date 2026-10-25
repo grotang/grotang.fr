@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Où va l'argent public ? Dépenses et recettes publiques de la France</title>
+<style>
+/* Page /economie/ — les comptes des administrations publiques.
+   Les jetons de couleur (--ground, --ink, --n1… --n8) viennent de chrome.mjs,
+   injectés par build.mjs : mêmes couleurs, même thème que les pages UEFA et tennis.
+   La palette catégorielle --n1… --n8 est l'ordre validé du site (bleu, orange,
+   aqua, jaune, magenta, vert, violet, rouge) ; chaque fonction de dépense a la
+   SIENNE, fixe, quelle que soit l'année ou son rang. */
+*{box-sizing:border-box}
+body{margin:0; background:var(--ground); color:var(--ink);
+  font-family:Calibri,"Carlito","Helvetica Neue",Arial,sans-serif; font-size:15px; line-height:1.55;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1320px; margin:0 auto; padding-inline:clamp(16px,4vw,40px); padding-block:clamp(22px,3.6vw,40px)}
+.num{font-variant-numeric:tabular-nums}
+h1,h2,h3{margin:0; text-wrap:balance; letter-spacing:-.012em; font-family:"Newsreader",Georgia,"Times New Roman",serif; font-optical-sizing:auto}
+a{color:var(--fr)}
+
+/* ---------- en-tête ---------- */
+.mast{display:flex; flex-wrap:wrap; gap:16px 32px; align-items:flex-end; justify-content:space-between;
+  border-bottom:2px solid var(--ink); padding-bottom:14px}
+.eyebrow{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); font-weight:600}
+h1{font-size:clamp(32px,5vw,52px); font-weight:600; line-height:1.02; letter-spacing:-.02em}
+.mast .sub{color:var(--ink-2); font-size:14px; margin:6px 0 0; max-width:62ch}
+.stamp{display:grid; gap:3px; text-align:right; font-size:12px; color:var(--ink-2); margin-left:auto}
+.stamp b{color:var(--ink); font-weight:600}
+
+/* ---------- commandes : une seule rangée, au-dessus de tout ce qu'elle pilote ---------- */
+.filtres{position:sticky; top:46px; z-index:20; display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center;
+  margin:14px 0 0; padding:9px 0; background:var(--ground); border-bottom:1px solid var(--rule)}
+.ctl{display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap}
+.ctl > .lb{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700; color:var(--ink-3); white-space:nowrap}
+.seg{display:inline-flex; flex-wrap:wrap; border:1px solid var(--rule); border-radius:2px; overflow:hidden; background:var(--surface)}
+.seg button{appearance:none; border:0; background:var(--surface); color:var(--ink-2); font:inherit; font-size:12.5px;
+  font-weight:600; padding:5px 11px; cursor:pointer; border-right:1px solid var(--rule); white-space:nowrap}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink); color:var(--surface)}
+.seg button:disabled{opacity:.38; cursor:default}
+.seg button:focus-visible,.sel select:focus-visible{outline:2px solid var(--fr); outline-offset:-2px}
+.sel{position:relative; display:inline-flex; align-items:center}
+.sel select{appearance:none; font:inherit; font-size:12.5px; font-weight:600; color:var(--ink); background:var(--surface);
+  border:1px solid var(--rule); border-radius:2px; padding:4px 26px 4px 10px; line-height:1.5; cursor:pointer}
+.sel::after{content:""; position:absolute; right:9px; width:7px; height:7px; pointer-events:none;
+  border-right:1.6px solid var(--ink-3); border-bottom:1.6px solid var(--ink-3); transform:translateY(-2px) rotate(45deg)}
+.yr{display:inline-flex; align-items:center; gap:0}
+.yr button{appearance:none; border:1px solid var(--rule); background:var(--surface); color:var(--ink-2); font:inherit;
+  font-weight:700; width:28px; height:30px; cursor:pointer}
+.yr button:first-child{border-right:0; border-radius:2px 0 0 2px}
+.yr button:last-child{border-left:0; border-radius:0 2px 2px 0}
+.yr button:disabled{opacity:.35; cursor:default}
+.yr .sel select{border-radius:0; font-variant-numeric:tabular-nums; font-size:13px}
+.filtres .hint{font-size:12px; color:var(--ink-3)}
+@media (max-width:560px){ .filtres{top:auto; position:static} .seg button{padding:7px 9px; font-size:12px} }
+
+/* ---------- chiffres de tête ---------- */
+.tiles{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-top:18px}
+.tile{background:var(--surface); border:1px solid var(--rule); border-radius:3px; padding:13px 15px 12px}
+.tile .k{font-size:11px; letter-spacing:.08em; text-transform:uppercase; font-weight:700; color:var(--ink-3)}
+.tile .v{font-size:clamp(26px,2.8vw,34px); font-weight:700; letter-spacing:-.01em; line-height:1.15; margin-top:5px}
+.tile .v small{font-size:.5em; font-weight:500; color:var(--ink-2); letter-spacing:0; margin-left:4px}
+.tile .d{font-size:12.5px; color:var(--ink-2); margin-top:4px}
+.tile .d b{font-variant-numeric:tabular-nums; font-weight:600; color:var(--ink); font-size:12px}
+.tile.def .v{color:var(--bad)}
+@media (max-width:900px){ .tiles{grid-template-columns:repeat(2,minmax(0,1fr))} }
+.cent{margin:14px 0 0; font-size:15.5px; line-height:1.65; color:var(--ink-2); max-width:118ch}
+.cent b{color:var(--ink); font-weight:700; white-space:nowrap}
+.cent i{font-style:normal; display:inline-block; width:9px; height:9px; border-radius:2px; margin:0 4px 0 1px; vertical-align:.04em}
+.encore{margin:8px 0 0; font-size:13px; color:var(--ink-3); max-width:118ch}
+.encore b{color:var(--ink-2)}
+
+/* ---------- sections et panneaux (même grammaire que la page UEFA) ---------- */
+section{margin-top:clamp(30px,4.5vw,50px)}
+.shead{display:flex; flex-wrap:wrap; gap:6px 18px; align-items:baseline; border-bottom:1px solid var(--rule); padding-bottom:8px; margin-bottom:16px}
+.shead h2{font-size:clamp(21px,2.5vw,28px); font-weight:600}
+.shead p{margin:0; color:var(--ink-2); font-size:13.5px; max-width:84ch}
+.panel{background:var(--surface); border:1px solid var(--rule); border-radius:3px; padding:clamp(14px,2.2vw,22px)}
+.panel + .panel{margin-top:14px}
+.ptitle{display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 10px; margin-bottom:12px}
+.ptitle .no{font-size:11px; font-weight:700; letter-spacing:.06em; color:var(--surface); background:var(--ink); padding:2px 7px; border-radius:2px}
+.ptitle h3{font-size:17.5px; font-weight:600}
+.ptitle .sub{margin-left:auto; display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center}
+.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-height:1.55; max-width:124ch}
+.figc b{color:var(--ink)}
+.chart{width:100%; position:relative}
+.chart svg{display:block; width:100%; height:auto; overflow:visible}
+svg text{font-family:Calibri,"Carlito",Arial,sans-serif}
+svg .m{font-variant-numeric:tabular-nums}
+.ax line,.ax path{stroke:var(--rule); stroke-width:1; fill:none}
+.ax text{fill:var(--ink-3); font-size:11px}
+.ax .z{stroke:var(--ink-3)}
+.lgd{display:flex; flex-wrap:wrap; gap:4px 14px; font-size:12.5px; color:var(--ink-2); margin:0 0 8px}
+.lgd span{display:inline-flex; align-items:center; gap:6px}
+.lgd i{width:12px; height:3px; border-radius:2px; display:inline-block}
+.lgd i.sq{height:10px; width:10px}
+
+/* ---------- 1 · le circuit (Sankey) ---------- */
+.duo{display:grid; grid-template-columns:minmax(0,1.55fr) minmax(300px,1fr); gap:18px; align-items:start}
+@media (max-width:1020px){ .duo{grid-template-columns:1fr} }
+.sk .lk{fill-opacity:.2; transition:fill-opacity .12s}
+.sk .lk.hl{fill-opacity:.55}
+.sk.foc .lk:not(.hl){fill-opacity:.08}
+.sk .nd{cursor:default}
+.sk .nd.cl{cursor:pointer}
+.sk .nd rect{transition:opacity .12s}
+.sk.foc .nd:not(.hl) rect{opacity:.35}
+.sk .nd.sel rect{stroke:var(--ink); stroke-width:2}
+.sk .lab{paint-order:stroke; stroke:var(--surface); stroke-width:3.2px; stroke-linejoin:round; pointer-events:none}
+.sk .lab .n{fill:var(--ink); font-size:12.5px; font-weight:700}
+.sk .lab .v{fill:var(--ink-2); font-size:11.5px}
+.sk .hd{fill:var(--ink-3); font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700}
+.sk .hdv{fill:var(--ink); font-size:13px; font-weight:600}
+.sk .ld{stroke:var(--ink-3); stroke-width:1; fill:none}
+.sk .nd:focus-visible{outline:none}
+.sk .nd:focus-visible rect{stroke:var(--fr); stroke-width:2.5}
+
+/* zoom sur une fonction */
+.zoom h4{margin:0; font-family:"Newsreader",Georgia,serif; font-size:21px; font-weight:600; letter-spacing:-.01em; display:flex; align-items:center; gap:9px}
+.zoom h4 i{width:12px; height:12px; border-radius:3px; flex:none}
+.zoom .zv{font-size:13.5px; color:var(--ink-2); margin:3px 0 12px}
+.zoom .zv b{color:var(--ink); font-weight:600}
+.zl{list-style:none; margin:0; padding:0}
+.zl li{display:grid; grid-template-columns:minmax(0,1fr) 92px; gap:2px 10px; align-items:center; padding:5px 0; border-top:1px solid var(--rule-soft); font-size:13px}
+.zl li:first-child{border-top:0}
+.zl .nm{color:var(--ink); line-height:1.3}
+.zl .nm small{display:block; color:var(--ink-3); font-size:11.5px}
+.zl .vl{text-align:right; font-variant-numeric:tabular-nums; font-size:12px; color:var(--ink); white-space:nowrap}
+.zl .vl small{display:block; color:var(--ink-3); font-size:10.5px}
+.zl .br{grid-column:1 / -1; height:6px; background:var(--surface-2); border-radius:3px; overflow:hidden}
+.zl .br i{display:block; height:100%; border-radius:3px}
+.zh{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700; color:var(--ink-3); margin:18px 0 6px}
+.qui{display:grid; gap:5px}
+.qui div{display:grid; grid-template-columns:112px minmax(0,1fr) 78px; gap:8px; align-items:center; font-size:12.5px}
+.qui .b{height:9px; background:var(--surface-2); border-radius:2px; overflow:hidden}
+.qui .b i{display:block; height:100%; border-radius:2px; background:var(--ink-2)}
+.qui .v{text-align:right; font-variant-numeric:tabular-nums; font-size:12px}
+.fnav{display:flex; flex-wrap:wrap; gap:5px; margin:0 0 14px}
+.fnav button{appearance:none; font:inherit; font-size:12px; font-weight:600; color:var(--ink-2); background:var(--surface-2);
+  border:1px solid var(--rule-soft); border-radius:12px; padding:2px 9px 2px 7px; cursor:pointer; display:inline-flex; align-items:center; gap:5px}
+.fnav button i{width:8px; height:8px; border-radius:2px}
+.fnav button[aria-pressed="true"]{background:var(--ink); color:var(--surface); border-color:var(--ink)}
+.vide{color:var(--ink-3); font-size:13.5px; padding:18px 0}
+
+/* ---------- listes de barres (recettes, sous-secteurs) ---------- */
+.grp{margin-top:6px}
+.grp + .grp{margin-top:14px}
+.grp .gh{display:flex; justify-content:space-between; align-items:baseline; gap:10px; border-bottom:1px solid var(--rule); padding:3px 0 4px; font-weight:700; font-size:13.5px}
+.grp .gh span:last-child{font-variant-numeric:tabular-nums; font-size:12.5px; font-weight:600}
+.row{display:grid; grid-template-columns:minmax(150px,290px) minmax(0,1fr) 96px 58px; gap:10px; align-items:center; padding:4px 0; font-size:13px}
+.row .nm{line-height:1.3}
+.row .nm small{display:block; color:var(--ink-3); font-size:11.5px}
+.row .b{height:10px; background:var(--surface-2); border-radius:2px; overflow:hidden}
+.row .b i{display:block; height:100%; border-radius:0 3px 3px 0}
+.row .v{text-align:right; font-variant-numeric:tabular-nums; font-size:12px; white-space:nowrap}
+.row .p{text-align:right; font-variant-numeric:tabular-nums; font-size:11.5px; color:var(--ink-3)}
+@media (max-width:640px){ .row{grid-template-columns:minmax(0,1fr) 84px 48px} .row .b{grid-column:1 / -1; grid-row:2} }
+
+.ss{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px}
+@media (max-width:820px){ .ss{grid-template-columns:1fr} }
+.sc{border:1px solid var(--rule); border-radius:3px; padding:12px 14px; background:var(--surface)}
+.sc h4{margin:0; font-size:15px; font-weight:700; display:flex; align-items:center; gap:7px}
+.sc h4 i{width:10px; height:10px; border-radius:2px}
+.sc .sub{font-size:12px; color:var(--ink-3); margin:1px 0 9px}
+.sc dl{display:grid; grid-template-columns:auto 1fr; gap:3px 10px; margin:0; font-size:13px}
+.sc dt{color:var(--ink-2)}
+.sc dd{margin:0; text-align:right; font-variant-numeric:tabular-nums; font-size:12.5px}
+.sc dd.neg{color:var(--bad); font-weight:600}
+.sc dd.pos{color:var(--good); font-weight:600}
+.sc .top{margin-top:10px; padding-top:8px; border-top:1px solid var(--rule-soft); font-size:12.5px}
+.sc .top div{display:grid; grid-template-columns:minmax(0,1fr) 74px; gap:8px; padding:1px 0}
+.sc .top div span:last-child{text-align:right; font-variant-numeric:tabular-nums; font-size:12px}
+
+/* ---------- tables repliées : chaque graphique a sa version en chiffres ---------- */
+.xfold{margin:12px 0 0; border:1px solid var(--rule-soft); border-radius:3px; background:var(--surface-2)}
+.xfold>summary{cursor:pointer; padding:7px 11px; font-size:12.5px; color:var(--ink-2); font-weight:600; list-style:none; display:flex; align-items:center; gap:7px}
+.xfold>summary::-webkit-details-marker{display:none}
+.xfold>summary::before{content:"▸"; color:var(--ink-3); font-size:10px}
+.xfold[open]>summary::before{content:"▾"}
+.xfold .in{padding:0 11px 10px; max-height:460px; overflow:auto}
+.xtable{width:100%; border-collapse:collapse; font-size:12.5px; margin:6px 0 0}
+.xtable th,.xtable td{padding:4px 8px; border-bottom:1px solid var(--rule-soft); text-align:right; white-space:nowrap}
+.xtable th:first-child,.xtable td:first-child{text-align:left; white-space:normal}
+.xtable th{color:var(--ink-3); font-weight:600; font-size:11px; letter-spacing:.04em; text-transform:uppercase; position:sticky; top:0; background:var(--surface-2)}
+.xtable td{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-size:12px}
+.xtable td:first-child{font-family:inherit; font-size:12.5px}
+.xtable tr.t td{font-weight:700; border-top:1px solid var(--ink-3)}
+
+/* ---------- Europe ---------- */
+.eu .r{display:grid; grid-template-columns:minmax(120px,260px) 62px 62px minmax(0,1fr) 64px; gap:10px; align-items:center; padding:4px 0; border-top:1px solid var(--rule-soft); font-size:13px}
+.eu .r.h{border-top:0; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; font-weight:700; color:var(--ink-3)}
+.eu .r.t{font-weight:700; border-top:1px solid var(--ink-3)}
+.eu .r .v{text-align:right; font-variant-numeric:tabular-nums; font-size:12px}
+.eu .r.h .v{font-family:inherit; font-size:10.5px}
+.eu .g{position:relative; height:12px}
+.eu .g::before{content:""; position:absolute; left:50%; top:-4px; bottom:-4px; border-left:1px solid var(--ink-3)}
+.eu .g i{position:absolute; top:1px; height:10px}
+.eu .d{text-align:right; font-variant-numeric:tabular-nums; font-size:12px; font-weight:600}
+@media (max-width:640px){ .eu .r{grid-template-columns:minmax(0,1fr) 46px 46px 56px} .eu .g{grid-column:1 / -1; grid-row:2} .eu .r.h .g{display:none} }
+
+/* ---------- notes ---------- */
+.notes{background:var(--surface); border:1px solid var(--rule); border-radius:3px; padding:clamp(16px,2.4vw,24px)}
+.notes h3{font-size:16px; font-weight:700; margin:16px 0 4px}
+.notes h3:first-child{margin-top:0}
+.notes p,.notes li{font-size:13.5px; color:var(--ink-2); line-height:1.6; max-width:96ch}
+.notes ul{padding-left:18px; margin:4px 0}
+.foot{margin-top:28px; font-size:12px; color:var(--ink-3)}
+
+/* ---------- infobulle ---------- */
+.tip{position:fixed; z-index:60; pointer-events:none; background:var(--surface); border:1px solid var(--rule); border-radius:3px;
+  padding:9px 11px 10px; box-shadow:0 6px 22px rgba(0,0,0,.16); font-size:12.5px; color:var(--ink); min-width:200px; max-width:320px}
+.tip[hidden]{display:none}
+.tip .th{display:flex; align-items:center; gap:6px; font-size:11px; letter-spacing:.06em; text-transform:uppercase; font-weight:700; color:var(--ink-2); margin-bottom:5px}
+.tip .th i{width:9px; height:9px; border-radius:2px; flex:none}
+.tip .tr{display:flex; justify-content:space-between; gap:12px; line-height:1.55}
+.tip .tr span{color:var(--ink-2)}
+.tip .tr b{font-variant-numeric:tabular-nums; font-weight:600; font-size:12px; white-space:nowrap}
+.tip .tf{margin-top:6px; padding-top:6px; border-top:1px solid var(--rule-soft); font-size:11.5px; color:var(--ink-3)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header class="mast">
+  <div>
+    <div class="eyebrow">Les comptes publics de la France</div>
+    <h1>Où va l'argent public ?</h1>
+    <p class="sub">Ce que l'État, la Sécurité sociale et les collectivités prélèvent, dépensent et empruntent, de 1995 à aujourd'hui, poste par poste. Chiffres de la comptabilité nationale, relus chaque semaine chez Eurostat.</p>
+  </div>
+  <div class="stamp" id="stamp"></div>
+</header>
+
+<div class="filtres" role="group" aria-label="Réglages de la page">
+  <span class="ctl"><span class="lb">Année</span>
+    <span class="yr"><button type="button" id="an-m" aria-label="Année précédente">‹</button><span class="sel"><select id="an" aria-label="Année"></select></span><button type="button" id="an-p" aria-label="Année suivante">›</button></span></span>
+  <span class="ctl"><span class="lb">Unité</span>
+    <span class="seg" role="group" aria-label="Unité">
+      <button type="button" data-u="md" aria-pressed="true">Milliards €</button><button type="button" data-u="pib" aria-pressed="false">% du PIB</button><button type="button" data-u="hab" aria-pressed="false">€ par habitant</button><button type="button" data-u="cent" aria-pressed="false">Sur 100 €</button></span></span>
+  <span class="hint" id="hint"></span>
+</div>
+
+<div class="tiles" id="tiles"></div>
+<p class="cent" id="cent"></p>
+<p class="encore" id="encore"></p>
+
+<section>
+  <div class="shead"><h2>D'où vient l'argent, où il va</h2>
+    <p>Chaque euro dépensé, de la recette qui le finance jusqu'à la politique qu'il paie. Survolez un flux pour le chiffrer ; cliquez une fonction pour l'ouvrir.</p></div>
+  <div class="panel">
+    <div class="ptitle"><span class="no">1</span><h3 id="t1">Le circuit</h3>
+      <span class="sub"><span class="ctl"><span class="lb">Dépenses</span><span class="seg" role="group" aria-label="Ventilation des dépenses">
+        <button type="button" data-v="fonction" aria-pressed="true">Par politique</button><button type="button" data-v="nature" aria-pressed="false">Par nature</button></span></span></span></div>
+    <div class="duo">
+      <div><div class="chart sk" id="sk" role="img" aria-label="Diagramme des flux : recettes et emprunt vers les dépenses publiques, ventilées par politique ou par nature"></div>
+        <details class="xfold"><summary>Les chiffres du schéma</summary><div class="in" id="skTab"></div></details></div>
+      <div class="zoom" id="zoom"></div>
+    </div>
+    <p class="figc" id="skNote"></p>
+  </div>
+</section>
+
+<section>
+  <div class="shead"><h2>Qui paie ?</h2>
+    <p>Les impôts et cotisations sociales un par un, tous bénéficiaires confondus (État, Sécurité sociale, collectivités, Union européenne).</p></div>
+  <div class="panel">
+    <div class="ptitle"><span class="no">2</span><h3 id="t2">Impôt par impôt</h3></div>
+    <div id="rec"></div>
+    <p class="figc" id="recNote"></p>
+  </div>
+</section>
+
+<section>
+  <div class="shead"><h2>Qui dépense ?</h2>
+    <p>Trois étages : l'État et ses opérateurs, la Sécurité sociale, les collectivités locales. Le déficit n'est pas réparti au hasard.</p></div>
+  <div class="panel">
+    <div class="ptitle"><span class="no">3</span><h3 id="t3">Les trois administrations</h3></div>
+    <div class="ss" id="ss"></div>
+    <p class="figc" id="ssNote"></p>
+  </div>
+  <div class="panel">
+    <div class="ptitle"><span class="no">4</span><h3>Qui creuse le déficit, année par année</h3></div>
+    <div class="lgd" id="soLg"></div>
+    <div class="chart" id="so"></div>
+    <p class="figc" id="soNote"></p>
+  </div>
+</section>
+
+<section>
+  <div class="shead"><h2>Trente ans de comptes</h2>
+    <p>La dépense et la recette rapportées à la richesse produite chaque année. L'écart entre les deux courbes, c'est l'emprunt.</p></div>
+  <div class="panel">
+    <div class="ptitle"><span class="no">5</span><h3>Dépenses et recettes, en % du PIB</h3></div>
+    <div class="lgd" id="trLg"></div>
+    <div class="chart" id="tr"></div>
+    <details class="xfold"><summary>Les chiffres, année par année</summary><div class="in" id="trTab"></div></details>
+  </div>
+  <div class="panel">
+    <div class="ptitle"><span class="no">6</span><h3 id="t6">Ce qui a grossi, ce qui a fondu</h3>
+      <span class="sub"><span class="ctl"><span class="lb">Niveau</span><span class="seg" role="group" aria-label="Niveau de détail">
+        <button type="button" data-e="f" aria-pressed="true">Politiques</button><button type="button" data-e="s" aria-pressed="false">Sous-postes</button></span></span></span></div>
+    <div class="lgd" id="evLg"></div>
+    <div class="chart" id="ev"></div>
+    <p class="figc" id="evNote"></p>
+  </div>
+</section>
+
+<section>
+  <div class="shead"><h2>La France et ses voisins</h2>
+    <p>Même nomenclature, même définition, même année pour tous : où la France dépense-t-elle plus que les autres ?</p></div>
+  <div class="panel">
+    <div class="ptitle"><span class="no">7</span><h3 id="t7">L'écart, poste par poste</h3>
+      <span class="sub"><span class="ctl"><span class="lb">Comparer à</span><span class="sel"><select id="cmp" aria-label="Pays de comparaison"></select></span></span>
+        <span class="ctl"><span class="lb">Niveau</span><span class="seg" role="group" aria-label="Niveau de détail">
+        <button type="button" data-g="f" aria-pressed="true">Politiques</button><button type="button" data-g="s" aria-pressed="false">Sous-postes</button></span></span></span></div>
+    <p class="figc" id="euHead" style="margin:0 0 12px; font-size:14px"></p>
+    <div class="eu" id="eu"></div>
+    <p class="figc" id="euNote"></p>
+  </div>
+  <div class="panel">
+    <div class="ptitle"><span class="no">8</span><h3>La dépense publique depuis 1995, en % du PIB</h3></div>
+    <div class="lgd" id="ehLg"></div>
+    <div class="chart" id="eh"></div>
+    <p class="figc" id="ehNote"></p>
+  </div>
+</section>
+
+<section>
+  <div class="shead"><h2>Comment c'est compté</h2></div>
+  <div class="notes" id="notes">
+    <h3>Le champ : les administrations publiques</h3>
+    <p>Tout ce qui est public et non marchand, au sens de la comptabilité nationale : l'État et ses organismes (universités, France Travail, agences…), les administrations de sécurité sociale (régimes de base, retraites complémentaires Agirc-Arrco, assurance chômage, hôpitaux publics) et les collectivités locales. Les entreprises publiques (SNCF, EDF…) n'en font pas partie. C'est le champ du « déficit public » et de la « dette publique » au sens européen.</p>
+    <h3>Consolidé ou pas</h3>
+    <p>Pour l'ensemble, les montants sont <b>consolidés</b> : quand l'État verse une dotation à une commune, l'euro n'est compté qu'une fois, quand la commune le dépense. Pour chacune des trois administrations prise isolément, ils ne le sont pas : leurs dépenses additionnées dépassent donc le total. Les soldes, eux, s'additionnent exactement.</p>
+    <h3>Par politique ou par nature</h3>
+    <p>Une même dépense se range de deux façons. <b>Par politique</b> (la nomenclature internationale COFOG, 10 fonctions et 70 sous-fonctions) : à quoi elle sert — l'école, l'hôpital, les retraites. <b>Par nature</b> : sous quelle forme elle sort — salaires des agents, prestations versées aux ménages, achats, investissement, intérêts. La ventilation par politique est publiée environ un an après les grands agrégats : pour la dernière année connue, seule la vue par nature existe.</p>
+    <h3>Les chiffres</h3>
+    <ul id="srcList"></ul>
+    <p>Montants en euros courants, arrondis au million. « Sur 100 € » rapporte chaque poste à la dépense publique totale de l'année (à l'ensemble des impôts et cotisations dans le bloc 2). Le PIB et la population sont ceux d'Eurostat, cohérents avec les comptes publics. Les ratios européens du bloc 7 sont ceux qu'Eurostat publie avec sa ventilation par fonction ; ils peuvent différer de quelques dixièmes de point des agrégats révisés plus récemment.</p>
+    <p>Le robot relit Eurostat chaque lundi. Avant d'écrire quoi que ce soit, il vérifie que les comptes tombent juste : recettes égales à la somme de leurs composantes, dépenses à la somme de leurs natures, solde à la différence des deux, chaque politique à la somme de ses sous-postes, détail des impôts à l'agrégat. Un seul écart, et la page garde ses chiffres précédents.</p>
+  </div>
+  <p class="foot">© Tanguy Drouin — grotang.fr. Les chiffres sont ceux d'Eurostat ; leur mise en forme et les textes sont protégés.</p>
+</section>
+
+</div>
+
+<div class="tip" id="tip" hidden></div>
+
+<script>
+/*DATA_START*/const DE = null;/*DATA_END*/
+(function () {
+'use strict';
+const D = DE;
+const A = D.agg, CF = D.cofog, IM = D.imp;
+const ix = y => D.an.indexOf(y);
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+
+/* ---------- libellés ---------- */
+/* Les dix politiques (COFOG niveau 1), chacune avec SA couleur, fixe.
+   Huit teintes pour dix fonctions : les deux régaliennes partagent le violet,
+   les deux plus petites (logement, culture) un gris neutre. Le nom est toujours
+   écrit à côté : la couleur n'est jamais le seul repère. */
+const FN = {
+  GF10: { n: 'Protection sociale', c: '--n1', l: 'Protection sociale' },
+  GF07: { n: 'Santé', c: '--n2', l: 'Santé' },
+  GF09: { n: 'Enseignement', c: '--n3', l: 'Enseignement' },
+  GF04: { n: 'Affaires économiques', c: '--n4', l: 'Affaires économiques' },
+  GF01: { n: 'Services généraux', c: '--n5', l: 'Services publics généraux' },
+  GF05: { n: 'Environnement', c: '--n6', l: "Protection de l'environnement" },
+  GF02: { n: 'Défense', c: '--n7', l: 'Défense' },
+  GF03: { n: 'Sécurité et justice', c: '--n7', l: 'Ordre et sécurité publics' },
+  GF06: { n: 'Logement, équipements', c: '--ink-3', l: 'Logement et équipements collectifs' },
+  GF08: { n: 'Culture, sport, loisirs', c: '--ink-3', l: 'Loisirs, culture et culte' },
+};
+const SF = {
+  GF0101: 'Pouvoirs publics, finances, affaires étrangères', GF0102: 'Aide au développement', GF0103: 'Administration générale',
+  GF0104: 'Recherche fondamentale', GF0105: 'Recherche (services généraux)', GF0106: 'Autres services généraux',
+  GF0107: 'Intérêts de la dette', GF0108: 'Transferts à d\'autres administrations',
+  GF0201: 'Défense militaire', GF0202: 'Défense civile', GF0203: 'Aide militaire à l\'étranger', GF0204: 'Recherche de défense', GF0205: 'Autres dépenses de défense',
+  GF0301: 'Police et gendarmerie', GF0302: 'Pompiers et protection civile', GF0303: 'Justice', GF0304: 'Prisons', GF0305: 'Recherche (sécurité)', GF0306: 'Autres dépenses de sécurité',
+  GF0401: 'Aides générales à l\'économie et à l\'emploi', GF0402: 'Agriculture, forêt, pêche', GF0403: 'Énergie', GF0404: 'Industrie et construction',
+  GF0405: 'Transports', GF0406: 'Communications', GF0407: 'Autres secteurs (tourisme, commerce…)', GF0408: 'Recherche appliquée', GF0409: 'Autres affaires économiques',
+  GF0501: 'Déchets', GF0502: 'Eaux usées', GF0503: 'Lutte contre la pollution', GF0504: 'Biodiversité et paysages', GF0505: 'Recherche (environnement)', GF0506: 'Autres dépenses d\'environnement',
+  GF0601: 'Logement (construction, rénovation)', GF0602: 'Aménagement et équipements collectifs', GF0603: 'Eau potable', GF0604: 'Éclairage public', GF0605: 'Recherche (logement)', GF0606: 'Autres dépenses de logement',
+  GF0701: 'Médicaments et matériel médical', GF0702: 'Soins de ville', GF0703: 'Hôpital', GF0704: 'Santé publique et prévention', GF0705: 'Recherche médicale', GF0706: 'Autres dépenses de santé',
+  GF0801: 'Sport et loisirs', GF0802: 'Culture', GF0803: 'Audiovisuel public et édition', GF0804: 'Cultes et vie associative', GF0805: 'Recherche (culture)', GF0806: 'Autres dépenses de culture',
+  GF0901: 'Maternelle et primaire', GF0902: 'Collège et lycée', GF0903: 'Post-bac non supérieur', GF0904: 'Enseignement supérieur', GF0905: 'Non ventilé par niveau',
+  GF0906: 'Services annexes (cantine, transport, internat)', GF0907: 'Recherche (enseignement)', GF0908: 'Autres dépenses d\'enseignement',
+  GF1001: 'Maladie et invalidité', GF1002: 'Vieillesse', GF1003: 'Survivants (réversion)', GF1004: 'Famille et enfants', GF1005: 'Chômage',
+  GF1006: 'Aides au logement', GF1007: 'Exclusion sociale (RSA, minima…)', GF1008: 'Recherche (protection sociale)', GF1009: 'Autres dépenses sociales',
+};
+/* Précisions de lecture, affichées sous le nom quand elles évitent un contresens. */
+const SFX = {
+  GF1001: 'indemnités journalières, pensions d\'invalidité, handicap — les soins sont en « Santé »',
+  GF1002: 'retraites pour l\'essentiel, et dépendance des personnes âgées',
+  GF0107: 'charge d\'intérêts ; le remboursement du capital n\'est pas une dépense',
+  GF0103: 'personnel et services communs des administrations',
+  GF0401: 'dont aides à l\'emploi et soutiens d\'urgence aux entreprises',
+  GF0704: 'tests et vaccins covid en 2020-2022',
+  GF0602: 'voirie, urbanisme, équipements des communes',
+};
+/* Recettes (gov_10a_main) : leur somme est EXACTEMENT les recettes totales. */
+const REC = [
+  { k: 'D61REC', n: 'Cotisations sociales', l: 'Cotisations sociales (employeurs, salariés, indépendants)' },
+  { k: 'D2REC', n: 'TVA, taxes sur la production', l: 'Impôts sur les produits et la production (TVA, accises, taxes foncières…)' },
+  { k: 'D5REC', n: 'Impôts sur le revenu', l: 'Impôts courants sur le revenu et le patrimoine (IR, CSG, IS…)' },
+  { k: 'P11_P12_P131', n: 'Ventes et redevances', l: 'Ventes de services, tarifs, redevances' },
+  { k: ['D7REC', 'D39REC', 'D92_D99REC'], n: 'Transferts reçus', l: 'Transferts reçus (dont fonds européens) et divers' },
+  { k: 'D4REC', n: 'Revenus du patrimoine', l: 'Revenus de la propriété (dividendes, intérêts, loyers)' },
+  { k: 'D91REC', n: 'Impôts en capital', l: 'Impôts en capital (successions, donations)' },
+];
+/* Dépenses par nature : leur somme est EXACTEMENT les dépenses totales. */
+const NAT = [
+  { k: 'D62_D632PAY', n: 'Prestations sociales', c: '--n1', s: [['D62PAY', 'versées en argent (retraites, allocations…)'], ['D632PAY', 'en nature (remboursements de soins, de médicaments…)']] },
+  { k: 'D1PAY', n: 'Salaires des agents', c: '--n2', s: [['D11PAY', 'salaires et traitements bruts'], ['D12PAY', 'cotisations sociales employeur']] },
+  { k: 'P2', n: 'Achats courants', c: '--n3', s: [] },
+  { k: 'OP5ANP', n: 'Investissement', c: '--n4', s: [['P51G', 'dont formation brute de capital fixe']] },
+  { k: 'D7PAY', n: 'Transferts courants', c: '--n5', s: [['D76PAY', 'dont contribution au budget de l\'Union européenne']] },
+  { k: 'D4PAY', n: 'Intérêts de la dette', c: '--n7', s: [] },
+  { k: 'D3PAY', n: 'Subventions', c: '--n6', s: [] },
+  { k: 'D9PAY', n: 'Transferts en capital', c: '--ink-3', s: [] },
+  { k: ['D29PAY', 'D5PAY', 'D8'], n: 'Impôts payés', c: '--ink-3', s: [] },
+];
+const SECT = [
+  { k: 'S1311', n: 'État et organismes centraux', c: '--n7', d: 'ministères, opérateurs, universités, France Travail…' },
+  { k: 'S1314', n: 'Sécurité sociale', c: '--n3', d: 'régimes de base, retraites complémentaires, Unédic, hôpitaux' },
+  { k: 'S1313', n: 'Collectivités locales', c: '--n4', d: 'communes, intercommunalités, départements, régions' },
+];
+const GEO = { FR: 'France', DE: 'Allemagne', IT: 'Italie', ES: 'Espagne', NL: 'Pays-Bas', BE: 'Belgique', AT: 'Autriche',
+  SE: 'Suède', DK: 'Danemark', FI: 'Finlande', EA20: 'Zone euro', EU27_2020: 'Union européenne' };
+const GEO_A = { DE: "l'Allemagne", IT: "l'Italie", ES: "l'Espagne", NL: 'les Pays-Bas', BE: 'la Belgique', AT: "l'Autriche",
+  SE: 'la Suède', DK: 'le Danemark', FI: 'la Finlande', EA20: 'la zone euro', EU27_2020: "l'Union européenne" };
+
+/* ---------- état de la page ---------- */
+const S = { an: D.derF, u: 'md', v: 'fonction', f: 'GF10', e: 'f', g: 'f', cmp: 'EA20' };
+try { const h = new URLSearchParams(location.hash.slice(1));
+  if (D.an.includes(+h.get('an'))) S.an = +h.get('an');
+  if (['md', 'pib', 'hab', 'cent'].includes(h.get('u'))) S.u = h.get('u');
+  if (FN[h.get('f')]) S.f = h.get('f');
+} catch (e) {}
+const hashSync = () => { try { history.replaceState(null, '', '#an=' + S.an + '&u=' + S.u + '&f=' + S.f); } catch (e) {} };
+
+/* ---------- nombres ---------- */
+const nf = (x, d) => x.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
+const col = v => 'var(' + v + ')';
+const sum = (o, keys, k) => [].concat(keys).reduce((a, c) => a + ((o[c] || [])[k] || 0), 0);
+const TE = k => A.S13.TE[k];
+/* Conversion d'un montant en millions d'euros dans l'unité choisie. */
+function cv(m, k, u, base) {
+  u = u || S.u;
+  if (m === null || m === undefined) return null;
+  if (u === 'md') return m / 1000;
+  if (u === 'pib') return m / D.pib[k] * 100;
+  if (u === 'hab') return m * 1000 / D.pop[k];
+  return m / (base || TE(k)) * 100;
+}
+function F(x, u, long) {
+  u = u || S.u;
+  if (x === null || x === undefined || !isFinite(x)) return '—';
+  const a = Math.abs(x);
+  if (u === 'md') return nf(x, a >= 100 ? 0 : a >= 1 ? 1 : 2) + ' Md€';
+  if (u === 'pib') return nf(x, a >= 0.1 || a === 0 ? 1 : 2) + (long ? ' % du PIB' : ' %');
+  if (u === 'hab') return nf(x, a >= 10 ? 0 : 1) + ' €' + (long ? ' par habitant' : '');
+  return nf(x, a >= 0.1 || a === 0 ? 1 : 2) + ' €';
+}
+const FM = (m, k, u, base) => F(cv(m, k, u, base), u);
+const pct = (a, b) => nf(a / b * 100, a / b >= 0.1 ? 0 : 1) + ' %';
+const uLong = { md: 'en milliards d\'euros', pib: 'en % du PIB', hab: 'en euros par habitant', cent: 'pour 100 € de dépense publique' };
+
+/* ---------- infobulle ---------- */
+const tip = $('tip');
+function tipOn(ev, html) {
+  tip.innerHTML = html; tip.hidden = false;
+  const r = tip.getBoundingClientRect(), vw = innerWidth, vh = innerHeight;
+  let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + r.width > vw - 8) x = Math.max(8, ev.clientX - r.width - 14);
+  if (y + r.height > vh - 8) y = Math.max(8, ev.clientY - r.height - 14);
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+}
+const tipOff = () => { tip.hidden = true; };
+document.addEventListener('touchstart', e => { if (!e.target.closest('[data-tip]')) tipOff(); }, { passive: true });
+const trow = (a, b) => '<div class="tr"><span>' + a + '</span><b>' + b + '</b></div>';
+/* Les quatre lectures d'un même montant : le lecteur n'a pas à changer d'unité pour comparer. */
+const quatre = (m, k, base, baseLab) => trow('Montant', FM(m, k, 'md')) + trow('Part du PIB', FM(m, k, 'pib') )
+  + trow('Par habitant', FM(m, k, 'hab')) + trow(baseLab || 'Sur 100 € de dépense', FM(m, k, 'cent', base));
+
+/* ---------- petits outils SVG ---------- */
+function el(tag, at, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in at) if (at[k] !== undefined && at[k] !== null) e.setAttribute(k, at[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function svgIn(box, w, h) {
+  box.innerHTML = '';
+  return el('svg', { viewBox: `0 0 ${w} ${h}`, width: w, height: h, preserveAspectRatio: 'xMinYMin meet' }, box);
+}
+function niceTicks(lo, hi, n) {
+  const span = hi - lo, step0 = span / Math.max(1, n), p = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * p).find(s => s >= step0) || 10 * p;
+  const t = []; for (let v = Math.floor(lo / step + 1e-9) * step; v < hi + step - 1e-9; v += step) t.push(+v.toFixed(10));
+  return { t, step };
+}
+
+/* ======================================================================
+   EN-TÊTE : quatre chiffres et la phrase « sur 100 € »
+   ====================================================================== */
+function tete() {
+  const k = ix(S.an), y = S.an;
+  const te = A.S13.TE[k], tr = A.S13.TR[k], b9 = A.S13.B9[k], dt = D.dette[k];
+  const tile = (cl, lab, m, extra) => `<div class="tile ${cl}"><div class="k">${lab} ${y}</div>
+    <div class="v">${F(cv(m, k, 'md'), 'md').replace(' Md€', '<small>Md€</small>')}</div>
+    <div class="d"><b>${FM(m, k, 'pib')}</b> du PIB · <b>${FM(m, k, 'hab')}</b> par habitant${extra || ''}</div></div>`;
+  $('tiles').innerHTML =
+    tile('', 'Dépenses', te) +
+    tile('', 'Recettes', tr) +
+    (b9 < 0 ? tile('def', 'Déficit', -b9, `<br>soit <b>${nf(-b9 / te * 100, 1)} €</b> empruntés sur 100 € dépensés`)
+            : tile('', 'Excédent', b9)) +
+    tile('', 'Dette fin', dt, `<br>soit <b>${nf(dt / te, 1).replace(',0', '')}</b> années de dépense`);
+
+  /* La phrase « sur 100 € » : la ventilation par politique si elle existe pour
+     l'année, sinon par nature. Les montants sont rapportés au total COFOG de
+     l'année (base 100 exacte), le financement au total des dépenses. */
+  const parts = [];
+  if (y <= D.derF) {
+    const tot = CF.S13.TOTAL[k];
+    const fs = Object.keys(FN).map(c => [c, CF.S13[c][k]]).sort((a, b) => b[1] - a[1]);
+    const v = c => nf(CF.S13[c][k] / tot * 100, 1) + ' €';
+    for (const [c] of fs.slice(0, 5)) {
+      let s = `<b>${v(c)}</b> <i style="background:${col(FN[c].c)}"></i>${FN[c].n.toLowerCase()}`;
+      if (c === 'GF10') s += ` (dont <b>${v('GF1002')}</b> de vieillesse, retraites pour l'essentiel)`;
+      if (c === 'GF01') s += ` (dont <b>${v('GF0107')}</b> d'intérêts de la dette)`;
+      if (c === 'GF07') s += ` (dont <b>${v('GF0703')}</b> d'hôpital)`;
+      parts.push(s);
+    }
+    const reste = fs.slice(5).reduce((a, x) => a + x[1], 0);
+    parts.push(`<b>${nf(reste / tot * 100, 1)} €</b> pour tout le reste : ${fs.slice(5).map(x => FN[x[0]].n.toLowerCase()).join(', ')}`);
+  } else {
+    for (const n of NAT.slice(0, 6)) parts.push(`<b>${nf(sum(A.S13, n.k, k) / te * 100, 1)} €</b> <i style="background:${col(n.c)}"></i>${n.n.toLowerCase()}`);
+  }
+  const fin = REC.slice(0, 3).map(r => `<b>${nf(sum(A.S13, r.k, k) / te * 100, 1)} €</b> ${r.n === 'TVA, taxes sur la production' ? 'de TVA et de taxes sur la production' : r.n === 'Impôts sur le revenu' ? "d'impôts sur le revenu et le patrimoine" : 'de cotisations sociales'}`);
+  $('cent').innerHTML = `Sur 100 € de dépense publique en ${y} : ${parts.join(' ; ')}. `
+    + `Ils sont payés par ${fin.join(', ')}, ${nf((tr - sum(A.S13, ['D61REC', 'D2REC', 'D5REC'], k)) / te * 100, 1)} € d'autres recettes`
+    + (b9 < 0 ? `, et <b>${nf(-b9 / te * 100, 1)} €</b> d'emprunt.` : '.');
+
+  /* Annonce de la dernière année quand on regarde une autre */
+  const kd = ix(D.der);
+  $('encore').innerHTML = S.an !== D.der
+    ? `Dernière année connue, <b>${D.der}</b> : dépenses ${FM(A.S13.TE[kd], kd, 'md')} (${FM(A.S13.TE[kd], kd, 'pib')} du PIB), recettes ${FM(A.S13.TR[kd], kd, 'md')}, déficit ${FM(-A.S13.B9[kd], kd, 'md')}`
+      + (D.der > D.derF ? ` — sa ventilation par politique n'est pas encore publiée par Eurostat (vue par nature seulement).` : '.')
+    : (D.der > D.derF ? `Pour ${D.der}, Eurostat n'a publié que les grands agrégats : les dépenses sont ventilées par nature. La ventilation par politique s'arrête à ${D.derF}.` : '');
+}
+
+/* ======================================================================
+   1 · LE CIRCUIT (Sankey)
+   ====================================================================== */
+function circuit() {
+  const k = ix(S.an), box = $('sk');
+  const parPol = S.v === 'fonction' && S.an <= D.derF;
+  const te = TE(k), b9 = A.S13.B9[k];
+  const L = REC.map(r => ({ id: 'r' + r.n, n: r.n, l: r.l, m: sum(A.S13, r.k, k), c: '--ink-2', kind: 'rec' }))
+    .sort((a, b) => b.m - a.m);
+  if (b9 < 0) L.push({ id: 'def', n: 'Emprunt (déficit)', l: 'Déficit financé par emprunt', m: -b9, c: '--bad', kind: 'def' });
+  let R;
+  if (parPol) R = Object.keys(FN).map(c => ({ id: c, n: FN[c].n, l: FN[c].l, m: CF.S13[c][k], c: FN[c].c, kind: 'fn' }))
+    .sort((a, b) => b.m - a.m);
+  else R = NAT.map(n => ({ id: 'n' + n.n, n: n.n, l: n.n, m: sum(A.S13, n.k, k), c: n.c, kind: 'nat', nat: n }));
+  if (b9 > 0) R.push({ id: 'exc', n: 'Excédent', l: 'Excédent', m: b9, c: '--good', kind: 'exc' });
+  R = R.filter(n => n.m > 0);
+
+  $('t1').textContent = `Le circuit, ${S.an}`;
+  document.querySelectorAll('[data-v]').forEach(b => { b.disabled = b.dataset.v === 'fonction' && S.an > D.derF;
+    b.setAttribute('aria-pressed', (b.dataset.v === 'fonction') === parPol); });
+
+  const W = Math.max(300, box.clientWidth), mob = W < 560;
+  /* Au téléphone, les petites étiquettes des deux colonnes se croisaient en bas :
+     à gauche, l'emprunt et les petites recettes passent en haut, face au gros
+     bloc de la protection sociale, et leurs étiquettes se réduisent au nom. */
+  if (mob) { const d = L.filter(n => n.kind === 'def'); L.splice(0, L.length, ...d, ...L.filter(n => n.kind !== 'def').sort((a, b) => a.m - b.m)); }
+  const H = mob ? 680 : 610, top = 46, bot = 6, nw = mob ? 10 : 14, gap = mob ? 3 : 5;
+  const sL = L.reduce((a, n) => a + n.m, 0), sR = R.reduce((a, n) => a + n.m, 0), M = Math.max(sL, sR, te);
+  const kk = (H - top - bot - gap * (Math.max(L.length, R.length) - 1)) / M;
+  const xL = 0, xM = Math.round(W / 2 - nw / 2), xR = W - nw;
+  const pose = (arr, x) => {
+    const h = arr.reduce((a, n) => a + Math.max(1.5, n.m * kk), 0) + gap * (arr.length - 1);
+    let y = top + (H - top - bot - h) / 2;
+    for (const n of arr) { n.x = x; n.h = Math.max(1.5, n.m * kk); n.y = y; y += n.h + gap; }
+  };
+  pose(L, xL); pose(R, xR);
+  const hM = M * kk, yM = top + (H - top - bot - hM) / 2;
+  const svg = svgIn(box, W, H);
+  const gl = el('g', {}, svg), gn = el('g', {}, svg), gt = el('g', {}, svg);
+
+  /* rubans : gauche → milieu, milieu → droite, chacun empilé sur la colonne du milieu */
+  const ruban = (x1, a1, b1, x2, a2, b2, c, cls) => {
+    const xm = (x1 + x2) / 2;
+    return el('path', { class: 'lk ' + cls, d: `M${x1},${a1}C${xm},${a1} ${xm},${a2} ${x2},${a2}L${x2},${b2}C${xm},${b2} ${xm},${b1} ${x1},${b1}Z`,
+      style: `fill:${col(c)}` }, gl);
+  };
+  let cy = yM;
+  for (const n of L) { const h = n.m * kk; n.lk = ruban(xL + nw, n.y, n.y + n.h, xM, cy, cy + h, n.c, n.id); cy += h; }
+  cy = yM;
+  for (const n of R) { const h = n.m * kk; n.lk = ruban(xM + nw, cy, cy + h, xR, n.y, n.y + n.h, n.c, n.id); cy += h; }
+
+  /* noeuds */
+  const nd = (n, cls) => {
+    const g = el('g', { class: 'nd ' + cls, tabindex: n.kind === 'fn' ? 0 : null, role: n.kind === 'fn' ? 'button' : null,
+      'aria-label': n.kind === 'fn' ? n.l + ' : ouvrir le détail' : null, 'data-tip': 1 }, gn);
+    el('rect', { x: n.x, y: n.y, width: nw, height: n.h, rx: 2, style: `fill:${col(n.c)}` }, g);
+    el('rect', { x: n.x - 6, y: n.y - 2, width: nw + 12, height: n.h + 4, style: 'fill:transparent' }, g);
+    return g;
+  };
+  const milieu = { x: xM, y: yM, h: hM, m: te, c: '--ink', n: 'Dépenses publiques' };
+  const gM = nd(milieu, 'mid');
+  for (const n of L) n.g = nd(n, 'l');
+  for (const n of R) { n.g = nd(n, 'r' + (n.kind === 'fn' ? ' cl' : '') + (n.id === S.f && parPol ? ' sel' : '')); }
+
+  /* en-têtes de colonne */
+  const hd = (x, anc, a, b) => { el('text', { x, y: 13, 'text-anchor': anc, class: 'hd' }, gt).textContent = a;
+    el('text', { x, y: 31, 'text-anchor': anc, class: 'hdv m' }, gt).textContent = b; };
+  hd(0, 'start', b9 < 0 ? 'Recettes + emprunt' : 'Recettes', F(cv(A.S13.TR[k], k), S.u) + (b9 < 0 ? ' + ' + F(cv(-b9, k), S.u) : ''));
+  hd(W / 2, 'middle', 'Dépenses', F(cv(te, k), S.u));
+  hd(W, 'end', parPol ? 'Par politique' : 'Par nature', mob ? '' : (parPol ? '10 fonctions COFOG' : 'comptes nationaux'));
+
+  /* étiquettes : sur les rubans, avec un halo de la couleur du fond ; on les
+     écarte les unes des autres quand les noeuds sont trop petits, avec un trait
+     de rappel vers leur noeud. */
+  const place = (arr, side) => {
+    const lo = top + 8, hi = H - bot - 8;
+    const p = arr.map(n => ({ n, y: n.y + n.h / 2, two: n.h >= 22 }));
+    const hh = q => q.two ? 29 : 16, d = (a, b) => (hh(a) + hh(b)) / 2 + 1;
+    for (let i = 1; i < p.length; i++) p[i].y = Math.max(p[i].y, p[i - 1].y + d(p[i - 1], p[i]));
+    const last = p[p.length - 1];
+    if (last && last.y + hh(last) / 2 > hi) { last.y = hi - hh(last) / 2; for (let i = p.length - 2; i >= 0; i--) p[i].y = Math.min(p[i].y, p[i + 1].y - d(p[i], p[i + 1])); }
+    for (const q of p) {
+      const n = q.n, x = side === 'l' ? n.x + nw + 6 : n.x - 6, anc = side === 'l' ? 'start' : 'end';
+      const c0 = n.y + n.h / 2;
+      if (Math.abs(q.y - c0) > 4) el('path', { class: 'ld', d: side === 'l' ? `M${n.x + nw},${c0}L${x - 2},${q.y}` : `M${n.x},${c0}L${x + 2},${q.y}` }, gt);
+      const val = F(cv(n.m, k), S.u) + (S.u === 'cent' ? '' : ' · ' + pct(n.m, side === 'l' ? te : (parPol ? CF.S13.TOTAL[k] : te)));
+      const t = el('text', { class: 'lab', 'text-anchor': anc }, gt);
+      if (q.two) {
+        const a = el('tspan', { x, y: q.y - 3, class: 'n' }, t); a.textContent = n.n;
+        const b = el('tspan', { x, y: q.y + 11, class: 'v m' }, t); b.textContent = val;
+      } else {
+        const a = el('tspan', { x, y: q.y + 4, class: 'n' }, t); a.textContent = n.n + (mob ? '' : '  ');
+        if (!mob) { const b = el('tspan', { class: 'v m' }, t); b.textContent = val; }
+      }
+    }
+  };
+  place(L, 'l'); place(R, 'r');
+
+  /* survol : on éclaire le noeud et ses flux */
+  const allN = [...L, ...R];
+  const focus = on => { svg.classList.toggle('foc', !!on); box.classList.toggle('foc', !!on);
+    for (const n of allN) { n.lk.classList.toggle('hl', n === on); n.g.classList.toggle('hl', n === on); } };
+  const tipN = (n, side) => {
+    let h = `<div class="th"><i style="background:${col(n.c)}"></i>${n.l}</div>` + quatre(n.m, k);
+    if (side === 'l' && n.kind !== 'def') h += trow('Part des recettes', pct(n.m, A.S13.TR[k]));
+    if (n.kind === 'fn') {
+      const subs = Object.keys(CF.S13).filter(c => c.length === 6 && c.startsWith(n.id) && CF.S13[c][k] > 0)
+        .sort((a, b) => CF.S13[b][k] - CF.S13[a][k]).slice(0, 3);
+      h += `<div class="tf">Dont ${subs.map(c => SF[c].toLowerCase() + ' ' + FM(CF.S13[c][k], k, 'md')).join(', ')}.<br>Cliquer pour le détail.</div>`;
+    }
+    if (n.kind === 'nat' && n.nat.s.length) h += `<div class="tf">${n.nat.s.map(([c, t]) => t + ' : ' + FM(A.S13[c][k], k, 'md')).join('<br>')}</div>`;
+    if (n.kind === 'def') h += `<div class="tf">Les recettes ne couvrent que ${pct(A.S13.TR[k], te)} des dépenses ; le reste est emprunté et s'ajoute à la dette.</div>`;
+    return h;
+  };
+  for (const [arr, side] of [[L, 'l'], [R, 'r']]) for (const n of arr) {
+    for (const t of [n.g, n.lk]) {
+      t.addEventListener('mousemove', e => { focus(n); tipOn(e, tipN(n, side)); });
+      t.addEventListener('mouseleave', () => { focus(null); tipOff(); });
+      t.addEventListener('touchstart', e => { focus(n); tipOn(e.touches[0], tipN(n, side)); }, { passive: true });
+    }
+    if (n.kind === 'fn') {
+      const go = () => { S.f = n.id; hashSync(); circuit(); zoom(); };
+      n.g.addEventListener('click', go);
+      n.g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+    }
+  }
+  gM.addEventListener('mousemove', e => tipOn(e, `<div class="th">Dépenses publiques ${S.an}</div>` + quatre(te, k)
+    + (parPol ? `<div class="tf">Ventilées par politique : ${FM(CF.S13.TOTAL[k], k, 'md')} (publication COFOG d'Eurostat, antérieure à la dernière révision des comptes : ${nf((CF.S13.TOTAL[k] / te - 1) * 100, 2)} %).</div>` : '')));
+  gM.addEventListener('mouseleave', tipOff);
+
+  /* la version en chiffres */
+  const tab = (arr, titre, base) => `<tr><th>${titre}</th><th>Md€</th><th>% PIB</th><th>€/hab.</th><th>Sur 100 €</th></tr>`
+    + arr.map(n => `<tr><td>${n.l}</td><td>${FM(n.m, k, 'md')}</td><td>${FM(n.m, k, 'pib')}</td><td>${FM(n.m, k, 'hab')}</td><td>${FM(n.m, k, 'cent', base)}</td></tr>`).join('');
+  $('skTab').innerHTML = `<table class="xtable">${tab(L, 'Financement ' + S.an)}<tr class="t"><td>Total</td><td>${FM(te, k, 'md')}</td><td>${FM(te, k, 'pib')}</td><td>${FM(te, k, 'hab')}</td><td>100,0 €</td></tr>`
+    + tab(R, (parPol ? 'Dépenses par politique ' : 'Dépenses par nature ') + S.an, parPol ? CF.S13.TOTAL[k] : te) + '</table>';
+  $('skNote').innerHTML = parPol
+    ? `Les recettes et l'emprunt couvrent exactement les dépenses : <b>${FM(A.S13.TR[k], k, 'md')}</b> de recettes + <b>${FM(Math.max(0, -b9), k, 'md')}</b> d'emprunt = <b>${FM(te, k, 'md')}</b>. La ventilation par politique est celle de la nomenclature COFOG ; les intérêts de la dette y figurent dans « services généraux ».`
+    : `Par nature : la forme sous laquelle l'argent sort. Les prestations sociales comptent les pensions et allocations versées en argent et les soins remboursés ; les salaires, ceux de tous les agents publics (enseignants, soignants des hôpitaux publics, policiers…).`
+      + (S.an > D.derF ? ` <b>${S.an}</b> : la ventilation par politique n'est pas encore publiée.` : '');
+}
+
+/* ======================================================================
+   1b · ZOOM SUR UNE POLITIQUE
+   ====================================================================== */
+function zoom() {
+  const z = $('zoom'), k = ix(S.an);
+  if (!(S.v === 'fonction' && S.an <= D.derF)) {
+    /* vue par nature : le détail des natures */
+    const te = TE(k);
+    z.innerHTML = `<div class="zh" style="margin-top:0">Dépenses par nature, ${S.an}</div><ul class="zl">` + NAT.map(n => {
+      const m = sum(A.S13, n.k, k);
+      return `<li><span class="nm">${n.n}${n.s.length ? `<small>${n.s.map(([c, t]) => t + ' : ' + FM(A.S13[c][k], k)).join(' · ')}</small>` : ''}</span>
+        <span class="vl">${FM(m, k)}<small>${pct(m, te)}</small></span><span class="br"><i style="width:${m / A.S13.D62_D632PAY[k] * 100}%; background:${col(n.c)}"></i></span></li>`;
+    }).join('') + '</ul>' + (S.an > D.derF ? `<p class="vide">La ventilation par politique de ${S.an} n'est pas encore publiée ; elle s'arrête à ${D.derF}.</p>` : '');
+    return;
+  }
+  const f = S.f, F0 = FN[f], tot = CF.S13.TOTAL[k], v = CF.S13[f][k];
+  const subs = Object.keys(CF.S13).filter(c => c.length === 6 && c.startsWith(f) && CF.S13[c][k] > 0.5)
+    .sort((a, b) => CF.S13[b][k] - CF.S13[a][k]);
+  const mx = subs.length ? CF.S13[subs[0]][k] : 1;
+  let h = `<div class="fnav" role="group" aria-label="Politique">` + Object.keys(FN).sort((a, b) => CF.S13[b][k] - CF.S13[a][k])
+    .map(c => `<button type="button" data-f="${c}" aria-pressed="${c === f}"><i style="background:${col(FN[c].c)}"></i>${FN[c].n}</button>`).join('') + '</div>';
+  h += `<h4><i style="background:${col(F0.c)}"></i>${F0.l}</h4>
+    <div class="zv"><b>${FM(v, k, 'md')}</b> · ${FM(v, k, 'pib')} du PIB · ${FM(v, k, 'hab')} par habitant · <b>${nf(v / tot * 100, 1)} €</b> sur 100 €</div>`;
+  h += `<ul class="zl">` + subs.map(c => {
+    const m = CF.S13[c][k];
+    return `<li data-tip="1" data-c="${c}"><span class="nm">${SF[c]}${SFX[c] ? `<small>${SFX[c]}</small>` : ''}</span>
+      <span class="vl">${FM(m, k)}<small>${pct(m, v)} du poste</small></span>
+      <span class="br"><i style="width:${m / mx * 100}%; background:${col(F0.c)}"></i></span></li>`;
+  }).join('') + '</ul>';
+
+  /* qui la porte : montants bruts de chaque administration (non consolidés) */
+  const q = SECT.map(s => ({ s, m: Math.max(0, (CF[s.k][f] || [])[k] || 0) }));
+  const qm = Math.max(...q.map(x => x.m)) || 1;
+  h += `<div class="zh">Qui la porte <span style="text-transform:none; letter-spacing:0; font-weight:400">— montants bruts, transferts entre administrations compris</span></div><div class="qui">` + q.map(x =>
+    `<div><span>${x.s.n.replace(' et organismes centraux', '')}</span><span class="b"><i style="width:${x.m / qm * 100}%; background:${col(x.s.c)}"></i></span><span class="v">${FM(x.m, k)}</span></div>`).join('') + '</div>';
+
+  /* trente ans de cette politique, en % du PIB */
+  h += `<div class="zh">En % du PIB depuis 1995</div><div class="chart" id="zsp"></div>`;
+  z.innerHTML = h;
+  z.querySelectorAll('[data-f]').forEach(b => b.addEventListener('click', () => { S.f = b.dataset.f; hashSync(); circuit(); zoom(); }));
+  z.querySelectorAll('li[data-c]').forEach(li => {
+    const c = li.dataset.c, show = e => {
+      const k95 = ix(1995);
+      tipOn(e, `<div class="th"><i style="background:${col(F0.c)}"></i>${SF[c]}</div>` + quatre(CF.S13[c][k], k)
+        + trow('Part de « ' + F0.n.toLowerCase() + ' »', pct(CF.S13[c][k], v))
+        + `<div class="tf">En 1995 : ${FM(CF.S13[c][k95], k95, 'pib')} du PIB ; en ${S.an} : ${FM(CF.S13[c][k], k, 'pib')}.</div>`);
+    };
+    li.addEventListener('mousemove', show); li.addEventListener('mouseleave', tipOff);
+  });
+  const ys = D.an.filter(y => y <= D.derF);
+  lignes($('zsp'), ys, [{ n: F0.n, c: F0.c, v: ys.map(y => CF.S13[f][ix(y)] / D.pib[ix(y)] * 100), w: 2 }],
+    { h: 150, fy: x => nf(x, 1) + ' %', mark: S.an, compact: true });
+}
+
+/* ======================================================================
+   2 · QUI PAIE : impôts et cotisations
+   ====================================================================== */
+function recettes() {
+  const y = Math.min(S.an, D.derT), k = ix(y), g = c => (IM[c] || [])[k] || 0;
+  const autresCot = g('D61') - g('D611') - g('D612') - g('D613') + g('D613CN');
+  const groupes = [
+    { n: 'Cotisations sociales', c: '--n1', it: [
+      ['Cotisations des employeurs', g('D611'), 'part patronale, sur les salaires'],
+      ['Cotisations des salariés', g('D613CE'), 'part salariale'],
+      ['Cotisations des indépendants', g('D613CS'), ''],
+      ['Cotisations imputées', g('D612'), 'contrepartie comptable des pensions que l\'État verse lui-même à ses fonctionnaires'],
+      ['Autres cotisations', autresCot, 'chômeurs, retraités, ajustements'] ] },
+    { n: 'Impôts sur la consommation', c: '--n2', it: [
+      ['TVA', g('D211'), ''],
+      ['Accises', g('D214A'), 'carburants, tabac, alcools, électricité…'],
+      ['Autres taxes sur les produits', g('D21') - g('D211') - g('D214A'), 'droits de mutation, assurances, droits de douane…'] ] },
+    { n: 'Impôts sur le revenu et les bénéfices', c: '--n3', it: [
+      ['Impôts sur le revenu des ménages', g('D51A_C1'), 'impôt sur le revenu, CSG, CRDS, prélèvements sur l\'épargne'],
+      ['Impôts sur les bénéfices des sociétés', g('D51B_C2'), 'impôt sur les sociétés et assimilés'],
+      ['Autres impôts sur le revenu', g('D5') - g('D51A_C1') - g('D51B_C2') - g('D59'), ''],
+      ['Autres impôts courants', g('D59'), 'taxe d\'habitation (supprimée sur les résidences principales), impôts sur la fortune…'] ] },
+    { n: 'Impôts sur la production', c: '--n4', it: [
+      ['Impôts sur le foncier et les bâtiments', g('D29A'), 'taxes foncières, cotisation foncière des entreprises…'],
+      ['Taxes sur les salaires et la main-d\'œuvre', g('D29C'), 'taxe sur les salaires, versement mobilité, formation…'],
+      ['Autres impôts sur la production', g('D29') - g('D29A') - g('D29C'), ''] ] },
+    { n: 'Impôts sur le patrimoine transmis', c: '--n5', it: [
+      ['Droits de succession et de donation', g('D91'), ''] ] },
+  ];
+  const tot = groupes.reduce((a, gr) => a + gr.it.reduce((b, x) => b + x[1], 0), 0);
+  const base = tot;
+  const mx = Math.max(...groupes.flatMap(gr => gr.it.map(x => x[1])));
+  $('t2').textContent = `Impôt par impôt, ${y}`;
+  $('rec').innerHTML = `<p class="figc" style="margin:0 0 6px">Total des impôts et cotisations : <b>${FM(tot, k, 'md')}</b>, soit <b>${FM(tot, k, 'pib')}</b> du PIB et <b>${FM(tot, k, 'hab')}</b> par habitant${S.u === 'cent' ? ' — ici, « sur 100 € » se lit sur 100 € d\'impôts et cotisations' : ''}.</p>`
+    + groupes.map(gr => {
+      const s = gr.it.reduce((a, x) => a + x[1], 0);
+      return `<div class="grp"><div class="gh"><span>${gr.n}</span><span>${FM(s, k, null, base)} · ${pct(s, tot)}</span></div>`
+        + gr.it.filter(x => Math.abs(x[1]) >= 500).map(([n, m, d]) => `<div class="row" data-tip="1" data-m="${m}" data-n="${n}">
+          <span class="nm">${n}${d ? `<small>${d}</small>` : ''}</span>
+          <span class="b"><i style="width:${Math.max(0, m) / mx * 100}%; background:${col(gr.c)}"></i></span>
+          <span class="v">${FM(m, k, null, base)}</span><span class="p">${pct(m, tot)}</span></div>`).join('') + '</div>';
+    }).join('');
+  $('rec').querySelectorAll('.row').forEach(r => {
+    const m = +r.dataset.m, k95 = ix(1995);
+    r.addEventListener('mousemove', e => tipOn(e, `<div class="th">${r.dataset.n}</div>` + quatre(m, k, base, 'Sur 100 € d\'impôts')
+      + trow('Part de la dépense publique', pct(m, TE(k)))));
+    r.addEventListener('mouseleave', tipOff);
+  });
+  $('recNote').innerHTML = (S.an > D.derT ? `Le détail impôt par impôt de ${S.an} n'est pas encore publié : année ${D.derT} affichée. ` : '')
+    + `Source : statistiques des recettes fiscales d'Eurostat, qui recoupent les comptes à moins de 0,5 % près. La CSG est un impôt sur le revenu en comptabilité nationale, pas une cotisation. Montants nets des impôts jugés irrécouvrables.`;
+}
+
+/* ======================================================================
+   3 · QUI DÉPENSE : les trois administrations
+   ====================================================================== */
+function sousSecteurs() {
+  const k = ix(S.an), te = TE(k);
+  $('t3').textContent = `Les trois administrations, ${S.an}`;
+  $('ss').innerHTML = SECT.map(s => {
+    const a = A[s.k], b9 = a.B9[k];
+    let top = '';
+    if (S.an <= D.derF) {
+      const fs = Object.keys(FN).map(c => [c, (CF[s.k][c] || [])[k] || 0]).filter(x => x[1] > 0).sort((p, q) => q[1] - p[1]).slice(0, 4);
+      const tr = (CF[s.k].GF0108 || [])[k] || 0;
+      top = `<div class="top">${fs.map(([c, m]) => `<div><span>${FN[c].n}</span><span>${FM(m, k)}</span></div>`).join('')}`
+        + (tr > 1000 ? `<div><span>dont versé aux autres administrations</span><span>${FM(tr, k)}</span></div>` : '') + '</div>';
+    }
+    return `<div class="sc"><h4><i style="background:${col(s.c)}"></i>${s.n}</h4><div class="sub">${s.d}</div>
+      <dl><dt>Dépenses</dt><dd>${FM(a.TE[k], k)}</dd><dt>Recettes</dt><dd>${FM(a.TR[k], k)}</dd>
+      <dt>${b9 < 0 ? 'Déficit' : 'Excédent'}</dt><dd class="${b9 < 0 ? 'neg' : 'pos'}">${FM(Math.abs(b9), k)}</dd>
+      <dt>Part du déficit total</dt><dd>${A.S13.B9[k] < 0 && b9 < 0 ? pct(b9, A.S13.B9[k]) : '—'}</dd></dl>${top}</div>`;
+  }).join('');
+  const etat = A.S1311.B9[k], tot = A.S13.B9[k];
+  $('ssNote').innerHTML = `Montants non consolidés : chaque administration compte aussi ce qu'elle verse aux deux autres (l'État finance une part des collectivités et de la Sécurité sociale), d'où un total supérieur à ${FM(te, k)}. Les soldes, eux, s'additionnent : `
+    + SECT.map(s => FM(A[s.k].B9[k], k)).join(' + ') + ` = <b>${FM(tot, k)}</b>.`
+    + (tot < 0 && etat < 0 ? ` L'État porte <b>${pct(etat, tot)}</b> du déficit public.` : '');
+
+  /* bloc 4 : soldes empilés, 1995 → dernière année */
+  soldes();
+}
+
+function soldes() {
+  const box = $('so'), W = Math.max(300, box.clientWidth), H = 280, pl = 46, pr = 8, pt = 10, pb = 26;
+  const u = S.u === 'cent' ? 'pib' : S.u;
+  const ys = D.an, val = (s, y) => cv(A[s].B9[ix(y)], ix(y), u);
+  let lo = 0, hi = 0;
+  for (const y of ys) { let p = 0, n = 0; for (const s of SECT) { const v = val(s.k, y); if (v > 0) p += v; else n += v; } hi = Math.max(hi, p); lo = Math.min(lo, n); }
+  const { t } = niceTicks(lo, hi, 5);
+  lo = Math.min(lo, t[0]); hi = Math.max(hi, t[t.length - 1]);
+  const svg = svgIn(box, W, H), sy = v => pt + (hi - v) / (hi - lo) * (H - pt - pb);
+  const bw = (W - pl - pr) / ys.length, gx = el('g', { class: 'ax' }, svg);
+  for (const v of t) { el('line', { x1: pl, x2: W - pr, y1: sy(v), y2: sy(v), class: v === 0 ? 'z' : '' }, gx);
+    el('text', { x: pl - 6, y: sy(v) + 4, 'text-anchor': 'end' }, gx).textContent = u === 'md' ? nf(v, 0) : u === 'pib' ? nf(v, 1) : nf(v, 0); }
+  ys.forEach((y, i) => { if (y % 5 === 0 || i === ys.length - 1) el('text', { x: pl + i * bw + bw / 2, y: H - 8, 'text-anchor': 'middle' }, gx).textContent = y; });
+  const g = el('g', {}, svg);
+  ys.forEach((y, i) => {
+    let p = 0, n = 0;
+    const x = pl + i * bw + 1, w = Math.max(1, bw - 2);
+    for (const s of SECT) {
+      const v = val(s.k, y);
+      if (v >= 0) { el('rect', { x, y: sy(p + v), width: w, height: Math.max(0, sy(p) - sy(p + v) - (v > 0 ? 1 : 0)), style: `fill:${col(s.c)}`, opacity: y === S.an ? 1 : .78 }, g); p += v; }
+      else { el('rect', { x, y: sy(n) + (n < 0 ? 1 : 0), width: w, height: Math.max(0, sy(n + v) - sy(n) - (n < 0 ? 1 : 0)), style: `fill:${col(s.c)}`, opacity: y === S.an ? 1 : .78 }, g); n += v; }
+    }
+    const tv = cv(A.S13.B9[ix(y)], ix(y), u);
+    el('rect', { x: x - 1, y: sy(tv) - 1.25, width: w + 2, height: 2.5, style: 'fill:var(--ink)' }, g);
+    const hit = el('rect', { x: pl + i * bw, y: pt, width: bw, height: H - pt - pb, style: 'fill:transparent', 'data-tip': 1 }, g);
+    const show = e => tipOn(e, `<div class="th">Solde public ${y}</div>` + SECT.map(s => trow(s.n.replace(' et organismes centraux', ''), F(val(s.k, y), u, true))).join('')
+      + trow('<b>Ensemble</b>', F(tv, u, true)));
+    hit.addEventListener('mousemove', show); hit.addEventListener('mouseleave', tipOff);
+    hit.addEventListener('click', () => setAn(y));
+  });
+  if (S.an >= ys[0]) el('rect', { x: pl + ys.indexOf(S.an) * bw, y: pt, width: bw, height: H - pt - pb, style: 'fill:var(--ink); fill-opacity:.06; pointer-events:none' }, g);
+  $('soLg').innerHTML = SECT.map(s => `<span><i class="sq" style="background:${col(s.c)}"></i>${s.n}</span>`).join('')
+    + `<span><i style="background:var(--ink); height:3px"></i>Ensemble</span><span style="color:var(--ink-3)">${uLong[u]}${S.u === 'cent' ? ' (l\'unité « sur 100 € » n\'a pas de sens ici)' : ''}</span>`;
+  const k = ix(D.der);
+  const nEtat = D.an.filter(y => A.S1311.B9[ix(y)] < 0).length;
+  $('soNote').innerHTML = `Sous zéro, un déficit. L'État est en déficit chaque année depuis 1995 (${nEtat} années sur ${D.an.length}) ; la Sécurité sociale oscille autour de l'équilibre, les collectivités, tenues par la règle d'or (elles n'empruntent que pour investir), restent proches de zéro. Cliquer une barre pour choisir l'année.`;
+}
+
+/* ======================================================================
+   5 · TRENTE ANS : dépenses et recettes en % du PIB
+   ====================================================================== */
+function trente() {
+  const ys = D.an, te = ys.map(y => A.S13.TE[ix(y)] / D.pib[ix(y)] * 100), tr = ys.map(y => A.S13.TR[ix(y)] / D.pib[ix(y)] * 100);
+  lignes($('tr'), ys, [{ n: 'Dépenses', c: '--ink', v: te, w: 2.5 }, { n: 'Recettes', c: '--n1', v: tr, w: 2.5 }],
+    { h: 320, fy: x => nf(x, 0) + ' %', mark: S.an, gap: [0, 1], click: setAn,
+      ev: [[2009, 'Crise financière'], [2020, 'Covid']],
+      tipx: i => `<div class="th">${ys[i]}</div>` + trow('Dépenses', nf(te[i], 1) + ' % du PIB') + trow('Recettes', nf(tr[i], 1) + ' % du PIB')
+        + trow('Déficit', nf(te[i] - tr[i], 1) + ' pt de PIB') + trow('Dette', nf(D.dette[i] / D.pib[i] * 100, 1) + ' % du PIB') });
+  $('trLg').innerHTML = `<span><i style="background:var(--ink)"></i>Dépenses</span><span><i style="background:var(--n1)"></i>Recettes</span><span><i class="sq" style="background:var(--bad); opacity:.25"></i>Déficit</span>`;
+  $('trTab').innerHTML = `<table class="xtable"><tr><th>Année</th><th>Dépenses Md€</th><th>Recettes Md€</th><th>Solde Md€</th><th>Dépenses % PIB</th><th>Recettes % PIB</th><th>Dette % PIB</th></tr>`
+    + ys.map((y, i) => `<tr><td>${y}</td><td>${nf(A.S13.TE[i] / 1000, 1)}</td><td>${nf(A.S13.TR[i] / 1000, 1)}</td><td>${nf(A.S13.B9[i] / 1000, 1)}</td><td>${nf(te[i], 1)}</td><td>${nf(tr[i], 1)}</td><td>${nf(D.dette[i] / D.pib[i] * 100, 1)}</td></tr>`).reverse().join('') + '</table>';
+  evolution();
+}
+
+/* 6 · Ce qui a grossi : 1995 → année choisie (ou dernière année ventilée), en points de PIB */
+function evolution() {
+  const y1 = Math.min(S.an, D.derF), k0 = ix(1995), k1 = ix(y1);
+  const p = (c, k) => CF.S13[c][k] / D.pib[k] * 100;
+  let rows;
+  if (S.e === 'f') rows = Object.keys(FN).map(c => ({ c, n: FN[c].n, col: FN[c].c, a: p(c, k0), b: p(c, k1) }));
+  else rows = Object.keys(CF.S13).filter(c => c.length === 6).map(c => ({ c, n: SF[c], col: FN[c.slice(0, 4)].c, a: p(c, k0), b: p(c, k1) }))
+    .sort((x, z) => Math.abs(z.b - z.a) - Math.abs(x.b - x.a)).slice(0, 14);
+  rows.sort((x, z) => (z.b - z.a) - (x.b - x.a));
+  $('t6').textContent = `Ce qui a grossi, ce qui a fondu : 1995 → ${y1}`;
+  const box = $('ev'), W = Math.max(300, box.clientWidth), mob = W < 600, lw = mob ? 128 : 230, rw = 64;
+  const rh = 26, H = rows.length * rh + 26, svg = svgIn(box, W, H);
+  const mx = Math.max(...rows.flatMap(r => [r.a, r.b])), { t } = niceTicks(0, mx, mob ? 3 : 6), hi = t[t.length - 1];
+  const sx = v => lw + v / hi * (W - lw - rw - 10);
+  const gx = el('g', { class: 'ax' }, svg);
+  for (const v of t) { el('line', { x1: sx(v), x2: sx(v), y1: 0, y2: H - 22 }, gx); el('text', { x: sx(v), y: H - 6, 'text-anchor': 'middle' }, gx).textContent = nf(v, v < 10 && hi < 10 ? 1 : 0) + ' %'; }
+  rows.forEach((r, i) => {
+    const y = i * rh + rh / 2, g = el('g', { 'data-tip': 1 }, svg);
+    el('rect', { x: 0, y: i * rh, width: W, height: rh, style: 'fill:transparent' }, g);
+    const t1 = el('text', { x: lw - 10, y: y + 4, 'text-anchor': 'end', style: 'fill:var(--ink); font-size:12.5px' }, g);
+    t1.textContent = mob && r.n.length > 20 ? r.n.slice(0, 19) + '…' : r.n;
+    el('line', { x1: sx(r.a), x2: sx(r.b), y1: y, y2: y, style: `stroke:${col(r.col)}; stroke-width:3; stroke-linecap:round; stroke-opacity:.55` }, g);
+    el('circle', { cx: sx(r.a), cy: y, r: 4.5, style: `fill:var(--surface); stroke:${col(r.col)}; stroke-width:2` }, g);
+    el('circle', { cx: sx(r.b), cy: y, r: 5, style: `fill:${col(r.col)}; stroke:var(--surface); stroke-width:2` }, g);
+    const d = r.b - r.a, t2 = el('text', { x: W - 2, y: y + 4, 'text-anchor': 'end', class: 'm', style: `fill:${d >= 0 ? 'var(--ink)' : 'var(--ink-3)'}; font-size:12px; font-weight:600` }, g);
+    t2.textContent = (d >= 0 ? '+' : '−') + nf(Math.abs(d), Math.abs(d) < 0.1 ? 2 : 1);
+    g.addEventListener('mousemove', e => tipOn(e, `<div class="th"><i style="background:${col(r.col)}"></i>${r.n}</div>`
+      + trow('1995', nf(r.a, 2) + ' % du PIB') + trow(String(y1), nf(r.b, 2) + ' % du PIB') + trow('Écart', (d >= 0 ? '+' : '−') + nf(Math.abs(d), 2) + ' pt')
+      + trow('En euros ' + y1, FM(CF.S13[r.c][k1], k1, 'md'))));
+    g.addEventListener('mouseleave', tipOff);
+  });
+  $('evLg').innerHTML = `<span><svg width="12" height="12"><circle cx="6" cy="6" r="4" style="fill:var(--surface); stroke:var(--ink-2); stroke-width:2"/></svg>1995</span><span><svg width="12" height="12"><circle cx="6" cy="6" r="5" style="fill:var(--ink-2)"/></svg>${y1}</span><span style="color:var(--ink-3)">en % du PIB ; à droite, l'écart en points</span>`;
+  const tot = (CF.S13.TOTAL[k1] / D.pib[k1] - CF.S13.TOTAL[k0] / D.pib[k0]) * 100;
+  const pr = Object.keys(FN).map(c => [c, p(c, k1) - p(c, k0)]).sort((a, b) => b[1] - a[1]);
+  $('evNote').innerHTML = `De 1995 à ${y1}, la dépense publique est passée de ${nf(CF.S13.TOTAL[k0] / D.pib[k0] * 100, 1)} % à ${nf(CF.S13.TOTAL[k1] / D.pib[k1] * 100, 1)} % du PIB (${tot >= 0 ? '+' : '−'}${nf(Math.abs(tot), 1)} pt). `
+    + `La plus forte hausse : ${FN[pr[0][0]].n.toLowerCase()} (+${nf(pr[0][1], 1)} pt) ; la plus forte baisse : ${FN[pr[pr.length - 1][0]].n.toLowerCase()} (${nf(pr[pr.length - 1][1], 1).replace('-', '−')} pt).`;
+}
+
+/* ======================================================================
+   7 · EUROPE
+   ====================================================================== */
+function europe() {
+  const E = D.ue, fr = E.cofog.FR, cp = E.cofog[S.cmp];
+  let rows;
+  if (S.g === 'f') rows = Object.keys(FN).map(c => ({ c, n: FN[c].n, col: FN[c].c }));
+  else rows = Object.keys(fr).filter(c => c.length === 6 && cp[c] !== undefined)
+    .sort((a, b) => Math.abs(fr[b] - cp[b]) - Math.abs(fr[a] - cp[a])).slice(0, 15).map(c => ({ c, n: SF[c], col: FN[c.slice(0, 4)].c }));
+  rows.forEach(r => { r.a = fr[r.c]; r.b = cp[r.c]; r.d = r.a - r.b; });
+  rows.sort((x, z) => z.d - x.d);
+  const mx = Math.max(...rows.map(r => Math.abs(r.d)), 0.5);
+  const nom = GEO[S.cmp];
+  $('t7').textContent = `L'écart, poste par poste (${E.an})`;
+  const bar = d => { const w = Math.abs(d) / mx * 50; return `<span class="g"><i style="${d >= 0 ? 'left:50%' : 'right:50%'}; width:${w}%; background:${d >= 0 ? 'var(--n2)' : 'var(--n1)'}; border-radius:${d >= 0 ? '0 3px 3px 0' : '3px 0 0 3px'}"></i></span>`; };
+  const fd = d => (d >= 0 ? '+' : '−') + nf(Math.abs(d), 1);
+  $('eu').innerHTML = `<div class="r h"><span>${S.g === 'f' ? 'Politique' : 'Sous-poste (15 plus gros écarts)'}</span><span class="v">France</span><span class="v">${nom.replace('Union européenne', 'UE')}</span><span class="g"></span><span class="v">Écart</span></div>`
+    + rows.map(r => `<div class="r" data-tip="1" data-c="${r.c}"><span>${r.n}</span><span class="v">${nf(r.a, 1)}</span><span class="v">${nf(r.b, 1)}</span>${bar(r.d)}<span class="d" style="color:${r.d >= 0 ? 'var(--ink)' : 'var(--ink-3)'}">${fd(r.d)}</span></div>`).join('')
+    + `<div class="r t"><span>Total</span><span class="v">${nf(fr.TOTAL, 1)}</span><span class="v">${nf(cp.TOTAL, 1)}</span><span class="g"></span><span class="d">${fd(fr.TOTAL - cp.TOTAL)}</span></div>`;
+  $('eu').querySelectorAll('.r[data-c]').forEach(r => {
+    const c = r.dataset.c;
+    r.addEventListener('mousemove', e => {
+      const all = E.geo.filter(g => E.cofog[g][c] !== undefined).sort((a, b) => E.cofog[b][c] - E.cofog[a][c]);
+      tipOn(e, `<div class="th">${(FN[c] || {}).n || SF[c]}, ${E.an}</div>` + all.map(g => trow(g === 'FR' ? '<b>France</b>' : GEO[g], nf(E.cofog[g][c], 1) + ' %')).join('')
+        + `<div class="tf">En % du PIB de chaque pays.</div>`);
+    });
+    r.addEventListener('mouseleave', tipOff);
+  });
+  /* phrase de tête : l'écart total et ce qui l'explique */
+  const d = fr.TOTAL - cp.TOTAL, f2 = Object.keys(fr).filter(c => c.length === 6 && cp[c] !== undefined)
+    .map(c => [c, fr[c] - cp[c]]).sort((a, b) => b[1] - a[1]);
+  $('euHead').innerHTML = `En ${E.an}, la France consacre <b>${nf(fr.TOTAL, 1)} %</b> de son PIB à la dépense publique, ${GEO_A[S.cmp]} <b>${nf(cp.TOTAL, 1)} %</b> : `
+    + (d >= 0 ? `<b>${nf(d, 1)} points</b> de plus.` : `<b>${nf(-d, 1)} points</b> de moins.`)
+    + ` Les plus gros écarts : ${f2.slice(0, 3).map(([c, v]) => SF[c].toLowerCase() + ' (' + fd(v) + ')').join(', ')}`
+    + (f2[f2.length - 1][1] < 0 ? ` ; à l'inverse, ${SF[f2[f2.length - 1][0]].toLowerCase()} (${fd(f2[f2.length - 1][1])}).` : '.');
+  $('euNote').innerHTML = `En points de PIB, ${E.an}, nomenclature COFOG d'Eurostat. Orange : la France dépense davantage ; bleu : moins. Les écarts de niveau de vie et de démographie (part des plus de 65 ans) expliquent une partie des différences, pas toutes. Survoler une ligne pour voir les ${E.geo.length} pays.`;
+  europeHist();
+}
+
+function europeHist() {
+  const H0 = D.hist, ys = H0.an, others = H0.an && D.ue.geo.filter(g => g !== 'FR' && g !== S.cmp && g !== 'EA20' && g !== 'EU27_2020');
+  const series = others.map(g => ({ n: GEO[g], c: '--rule', v: H0.TE[g], w: 1.2, ghost: true }))
+    .concat([{ n: GEO[S.cmp], c: '--n2', v: H0.TE[S.cmp], w: 2.2 }, { n: 'France', c: '--n1', v: H0.TE.FR, w: 2.8 }]);
+  lignes($('eh'), ys, series, { h: 300, fy: x => nf(x, 0) + ' %', mark: S.an, click: setAn,
+    tipx: i => `<div class="th">${ys[i]}, dépense publique en % du PIB</div>` + ['FR', ...D.ue.geo.filter(g => g !== 'FR')]
+      .filter(g => H0.TE[g][i] !== null).sort((a, b) => H0.TE[b][i] - H0.TE[a][i])
+      .map(g => trow(g === 'FR' || g === S.cmp ? '<b>' + GEO[g] + '</b>' : GEO[g], nf(H0.TE[g][i], 1) + ' %')).join('') });
+  $('ehLg').innerHTML = `<span><i style="background:var(--n1)"></i>France</span><span><i style="background:var(--n2)"></i>${GEO[S.cmp]}</span><span><i style="background:var(--rule)"></i>Les autres pays de la sélection</span>`;
+  const pays = D.ue.geo.filter(g => g !== 'EA20' && g !== 'EU27_2020'), i = ys.length - 1, rang = pays.filter(g => H0.TE[g][i] !== null).sort((a, b) => H0.TE[b][i] - H0.TE[a][i]).indexOf('FR') + 1;
+  $('ehNote').innerHTML = `En ${ys[i]}, la France est ${rang === 1 ? '<b>première</b>' : `<b>${rang}<sup>e</sup></b>`} des ${pays.filter(g => H0.TE[g][i] !== null).length} pays de la sélection. Source : Eurostat, agrégats révisés (gov_10a_main).`;
+}
+
+/* ======================================================================
+   Courbes (une seule échelle, réticule et infobulle au survol)
+   ====================================================================== */
+function lignes(box, xs, series, o) {
+  const W = Math.max(280, box.clientWidth), H = o.h || 300, pl = o.compact ? 34 : 40, pr = 10, pt = 10, pb = 24;
+  let lo = Infinity, hi = -Infinity;
+  for (const s of series) for (const v of s.v) if (v !== null) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+  const pad = (hi - lo) * 0.08 || 1; lo -= pad; hi += pad;
+  if (o.compact) lo = Math.min(lo, 0) < 0 ? lo : Math.max(0, lo);
+  const { t } = niceTicks(lo, hi, o.compact ? 3 : 5); lo = Math.min(lo, t[0]); hi = Math.max(hi, t[t.length - 1]);
+  const svg = svgIn(box, W, H), sx = i => pl + i / (xs.length - 1) * (W - pl - pr), sy = v => pt + (hi - v) / (hi - lo) * (H - pt - pb);
+  const gx = el('g', { class: 'ax' }, svg);
+  for (const v of t) { el('line', { x1: pl, x2: W - pr, y1: sy(v), y2: sy(v) }, gx); el('text', { x: pl - 6, y: sy(v) + 4, 'text-anchor': 'end' }, gx).textContent = o.fy(v); }
+  const pas = W < 520 ? 10 : 5;
+  xs.forEach((y, i) => { if (y % pas === 0 || i === xs.length - 1) el('text', { x: sx(i), y: H - 6, 'text-anchor': i === xs.length - 1 ? 'end' : 'middle' }, gx).textContent = y; });
+  if (o.ev) for (const [y, lab] of o.ev) { const i = xs.indexOf(y); if (i < 0) continue;
+    el('line', { x1: sx(i), x2: sx(i), y1: pt, y2: H - pb, style: 'stroke:var(--rule-soft)' }, gx);
+    el('text', { x: sx(i) + 4, y: pt + 10, style: 'fill:var(--ink-3); font-size:11px' }, gx).textContent = lab; }
+  if (o.gap) { const [a, b] = o.gap, A0 = series[a].v, B0 = series[b].v;
+    const up = A0.map((v, i) => `${sx(i)},${sy(v)}`), dn = B0.map((v, i) => `${sx(i)},${sy(v)}`).reverse();
+    el('polygon', { points: up.concat(dn).join(' '), style: 'fill:var(--bad); fill-opacity:.16' }, svg); }
+  const k = xs.indexOf(o.mark);
+  if (k >= 0) el('line', { x1: sx(k), x2: sx(k), y1: pt, y2: H - pb, style: 'stroke:var(--ink-3); stroke-width:1' }, svg);
+  for (const s of series) {
+    let d = '', on = false;
+    s.v.forEach((v, i) => { if (v === null) { on = false; return; } d += (on ? 'L' : 'M') + sx(i).toFixed(1) + ',' + sy(v).toFixed(1); on = true; });
+    el('path', { d, style: `fill:none; stroke:${col(s.c)}; stroke-width:${s.w || 2}; stroke-linejoin:round; stroke-linecap:round` }, svg);
+  }
+  for (const s of series) if (!s.ghost && k >= 0 && s.v[k] !== null) el('circle', { cx: sx(k), cy: sy(s.v[k]), r: 4.5, style: `fill:${col(s.c)}; stroke:var(--surface); stroke-width:2` }, svg);
+  if (o.compact) { const s = series[0], i = k >= 0 ? k : xs.length - 1;
+    el('text', { x: Math.min(sx(i) + 7, W - 2), y: sy(s.v[i]) - 8, 'text-anchor': sx(i) > W - 60 ? 'end' : 'start', class: 'm', style: 'fill:var(--ink); font-size:11.5px; font-weight:600' }, svg).textContent = nf(s.v[i], 1) + ' %'; }
+  /* réticule */
+  const cr = el('line', { y1: pt, y2: H - pb, style: 'stroke:var(--ink-2); stroke-width:1; display:none; pointer-events:none' }, svg);
+  const hit = el('rect', { x: pl, y: 0, width: W - pl - pr, height: H, style: 'fill:transparent', 'data-tip': 1 }, svg);
+  const near = e => { const r = svg.getBoundingClientRect(), x = (e.clientX - r.left) * W / r.width;
+    return Math.max(0, Math.min(xs.length - 1, Math.round((x - pl) / (W - pl - pr) * (xs.length - 1)))); };
+  const mv = e => { const i = near(e); cr.setAttribute('x1', sx(i)); cr.setAttribute('x2', sx(i)); cr.style.display = '';
+    tipOn(e, o.tipx ? o.tipx(i) : `<div class="th">${xs[i]}</div>` + series.filter(s => !s.ghost).map(s => trow(s.n, o.fy(s.v[i]).replace(' %', '') + ' % du PIB')).join('')); };
+  hit.addEventListener('mousemove', mv);
+  hit.addEventListener('touchstart', e => mv(e.touches[0]), { passive: true });
+  hit.addEventListener('mouseleave', () => { cr.style.display = 'none'; tipOff(); });
+  if (o.click) hit.addEventListener('click', e => o.click(xs[near(e)]));
+}
+
+/* ======================================================================
+   Commandes, tampon, sources
+   ====================================================================== */
+const sel = $('an');
+for (const y of [...D.an].reverse()) { const op = document.createElement('option'); op.value = y; op.textContent = y + (y > D.derF ? ' (par nature)' : ''); sel.appendChild(op); }
+const cmp = $('cmp');
+for (const g of D.ue.geo.filter(g => g !== 'FR')) { const op = document.createElement('option'); op.value = g; op.textContent = GEO[g]; cmp.appendChild(op); }
+cmp.value = S.cmp;
+
+function setAn(y) { if (!D.an.includes(y)) return; S.an = y; if (y > D.derF) S.v = 'nature'; else if (S.vAuto) S.v = 'fonction'; hashSync(); tout(); }
+sel.addEventListener('change', () => setAn(+sel.value));
+$('an-m').addEventListener('click', () => setAn(S.an - 1));
+$('an-p').addEventListener('click', () => setAn(S.an + 1));
+document.querySelectorAll('[data-u]').forEach(b => b.addEventListener('click', () => { S.u = b.dataset.u; hashSync(); tout(); }));
+document.querySelectorAll('[data-v]').forEach(b => b.addEventListener('click', () => { S.v = b.dataset.v; S.vAuto = S.v === 'fonction'; circuit(); zoom(); }));
+document.querySelectorAll('[data-e]').forEach(b => b.addEventListener('click', () => { S.e = b.dataset.e;
+  document.querySelectorAll('[data-e]').forEach(x => x.setAttribute('aria-pressed', x === b)); evolution(); }));
+document.querySelectorAll('[data-g]').forEach(b => b.addEventListener('click', () => { S.g = b.dataset.g;
+  document.querySelectorAll('[data-g]').forEach(x => x.setAttribute('aria-pressed', x === b)); europe(); }));
+cmp.addEventListener('change', () => { S.cmp = cmp.value; europe(); });
+S.vAuto = true;
+
+const moisFR = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+const dateFR = s => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || ''); return m ? `${+m[3]} ${moisFR[+m[2] - 1]} ${m[1]}` : '—'; };
+$('stamp').innerHTML = `<span>Comptes publics jusqu'à <b>${D.der}</b></span><span>Ventilation par politique jusqu'à <b>${D.derF}</b></span><span>Mise à jour Eurostat du <b>${dateFR(D.source.maj)}</b></span>`;
+const ds = (c, t) => `<li><a href="https://ec.europa.eu/eurostat/databrowser/view/${c}/default/table" rel="noopener">${c}</a> — ${t}</li>`;
+$('srcList').innerHTML = ds('gov_10a_main', 'recettes et dépenses par nature, soldes, par administration (Eurostat, mis à jour le ' + dateFR(D.source.maj) + ')')
+  + ds('gov_10a_exp', 'dépenses par fonction COFOG, 80 postes, par administration (' + dateFR(D.source.majCofog) + ')')
+  + ds('gov_10a_taxag', 'impôts et cotisations, détail par impôt (' + dateFR(D.source.majImpots) + ')')
+  + ds('gov_10dd_edpt1', 'dette publique au sens de Maastricht')
+  + ds('nama_10_gdp', 'PIB en valeur') + ds('nama_10_pe', 'population');
+
+function tout() {
+  sel.value = S.an;
+  $('an-m').disabled = S.an <= D.an[0]; $('an-p').disabled = S.an >= D.der;
+  document.querySelectorAll('[data-u]').forEach(b => b.setAttribute('aria-pressed', b.dataset.u === S.u));
+  $('hint').textContent = uLong[S.u];
+  tete(); circuit(); zoom(); recettes(); sousSecteurs(); trente(); europe();
+}
+tout();
+let rz = 0, w0 = innerWidth;
+addEventListener('resize', () => { if (innerWidth === w0) return; w0 = innerWidth; clearTimeout(rz); rz = setTimeout(tout, 150); });
+})();
+</script>
+</body>
+</html>
