@@ -705,8 +705,13 @@ footer{margin-top:36px; padding-top:14px; border-top:1px solid var(--rule); font
 footer p{margin:0}
 footer .droits{margin-top:8px; color:var(--ink-2)}
 footer .legal{margin-top:3px; font-size:11px}
-/* Mini-classement sous l'en-tête : la France et ses deux voisins de chaque côté */
-.mini{margin:18px 0 34px; max-width:340px}
+/* En-tête-réponse sous l'en-tête (25/10/2026) : à gauche le classement à cinq
+   ans autour de la France (fin de saison projetée / en cours), à droite où la
+   France peut finir, d'après la projection. */
+.mini{margin:18px 0 34px; display:grid; grid-template-columns:340px minmax(0,380px); gap:0 56px; align-items:start}
+.mini .mh{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; min-height:28px}
+.mini .mt{font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); font-weight:700}
+.mini .seg button{font-size:12px; padding:3px 9px}
 .mini table{width:100%; border-collapse:collapse; font-size:13.5px}
 .mini td{padding:5px 0; border-bottom:1px solid var(--rule-soft); text-align:left; background:none !important; height:auto}
 .mini tr:first-child td{border-top:1px solid var(--rule)}
@@ -718,9 +723,20 @@ footer .legal{margin-top:3px; font-size:11px}
 .mini td.t{width:70px; color:var(--ink)}
 .mini td.e{width:70px; color:var(--ink-3)}
 .mini tr.fr td{font-weight:700; color:var(--ink)}
-.mini .p{margin-top:8px; font-size:12.5px; color:var(--ink-3)}
-.mini .p a{color:var(--n1); text-decoration:none; font-weight:700}
-.mini .p a:hover{text-decoration:underline}
+.mini .lk{margin-top:8px; font-size:12.5px}
+.mini .lk a{color:var(--n1); text-decoration:none; font-weight:700}
+.mini .lk a:hover{text-decoration:underline}
+.mini .fin{display:grid; grid-template-columns:34px minmax(0,1fr) 64px; align-items:center; gap:6px 10px; font-size:13.5px; border-top:1px solid var(--rule); border-bottom:1px solid var(--rule); padding:8px 0}
+.mini .fin > div{display:contents}
+.mini .fin .r{color:var(--ink-3); font-size:12px}
+.mini .fin .b{height:9px; background:var(--surface-2); border-radius:2px; overflow:hidden}
+.mini .fin .b i{display:block; height:100%; border-radius:2px; background:var(--ink-3); opacity:.55}
+.mini .fin .cur .b i{background:var(--n1); opacity:1}
+.mini .fin .v{font-family:"IBM Plex Mono",monospace; font-size:12.5px; text-align:right; white-space:nowrap}
+.mini .fin .cur .r,.mini .fin .cur .v{font-weight:700; color:var(--ink)}
+.mini .qui{font-size:12.5px; color:var(--ink-2); margin-top:8px; line-height:1.5}
+.mini .qui b{color:var(--ink)}
+@media (max-width:760px){ .mini{grid-template-columns:1fr; gap:22px; margin:14px 0 28px} }
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
 
@@ -767,7 +783,7 @@ footer .legal{margin-top:3px; font-size:11px}
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">3</span><h3>Le classement</h3>
+    <div class="ptitle" id="classement"><span class="no">3</span><h3>Le classement</h3>
       <span class="sub"><span class="ctl"><span class="lb">Période</span><span class="seg" role="group" aria-label="Période"><button type="button" id="p-season" aria-pressed="true">Saison en cours</button></span><span class="sel"><select id="p-win" aria-label="Fenêtre de saisons">
         <option value="" disabled hidden>X dernières saisons</option><option value="5">5 dernières saisons</option><option value="4">Après l'été 2027</option><option value="3">Après l'été 2028</option><option value="2">Après l'été 2029</option></select></span></span><span class="ctl"><span class="lb">Saison en cours</span><span class="seg" role="group" aria-label="Saison en cours : projection ou réel">
         <button type="button" id="v-proj" aria-pressed="true" title="La saison en cours comptée à sa valeur de fin de saison projetée (médiane du bloc 8)">Projection</button><button type="button" id="v-reel" aria-pressed="false" title="La saison en cours comptée pour les seuls points déjà marqués">Réel acquis</button><button type="button" id="v-sans" aria-pressed="false" title="Sans la saison en cours : le socle seul, les saisons closes de la fenêtre">Socle seul</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
@@ -1450,24 +1466,52 @@ document.getElementById('stamp').innerHTML =
 
 </script>
 <script>
-/* ---------- mini-classement sous l'en-tête (25/10/2026) ---------- */
-/* La France, les deux nations au-dessus et les deux en dessous : rang, total à
-   cinq ans, écart à la France. Puis, si la projection la fournit (PRJ.rgFR,
-   calculée par __projette), la part des saisons simulées où la France finit à
-   son rang actuel, avec un lien vers le bloc 9. */
+/* ---------- en-tête-réponse sous l'en-tête (25/10/2026) ---------- */
+/* À gauche : la France et ses deux voisins de chaque côté au classement à cinq
+   ans, au choix « Fin de saison » (saisons closes + médiane projetée de la
+   saison en cours, rangs recalculés sur les 55, comme le bloc 3 en Projection ;
+   par défaut) ou « En cours » (le classement d'aujourd'hui). À droite : la part
+   des saisons simulées où la France finit à chaque rang (PRJ.rgFR) et qui peut
+   la doubler (PRJ.devFR). Sans ces deux sorties (projection pas encore
+   recalculée), seul le classement « En cours » s'affiche. */
 (function () {
-  const el = document.getElementById('mini'); if (!el) return;
-  const ord = [...N].sort((a, b) => a.r - b.r), F = BY.FRA, i = ord.findIndex(n => n.c === 'FRA');
-  if (!F || i < 0) return;
+  const el = document.getElementById('mini'); if (!el || !BY.FRA) return;
+  const P = typeof PRJ !== 'undefined' && PRJ ? PRJ : null;
+  const RG = P && P.rgFR, DEV = P && P.devFR, MED = P && P.q && P.q.tir;
   const col = c => `var(${SLOT[c] || '--ink-3'})`;
-  const rows = ord.slice(Math.max(0, i - 2), i + 3).map(n =>
-    `<tr class="${n.c === 'FRA' ? 'fr' : ''}"><td class="r">${n.r}<sup>e</sup></td><td class="d"><i style="background:${col(n.c)}"></i></td>`
-    + `<td>${name(n.c)}</td><td class="t">${nfx(n.t)}</td>`
-    + `<td class="e">${n.c === 'FRA' ? '' : (n.t > F.t ? '+' : '−') + nfx(Math.abs(n.t - F.t))}</td></tr>`).join('');
-  const rg = typeof PRJ !== 'undefined' && PRJ && PRJ.rgFR;
-  const p = rg && rg[F.r - 1] != null ? Math.round(rg[F.r - 1] * 100) : null;
-  el.innerHTML = `<table>${rows}</table>`
-    + (p != null ? `<div class="p">Fin de saison : <a href="#projection">${F.r}<sup>e</sup> dans ${p} % des simulations →</a></div>` : '');
+  const cinq = c => { const y = BY[c].y; return y[0] + y[1] + y[2] + y[3] + (MED && MED[c] ? MED[c][2] : y[4]); };
+  let mode = MED ? 'fin' : 'cours';
+  const pct = v => v < .001 ? '< 0,1 %' : v < .01 ? nf(v * 100, 1) + ' %' : Math.round(v * 100) + ' %';
+  function table() {
+    const ord = N.map(n => ({ c: n.c, t: mode === 'fin' ? cinq(n.c) : n.t })).sort((a, b) => b.t - a.t);
+    ord.forEach((n, k) => n.r = k + 1);
+    const i = ord.findIndex(n => n.c === 'FRA'), F = ord[i];
+    return ord.slice(Math.max(0, i - 2), i + 3).map(n =>
+      `<tr class="${n.c === 'FRA' ? 'fr' : ''}"><td class="r">${n.r}<sup>e</sup></td><td class="d"><i style="background:${col(n.c)}"></i></td>`
+      + `<td>${name(n.c)}</td><td class="t">${nfx(n.t)}</td>`
+      + `<td class="e">${n.c === 'FRA' ? '' : (n.t > F.t ? '+' : '−') + nfx(Math.abs(n.t - F.t))}</td></tr>`).join('');
+  }
+  function fin() {
+    const ks = RG.map((v, k) => ({ k: k + 1, v })).filter(x => x.v > 0), mx = Math.max(...RG);
+    const cur = ks.reduce((a, b) => b.v > a.v ? b : a).k;
+    const rows = ks.map(x => `<div class="${x.k === cur ? 'cur' : ''}"><span class="r">${x.k === 10 ? '10<sup>e</sup>+' : x.k + '<sup>e</sup>'}</span>`
+      + `<span class="b"><i style="width:${Math.max(1.5, x.v / mx * 100)}%"></i></span><span class="v">${pct(x.v)}</span></div>`).join('');
+    const ord = [...N].sort((a, b) => a.r - b.r), i = ord.findIndex(n => n.c === 'FRA');
+    const derr = DEV ? ord.slice(i + 1).filter(n => (DEV[n.c] || 0) >= .005).map(n => `<b>${name(n.c)}</b> ${pct(DEV[n.c])}`) : [];
+    const dev = DEV ? ord.slice(0, i).filter(n => DEV[n.c] != null && 1 - DEV[n.c] > 0).map(n => `<b>${name(n.c)}</b> ${pct(1 - DEV[n.c])}`) : [];
+    return `<div class="fin">${rows}</div><div class="qui">`
+      + (derr.length ? `Peut la doubler : ${derr.join(', ')}.` : '')
+      + (dev.length ? ` Peut passer : ${dev.join(', ')}.` : '') + `</div>`;
+  }
+  function draw() {
+    const gauche = `<div><div class="mh"><span class="mt">Classement à cinq ans</span>`
+      + (MED ? `<span class="seg" role="group" aria-label="Classement"><button type="button" data-m="fin" aria-pressed="${mode === 'fin'}">Fin de saison</button><button type="button" data-m="cours" aria-pressed="${mode === 'cours'}">En cours</button></span>` : '')
+      + `</div><table>${table()}</table><div class="lk"><a href="#classement">Classement complet →</a></div></div>`;
+    const droite = RG ? `<div><div class="mh"><span class="mt">En fin de saison, la France finit…</span></div>${fin()}<div class="lk"><a href="#projection">Détail de la projection →</a></div></div>` : '';
+    el.innerHTML = gauche + droite;
+    el.querySelectorAll('button[data-m]').forEach(b => b.onclick = () => { mode = b.dataset.m; draw(); });
+  }
+  draw();
 })();
 </script>
 <script>/* Script découpé par bloc : entre deux scripts, le navigateur peut afficher et répondre au doigt — plus de longue tâche unique au chargement. */
@@ -4379,16 +4423,22 @@ const legende = segs => segs.map(s =>
       /* Rang final de la France au classement à cinq ans, DANS chaque tirage :
          quatre saisons closes (fixes) + saison en cours simulée, pour les 55.
          rgFR[k] = part des saisons où la France finit (k+1)e (10e et au-delà
-         regroupés). Lu par le mini-classement sous l'en-tête. */
-      let rgFR = null;
+         regroupés). Lus par l'en-tête-réponse sous l'en-tête. */
+      let rgFR = null, devFR = null;
       if (F) { const base = {};
         for (const c of S.codes) { const y = BY[c] && BY[c].y; base[c] = y ? y[0] + y[1] + y[2] + y[3] : 0; }
         const cpt = new Array(10).fill(0);
         for (let i = 0; i < F.length; i++) { const f = base.FRA + F[i]; let k = 1;
           for (const c of S.codes) if (c !== 'FRA' && S.tir[c] && base[c] + S.tir[c][i] > f) k++;
           cpt[Math.min(k, 10) - 1]++; }
-        rgFR = cpt.map(v => +(v / F.length).toFixed(4)); }
-      return { n, q, dv, rgFR, ecarts: S.ecarts, calendrier: S.calendrier, moteur: S.moteur, pronos: (S.pronos || []).map(x => [x.k, x.dom, x.ext, x.p[0], x.p[2]]), ...(opts && opts.rangs ? { rangs: S.rangs } : {}), maj: D.meta.lastUpdated };
+        rgFR = cpt.map(v => +(v / F.length).toFixed(5));
+        /* devFR[c] : part des tirages où c finit devant la France au classement
+           à cinq ans (gardé seulement s'il n'est ni 0 ni 1). */
+        devFR = {};
+        for (const c of S.codes) { if (c === 'FRA' || !S.tir[c]) continue; let k = 0;
+          for (let i = 0; i < F.length; i++) if (base[c] + S.tir[c][i] > base.FRA + F[i]) k++;
+          if (k > 0 && k < F.length) devFR[c] = +(k / F.length).toFixed(5); } }
+      return { n, q, dv, rgFR, devFR, ecarts: S.ecarts, calendrier: S.calendrier, moteur: S.moteur, pronos: (S.pronos || []).map(x => [x.k, x.dom, x.ext, x.p[0], x.p[2]]), ...(opts && opts.rangs ? { rangs: S.rangs } : {}), maj: D.meta.lastUpdated };
     };
 
     /* Toutes les nations par defaut : la projection est le bloc ou l'on vient
