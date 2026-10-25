@@ -722,7 +722,13 @@ footer .legal{margin-top:3px; font-size:11px}
 .mini td.t,.mini td.e{font-family:"IBM Plex Mono",monospace; font-size:12.5px; text-align:right; font-variant-numeric:tabular-nums}
 .mini td.t{width:70px; color:var(--ink)}
 .mini td.e{width:70px; color:var(--ink-3)}
-.mini tr.fr td{font-weight:700; color:var(--ink)}
+.mini tr.fr td{font-weight:700; color:var(--ink); background:var(--fr-soft) !important}
+.mini td.r{padding-left:6px}   /* toutes les lignes : le rang ne touche pas le bord du bandeau France */
+/* les nations à deux places de la France : plus petites, en retrait (choix de GT, 25/10) */
+.mini tr.n2 td{padding:2px 0; font-size:12px; color:var(--ink-3)}
+.mini tr.n2 td.t,.mini tr.n2 td.e{font-size:11px; color:var(--ink-3)}
+.mini tr.n2 td.r{font-size:10.5px}
+.mini tr.n2 td.d i{width:6px; height:6px; opacity:.7}
 .mini .lk{margin-top:8px; font-size:12.5px}
 .mini .lk a{color:var(--n1); text-decoration:none; font-weight:700}
 .mini .lk a:hover{text-decoration:underline}
@@ -1481,13 +1487,13 @@ document.getElementById('stamp').innerHTML =
   const col = c => `var(${SLOT[c] || '--ink-3'})`;
   const cinq = c => { const y = BY[c].y; return y[0] + y[1] + y[2] + y[3] + (MED && MED[c] ? MED[c][2] : y[4]); };
   let mode = MED ? 'fin' : 'cours';
-  const pct = v => v === 0 ? 'jamais' : v < .001 ? '< 0,1 %' : v < .01 ? nf(v * 100, 1) + ' %' : Math.round(v * 100) + ' %';
+  const pct = v => v === 0 ? 'jamais' : v < .001 ? '<\u00a00,1\u00a0%' : v < .01 ? nf(v * 100, 1) + '\u00a0%' : Math.round(v * 100) + '\u00a0%';
   function table() {
     const ord = N.map(n => ({ c: n.c, t: mode === 'fin' ? cinq(n.c) : n.t })).sort((a, b) => b.t - a.t);
     ord.forEach((n, k) => n.r = k + 1);
     const i = ord.findIndex(n => n.c === 'FRA'), F = ord[i];
     return ord.slice(Math.max(0, i - 2), i + 3).map(n =>
-      `<tr class="${n.c === 'FRA' ? 'fr' : ''}"><td class="r">${n.r}<sup>e</sup></td><td class="d"><i style="background:${col(n.c)}"></i></td>`
+      `<tr class="${n.c === 'FRA' ? 'fr' : Math.abs(n.r - F.r) >= 2 ? 'n2' : ''}"><td class="r">${n.r}<sup>e</sup></td><td class="d"><i style="background:${col(n.c)}"></i></td>`
       + `<td>${name(n.c)}</td><td class="t">${nfx(n.t)}</td>`
       + `<td class="e">${n.c === 'FRA' ? '' : (n.t > F.t ? '+' : '−') + nfx(Math.abs(n.t - F.t))}</td></tr>`).join('');
   }
@@ -1500,8 +1506,8 @@ document.getElementById('stamp').innerHTML =
     const rows = ks.map(x => `<div class="${x.k === cur ? 'cur' : ''}"><span class="r">${x.k === 10 ? '10<sup>e</sup>+' : x.k + '<sup>e</sup>'}</span>`
       + `<span class="b"><i style="width:${x.v ? Math.max(1.5, x.v / mx * 100) : 0}%"></i></span><span class="v">${pct(x.v)}</span></div>`).join('');
     const ord = [...N].sort((a, b) => a.r - b.r), i = ord.findIndex(n => n.c === 'FRA');
-    const derr = DEV ? ord.slice(i + 1).filter(n => (DEV[n.c] || 0) >= .005).map(n => `<b>${name(n.c)}</b> ${pct(DEV[n.c])}`) : [];
-    const dev = DEV ? ord.slice(0, i).filter(n => DEV[n.c] != null && 1 - DEV[n.c] > 0).map(n => `<b>${name(n.c)}</b> ${pct(1 - DEV[n.c])}`) : [];
+    const derr = DEV ? ord.slice(i + 1).filter(n => (DEV[n.c] || 0) >= .005).map(n => `<b>${name(n.c)}</b>\u00a0${pct(DEV[n.c])}`) : [];
+    const dev = DEV ? ord.slice(0, i).filter(n => DEV[n.c] != null && 1 - DEV[n.c] > 0).map(n => `<b>${name(n.c)}</b>\u00a0${pct(1 - DEV[n.c])}`) : [];
     return `<div class="fin">${rows}</div><div class="qui">`
       + (derr.length ? `Peut la doubler : ${derr.join(', ')}.` : '')
       + (dev.length ? ` Peut passer : ${dev.join(', ')}.` : '') + `</div>`;
