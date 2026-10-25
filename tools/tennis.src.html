@@ -63,27 +63,37 @@ td.y.dec { color:var(--ink); font-weight:700; }
 .sp { display:block; width:100%; height:100%; line-height:22px; font-size:.58rem; color:var(--ink-3); background:var(--empty); }
 td.tc { font-size:.7rem; font-weight:700; background:var(--surface-2) !important; border-left:1px solid var(--rule); }
 
-.note { text-align:center; font-size:.6rem; color:var(--ink-3); margin-top:10px; line-height:1.7; }
+.note { text-align:center; font-size:.6rem; color:var(--ink-3); margin-top:10px; line-height:1.7; max-width:640px; margin-left:auto; margin-right:auto; }
+
+/* Choix du tour : même contrôle segmenté que la page UEFA */
+.tours { display:flex; justify-content:center; margin:0 auto 12px; }
+.seg { display:inline-flex; flex-wrap:wrap; justify-content:center; border:1px solid var(--rule); border-radius:2px; overflow:hidden; }
+.seg button { appearance:none; border:0; border-right:1px solid var(--rule); background:var(--surface); color:var(--ink-2);
+  font:inherit; font-size:.7rem; padding:5px 9px; cursor:pointer; white-space:nowrap; }
+.seg button:last-child { border-right:0; }
+.seg button[aria-pressed="true"] { background:var(--ink); color:var(--surface); }
+.seg button:focus-visible { outline:2px solid var(--tennis); outline-offset:-2px; }
+@media (max-width:520px){ .seg button { padding:6px 7px; font-size:.68rem; } }
+
+/* tour en cours : chiffre provisoire, en italique et souligné en pointillé */
+.v.prov { font-style:italic; text-decoration:underline dotted; text-underline-offset:3px; }
 </style>
 </head>
 <body>
 
-<h1>🇫🇷 Français au tableau principal — Simple Messieurs · Ère Open (1968–2026)</h1>
-<p class="subtitle">Nombre de joueurs français au 1er tour (tableau principal) par Grand Chelem · Sources : fr.wikipedia.org + en.wikipedia.org</p>
+<h1 id="titre">🇫🇷 Français au 1er tour — Simple Messieurs · Ère Open</h1>
+<p class="subtitle" id="soustitre">Nombre de joueurs français présents à ce tour, par Grand Chelem · Source : en.wikipedia.org, relue chaque jour</p>
+
+<div class="tours"><div class="seg" role="group" aria-label="Tour">
+  <button type="button" data-t="T1" aria-pressed="true">1er tour</button><button type="button" data-t="T2" aria-pressed="false">2e tour</button><button type="button" data-t="T3" aria-pressed="false">3e tour</button><button type="button" data-t="H" aria-pressed="false">8es</button><button type="button" data-t="Q" aria-pressed="false">Quarts</button><button type="button" data-t="S" aria-pressed="false">Demies</button><button type="button" data-t="F" aria-pressed="false">Finale</button><button type="button" data-t="V" aria-pressed="false">Titre</button>
+</div></div>
 
 <div class="legend">
   <span class="legend-label">0</span>
-  <span class="sw" data-sw="0"></span>
-  <span class="sw" data-sw="1"></span>
-  <span class="sw" data-sw="2"></span>
-  <span class="sw" data-sw="3"></span>
-  <span class="sw" data-sw="4"></span>
-  <span class="sw" data-sw="5"></span>
-  <span class="sw" data-sw="6"></span>
-  <span class="sw" data-sw="7"></span>
-  <span class="legend-label">21+</span>
-  <span style="margin-left:10px;color:#444">— = pas de page Wikipedia structurée</span>
-  <span style="margin-left:10px;color:#444">✕ = annulé · ··· = à venir</span>
+  <span id="sws"></span>
+  <span class="legend-label" id="lgmax"></span>
+  <span style="margin-left:10px">— = pas d'édition ouverte aux pros</span>
+  <span style="margin-left:10px">✕ = annulé · ··· = à venir · <i style="text-decoration:underline dotted">4</i> = tour en cours</span>
 </div>
 
 <div class="wrap">
@@ -103,75 +113,20 @@ td.tc { font-size:.7rem; font-weight:700; background:var(--surface-2) !important
 </div>
 
 <p class="note">
-  Méthode : drapeaux <code>{{FRA-d}}</code> / <code>{{flagicon|FRA}}</code> dans les lignes du 1er tour · FR wiki prioritaire, EN wiki en fallback.<br>
-  AO : 32 joueurs (1968–1987) → 64 (1988) → 128 (à vérifier par édition). WIM 2020 : annulé (Covid).<br>
-  AO non disputé en 1986 (transition janv. 1985 → janv. 1987).
+  Méthode : on compte les drapeaux français (<code>{{flagicon|FRA}}</code>) à chaque tour du tableau Wikipédia (en), page « Men's singles » de chaque édition. Les tours se lisent par la structure du tableau, depuis la finale. Un robot relit l'année en cours trois fois par jour ; un tour pas encore complet est marqué en italique.<br>
+  1er tour = tous les Français du tableau principal, exemptés compris (vieux tableaux à 48, 56 ou 96 joueurs), tour préliminaire exclu (Roland-Garros et US Open 1968-1972).<br>
+  Open d'Australie à 64 joueurs jusqu'en 1987 : le 3e tour y est déjà le 8e de finale (à 32 joueurs en 1969-1971 : le 3e tour est le quart). AO 1977 : édition de janvier (celle de décembre : 2 Français, sortis au 1er tour). AO 1986 : non disputé. WIM 2020 : annulé (Covid).
 </p>
 <p class="subtitle" style="margin-top:18px;margin-bottom:2px">© 2026 Tanguy Drouin — grotang.fr. Tous droits réservés.</p>
 <p class="subtitle" style="font-size:.6rem">Site personnel non professionnel · Hébergeur : GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis · +1 877 448 4820</p>
 
 <script>
-const D = {
-  1968:{AO:null, RG:20, WIM:8,  USO:1},
-  1969:{AO:2,    RG:15, WIM:8,  USO:6},
-  1970:{AO:1,    RG:19, WIM:9,  USO:3},
-  1971:{AO:0,    RG:17, WIM:10, USO:4},
-  1972:{AO:1,    RG:10, WIM:10, USO:4},
-  1973:{AO:7,    RG:14, WIM:5,  USO:6},
-  1974:{AO:8,    RG:8,  WIM:9,  USO:3},
-  1975:{AO:2,    RG:13, WIM:4,  USO:3},
-  1976:{AO:1,    RG:17, WIM:5,  USO:4},
-  1977:{AO:0,    RG:14, WIM:1,  USO:4},
-  1978:{AO:4,    RG:17, WIM:4,  USO:6},
-  1979:{AO:0,    RG:16, WIM:5,  USO:5},
-  1980:{AO:3,    RG:19, WIM:5,  USO:6},
-  1981:{AO:2,    RG:19, WIM:7,  USO:7},
-  1982:{AO:1,    RG:19, WIM:7,  USO:7},
-  1983:{AO:2,    RG:17, WIM:5,  USO:7},
-  1984:{AO:1,    RG:12, WIM:2,  USO:3},
-  1985:{AO:3,    RG:11, WIM:5,  USO:5},
-  1986:{AO:'ND', RG:10, WIM:3,  USO:5},
-  1987:{AO:1,    RG:13, WIM:4,  USO:6},
-  1988:{AO:6,    RG:12, WIM:5,  USO:6},
-  1989:{AO:9,    RG:12, WIM:2,  USO:5},
-  1990:{AO:10,   RG:14, WIM:8,  USO:8},
-  1991:{AO:7,    RG:13, WIM:8,  USO:9},
-  1992:{AO:10,   RG:13, WIM:10, USO:9},
-  1993:{AO:9,    RG:13, WIM:7,  USO:9},
-  1994:{AO:9,    RG:12, WIM:10, USO:7},
-  1995:{AO:11,   RG:12, WIM:10, USO:9},
-  1996:{AO:9,    RG:14, WIM:9,  USO:7},
-  1997:{AO:7,    RG:15, WIM:8,  USO:7},
-  1998:{AO:8,    RG:16, WIM:6,  USO:10},
-  1999:{AO:8,    RG:13, WIM:6,  USO:9},
-  2000:{AO:11,   RG:15, WIM:10, USO:10},
-  2001:{AO:9,    RG:15, WIM:8,  USO:10},
-  2002:{AO:13,   RG:14, WIM:13, USO:10},
-  2003:{AO:11,   RG:17, WIM:11, USO:12},
-  2004:{AO:14,   RG:21, WIM:12, USO:15},
-  2005:{AO:15,   RG:17, WIM:12, USO:9},
-  2006:{AO:13,   RG:15, WIM:11, USO:12},
-  2007:{AO:15,   RG:19, WIM:15, USO:15},
-  2008:{AO:16,   RG:16, WIM:14, USO:15},
-  2009:{AO:14,   RG:17, WIM:14, USO:12},
-  2010:{AO:13,   RG:16, WIM:12, USO:14},
-  2011:{AO:13,   RG:17, WIM:15, USO:10},
-  2012:{AO:14,   RG:15, WIM:13, USO:12},
-  2013:{AO:13,   RG:18, WIM:15, USO:15},
-  2014:{AO:14,   RG:17, WIM:14, USO:13},
-  2015:{AO:11,   RG:13, WIM:11, USO:11},
-  2016:{AO:13,   RG:16, WIM:14, USO:13},
-  2017:{AO:13,   RG:17, WIM:11, USO:12},
-  2018:{AO:12,   RG:12, WIM:12, USO:12},
-  2019:{AO:9,    RG:16, WIM:12, USO:13},
-  2020:{AO:12,   RG:16, WIM:'C', USO:7},
-  2021:{AO:10,   RG:17, WIM:14, USO:12},
-  2022:{AO:10,   RG:15, WIM:8,  USO:9},
-  2023:{AO:10,   RG:17, WIM:14, USO:15},
-  2024:{AO:14,   RG:16, WIM:13, USO:12},
-  2025:{AO:13,   RG:15, WIM:12, USO:12},
-  2026:{AO:14,   RG:21, WIM:15, USO:13},
-};
+/* Données : tools/tennis/data.json, injecté ici par tools/build.mjs (relu chaque
+   jour par le robot tennis). Une édition = 8 nombres (1er, 2e, 3e tour, 8es,
+   quarts, demies, finale, titre) ; null = pas d'édition ouverte aux pros,
+   'ND' = non disputé, 'C' = annulé, '?' = à venir. `ouverts` : les éditions en
+   cours, un état par tour (c complet, p commencé, v pas commencé). */
+/*DATA_START*/const DT = {"tours":["T1","T2","T3","H","Q","S","F","V"],"ouverts":{},"editions":{}};/*DATA_END*/
 
 // Echelle de chaleur : [valeur mini, fond, encre].
 // Deux rampes, pas une inversion. Sur fond sombre on part d'un vert profond et
@@ -210,27 +165,44 @@ const isDark = () => document.documentElement.getAttribute('data-theme') === 'da
 const neutral = () => isDark()
   ? {bg:'#1a1a28', dim:'#444', faint:'#333', na:'#2d2d40'}
   : {bg:'#EDF0F5', dim:'#9AA3B0', faint:'#B6BDC8', na:'#C3CAD6'};
-function cs(v) {
-  const SC = isDark() ? SC_DARK : SC_LIGHT, N = neutral();
-  if (v === null) return {bg:N.bg, fg:N.na,    t:'\u2014', cls:'na'};
-  if (v === 'C')  return {bg:N.bg, fg:N.dim,   t:'\u2715', cls:'sp'};
-  if (v === '?')  return {bg:N.bg, fg:N.dim,   t:'\u00b7\u00b7\u00b7', cls:'sp'};
-  if (v === 'ND') return {bg:N.bg, fg:N.faint, t:'\u2013', cls:'na'};
-  let s = SC[0];
-  for (const st of SC) { if (v >= st[0]) s = st; }
-  return {bg:s[1], fg:s[2], t:String(v), cls:'v'};
-}
 
 const SLAMS = ['AO','RG','WIM','USO'];
+const TOURS = DT.tours;
+const NOM = {T1:'au 1er tour', T2:'au 2e tour', T3:'au 3e tour', H:'en 8es de finale', Q:'en quarts de finale',
+             S:'en demi-finales', F:'en finale', V:'vainqueurs'};
+const years = Object.keys(DT.editions).map(Number).sort((a,b)=>b-a);
+let tour = 'T1';
+
+/* l'échelle de couleur suit le tour choisi : son maximum historique prend la
+   couleur la plus forte, sinon les tours de fin de tableau resteraient pâles */
+const maxDe = t => { const i = TOURS.indexOf(t); let m = 1;
+  for (const y of years) for (const s of SLAMS) { const v = DT.editions[y][s]; if (Array.isArray(v)) m = Math.max(m, v[i]); }
+  return m; };
+const maxTot = t => { const i = TOURS.indexOf(t); let m = 1;
+  for (const y of years) { let x = 0; for (const s of SLAMS) { const v = DT.editions[y][s]; if (Array.isArray(v)) x += v[i]; } m = Math.max(m, x); }
+  return m; };
+const pas = (v, max) => v <= 0 ? 0 : max <= 1 ? 11 : Math.min(11, 1 + Math.round((v - 1) / (max - 1) * 10));
+
+function cs(val, i, etat, max) {
+  const SC = isDark() ? SC_DARK : SC_LIGHT, N = neutral();
+  if (val === null || val === undefined) return {bg:N.bg, fg:N.na, t:'—', cls:'na'};
+  if (val === 'C')  return {bg:N.bg, fg:N.dim,   t:'✕', cls:'sp'};
+  if (val === '?' || etat === 'v') return {bg:N.bg, fg:N.dim, t:'···', cls:'sp'};
+  if (val === 'ND') return {bg:N.bg, fg:N.faint, t:'–', cls:'na'};
+  const v = val[i];
+  const s = SC[pas(v, max)];
+  return {bg:s[1], fg:s[2], t:String(v), cls:'v' + (etat === 'p' ? ' prov' : '')};
+}
+
 const tb = document.getElementById('tb');
-const years = Object.keys(D).map(Number).sort((a,b)=>b-a);
 
 /* Les couleurs des cases sont posées en style en ligne, pas en CSS : un simple
    changement de variable ne les atteint pas, il faut redessiner la grille. */
 function draw(){
+const i = TOURS.indexOf(tour), max = maxDe(tour), mt = maxTot(tour);
 tb.innerHTML = '';
 for (const y of years) {
-  const d = D[y];
+  const d = DT.editions[y];
   const tr = document.createElement('tr');
   if (y % 10 === 0) tr.classList.add('dec');
 
@@ -239,19 +211,21 @@ for (const y of years) {
   ty.textContent = y;
   tr.appendChild(ty);
 
-  let tot = 0, cnt = 0;
+  let tot = 0, cnt = 0, prov = false;
   for (const s of SLAMS) {
     const v = d[s];
-    const c = cs(v);
+    const etat = (DT.ouverts[y] && DT.ouverts[y][s] || '')[i] || 'c';
+    const c = cs(v, i, etat, max);
     const td = document.createElement('td');
     td.style.background = c.bg;
     const sp = document.createElement('span');
     sp.className = c.cls;
     sp.style.color = c.fg;
     sp.textContent = c.t;
+    if (etat === 'p') sp.title = 'Tour en cours : chiffre provisoire';
     td.appendChild(sp);
     tr.appendChild(td);
-    if (typeof v === 'number') { tot += v; cnt++; }
+    if (Array.isArray(v) && etat !== 'v') { tot += v[i]; cnt++; if (etat === 'p') prov = true; }
   }
 
   const tt = document.createElement('td');
@@ -259,23 +233,41 @@ for (const y of years) {
   if (cnt > 0) {
     tt.textContent = tot;
     /* le total va du discret au marqué, dans le sens du fond */
-    const p = Math.min(tot / 65, 1);
+    const p = Math.min(tot / mt, 1);
     const g = isDark() ? Math.round(50 + p * 150) : Math.round(170 - p * 155);
     tt.style.color = `rgb(${g},${g},${g})`;
-    if (cnt < 4) tt.style.opacity = '.45';
+    const attendus = SLAMS.filter(s => d[s] !== 'C' && d[s] !== 'ND' && d[s] !== null).length;
+    if (cnt < attendus || prov) tt.style.opacity = '.45';
   }
   tr.appendChild(tt);
   tb.appendChild(tr);
 }
 }
 function drawLegend(){
-  const SC = isDark() ? SC_DARK : SC_LIGHT;
-  document.querySelectorAll('.sw[data-sw]').forEach(el => {
-    const i = +el.dataset.sw;
-    el.style.background = (SC[i] || SC[SC.length-1])[1];
-  });
+  const SC = isDark() ? SC_DARK : SC_LIGHT, max = maxDe(tour);
+  const vals = max <= 8 ? [...Array(max).keys()].map(k => k + 1) : [1,2,3,4,5,6,7].map(k => Math.round(1 + k * (max - 1) / 6));
+  document.getElementById('sws').innerHTML = [0, ...vals].map(v =>
+    `<span class="sw" style="background:${SC[pas(v, max)][1]}" title="${v}"></span>`).join(' ');
+  document.getElementById('lgmax').textContent = String(max);
 }
-draw(); drawLegend();
+function titres(){
+  const fin = years[0];
+  document.getElementById('titre').textContent = tour === 'V'
+    ? `🇫🇷 Titres français — Simple Messieurs · Ère Open (1968–${fin})`
+    : `🇫🇷 Français ${NOM[tour]} — Simple Messieurs · Ère Open (1968–${fin})`;
+  document.getElementById('soustitre').textContent = tour === 'V'
+    ? 'Grands Chelems remportés par un Français · Source : en.wikipedia.org, relue chaque jour'
+    : `Nombre de joueurs français ${NOM[tour]}, par Grand Chelem · Source : en.wikipedia.org, relue chaque jour`;
+}
+function choisir(t, garder){
+  if (!TOURS.includes(t)) t = 'T1';
+  tour = t;
+  document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === t)));
+  titres(); draw(); drawLegend();
+  if (garder) history.replaceState(null, '', t === 'T1' ? location.pathname : '#' + t);
+}
+document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => choisir(b.dataset.t, true)));
+choisir(location.hash.slice(1), false);
 document.addEventListener('grotang:theme', () => { draw(); drawLegend(); });
 </script>
 </body>

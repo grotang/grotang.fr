@@ -154,7 +154,7 @@ jobs:
             fi
             git add -A
             git commit -m "$MSG"
-            git push
+            git push || { git pull --rebase && git push; }
             echo "Déposé : $MSG"
             echo "deploy=true" >> "$GITHUB_OUTPUT"
             exit 0
@@ -171,7 +171,7 @@ jobs:
             date -u +"Derniere verification de la source : %Y-%m-%d %H:%M UTC" > tools/uefa/last-checked.txt
             git add tools/uefa/last-checked.txt
             git commit -m "Signe de vie : source inchangée depuis $AGE jours"
-            git push
+            git push || { git pull --rebase && git push; }
             echo "Signe de vie déposé, la tâche planifiée reste active."
           fi
 

@@ -1,0 +1,86 @@
+name: Rafraîchissement tennis
+
+# LA PAGE /tennis/ SE MET À JOUR TOUTE SEULE (depuis le 25/10/2026).
+#
+# Trois passages par jour, toute l'année. Hors Grand Chelem, un passage relit
+# quatre pages Wikipédia, ne trouve rien de neuf et sort sans rien écrire ; il
+# ne coûte rien (minutes gratuites pour un dépôt public). Pendant un Grand
+# Chelem, chaque passage reprend le tableau là où Wikipédia en est.
+#
+# Les heures suivent la fin des sessions de jeu :
+#   47 07 UTC → après la session de nuit de l'US Open (New York)
+#   47 14 UTC → après la session de nuit de l'Open d'Australie (Melbourne)
+#   47 20 UTC → après la journée de Roland-Garros ou de Wimbledon
+# et tombent hors des passages du robot UEFA (21 h 38, 22 h 38, 5 h 12, 6 h 12
+# UTC). La minute n'est jamais 00 (« High load times include the start of
+# every hour »).
+#
+# Lancé à la main (« Run workflow ») : un passage tout de suite.
+on:
+  schedule:
+    - cron: '47 7 * * *'
+    - cron: '47 14 * * *'
+    - cron: '47 20 * * *'
+  workflow_dispatch:
+
+# Écrire dans le dépôt, et appeler pages.yml (un push du robot ne le réveille
+# pas : voir la note « POURQUOI DEUX DROITS » dans uefa.yml).
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: tennis-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Sans réseau : lecture d'un tableau fabriqué (complet, puis en cours) et
+      # faits historiques de data.json. Un échec arrête tout avant écriture.
+      - name: Test de lecture
+        run: node tools/tennis/test-tennis.mjs
+
+      # Relit Wikipédia. Commence par un contrôle de référence (Roland-Garros
+      # 2025 doit redonner ses chiffres validés) ; n'écrit data.json que si un
+      # chiffre a bougé.
+      - name: Relire Wikipédia
+        run: node tools/tennis/refresh.mjs
+
+      - name: Déposer si quelque chose a changé
+        id: depot
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- tools/tennis/data.json; then
+            echo "Rien à déposer."
+            exit 0
+          fi
+          git config user.name  "grotang.fr (robot)"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/tennis/data.json
+          git commit -m "Tennis : tableau relu sur Wikipédia ($(date -u +%d/%m))"
+          # le robot UEFA peut avoir déposé entre-temps : on se recale et on réessaie
+          git push || { git pull --rebase && git push; }
+          echo "deploy=true" >> "$GITHUB_OUTPUT"
+
+      - name: Publier le site
+        if: steps.depot.outputs.deploy == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run pages.yml --ref main
+
+      # ALARME. Un contrôle a échoué (référence, ou cohérence d'une édition) :
+      # les chiffres en cause n'ont pas été écrits, le reste est publié. On
+      # échoue ICI, en toute fin, pour que GitHub envoie son e-mail « Run failed ».
+      - name: Alarme
+        if: ${{ !cancelled() }}
+        run: |
+          node -e "const fs=require('fs'),f=require('path').join(require('os').tmpdir(),'grotang-tennis-alarme.txt'); if(fs.existsSync(f)){console.log('::error::'+fs.readFileSync(f,'utf8').trim()); process.exit(1)} console.log('Contrôles tennis : OK')"

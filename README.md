@@ -7,7 +7,7 @@ Un site statique, en français, qui suit le classement UEFA des associations (la
 | Page | Adresse | Données |
 |---|---|---|
 | Coefficient UEFA | [grotang.fr/uefa/](https://grotang.fr/uefa/) | relues automatiquement, plusieurs fois par jour en période de match |
-| Français en Grand Chelem | [grotang.fr/tennis/](https://grotang.fr/tennis/) | figées, saisie manuelle |
+| Français en Grand Chelem | [grotang.fr/tennis/](https://grotang.fr/tennis/) | tour par tour, relues sur Wikipédia trois fois par jour |
 
 ---
 
@@ -63,6 +63,7 @@ Rien n'est construit à la main : `public/` n'est **pas** dans le dépôt. Le ro
 |---|---|---|
 | `uefa-soir.yml` « Soir de match UEFA » | Part vers 19 h 47 (Paris), second départ vers 21 h 47 | Si c'est un soir de match, reste éveillé : dès 20 h 35, relit la source et Wikipédia **toutes les dix minutes**, dépose et publie dès qu'il y a du neuf, s'arrête quand tout est à jour (source datée du soir **et** score de tous les matchs du soir), au plus tard à 3 h 30. |
 | `uefa.yml` « Rafraîchissement UEFA » | 23 h 38 et 7 h 12 (Paris) | Passages à heure fixe, en filet. Porte l'**alarme de fraîcheur** (`tools/uefa/fraicheur.mjs`) : si un soir de match est passé et que la source n'a pas bougé, le passage de 7 h échoue et GitHub envoie un e-mail. |
+| `tennis.yml` « Rafraîchissement tennis » | 7 h 47, 14 h 47, 20 h 47 UTC | Relit sur Wikipédia les tableaux de l'année en cours (`tools/tennis/refresh.mjs`), après un contrôle sur une édition close (Roland-Garros 2025). Ne dépose `tools/tennis/data.json` que si un chiffre a bougé, puis appelle `pages.yml`. |
 | `pages.yml` « Publication GitHub Pages » | À chaque commit sur `tools/**`, ou appelé par les robots | Fabrique le site (`node tools/build.mjs`) et le publie. |
 
 Pourquoi une veille plutôt qu'une heure fixe : GitHub ne garantit pas l'heure de départ d'une tâche planifiée. Le 13/10/2026, le passage prévu à 23 h 38 est parti à 2 h 33. Une tâche qui part tôt et reste éveillée couvre la soirée même partie en retard. Les minutes d'Actions sont gratuites pour un dépôt public, y compris celles où la tâche attend.
@@ -91,7 +92,12 @@ Une page fausse est pire qu'une page en retard. Le pire scénario voulu est un s
 tools/
   build.mjs              fabrique public/ à partir des sources (pages, icônes, sitemap, données injectées)
   chrome.mjs             barre de navigation, thème clair/sombre, favicon, communs aux pages
-  tennis.src.html        page tennis
+  tennis.src.html        page tennis (données injectées depuis tennis/data.json)
+  tennis/
+    data.json            Français par tour, chaque Grand Chelem depuis 1968 (réécrit par le robot)
+    wiki.mjs             lecture d'un tableau Wikipédia (sans dépendance)
+    refresh.mjs          relit l'année en cours, contrôle, réécrit data.json
+    test-tennis.mjs      test sans réseau (tableau fabriqué + faits historiques)
   icons/, fonts/         icônes du site, polices auto-hébergées
   uefa/
     page.html            LA page UEFA : HTML, CSS, JS et blocs de données entre sentinelles

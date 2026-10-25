@@ -2,7 +2,7 @@
 /* Générateur du site grotang.fr.
  *
  * Entrées   : tools/uefa/page.html  (page UEFA, reconstruite chaque matin)
- *             tools/tennis.src.html (page tennis, figée)
+ *             tools/tennis.src.html + tools/tennis/data.json (page tennis, relue chaque jour)
  *             tools/uefa/nations.json (chiffres des vignettes de l'accueil)
  * Sortie    : public/  — exactement ce que Netlify publie, sans build côté Netlify.
  *
@@ -295,22 +295,26 @@ ${ANALYTICS}
 }
 
 /* ---------- 2 · page tennis ---------- */
-/* Page reprise telle quelle depuis grotang.fr (octets identiques à la version en
-   ligne, vérifiés par empreinte). On n'ajoute que l'en-tête de navigation et les
-   métadonnées manquantes — aucune donnée n'est touchée. */
+/* La page (tools/tennis.src.html) reçoit ses données de tools/tennis/data.json,
+   que le robot tennis relit chaque jour sur Wikipédia ; on ajoute l'en-tête de
+   navigation et les métadonnées. */
 function buildTennis() {
-  const src = read('tools/tennis.src.html');
+  const DT = JSON.parse(read('tools/tennis/data.json'));
+  const brut = read('tools/tennis.src.html');
+  const RE = /\/\*DATA_START\*\/[^]*?\/\*DATA_END\*\//;
+  if (!RE.test(brut)) throw new Error('tennis : sentinelles DATA introuvables');
+  const src = brut.replace(RE, () => `/*DATA_START*/const DT = ${JSON.stringify(DT)};/*DATA_END*/`);
   let out = src.replace('<meta name="viewport" content="width=device-width, initial-scale=1.0">',
     `<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Nombre de joueurs français au tableau principal de chaque Grand Chelem, simple messieurs, ère Open 1968-2026.">
+<meta name="description" content="Les joueurs français tour par tour dans chaque Grand Chelem, simple messieurs, ère Open : 1er tour, 8es, quarts, demies, finales, titres. Mis à jour chaque jour.">
 ${VERIF}
 <link rel="canonical" href="https://grotang.fr/tennis/">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:site_name" content="grotang.fr">
-<meta property="og:title" content="Les Français en Grand Chelem, 1968-2026">
-<meta property="og:description" content="Nombre de joueurs français au tableau principal de chaque Grand Chelem, simple messieurs, ère Open 1968-2026.">
+<meta property="og:title" content="Les Français en Grand Chelem, tour par tour">
+<meta property="og:description" content="Les joueurs français tour par tour dans chaque Grand Chelem, simple messieurs, ère Open : 1er tour, 8es, quarts, demies, finales, titres.">
 <meta property="og:url" content="https://grotang.fr/tennis/">
 <meta name="twitter:card" content="summary">
 ${FAVICON}
@@ -325,10 +329,13 @@ body{padding-top:0}
   out = out.replace('</body>', `${THEME_JS}\n${ANALYTICS}\n</body>`);
   if (!out.includes('gnav')) throw new Error('tennis : injection de la navigation ratée');
 
-  /* chiffres pour la vignette d'accueil, lus dans la source — pas ressaisis */
-  const dat = src.slice(src.indexOf('const D = {'), src.indexOf('};', src.indexOf('const D = {')) + 2);
-  const rows = [...dat.matchAll(/(\d{4}):\{AO:([^,]+), *RG:([^,]+), *WIM:([^,]+), *USO:([^}]+)\}/g)]
-    .map(m => ({ y: +m[1], v: m.slice(2, 6).map(x => x.trim()).map(x => /^\d+$/.test(x) ? +x : null) }));
+  /* chiffres pour la vignette d'accueil : Français au 1er tour, lus dans data.json */
+  const rows = Object.keys(DT.editions).map(Number).sort((a, b) => a - b).map(y => ({ y,
+    v: ['AO', 'RG', 'WIM', 'USO'].map(s => {
+      const v = DT.editions[y][s];
+      const ouvert = DT.ouverts[y] && DT.ouverts[y][s];
+      return Array.isArray(v) && !(ouvert && ouvert[0] !== 'c') ? v[0] : null;
+    }) }));
   if (rows.length < 55) throw new Error('tennis : lecture des données incomplète (' + rows.length + ' lignes)');
   const full = rows.filter(r => r.v.every(v => v !== null)).map(r => ({ y: r.y, t: r.v.reduce((a, b) => a + b, 0) }));
   const peak = full.reduce((a, b) => b.t > a.t ? b : a);
@@ -504,7 +511,7 @@ const dateGit = (...src) => {
 const COMMUN = ['tools/build.mjs', 'tools/chrome.mjs'];
 const majUefa   = dateGit('tools/uefa/page.html', ...COMMUN)
   || dateSitemap('/uefa/',   PRECEDENT,   uefa.html,   true);
-const majTennis = dateGit('tools/tennis.src.html', ...COMMUN)
+const majTennis = dateGit('tools/tennis.src.html', 'tools/tennis/data.json', ...COMMUN)
   || dateSitemap('/tennis/', PREC_TENNIS, tennis.html, false);
 
 /* Matchs club par club (bloc 6b, survol des gaufres) : fichier à part, chargé
