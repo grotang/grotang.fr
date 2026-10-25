@@ -5,13 +5,14 @@
  *    des pages Wikipédia (huit sections de 16 + carré final), avec des
  *    Français placés à la main, d'abord complet puis en cours de tournoi.
  * 2. data.json : les faits que l'histoire impose (un seul titre, Noah 1983 ;
- *    sept finales), et les plafonds de chaque tour.
+ *    sept finales), les plafonds de chaque tour, les noms (autant que le
+ *    chiffre de la case) et les dates de chaque édition jouée.
  *
  * Un échec arrête le workflow avant toute écriture. */
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { lireTableau, colonnes, TOURS } from './wiki.mjs';
+import { lireTableau, colonnes, nomsColonnes, lireDates, TOURS } from './wiki.mjs';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 let ko = 0;
@@ -62,6 +63,19 @@ const attendu = (tours, r) => tours[r].filter(j => FR.has(j)).length;
   const vrai = [0, 1, 2, 3, 4, 5, 6].map(r => attendu(tours, r)).concat([FR.has(tours[7][0]) ? 1 : 0]);
   ok(n.join() === vrai.join(), `tableau complet : ${n.join(' ')} (attendu ${vrai.join(' ')})`);
   ok(TOURS.every(k => c[k][1] === 'c'), 'tableau complet : tous les tours « c »');
+  const nc = nomsColonnes(lireTableau(t));
+  ok(TOURS.every(k => nc[k].length === c[k][0]), 'tableau complet : autant de noms que de Français à chaque tour');
+  ok(nc.V.join() === 'Joueur 0' && nc.F.join() === 'Joueur 0,Joueur 64', `tableau complet : finale ${nc.F.join(' / ')}, titre ${nc.V.join()}`);
+}
+/* dates lues dans l'infobox, aux formats rencontrés sur les 233 éditions */
+{
+  const cas = [
+    ['| date = 25 May – 8 June 2025', 2025, '2025-05-25,2025-06-08'],
+    ['| date=12–25 January 1987', 1987, '1987-01-12,1987-01-25'],
+    ['| date = August 27 – September 7', 1975, '1975-08-27,1975-09-07'],
+    ['| date = 26 December 1973 – 1 January 1974', 1974, '1973-12-26,1974-01-01'],
+  ];
+  for (const [t, an, att] of cas) { const d = lireDates(t, an); ok(d && d.join() === att, `dates « ${t.replace(/^\|\s*date\s*=\s*/, '')} » → ${d && d.join(' / ')}`); }
 }
 {
   /* en cours : 1er tour joué, 2e tour connu, 3e tour vide */
@@ -93,6 +107,18 @@ for (const [an, e] of Object.entries(D.editions)) for (const [s, v] of Object.en
 ok(plafond, 'data.json : chaque tour sous son plafond');
 ok(titres.join() === 'RG1983', `data.json : titres ${titres.join(' ')}`);
 ok(finales.length === 7, `data.json : ${finales.length} finales (${finales.join(' ')})`);
+/* noms : 1 à 3 par tour, et autant que le chiffre de la case */
+let nomsOk = true;
+for (const [an, e] of Object.entries(D.noms || {})) for (const [s, v] of Object.entries(e)) v.forEach((l, i) => {
+  const n = D.editions[an]?.[s];
+  if (l && (!Array.isArray(n) || l.length < 1 || l.length > 3 || l.length !== n[i])) { nomsOk = false; console.log('  noms', s, an, TOURS[i], l.join()); }
+});
+ok(nomsOk, 'data.json : noms cohérents avec les chiffres');
+ok(D.noms?.[1983]?.RG?.[7]?.join() === 'Yannick Noah', 'data.json : titre RG 1983 = Yannick Noah');
+let sansDate = [];
+for (const [an, e] of Object.entries(D.editions)) for (const [s, v] of Object.entries(e))
+  if (Array.isArray(v) && s !== 'AOd' && !D.dates?.[an]?.[s]) sansDate.push(s + an);
+ok(sansDate.length === 0, `data.json : dates de chaque édition jouée${sansDate.length ? ' (manque ' + sansDate.join(' ') + ')' : ''}`);
 ok(D.editions[2026] && D.editions[2026].WIM[0] === 15 && D.editions[2026].USO[0] === 13, 'data.json : 2026 WIM 15, USO 13 au 1er tour');
 
 if (ko) { console.log(`\n${ko} échec(s).`); process.exit(1); }

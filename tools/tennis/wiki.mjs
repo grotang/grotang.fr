@@ -51,6 +51,13 @@ const BYE = /\bbye\b/i;
 const GRAS = /'''/;
 const rempli = v => !!v && (/\[\[|\{\{\s*flag/i.test(v) || BYE.test(v));
 
+/* Nom d'un joueur : la cible du lien, sans la précision d'homonymie
+   (« Gilles Simon (tennis) » → « Gilles Simon »). */
+export function nomJoueur(v) {
+  const m = /\[\[([^\]|]+)/.exec(v);
+  return m ? m[1].replace(/\s*\([^)]*\)\s*$/, '').replace(/_/g, ' ').trim() : '?';
+}
+
 /* Titre de section qui précède la position i (« === Finals === »…) */
 function titreAvant(t, i) {
   const m = [...t.slice(0, i).matchAll(/^={2,}\s*([^=\n]+?)\s*={2,}\s*$/gm)].pop();
@@ -58,7 +65,7 @@ function titreAvant(t, i) {
 }
 
 /* Lit le tableau. Renvoie { etapes, prelim, alertes } :
-   etapes[e] = { places, remplies, fra, gras, fraGras, noms } avec e compté
+   etapes[e] = { places, remplies, fra, gras, fraGras, noms, nomsGras } avec e compté
    depuis la fin (1 = finale, 2 = demies, 3 = quarts, 4 = 8es…).
    Certaines pages répètent les 8es : le dernier tour des sections a alors
    autant de places que le premier tour du carré final, et on ne compte que
@@ -88,16 +95,16 @@ export function lireTableau(t) {
 
   const etapes = {};
   const compter = (b, d, e) => {
-    const E = etapes[e] = etapes[e] || { places: 0, remplies: 0, fra: 0, gras: 0, fraGras: 0, noms: [] };
+    const E = etapes[e] = etapes[e] || { places: 0, remplies: 0, fra: 0, gras: 0, fraGras: 0, noms: [], nomsGras: [] };
     for (const [k, v] of Object.entries(b.params)) {
       if (!cle(d).test(k)) continue;
       E.places++;
       if (rempli(v)) E.remplies++;
       if (BYE.test(v)) continue;
       const f = FRA.test(v), g = GRAS.test(v);
-      if (f) { E.fra++; E.noms.push((/\[\[([^\]|]+)/.exec(v) || [, '?'])[1]); }
+      if (f) { E.fra++; E.noms.push(nomJoueur(v)); }
       if (g) E.gras++;
-      if (f && g) E.fraGras++;
+      if (f && g) { E.fraGras++; E.nomsGras.push(nomJoueur(v)); }
     }
   };
   for (let d = 1; d <= finale.prof; d++) compter(finale, d, finale.prof - d + 1);
@@ -139,17 +146,67 @@ export function colonnes(L) {
   return c;
 }
 
+/* Les Français de chaque colonne, par leur nom (même découpage que
+   colonnes()). Le 1er tour d'un vieux tableau à exemptés réunit les deux
+   premiers tours : un joueur présent aux deux n'est compté qu'une fois. */
+export function nomsColonnes(L) {
+  if (!L) return null;
+  const E = L.etapes;
+  const plein = e => E[e] && E[e].places === 2 ** e;
+  let t1 = Math.max(...Object.keys(E).map(Number));
+  if (L.prelim) while (t1 > 1 && !plein(t1)) t1--;
+  const de = e => E[e] ? [...E[e].noms] : null;
+  const c = { T1: de(t1), T2: de(t1 - 1), T3: de(t1 - 2), H: de(4), Q: de(3), S: de(2), F: de(1) };
+  if (!L.prelim && !plein(t1) && E[t1 - 1]) c.T1 = [...new Set([...E[t1].noms, ...E[t1 - 1].noms])];
+  c.V = E[1] ? [...E[1].nomsGras] : null;
+  return c;
+}
+
+/* Dates d'un tournoi, lues dans l'infobox de sa page (« | date = 25 May –
+   8 June 2025 »). Renvoie ['AAAA-MM-JJ', 'AAAA-MM-JJ'] ou null. */
+const MOIS = { january: 1, february: 2, march: 3, april: 4, may: 5, june: 6, july: 7,
+  august: 8, september: 9, october: 10, november: 11, december: 12 };
+export function lireDates(t, an) {
+  const m = /^\s*\|\s*dates?\s*=\s*(.+)$/im.exec(t || '');
+  if (!m) return null;
+  const x = m[1].replace(/<[^>]*>/g, ' ').replace(/\{\{[^}]*\}\}/g, ' ').replace(/&nbsp;/g, ' ')
+    .replace(/[–—−]|&ndash;/g, '-').replace(/\s+/g, ' ').trim();
+  const f = (a, mo, j) => `${a}-${String(mo).padStart(2, '0')}-${String(j).padStart(2, '0')}`;
+  const fin = (j1, m1, a1, j2, m2, a2) => {
+    if (!m1 || !m2) return null;
+    a2 = +(a2 || an); a1 = +(a1 || (m1 > m2 ? a2 - 1 : a2));
+    return [f(a1, m1, +j1), f(a2, m2, +j2)];
+  };
+  const M = s => s ? MOIS[s.toLowerCase()] : undefined;
+  /* « 25 May – 8 June 2025 », « 12–26 January 2025 » */
+  let r = /^(\d{1,2})\s*([A-Za-z]+)?,?\s*(\d{4})?\s*-\s*(\d{1,2})\s*([A-Za-z]+),?\s*(\d{4})?/.exec(x);
+  if (r && M(r[5])) return fin(r[1], M(r[2]) || M(r[5]), r[3], r[4], M(r[5]), r[6]);
+  /* « August 27 – September 7, 2025 », « August 25–September 7 » */
+  r = /^([A-Za-z]+)\s*(\d{1,2}),?\s*(\d{4})?\s*-\s*([A-Za-z]+)?\s*(\d{1,2}),?\s*(\d{4})?/.exec(x);
+  if (r && M(r[1])) return fin(r[2], M(r[1]), r[3], r[5], M(r[4]) || M(r[1]), r[6]);
+  return null;
+}
+
 /* data.json, écrit toujours de la même façon (une ligne par année, ordre
-   fixe) : deux écritures du même contenu donnent les mêmes octets. */
+   fixe) : deux écritures du même contenu donnent les mêmes octets.
+   editions : les chiffres ; dates : début et fin de chaque tournoi ;
+   noms : pour chaque tour, les Français quand ils sont 1 à 3 (sinon null). */
 const ORDRE = ['AO', 'AOd', 'RG', 'WIM', 'USO'];
 export function ecrireData(d) {
-  const ans = Object.keys(d.editions).sort();
-  const ligne = a => {
-    const e = d.editions[a];
-    return `    "${a}": {` + Object.keys(e).sort((x, y) => ORDRE.indexOf(x) - ORDRE.indexOf(y))
-      .map(k => `"${k}": ${JSON.stringify(e[k])}`).join(', ') + '}';
+  const bloc = o => {
+    const ans = Object.keys(o || {}).sort();
+    const ligne = a => `    "${a}": {` + Object.keys(o[a]).sort((x, y) => ORDRE.indexOf(x) - ORDRE.indexOf(y))
+      .map(k => `"${k}": ${JSON.stringify(o[a][k])}`).join(', ') + '}';
+    return ans.length ? '{\n' + ans.map(ligne).join(',\n') + '\n  }' : '{}';
   };
-  const ouv = d.ouverts || {};
-  return '{\n  "tours": ' + JSON.stringify(d.tours) + ',\n  "ouverts": ' + JSON.stringify(ouv) +
-    ',\n  "editions": {\n' + ans.map(ligne).join(',\n') + '\n  }\n}\n';
+  return '{\n  "tours": ' + JSON.stringify(d.tours) + ',\n  "ouverts": ' + JSON.stringify(d.ouverts || {}) +
+    ',\n  "editions": ' + bloc(d.editions) + ',\n  "dates": ' + bloc(d.dates) + ',\n  "noms": ' + bloc(d.noms) + '\n}\n';
+}
+
+/* Les noms à garder pour une édition : 1 à 3 Français à un tour → leurs
+   noms ; sinon null. Renvoie null si aucun tour n'a de nom à garder. */
+export function nomsAGarder(nc) {
+  if (!nc) return null;
+  const v = TOURS.map(k => nc[k] && nc[k].length >= 1 && nc[k].length <= 3 ? nc[k] : null);
+  return v.some(x => x) ? v : null;
 }

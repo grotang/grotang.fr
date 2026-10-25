@@ -14,6 +14,9 @@
  *      ouvertes, au passage du 1er janvier). Une page absente ou sans tableau
  *      = « à venir ». Une édition close (finale jouée, tous les tours remplis)
  *      n'est plus relue.
+ *      Avec les chiffres, les noms des Français de chaque tour quand ils sont
+ *      1 à 3 (infobulles), et les dates de chaque tournoi, lues une fois dans
+ *      la page du tournoi.
  *   3. Contrôles de cohérence sur chaque édition relue (voir controle()). Une
  *      édition qui échoue garde ses chiffres de la veille.
  *   4. Réécrit tools/tennis/data.json SEULEMENT si un chiffre a bougé (pas
@@ -28,7 +31,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { lireTableau, colonnes, ecrireData, TOURS } from './wiki.mjs';
+import { lireTableau, colonnes, nomsColonnes, nomsAGarder, lireDates, ecrireData, TOURS } from './wiki.mjs';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const FICHIER = path.join(ICI, 'data.json');
@@ -36,6 +39,8 @@ const ALARME = path.join(os.tmpdir(), 'grotang-tennis-alarme.txt');
 const UA = 'grotang.fr-robot/1.0 (https://grotang.fr/tennis/; Français en Grand Chelem, quelques pages par jour)';
 const SLAMS = { AO: 'Australian Open', RG: 'French Open', WIM: 'Wimbledon Championships', USO: 'US Open' };
 const titre = (an, s) => `${an} ${SLAMS[s]} – Men's singles`;
+/* la page du tournoi (dates dans l'infobox) ; « US Open » seul est une page d'homonymie */
+const titreTournoi = (an, s) => `${an} ${SLAMS[s]}${s === 'USO' ? ' (tennis)' : ''}`;
 
 const args = process.argv.slice(2);
 const DRY = args.includes('--dry-run');
@@ -75,7 +80,9 @@ function lire(t) {
   const L = lireTableau(t);
   if (!L) return null;
   const c = colonnes(L);
-  return { n: TOURS.map(k => c[k] ? c[k][0] : null), etat: TOURS.map(k => c[k] ? c[k][1] : 'c').join(''), alertes: L.alertes };
+  const nc = nomsColonnes(L);
+  return { n: TOURS.map(k => c[k] ? c[k][0] : null), etat: TOURS.map(k => c[k] ? c[k][1] : 'c').join(''), alertes: L.alertes,
+           nc: TOURS.map(k => nc[k] ? nc[k].length : null), noms: nomsAGarder(nc) };
 }
 
 /* Ce qui doit tomber juste sur toute édition, close ou en cours. */
@@ -91,6 +98,8 @@ function controle(r) {
   for (let i = 0; i < 7; i++)
     if (r.n[i] !== null && r.n[i + 1] !== null && r.n[i + 1] > r.n[i] && r.etat[i] === 'c' && i !== 2)
       pb.push(`${TOURS[i + 1]} (${r.n[i + 1]}) > ${TOURS[i]} (${r.n[i]})`);
+  /* les noms relevés doivent retomber sur les chiffres */
+  r.n.forEach((v, i) => { if (v !== null && r.etat[i] !== 'v' && r.nc[i] !== v) pb.push(`${TOURS[i]} : ${r.nc[i]} noms pour ${v} Français`); });
   return pb.concat(r.alertes.filter(a => !/deviné/.test(a)));
 }
 
@@ -146,14 +155,29 @@ for (const [an, s] of aRelire) {
     continue;
   }
   const clos = /^c+$/.test(r.etat);
-  const avant = JSON.stringify([ed[s], data.ouverts?.[an]?.[s] || null]);
+  const avant = JSON.stringify([ed[s], data.ouverts?.[an]?.[s] || null, data.noms?.[an]?.[s] || null]);
   ed[s] = r.n;
+  data.noms = data.noms || {};
+  if (r.noms) (data.noms[an] = data.noms[an] || {})[s] = r.noms;
+  else if (data.noms[an]) { delete data.noms[an][s]; if (!Object.keys(data.noms[an]).length) delete data.noms[an]; }
   data.ouverts = data.ouverts || {};
   if (clos) { if (data.ouverts[an]) delete data.ouverts[an][s]; }
   else (data.ouverts[an] = data.ouverts[an] || {})[s] = r.etat;
   if (data.ouverts[an] && !Object.keys(data.ouverts[an]).length) delete data.ouverts[an];
-  if (JSON.stringify([ed[s], data.ouverts?.[an]?.[s] || null]) !== avant) change = true;
+  if (JSON.stringify([ed[s], data.ouverts?.[an]?.[s] || null, data.noms?.[an]?.[s] || null]) !== avant) change = true;
   console.log(`${s} ${an} : ${r.n.map(v => v ?? '-').join(' ')}  [${r.etat}]${clos ? ' close' : ''}`);
+}
+
+/* 2 bis · dates des tournois de l'année (et de l'an passé) : lues une fois dans
+   l'infobox de la page du tournoi, dès qu'elle les donne. Jamais bloquant. */
+data.dates = data.dates || {};
+for (const an of [AN - 1, AN]) for (const s of Object.keys(SLAMS)) {
+  const v = data.editions[an]?.[s];
+  if (v === undefined || v === 'C' || v === 'ND' || data.dates[an]?.[s]) continue;
+  try {
+    const d = lireDates(await wikitexte(titreTournoi(an, s)), an);
+    if (d) { (data.dates[an] = data.dates[an] || {})[s] = d; change = true; console.log(`${s} ${an} : dates ${d.join(' → ')}`); }
+  } catch (e) { console.log(`${s} ${an} : dates illisibles (${e.message})`); }
 }
 
 if (change && !DRY) {

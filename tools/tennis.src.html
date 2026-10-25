@@ -74,6 +74,30 @@ td.tc { font-size:.7rem; font-weight:700; background:var(--surface-2) !important
 .seg button:focus-visible { outline:2px solid var(--tennis); outline-offset:-2px; }
 @media (max-width:520px){ .seg button { padding:6px 7px; font-size:.68rem; } }
 
+/* Infobulle d'une case : même habillage que la page UEFA */
+.tip { position:fixed; z-index:20; pointer-events:none; background:var(--surface); border:1px solid var(--rule);
+  border-radius:3px; padding:9px 11px 10px; box-shadow:0 6px 20px rgba(0,0,0,.16); font-size:12px; color:var(--ink);
+  min-width:190px; max-width:280px; opacity:0; transition:opacity .08s; }
+.tip.on { opacity:1; }
+.tip .th { display:flex; align-items:center; gap:6px; font-size:11px; letter-spacing:.06em; text-transform:uppercase; font-weight:700; color:var(--ink-2); }
+.tip .th i { width:9px; height:9px; border-radius:2px; flex:none; }
+.tip .tsub { font-size:11px; color:var(--ink-3); margin:2px 0 8px 15px; }
+.tip .big { display:flex; align-items:baseline; gap:6px; line-height:1.2; }
+.tip .big b { font-size:22px; font-weight:700; font-variant-numeric:tabular-nums; }
+.tip .big span { color:var(--ink-2); }
+.tip .big.vide span { color:var(--ink-3); }
+.tip .noms { list-style:none; margin:6px 0 0; padding:0; }
+.tip .noms li { line-height:1.55; color:var(--ink); font-weight:600; }
+.tip .noms li u { text-decoration:none; font-weight:400; color:var(--ink-3); font-size:11px; margin-left:4px; }
+.tip .parc { display:grid; grid-template-columns:repeat(8,1fr); gap:2px; margin-top:9px; }
+.tip .parc span { text-align:center; font-size:9.5px; color:var(--ink-3); line-height:1.3; }
+.tip .parc b { display:block; height:17px; line-height:17px; border-radius:2px; font-size:10.5px; font-weight:700;
+  font-variant-numeric:tabular-nums; background:var(--surface-2); color:var(--ink-3); }
+.tip .parc .sel b { outline:1.5px solid var(--ink); outline-offset:-1.5px; }
+.tip .parc .sel { color:var(--ink); font-weight:700; }
+.tip .tfoot { margin-top:8px; padding-top:7px; border-top:1px solid var(--rule-soft); font-size:11px; line-height:1.45; color:var(--ink-3); }
+td[data-s], td.tc { cursor:default; }
+
 /* tour en cours : chiffre provisoire, en italique et souligné en pointillé */
 .v.prov { font-style:italic; text-decoration:underline dotted; text-underline-offset:3px; }
 </style>
@@ -211,19 +235,19 @@ for (const y of years) {
     const etat = (DT.ouverts[y] && DT.ouverts[y][s] || '')[i] || 'c';
     const c = cs(v, i, etat, max);
     const td = document.createElement('td');
+    td.dataset.y = y; td.dataset.s = s;
     td.style.background = c.bg;
     const sp = document.createElement('span');
     sp.className = c.cls;
     sp.style.color = c.fg;
     sp.textContent = c.t;
-    if (etat === 'p') sp.title = 'Tour en cours : chiffre provisoire';
     td.appendChild(sp);
     tr.appendChild(td);
     if (Array.isArray(v) && etat !== 'v') { tot += v[i]; cnt++; if (etat === 'p') prov = true; }
   }
 
   const tt = document.createElement('td');
-  tt.className = 'tc';
+  tt.className = 'tc'; tt.dataset.y = y;
   if (cnt > 0) {
     tt.textContent = tot;
     /* le total va du discret au marqué, dans le sens du fond */
@@ -260,6 +284,121 @@ function choisir(t, garder){
   titres(); draw(); drawLegend();
   if (garder) history.replaceState(null, '', t === 'T1' ? location.pathname : '#' + t);
 }
+/* ---------- infobulles ---------- */
+/* Une case : le tournoi, ses dates, le nombre de Français au tour choisi, leurs
+   noms quand ils sont 3 ou moins, le parcours complet de l'édition et, le cas
+   échéant, la subtilité du tableau. La colonne Σ : l'année, tournoi par tournoi. */
+const TOURNOI = {AO:"Open d'Australie", RG:'Roland-Garros', WIM:'Wimbledon', USO:'US Open'};
+const COUL = {AO:'var(--ao)', RG:'var(--rg)', WIM:'var(--wim)', USO:'var(--uso)'};
+const COURT = ['1er','2e','3e','8es','¼','½','F','🏆'];
+const MOIS_FR = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const NOMS = DT.noms || {}, DATES = DT.dates || {};
+const esc = x => String(x).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function datesFr(d) {
+  if (!d) return '';
+  const [a, b] = d.map(x => x.split('-').map(Number));
+  const j = x => x[2] === 1 ? '1er' : String(x[2]);
+  if (a[0] !== b[0]) return `${j(a)} ${MOIS_FR[a[1]-1]} ${a[0]} – ${j(b)} ${MOIS_FR[b[1]-1]} ${b[0]}`;
+  if (a[1] !== b[1]) return `${j(a)} ${MOIS_FR[a[1]-1]} – ${j(b)} ${MOIS_FR[b[1]-1]} ${b[0]}`;
+  return `${j(a)}–${j(b)} ${MOIS_FR[b[1]-1]} ${b[0]}`;
+}
+function phrase(n, i) {
+  if (TOURS[i] === 'V') return n ? 'Titre français' : 'Pas de titre français';
+  return (n === 0 ? 'Aucun Français ' : 'Français ') + NOM[TOURS[i]];
+}
+/* subtilités des tableaux (relevées sur les pages Wikipédia) */
+function subtilite(y, s, t) {
+  const d = DT.editions[y][s];
+  if (d === null) return "Janvier 1968 : tournoi encore réservé aux amateurs, avant l'ère Open.";
+  if (d === 'ND') return 'Non disputé : le tournoi passe de décembre à janvier.';
+  let n = '';
+  /* petits tableaux (64 places au plus) : le 3e tour y est déjà le 8e de finale */
+  const petit = s === 'AO' && y >= 1969 && y <= 1981 ? (y <= 1971 ? 48 : y === 1972 ? 50 : y === 1973 ? 56 : 64)
+              : s === 'RG' && y === 1972 ? 64 : 0;
+  if (petit && (t === 'T3' || t === 'H'))
+    n = `Tableau à ${petit} joueurs${s === 'RG' ? ', après un tour préliminaire' : ''} : le 3e tour est déjà le 8e de finale.`;
+  if (s === 'AO' && y === 1977)
+    n = (n ? n + '<br>' : '') + 'Édition de janvier. Celle de décembre 1977 : 2 Français, sortis au 1er tour.';
+  return n;
+}
+function htmlCase(y, s) {
+  const i = TOURS.indexOf(tour), d = DT.editions[y][s];
+  const ouv = (DT.ouverts[y] && DT.ouverts[y][s]) || '';
+  let h = `<div class="th"><i style="background:${COUL[s]}"></i>${TOURNOI[s]} ${y}</div>`;
+  h += `<div class="tsub">${datesFr(DATES[y] && DATES[y][s]) || '&nbsp;'}</div>`;
+  if (!Array.isArray(d)) {
+    const lib = d === '?' ? 'À venir' : d === 'C' ? 'Annulé (Covid)' : d === 'ND' ? 'Non disputé' : "Pas d'édition ouverte aux pros";
+    h += `<div class="big vide"><span>${lib}</span></div>`;
+  } else if ((ouv[i] || 'c') === 'v') {
+    h += `<div class="big vide"><span>Tour pas encore joué</span></div>`;
+  } else {
+    const n = d[i];
+    h += `<div class="big${n ? '' : ' vide'}">${tour === 'V' || !n ? '' : `<b>${n}</b>`}<span>${phrase(n, i)}${ouv[i] === 'p' ? ' · tour en cours' : ''}</span></div>`;
+    const nm = NOMS[y] && NOMS[y][s] && NOMS[y][s][i];
+    if (nm && nm.length) h += '<ul class="noms">' + nm.map(x => `<li>${tour === 'V' ? '🏆 ' : ''}${esc(x)}</li>`).join('') + '</ul>';
+    /* le parcours de l'édition, du 1er tour au titre */
+    const mx = Math.max(1, d[0]);
+    h += '<div class="parc">' + d.map((v, k) => {
+      const e = ouv[k] || 'c', joue = e !== 'v';
+      const a = joue && v ? .18 + .82 * Math.min(1, v / mx) : 0;
+      const st = a ? `background:color-mix(in srgb, ${COUL[s]} ${Math.round(a * 100)}%, var(--surface-2));color:${a > .55 ? '#fff' : 'var(--ink)'}` : '';
+      return `<span class="${k === i ? 'sel' : ''}"><b style="${st}">${joue ? v : '·'}</b>${COURT[k]}</span>`;
+    }).join('') + '</div>';
+  }
+  const sub = subtilite(y, s, tour);
+  if (sub) h += `<div class="tfoot">${sub}</div>`;
+  return h;
+}
+function htmlAnnee(y) {
+  const i = TOURS.indexOf(tour), e = DT.editions[y];
+  let tot = 0, h = `<div class="th">${y} · ${tour === 'V' ? 'titres' : 'Français ' + NOM[tour]}</div><div class="tsub" style="margin-left:0">les quatre Grands Chelems</div>`;
+  const lignes = [], noms = [];
+  for (const s of SLAMS) {
+    const d = e[s], ouv = (DT.ouverts[y] && DT.ouverts[y][s]) || '';
+    let v = '–';
+    if (Array.isArray(d) && (ouv[i] || 'c') !== 'v') { v = d[i]; tot += v;
+      const nm = NOMS[y] && NOMS[y][s] && NOMS[y][s][i]; if (nm) nm.forEach(x => noms.push([x, s])); }
+    else if (d === '?' || (ouv[i] || 'c') === 'v') v = '···';
+    lignes.push(`<li style="display:flex;justify-content:space-between;gap:14px;font-weight:400"><span><i style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${COUL[s]};margin-right:6px"></i>${TOURNOI[s]}</span><b style="font-variant-numeric:tabular-nums">${v}</b></li>`);
+  }
+  h += `<ul class="noms" style="margin-top:0">${lignes.join('')}</ul>`;
+  if (noms.length && noms.length <= 3) h += '<div class="tfoot" style="color:var(--ink)">' + noms.map(([x, s]) => `${esc(x)} <span style="color:var(--ink-3)">(${s})</span>`).join('<br>') + '</div>';
+  return h;
+}
+const tip = document.createElement('div');
+tip.className = 'tip'; tip.setAttribute('role', 'tooltip');
+document.body.appendChild(tip);
+let tipCase = null;
+function montrer(td, x, yy) {
+  tip.innerHTML = td.dataset.s ? htmlCase(+td.dataset.y, td.dataset.s) : htmlAnnee(+td.dataset.y);
+  tipCase = td; tip.classList.add('on'); placer(x, yy);
+}
+function placer(x, yy) {
+  const w = tip.offsetWidth, h = tip.offsetHeight, W = innerWidth, H = innerHeight;
+  let l = x + 16, t = yy + 14;
+  if (l + w > W - 6) l = x - w - 16;
+  if (l < 6) l = Math.max(6, Math.min(W - w - 6, x - w / 2));
+  if (t + h > H - 6) t = yy - h - 14;
+  tip.style.left = l + 'px'; tip.style.top = Math.max(6, t) + 'px';
+}
+function cacher() { tip.classList.remove('on'); tipCase = null; }
+tb.addEventListener('pointermove', ev => {
+  if (ev.pointerType !== 'mouse') return;
+  const td = ev.target.closest('td[data-y]');
+  if (!td || td.classList.contains('y')) return cacher();
+  if (td !== tipCase) montrer(td, ev.clientX, ev.clientY); else placer(ev.clientX, ev.clientY);
+});
+tb.addEventListener('pointerleave', ev => { if (ev.pointerType === 'mouse') cacher(); });
+/* au doigt : on touche une case pour l'ouvrir, ailleurs pour la fermer */
+document.addEventListener('click', ev => {
+  const td = ev.target.closest && ev.target.closest('#tb td[data-y]');
+  if (!td) return cacher();
+  if (td === tipCase) return cacher();
+  const r = td.getBoundingClientRect();
+  montrer(td, r.left + r.width / 2, r.bottom);
+});
+addEventListener('scroll', () => { if (tipCase && matchMedia('(hover:none)').matches) cacher(); }, {passive:true});
 document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => choisir(b.dataset.t, true)));
 choisir(location.hash.slice(1), false);
 document.addEventListener('grotang:theme', () => { draw(); drawLegend(); });
