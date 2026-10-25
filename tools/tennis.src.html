@@ -74,6 +74,38 @@ td.tc { font-size:.7rem; font-weight:700; background:var(--surface-2) !important
 .seg button:focus-visible { outline:2px solid var(--tennis); outline-offset:-2px; }
 @media (max-width:520px){ .seg button { padding:6px 7px; font-size:.68rem; } }
 
+/* Grille et tableau des joueurs côte à côte (empilés au téléphone) */
+.duo { display:flex; justify-content:center; align-items:flex-start; gap:28px; }
+.duo .wrap { flex:none; }
+.jr { width:300px; flex:none; position:sticky; top:12px; max-height:calc(100vh - 24px); display:flex; flex-direction:column;
+  background:var(--surface); border:1px solid var(--rule); border-radius:3px; }
+.jr-h { padding:10px 12px 8px; border-bottom:1px solid var(--rule-soft); }
+.jr-t { font-size:.74rem; font-weight:700; color:var(--ink); }
+.jr-s { font-size:.62rem; color:var(--ink-3); margin-top:2px; }
+.jr-f { font-size:.64rem; color:var(--ink-3); margin-top:7px; min-height:2.6em; line-height:1.3; }
+.jr-f b { color:var(--ink); }
+.jr-f i { display:inline-block; width:7px; height:7px; border-radius:2px; margin:0 3px 0 6px; }
+.jr-l { list-style:none; margin:0; padding:4px 0; overflow-y:auto; flex:1; }
+.jr-l li { display:grid; grid-template-columns:22px minmax(0,1fr) 84px 26px; align-items:center; gap:7px;
+  padding:0 12px; height:22px; font-size:.7rem; cursor:pointer; }
+.jr-l li:hover, .jr-l li.on { background:var(--surface-2); }
+.jr-l li.on { box-shadow:inset 3px 0 0 var(--ink); }
+.jr-l .rg { color:var(--ink-3); font-size:.62rem; text-align:right; font-variant-numeric:tabular-nums; }
+.jr-l .nm { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink); }
+.jr-l .br { display:flex; height:8px; border-radius:2px; overflow:hidden; background:var(--surface-2); }
+.jr-l .br i { display:block; height:100%; }
+.jr-l .nb { text-align:right; font-weight:700; font-variant-numeric:tabular-nums; }
+/* un joueur choisi : ses cases ressortent, les autres s'effacent */
+#tb.foc td[data-s] { opacity:.16; }
+#tb.foc td[data-s].hl { opacity:1; box-shadow:inset 0 0 0 2px var(--ink); }
+#tb.foc td.tc { opacity:.16; }
+#tb.foc td.y { opacity:.35; }
+#tb.foc td.y.hl { opacity:1; color:var(--ink); }
+@media (max-width:720px){
+  .duo { flex-direction:column; align-items:center; gap:18px; }
+  .jr { position:static; width:100%; max-width:420px; max-height:70vh; }
+}
+
 /* Infobulle d'une case : même habillage que la page UEFA */
 .tip { position:fixed; z-index:20; pointer-events:none; background:var(--surface); border:1px solid var(--rule);
   border-radius:3px; padding:9px 11px 10px; box-shadow:0 6px 20px rgba(0,0,0,.16); font-size:12px; color:var(--ink);
@@ -119,6 +151,7 @@ td[data-s], td.tc { cursor:default; }
   <span style="margin-left:10px">✕ = annulé · ··· = à venir · <i style="text-decoration:underline dotted">4</i> = tour en cours</span>
 </div>
 
+<div class="duo">
 <div class="wrap">
 <table>
 <thead>
@@ -133,6 +166,16 @@ td[data-s], td.tc { cursor:default; }
 </thead>
 <tbody id="tb"></tbody>
 </table>
+</div>
+
+<aside class="jr" id="jr" aria-label="Joueurs français">
+  <div class="jr-h">
+    <div class="jr-t" id="jrTitre"></div>
+    <div class="jr-s" id="jrSous"></div>
+    <div class="jr-f" id="jrFocus">Survoler un joueur pour voir ses éditions dans la grille</div>
+  </div>
+  <ol class="jr-l" id="jrListe"></ol>
+</aside>
 </div>
 
 <p class="subtitle" style="margin-top:18px;margin-bottom:2px">© 2026 Tanguy Drouin — grotang.fr. Tous droits réservés.</p>
@@ -281,7 +324,7 @@ function choisir(t, garder){
   if (!TOURS.includes(t)) t = 'T1';
   tour = t;
   document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === t)));
-  titres(); draw(); drawLegend();
+  titres(); draw(); drawLegend(); drawJoueurs();
   if (garder) history.replaceState(null, '', t === 'T1' ? location.pathname : '#' + t);
 }
 /* ---------- infobulles ---------- */
@@ -292,7 +335,13 @@ const TOURNOI = {AO:"Open d'Australie", RG:'Roland-Garros', WIM:'Wimbledon', USO
 const COUL = {AO:'var(--ao)', RG:'var(--rg)', WIM:'var(--wim)', USO:'var(--uso)'};
 const COURT = ['1er','2e','3e','8es','¼','½','F','🏆'];
 const MOIS_FR = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-const NOMS = DT.noms || {}, DATES = DT.dates || {};
+const DATES = DT.dates || {}, JOUEURS = DT.joueurs || [], PARC = DT.parcours || {};
+/* les Français d'une case : ceux dont la dernière colonne atteinte est ≥ i */
+function nomsCase(y, s, i) {
+  const p = PARC[y] && PARC[y][s]; if (!p) return [];
+  const out = []; for (let j = 0; j < p.length; j += 2) if (p[j + 1] >= i) out.push(JOUEURS[p[j]]);
+  return out;
+}
 const esc = x => String(x).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 function datesFr(d) {
@@ -335,8 +384,8 @@ function htmlCase(y, s) {
   } else {
     const n = d[i];
     h += `<div class="big${n ? '' : ' vide'}">${tour === 'V' || !n ? '' : `<b>${n}</b>`}<span>${phrase(n, i)}${ouv[i] === 'p' ? ' · tour en cours' : ''}</span></div>`;
-    const nm = NOMS[y] && NOMS[y][s] && NOMS[y][s][i];
-    if (nm && nm.length) h += '<ul class="noms">' + nm.map(x => `<li>${tour === 'V' ? '🏆 ' : ''}${esc(x)}</li>`).join('') + '</ul>';
+    const nm = nomsCase(y, s, i);
+    if (nm.length && nm.length <= 3) h += '<ul class="noms">' + nm.map(x => `<li>${tour === 'V' ? '🏆 ' : ''}${esc(x)}</li>`).join('') + '</ul>';
     /* le parcours de l'édition, du 1er tour au titre */
     const mx = Math.max(1, d[0]);
     h += '<div class="parc">' + d.map((v, k) => {
@@ -358,7 +407,7 @@ function htmlAnnee(y) {
     const d = e[s], ouv = (DT.ouverts[y] && DT.ouverts[y][s]) || '';
     let v = '–';
     if (Array.isArray(d) && (ouv[i] || 'c') !== 'v') { v = d[i]; tot += v;
-      const nm = NOMS[y] && NOMS[y][s] && NOMS[y][s][i]; if (nm) nm.forEach(x => noms.push([x, s])); }
+      nomsCase(y, s, i).forEach(x => noms.push([x, s])); }
     else if (d === '?' || (ouv[i] || 'c') === 'v') v = '···';
     lignes.push(`<li style="display:flex;justify-content:space-between;gap:14px;font-weight:400"><span><i style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${COUL[s]};margin-right:6px"></i>${TOURNOI[s]}</span><b style="font-variant-numeric:tabular-nums">${v}</b></li>`);
   }
@@ -399,9 +448,75 @@ document.addEventListener('click', ev => {
   montrer(td, r.left + r.width / 2, r.bottom);
 });
 addEventListener('scroll', () => { if (tipCase && matchMedia('(hover:none)').matches) cacher(); }, {passive:true});
+/* ---------- tableau des joueurs ---------- */
+/* Pour le tour choisi : chaque Français qui l'a atteint, son nombre
+   d'éditions (barre par tournoi), trié du plus fréquent au plus rare. Survoler
+   ou toucher un joueur allume dans la grille les éditions où il y est arrivé. */
+let jrLignes = [], jrPin = null;
+function joueursDuTour() {
+  const i = TOURS.indexOf(tour), m = new Map();
+  for (const y of years) for (const s of SLAMS) {
+    const p = PARC[y] && PARC[y][s]; if (!p) continue;
+    const ouv = (DT.ouverts[y] && DT.ouverts[y][s]) || '';
+    if ((ouv[i] || 'c') === 'v') continue;
+    for (let j = 0; j < p.length; j += 2) if (p[j + 1] >= i) {
+      const id = p[j];
+      if (!m.has(id)) m.set(id, { id, nom: JOUEURS[id], n: 0, par: {AO:0, RG:0, WIM:0, USO:0}, eds: [], min: y, max: y });
+      const o = m.get(id); o.n++; o.par[s]++; o.eds.push([y, s]); o.min = Math.min(o.min, y); o.max = Math.max(o.max, y);
+    }
+  }
+  /* tri : nombre d'éditions, puis la plus récente, puis le nom */
+  return [...m.values()].sort((a, b) => b.n - a.n || b.max - a.max || a.nom.localeCompare(b.nom, 'fr'));
+}
+function drawJoueurs() {
+  jrLignes = joueursDuTour(); jrPin = null; allumer(null);
+  const n = jrLignes.length, mx = jrLignes.length ? jrLignes[0].n : 1;
+  document.getElementById('jrTitre').textContent = tour === 'V' ? 'Les Français titrés' : `Les Français ${NOM[tour]}`;
+  document.getElementById('jrSous').textContent = n === 0 ? 'Aucun Français'
+    : `${n} joueur${n > 1 ? 's' : ''} · ${tour === 'V' ? 'nombre de titres' : "nombre d'éditions"} depuis 1968`;
+  let rang = 0, prec = null;
+  document.getElementById('jrListe').innerHTML = jrLignes.map((o, k) => {
+    if (o.n !== prec) { rang = k + 1; prec = o.n; }
+    const br = SLAMS.filter(s => o.par[s]).map(s => `<i style="width:${o.par[s] / mx * 100}%;background:${COUL[s]}"></i>`).join('');
+    return `<li data-k="${k}"><span class="rg">${rang}</span><span class="nm">${esc(o.nom)}</span><span class="br">${br}</span><span class="nb">${o.n}</span></li>`;
+  }).join('');
+  focusTexte(null);
+}
+function focusTexte(o) {
+  const f = document.getElementById('jrFocus');
+  if (!o) { f.innerHTML = jrLignes.length ? 'Survoler un joueur pour voir ses éditions dans la grille' : ''; return; }
+  const per = o.min === o.max ? String(o.min) : `${o.min}–${o.max}`;
+  f.innerHTML = `<b>${esc(o.nom)}</b> · ${o.n} ${tour === 'V' ? 'titre' : 'édition'}${o.n > 1 ? 's' : ''} · ${per}<br>` +
+    SLAMS.filter(s => o.par[s]).map(s => `<i style="background:${COUL[s]}"></i>${s} ${o.par[s]}`).join('');
+}
+function allumer(o) {
+  tb.classList.toggle('foc', !!o);
+  tb.querySelectorAll('.hl').forEach(e => e.classList.remove('hl'));
+  if (!o) return;
+  for (const [y, s] of o.eds) {
+    const td = tb.querySelector(`td[data-y="${y}"][data-s="${s}"]`);
+    if (td) { td.classList.add('hl'); td.parentNode.firstChild.classList.add('hl'); }
+  }
+}
+const jrListe = document.getElementById('jrListe');
+const ligneDe = ev => { const li = ev.target.closest && ev.target.closest('#jrListe li'); return li ? li : null; };
+jrListe.addEventListener('pointerover', ev => {
+  if (ev.pointerType !== 'mouse' || jrPin !== null) return;
+  const li = ligneDe(ev); if (!li) return;
+  const o = jrLignes[+li.dataset.k]; allumer(o); focusTexte(o);
+});
+jrListe.addEventListener('pointerleave', ev => { if (ev.pointerType === 'mouse' && jrPin === null) { allumer(null); focusTexte(null); } });
+/* un clic (ou un toucher) épingle le joueur ; un second le relâche */
+jrListe.addEventListener('click', ev => {
+  const li = ligneDe(ev); if (!li) return;
+  const k = +li.dataset.k;
+  jrListe.querySelectorAll('li.on').forEach(e => e.classList.remove('on'));
+  if (jrPin === k) { jrPin = null; allumer(null); focusTexte(null); return; }
+  jrPin = k; li.classList.add('on'); allumer(jrLignes[k]); focusTexte(jrLignes[k]);
+});
 document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => choisir(b.dataset.t, true)));
 choisir(location.hash.slice(1), false);
-document.addEventListener('grotang:theme', () => { draw(); drawLegend(); });
+document.addEventListener('grotang:theme', () => { draw(); drawLegend(); if (jrPin !== null) allumer(jrLignes[jrPin]); });
 </script>
 </body>
 </html>

@@ -55,7 +55,10 @@ const rempli = v => !!v && (/\[\[|\{\{\s*flag/i.test(v) || BYE.test(v));
    (« Gilles Simon (tennis) » → « Gilles Simon »). */
 export function nomJoueur(v) {
   const m = /\[\[([^\]|]+)/.exec(v);
-  return m ? m[1].replace(/\s*\([^)]*\)\s*$/, '').replace(/_/g, ' ').trim() : '?';
+  if (m) return m[1].replace(/\s*\([^)]*\)\s*$/, '').replace(/_/g, ' ').trim();
+  /* joueur sans article (lien absent) : le texte de la case */
+  const x = v.replace(/\{\{[^{}]*\}\}/g, ' ').replace(/'''|<[^>]*>|\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
+  return x || '?';
 }
 
 /* Titre de section qui précède la position i (« === Finals === »…) */
@@ -190,7 +193,10 @@ export function lireDates(t, an) {
 /* data.json, écrit toujours de la même façon (une ligne par année, ordre
    fixe) : deux écritures du même contenu donnent les mêmes octets.
    editions : les chiffres ; dates : début et fin de chaque tournoi ;
-   noms : pour chaque tour, les Français quand ils sont 1 à 3 (sinon null). */
+   joueurs : les Français, dans l'ordre de leur première apparition (un
+   numéro ne change jamais) ; alias : autre graphie d'un même joueur sur
+   Wikipédia → nom retenu ; parcours : pour chaque édition, des paires
+   [numéro du joueur, dernière colonne atteinte (0 = 1er tour … 7 = titre)]. */
 const ORDRE = ['AO', 'AOd', 'RG', 'WIM', 'USO'];
 export function ecrireData(d) {
   const bloc = o => {
@@ -199,14 +205,38 @@ export function ecrireData(d) {
       .map(k => `"${k}": ${JSON.stringify(o[a][k])}`).join(', ') + '}';
     return ans.length ? '{\n' + ans.map(ligne).join(',\n') + '\n  }' : '{}';
   };
+  const alias = Object.keys(d.alias || {}).sort();
   return '{\n  "tours": ' + JSON.stringify(d.tours) + ',\n  "ouverts": ' + JSON.stringify(d.ouverts || {}) +
-    ',\n  "editions": ' + bloc(d.editions) + ',\n  "dates": ' + bloc(d.dates) + ',\n  "noms": ' + bloc(d.noms) + '\n}\n';
+    ',\n  "editions": ' + bloc(d.editions) + ',\n  "dates": ' + bloc(d.dates) +
+    ',\n  "joueurs": ' + JSON.stringify(d.joueurs || []) +
+    ',\n  "alias": ' + (alias.length ? '{\n' + alias.map(k => `    ${JSON.stringify(k)}: ${JSON.stringify(d.alias[k])}`).join(',\n') + '\n  }' : '{}') +
+    ',\n  "parcours": ' + bloc(d.parcours) + '\n}\n';
 }
 
-/* Les noms à garder pour une édition : 1 à 3 Français à un tour → leurs
-   noms ; sinon null. Renvoie null si aucun tour n'a de nom à garder. */
-export function nomsAGarder(nc) {
+/* Le parcours d'une édition : pour chaque Français, la dernière colonne où il
+   figure. Les colonnes sont emboîtées (un joueur du 3e tour est aussi au 1er
+   et au 2e) : le nombre de Français à la colonne i = joueurs dont la dernière
+   colonne est ≥ i. `canon` ramène une graphie à son nom retenu. */
+export function parcoursEdition(nc, canon = x => x) {
   if (!nc) return null;
-  const v = TOURS.map(k => nc[k] && nc[k].length >= 1 && nc[k].length <= 3 ? nc[k] : null);
-  return v.some(x => x) ? v : null;
+  const best = {};
+  TOURS.forEach((k, i) => { for (const n of nc[k] || []) { const c = canon(n); best[c] = Math.max(best[c] ?? -1, i); } });
+  return best;
+}
+/* Range un parcours dans data.json : numéros attribués aux nouveaux venus. */
+export function parcoursVersData(d, best) {
+  d.joueurs = d.joueurs || [];
+  const out = [];
+  for (const [n, k] of Object.entries(best)) {
+    let id = d.joueurs.indexOf(n);
+    if (id < 0) { d.joueurs.push(n); id = d.joueurs.length - 1; }
+    out.push([id, k]);
+  }
+  return out.sort((a, b) => a[0] - b[0]).flat();
+}
+/* Le nombre de Français par colonne, recalculé depuis un parcours rangé. */
+export function compteParcours(flat) {
+  const n = [0, 0, 0, 0, 0, 0, 0, 0];
+  for (let j = 1; j < flat.length; j += 2) for (let i = 0; i <= flat[j]; i++) n[i]++;
+  return n;
 }

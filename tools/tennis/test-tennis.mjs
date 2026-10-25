@@ -5,14 +5,14 @@
  *    des pages Wikipédia (huit sections de 16 + carré final), avec des
  *    Français placés à la main, d'abord complet puis en cours de tournoi.
  * 2. data.json : les faits que l'histoire impose (un seul titre, Noah 1983 ;
- *    sept finales), les plafonds de chaque tour, les noms (autant que le
- *    chiffre de la case) et les dates de chaque édition jouée.
+ *    sept finales), les plafonds de chaque tour, le parcours des joueurs
+ *    (il redonne le chiffre de chaque case) et les dates de chaque édition jouée.
  *
  * Un échec arrête le workflow avant toute écriture. */
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { lireTableau, colonnes, nomsColonnes, lireDates, TOURS } from './wiki.mjs';
+import { lireTableau, colonnes, nomsColonnes, lireDates, compteParcours, TOURS } from './wiki.mjs';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 let ko = 0;
@@ -107,14 +107,19 @@ for (const [an, e] of Object.entries(D.editions)) for (const [s, v] of Object.en
 ok(plafond, 'data.json : chaque tour sous son plafond');
 ok(titres.join() === 'RG1983', `data.json : titres ${titres.join(' ')}`);
 ok(finales.length === 7, `data.json : ${finales.length} finales (${finales.join(' ')})`);
-/* noms : 1 à 3 par tour, et autant que le chiffre de la case */
-let nomsOk = true;
-for (const [an, e] of Object.entries(D.noms || {})) for (const [s, v] of Object.entries(e)) v.forEach((l, i) => {
-  const n = D.editions[an]?.[s];
-  if (l && (!Array.isArray(n) || l.length < 1 || l.length > 3 || l.length !== n[i])) { nomsOk = false; console.log('  noms', s, an, TOURS[i], l.join()); }
-});
-ok(nomsOk, 'data.json : noms cohérents avec les chiffres');
-ok(D.noms?.[1983]?.RG?.[7]?.join() === 'Yannick Noah', 'data.json : titre RG 1983 = Yannick Noah');
+/* parcours des joueurs : ils redonnent exactement les chiffres de chaque case */
+let parcOk = true;
+for (const [an, e] of Object.entries(D.editions)) for (const [s, v] of Object.entries(e)) {
+  if (!Array.isArray(v) || s === 'AOd') continue;
+  const p = D.parcours?.[an]?.[s] || [];
+  if (compteParcours(p).join() !== v.join() || p.some((x, j) => j % 2 === 0 && !D.joueurs[x])) { parcOk = false; console.log('  parcours', s, an); }
+}
+ok(parcOk, 'data.json : parcours des joueurs = chiffres de chaque case');
+const champion = (D.parcours?.[1983]?.RG || []).filter((x, j) => j % 2 && x === 7).length === 1
+  && D.joueurs[D.parcours[1983].RG[D.parcours[1983].RG.indexOf(7) - 1]] === 'Yannick Noah';
+ok(champion, 'data.json : titre RG 1983 = Yannick Noah');
+ok(new Set(D.joueurs).size === D.joueurs.length && Object.keys(D.alias || {}).every(k => !D.joueurs.includes(k)),
+  `data.json : ${D.joueurs.length} joueurs, sans doublon ni graphie en double`);
 let sansDate = [];
 for (const [an, e] of Object.entries(D.editions)) for (const [s, v] of Object.entries(e))
   if (Array.isArray(v) && s !== 'AOd' && !D.dates?.[an]?.[s]) sansDate.push(s + an);

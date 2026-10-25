@@ -14,9 +14,10 @@
  *      ouvertes, au passage du 1er janvier). Une page absente ou sans tableau
  *      = « à venir ». Une édition close (finale jouée, tous les tours remplis)
  *      n'est plus relue.
- *      Avec les chiffres, les noms des Français de chaque tour quand ils sont
- *      1 à 3 (infobulles), et les dates de chaque tournoi, lues une fois dans
- *      la page du tournoi.
+ *      Avec les chiffres, les noms des Français de chaque tour (infobulles et
+ *      tableau des joueurs ; un nom inconnu est ramené au titre de son article
+ *      Wikipédia, pour qu'un même joueur ne compte pas deux fois), et les
+ *      dates de chaque tournoi, lues une fois dans la page du tournoi.
  *   3. Contrôles de cohérence sur chaque édition relue (voir controle()). Une
  *      édition qui échoue garde ses chiffres de la veille.
  *   4. Réécrit tools/tennis/data.json SEULEMENT si un chiffre a bougé (pas
@@ -31,7 +32,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { lireTableau, colonnes, nomsColonnes, nomsAGarder, lireDates, ecrireData, TOURS } from './wiki.mjs';
+import { lireTableau, colonnes, nomsColonnes, parcoursEdition, parcoursVersData, compteParcours, lireDates, ecrireData, TOURS } from './wiki.mjs';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const FICHIER = path.join(ICI, 'data.json');
@@ -75,6 +76,23 @@ async function wikitexte(t) {
   }
 }
 
+/* Graphie → titre de l'article (« Eric Deblicker » → « Éric Deblicker »),
+   par l'API de Wikimédia, 50 noms par requête. Seules les redirections
+   sont renvoyées. */
+async function redirections(noms) {
+  const out = {};
+  for (let i = 0; i < noms.length; i += 50) {
+    const lot = noms.slice(i, i + 50);
+    const r = await fetch(`https://en.wikipedia.org/w/api.php?action=query&format=json&formatversion=2&redirects=1&titles=${encodeURIComponent(lot.join('|'))}`,
+      { headers: { 'User-Agent': UA, 'Api-User-Agent': UA }, signal: AbortSignal.timeout(30_000) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const q = (await r.json()).query || {};
+    const norm = Object.fromEntries((q.normalized || []).map(n => [n.to, n.from]));
+    for (const x of q.redirects || []) out[norm[x.from] || x.from] = x.to.replace(/\s*\([^)]*\)\s*$/, '');
+  }
+  return out;
+}
+
 /* chiffres et état de chaque colonne (c complet, p commencé, v à venir) */
 function lire(t) {
   const L = lireTableau(t);
@@ -82,7 +100,7 @@ function lire(t) {
   const c = colonnes(L);
   const nc = nomsColonnes(L);
   return { n: TOURS.map(k => c[k] ? c[k][0] : null), etat: TOURS.map(k => c[k] ? c[k][1] : 'c').join(''), alertes: L.alertes,
-           nc: TOURS.map(k => nc[k] ? nc[k].length : null), noms: nomsAGarder(nc) };
+           nc: TOURS.map(k => nc[k] ? nc[k].length : null), noms: nc };
 }
 
 /* Ce qui doit tomber juste sur toute édition, close ou en cours. */
@@ -155,16 +173,30 @@ for (const [an, s] of aRelire) {
     continue;
   }
   const clos = /^c+$/.test(r.etat);
-  const avant = JSON.stringify([ed[s], data.ouverts?.[an]?.[s] || null, data.noms?.[an]?.[s] || null]);
+  /* les joueurs : graphies nouvelles ramenées au titre de leur article */
+  data.alias = data.alias || {}; data.joueurs = data.joueurs || [];
+  const inconnus = [...new Set(Object.values(r.noms).flat().filter(Boolean))]
+    .filter(n => !data.joueurs.includes(n) && !data.alias[n]);
+  if (inconnus.length) try {
+    for (const [de, vers] of Object.entries(await redirections(inconnus))) data.alias[de] = vers;
+  } catch (e) { console.log(`${s} ${an} : redirections non vérifiées (${e.message})`); }
+  const joueursAvant = data.joueurs.length;
+  const parc = parcoursVersData(data, parcoursEdition(r.noms, n => data.alias[n] || n));
+  if (compteParcours(parc).join() !== r.n.map(v => v ?? 0).join()) {
+    data.joueurs.length = joueursAvant;
+    const msg = `${s} ${an} : parcours des joueurs incohérent avec les chiffres — chiffres de la veille gardés`;
+    console.log('::warning::' + msg); alarmes.push(msg); continue;
+  }
+  const avant = JSON.stringify([ed[s], data.ouverts?.[an]?.[s] || null, data.parcours?.[an]?.[s] || null]);
   ed[s] = r.n;
-  data.noms = data.noms || {};
-  if (r.noms) (data.noms[an] = data.noms[an] || {})[s] = r.noms;
-  else if (data.noms[an]) { delete data.noms[an][s]; if (!Object.keys(data.noms[an]).length) delete data.noms[an]; }
+  data.parcours = data.parcours || {};
+  if (parc.length) (data.parcours[an] = data.parcours[an] || {})[s] = parc;
+  else if (data.parcours[an]) { delete data.parcours[an][s]; if (!Object.keys(data.parcours[an]).length) delete data.parcours[an]; }
   data.ouverts = data.ouverts || {};
   if (clos) { if (data.ouverts[an]) delete data.ouverts[an][s]; }
   else (data.ouverts[an] = data.ouverts[an] || {})[s] = r.etat;
   if (data.ouverts[an] && !Object.keys(data.ouverts[an]).length) delete data.ouverts[an];
-  if (JSON.stringify([ed[s], data.ouverts?.[an]?.[s] || null, data.noms?.[an]?.[s] || null]) !== avant) change = true;
+  if (JSON.stringify([ed[s], data.ouverts?.[an]?.[s] || null, data.parcours?.[an]?.[s] || null]) !== avant || data.joueurs.length !== joueursAvant) change = true;
   console.log(`${s} ${an} : ${r.n.map(v => v ?? '-').join(' ')}  [${r.etat}]${clos ? ' close' : ''}`);
 }
 
