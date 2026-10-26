@@ -66,10 +66,29 @@ h1{font-size:clamp(32px,5vw,52px); font-weight:600; line-height:1.02; letter-spa
 .tile .d b{font-variant-numeric:tabular-nums; font-weight:600; color:var(--ink); font-size:12px}
 .tile.def .v{color:var(--bad)}
 @media (max-width:900px){ .tiles{grid-template-columns:repeat(2,minmax(0,1fr))} }
-.cent{margin:14px 0 0; font-size:15.5px; line-height:1.65; color:var(--ink-2); max-width:118ch}
-.cent b{color:var(--ink); font-weight:700; white-space:nowrap}
-.cent i{font-style:normal; display:inline-block; width:9px; height:9px; border-radius:2px; margin:0 4px 0 1px; vertical-align:.04em}
-.encore{margin:8px 0 0; font-size:13px; color:var(--ink-3); max-width:118ch}
+.cent{margin-top:12px; background:var(--surface); border:1px solid var(--rule); border-radius:3px; padding:clamp(14px,2vw,20px) clamp(14px,2.2vw,22px)}
+.cent .ch{display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; margin-bottom:14px}
+.cent .ch h3{font-size:19px; font-weight:600}
+.cent .ch span{font-size:12.5px; color:var(--ink-3)}
+.cent .cols{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:clamp(18px,3vw,40px)}
+@media (max-width:820px){ .cent .cols{grid-template-columns:1fr} }
+.cent h4{margin:0 0 8px; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; font-weight:700; color:var(--ink-3)}
+/* la barre de 100 € : un segment par ligne, dans le même ordre, séparés par 2 px de fond */
+.cent .bar{display:flex; gap:2px; height:14px; margin-bottom:6px}
+.cent .bar i{display:block; height:100%; min-width:2px}
+.cent .bar i:first-child{border-radius:3px 0 0 3px}
+.cent .bar i:last-child{border-radius:0 3px 3px 0}
+.cent ul{list-style:none; margin:0; padding:0}
+.cent li{display:grid; grid-template-columns:10px minmax(0,1fr) auto; gap:2px 10px; align-items:baseline; padding:7px 0; border-top:1px solid var(--rule-soft)}
+.cent li:first-child{border-top:0}
+.cent li .sw{width:10px; height:10px; border-radius:2px; align-self:center}
+.cent li .nm{font-size:14.5px; color:var(--ink); line-height:1.3}
+.cent li .v{font-size:17px; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums; white-space:nowrap; text-align:right}
+.cent li .v small{font-size:12px; font-weight:400; color:var(--ink-3); margin-left:2px}
+.cent li .sub{grid-column:2 / -1; font-size:12.5px; color:var(--ink-3); line-height:1.4}
+.cent li .sub b{color:var(--ink-2); font-weight:700; font-variant-numeric:tabular-nums}
+.cent li.emp .v{color:var(--bad)}
+.encore{margin:8px 0 0; font-size:12.5px; color:var(--ink-3); max-width:118ch}
 .encore b{color:var(--ink-2)}
 
 /* ---------- sections et panneaux (même grammaire que la page UEFA) ---------- */
@@ -244,7 +263,7 @@ svg .m{font-variant-numeric:tabular-nums}
 </div>
 
 <div class="tiles" id="tiles"></div>
-<p class="cent" id="cent"></p>
+<div class="cent" id="cent" aria-label="Sur 100 € de dépense publique : où ils vont, qui les paie"></div>
 <p class="encore" id="encore"></p>
 
 <section>
@@ -522,30 +541,59 @@ function tete() {
             : tile('', 'Excédent', b9)) +
     tile('', 'Dette fin', dt, `<br>soit <b>${nf(dt / te, 1).replace(',0', '')}</b> années de dépense`);
 
-  /* La phrase « sur 100 € » : la ventilation par politique si elle existe pour
-     l'année, sinon par nature. Les montants sont rapportés au total COFOG de
-     l'année (base 100 exacte), le financement au total des dépenses. */
-  const parts = [];
+  /* « Sur 100 € » : deux colonnes qui se lisent en face l'une de l'autre.
+     À gauche, où vont 100 € de dépense (par politique si la ventilation existe
+     pour l'année, sinon par nature) ; à droite, ce qui les finance. Chaque
+     colonne : une barre de 100 € puis une ligne par segment, dans le même ordre
+     et la même couleur. Les montants sont rapportés au total de la colonne, donc
+     chaque colonne fait exactement 100 €. */
+  const e100 = (m, base) => nf(m / base * 100, 1);
+  const ligne = (r, base) => `<li data-tip="1" data-m="${r.m}"${r.cls ? ` class="${r.cls}"` : ''}><i class="sw" style="background:${col(r.c)}"></i>`
+    + `<span class="nm">${r.n}</span><span class="v">${e100(r.m, base)}<small>€</small></span>`
+    + (r.sub ? `<span class="sub">${r.sub}</span>` : '') + '</li>';
+  const barre = (rows, base) => '<div class="bar" aria-hidden="true">'
+    + rows.map(r => `<i style="width:${r.m / base * 100}%; background:${col(r.c)}"></i>`).join('') + '</div>';
+
+  let dep, baseD, titreD;
   if (y <= D.derF) {
-    const tot = CF.S13.TOTAL[k];
-    const fs = Object.keys(FN).map(c => [c, CF.S13[c][k]]).sort((a, b) => b[1] - a[1]);
-    const v = c => nf(CF.S13[c][k] / tot * 100, 1) + ' €';
-    for (const [c] of fs.slice(0, 5)) {
-      let s = `<b>${v(c)}</b> <i style="background:${col(FN[c].c)}"></i>${FN[c].n.toLowerCase()}`;
-      if (c === 'GF10') s += ` (dont <b>${v('GF1002')}</b> de vieillesse, retraites pour l'essentiel)`;
-      if (c === 'GF01') s += ` (dont <b>${v('GF0107')}</b> d'intérêts de la dette)`;
-      if (c === 'GF07') s += ` (dont <b>${v('GF0703')}</b> d'hôpital)`;
-      parts.push(s);
-    }
-    const reste = fs.slice(5).reduce((a, x) => a + x[1], 0);
-    parts.push(`<b>${nf(reste / tot * 100, 1)} €</b> pour tout le reste : ${fs.slice(5).map(x => FN[x[0]].n.toLowerCase()).join(', ')}`);
+    baseD = CF.S13.TOTAL[k]; titreD = 'Où ils vont';
+    const dt0 = c => `<b>${e100(CF.S13[c][k], baseD)} €</b>`;
+    const fs = Object.keys(FN).map(c => ({ c: FN[c].c, id: c, n: FN[c].n, m: CF.S13[c][k] })).sort((a, b) => b.m - a.m);
+    const SUBS = { GF10: `dont ${dt0('GF1002')} de vieillesse (retraites pour l'essentiel), ${dt0('GF1001')} de maladie-invalidité, ${dt0('GF1004')} de famille, ${dt0('GF1005')} de chômage`,
+      GF07: `dont ${dt0('GF0703')} d'hôpital, ${dt0('GF0702')} de soins de ville, ${dt0('GF0701')} de médicaments`,
+      GF01: `dont ${dt0('GF0107')} d'intérêts de la dette`,
+      GF04: `dont ${dt0('GF0405')} de transports, ${dt0('GF0401')} d'aides à l'économie et à l'emploi`,
+      GF09: `dont ${dt0('GF0902')} de collège-lycée, ${dt0('GF0901')} de maternelle-primaire, ${dt0('GF0904')} de supérieur` };
+    dep = fs.slice(0, 5).map(r => ({ ...r, sub: SUBS[r.id] }));
+    const reste = fs.slice(5);
+    dep.push({ c: '--ink-3', n: 'Tout le reste', m: reste.reduce((a, r) => a + r.m, 0),
+      sub: reste.map(r => r.n.toLowerCase() + ' <b>' + e100(r.m, baseD) + ' €</b>').join(', ') });
   } else {
-    for (const n of NAT.slice(0, 6)) parts.push(`<b>${nf(sum(A.S13, n.k, k) / te * 100, 1)} €</b> <i style="background:${col(n.c)}"></i>${n.n.toLowerCase()}`);
+    baseD = TE(k); titreD = 'Où ils vont, par nature';
+    dep = NAT.map(n => ({ c: n.c, n: n.n, m: sum(A.S13, n.k, k) }));
+    const reste = dep.splice(6);
+    dep.push({ c: '--ink-3', n: 'Tout le reste', m: reste.reduce((a, r) => a + r.m, 0), sub: reste.map(r => r.n.toLowerCase()).join(', ') });
   }
-  const fin = REC.slice(0, 3).map(r => `<b>${nf(sum(A.S13, r.k, k) / te * 100, 1)} €</b> ${r.n === 'TVA, taxes sur la production' ? 'de TVA et de taxes sur la production' : r.n === 'Impôts sur le revenu' ? "d'impôts sur le revenu et le patrimoine" : 'de cotisations sociales'}`);
-  $('cent').innerHTML = `Sur 100 € de dépense publique en ${y} : ${parts.join(' ; ')}. `
-    + `Ils sont payés par ${fin.join(', ')}, ${nf((tr - sum(A.S13, ['D61REC', 'D2REC', 'D5REC'], k)) / te * 100, 1)} € d'autres recettes`
-    + (b9 < 0 ? `, et <b>${nf(-b9 / te * 100, 1)} €</b> d'emprunt.` : '.');
+  const g = c => sum(A.S13, c, k);
+  const fin = [
+    { c: '--n1', n: 'Cotisations sociales', m: g('D61REC'), sub: 'employeurs, salariés, indépendants' },
+    { c: '--n2', n: 'TVA et taxes sur la production', m: g('D2REC'), sub: 'TVA, accises, taxes foncières, taxes sur les salaires…' },
+    { c: '--n3', n: 'Impôts sur le revenu et le patrimoine', m: g('D5REC'), sub: 'impôt sur le revenu, CSG, impôt sur les sociétés…' },
+    { c: '--ink-3', n: 'Autres recettes', m: tr - g(['D61REC', 'D2REC', 'D5REC']), sub: 'ventes et redevances, revenus du patrimoine, successions, fonds européens' },
+  ];
+  if (b9 < 0) fin.push({ c: '--bad', n: 'Emprunt', m: -b9, cls: 'emp', sub: 'le déficit, qui s\'ajoute à la dette' });
+  const baseF = fin.reduce((a, r) => a + r.m, 0);   // = dépenses totales (recettes + emprunt)
+
+  $('cent').innerHTML = `<div class="ch"><h3>Sur 100 € de dépense publique en ${y}</h3>`
+    + `<span>${FM(te, k, 'md')} au total, soit ${FM(te, k, 'hab')} par habitant</span></div>`
+    + `<div class="cols"><div><h4>${titreD}</h4>${barre(dep, baseD)}<ul>${dep.map(r => ligne(r, baseD)).join('')}</ul></div>`
+    + `<div><h4>Qui les paie</h4>${barre(fin, baseF)}<ul>${fin.map(r => ligne(r, baseF)).join('')}</ul></div></div>`;
+  $('cent').querySelectorAll('li[data-m]').forEach(li => {
+    const m = +li.dataset.m, n = li.querySelector('.nm').textContent;
+    li.addEventListener('mousemove', e => tipOn(e, `<div class="th">${n}, ${y}</div>` + trow('Montant', FM(m, k, 'md'))
+      + trow('Part du PIB', FM(m, k, 'pib')) + trow('Par habitant', FM(m, k, 'hab'))));
+    li.addEventListener('mouseleave', tipOff);
+  });
 
   /* Annonce de la dernière année quand on regarde une autre */
   const kd = ix(D.der);
