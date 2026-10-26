@@ -117,51 +117,22 @@ svg .m{font-variant-numeric:tabular-nums}
 .lgd i.sq{height:10px; width:10px}
 
 /* ---------- 1 · le circuit (Sankey) ---------- */
-.duo{display:grid; grid-template-columns:minmax(0,1.55fr) minmax(300px,1fr); gap:18px; align-items:start}
-@media (max-width:1020px){ .duo{grid-template-columns:1fr} }
 .sk .lk{fill-opacity:.2; transition:fill-opacity .12s}
 .sk .lk.hl{fill-opacity:.55}
 .sk.foc .lk:not(.hl){fill-opacity:.08}
 .sk .nd{cursor:default}
-.sk .nd.cl{cursor:pointer}
 .sk .nd rect{transition:opacity .12s}
 .sk.foc .nd:not(.hl) rect{opacity:.35}
-.sk .nd.sel rect{stroke:var(--ink); stroke-width:2}
 .sk .lab{paint-order:stroke; stroke:var(--surface); stroke-width:3.2px; stroke-linejoin:round; pointer-events:none}
 .sk .lab .n{fill:var(--ink); font-size:12.5px; font-weight:700}
 .sk .lab .v{fill:var(--ink-2); font-size:11.5px}
+.sk .lab.l2 .n{font-weight:600; font-size:12px}
+.sk .lab.l2 .v{font-size:11px}
 .sk .hd{fill:var(--ink-3); font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700}
 .sk .hdv{fill:var(--ink); font-size:13px; font-weight:600}
 .sk .ld{stroke:var(--ink-3); stroke-width:1; fill:none}
 .sk .nd:focus-visible{outline:none}
 .sk .nd:focus-visible rect{stroke:var(--fr); stroke-width:2.5}
-
-/* zoom sur une fonction */
-.zoom h4{margin:0; font-family:"Newsreader",Georgia,serif; font-size:21px; font-weight:600; letter-spacing:-.01em; display:flex; align-items:center; gap:9px}
-.zoom h4 i{width:12px; height:12px; border-radius:3px; flex:none}
-.zoom .zv{font-size:13.5px; color:var(--ink-2); margin:3px 0 12px}
-.zoom .zv b{color:var(--ink); font-weight:600}
-.zl{list-style:none; margin:0; padding:0}
-.zl li{display:grid; grid-template-columns:minmax(0,1fr) 92px; gap:2px 10px; align-items:center; padding:5px 0; border-top:1px solid var(--rule-soft); font-size:13px}
-.zl li:first-child{border-top:0}
-.zl .nm{color:var(--ink); line-height:1.3}
-.zl .nm small{display:block; color:var(--ink-3); font-size:11.5px}
-.zl .vl{text-align:right; font-variant-numeric:tabular-nums; font-size:12px; color:var(--ink); white-space:nowrap}
-.zl .vl small{display:block; color:var(--ink-3); font-size:10.5px}
-.zl .br{grid-column:1 / -1; height:6px; background:var(--surface-2); border-radius:3px; overflow:hidden}
-.zl .br i{display:block; height:100%; border-radius:3px}
-.zh{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700; color:var(--ink-3); margin:18px 0 6px}
-.qui{display:grid; gap:5px}
-.qui div{display:grid; grid-template-columns:112px minmax(0,1fr) 78px; gap:8px; align-items:center; font-size:12.5px}
-.qui .b{height:9px; background:var(--surface-2); border-radius:2px; overflow:hidden}
-.qui .b i{display:block; height:100%; border-radius:2px; background:var(--ink-2)}
-.qui .v{text-align:right; font-variant-numeric:tabular-nums; font-size:12px}
-.fnav{display:flex; flex-wrap:wrap; gap:5px; margin:0 0 14px}
-.fnav button{appearance:none; font:inherit; font-size:12px; font-weight:600; color:var(--ink-2); background:var(--surface-2);
-  border:1px solid var(--rule-soft); border-radius:12px; padding:2px 9px 2px 7px; cursor:pointer; display:inline-flex; align-items:center; gap:5px}
-.fnav button i{width:8px; height:8px; border-radius:2px}
-.fnav button[aria-pressed="true"]{background:var(--ink); color:var(--surface); border-color:var(--ink)}
-.vide{color:var(--ink-3); font-size:13.5px; padding:18px 0}
 
 /* ---------- listes de barres (recettes, sous-secteurs) ---------- */
 .grp{margin-top:6px}
@@ -268,16 +239,13 @@ svg .m{font-variant-numeric:tabular-nums}
 
 <section>
   <div class="shead"><h2>D'où vient l'argent, où il va</h2>
-    <p>Chaque euro dépensé, de la recette qui le finance jusqu'à la politique qu'il paie. Survolez un flux pour le chiffrer ; cliquez une fonction pour l'ouvrir.</p></div>
+    <p>Chaque euro dépensé, de la recette qui le finance jusqu'au poste qu'il paie. Survolez un noeud ou un flux pour éclairer son chemin et le chiffrer.</p></div>
   <div class="panel">
     <div class="ptitle"><span class="no">1</span><h3 id="t1">Le circuit</h3>
       <span class="sub"><span class="ctl"><span class="lb">Dépenses</span><span class="seg" role="group" aria-label="Ventilation des dépenses">
         <button type="button" data-v="fonction" aria-pressed="true">Par politique</button><button type="button" data-v="nature" aria-pressed="false">Par nature</button></span></span></span></div>
-    <div class="duo">
-      <div><div class="chart sk" id="sk" role="img" aria-label="Diagramme des flux : recettes et emprunt vers les dépenses publiques, ventilées par politique ou par nature"></div>
-        <details class="xfold"><summary>Les chiffres du schéma</summary><div class="in" id="skTab"></div></details></div>
-      <div class="zoom" id="zoom"></div>
-    </div>
+    <div class="chart sk" id="sk" role="img" aria-label="Diagramme des flux : recettes et emprunt vers les dépenses publiques, puis 11 politiques et leurs sous-postes"></div>
+    <details class="xfold"><summary>Les chiffres du schéma, poste par poste</summary><div class="in" id="skTab"></div></details>
     <p class="figc" id="skNote"></p>
   </div>
 </section>
@@ -355,7 +323,7 @@ svg .m{font-variant-numeric:tabular-nums}
     <h3>Consolidé ou pas</h3>
     <p>Pour l'ensemble, les montants sont <b>consolidés</b> : quand l'État verse une dotation à une commune, l'euro n'est compté qu'une fois, quand la commune le dépense. Pour chacune des trois administrations prise isolément, ils ne le sont pas : leurs dépenses additionnées dépassent donc le total. Les soldes, eux, s'additionnent exactement.</p>
     <h3>Par politique ou par nature</h3>
-    <p>Une même dépense se range de deux façons. <b>Par politique</b> (la nomenclature internationale COFOG, 10 fonctions et 70 sous-fonctions) : à quoi elle sert — l'école, l'hôpital, les retraites. <b>Par nature</b> : sous quelle forme elle sort — salaires des agents, prestations versées aux ménages, achats, investissement, intérêts. La ventilation par politique est publiée environ un an après les grands agrégats : pour la dernière année connue, seule la vue par nature existe.</p>
+    <p>Une même dépense se range de deux façons. <b>Par politique</b> (la nomenclature internationale COFOG, 10 fonctions et 70 sous-fonctions) : à quoi elle sert — l'école, l'hôpital, les retraites. Ici, les intérêts de la dette (sous-fonction 01.7) sont sortis des « services généraux » et forment une onzième politique : le niveau 1 compte donc 11 postes, le niveau 2 les sous-fonctions. <b>Par nature</b> : sous quelle forme elle sort — salaires des agents, prestations versées aux ménages, achats, investissement, intérêts. La ventilation par politique est publiée environ un an après les grands agrégats : pour la dernière année connue, seule la vue par nature existe.</p>
     <h3>Les chiffres</h3>
     <ul id="srcList"></ul>
     <p>Montants en euros courants, arrondis au million. « Sur 100 € » rapporte chaque poste à la dépense publique totale de l'année (à l'ensemble des impôts et cotisations dans le bloc 2). Le PIB et la population sont ceux d'Eurostat, cohérents avec les comptes publics. Les ratios européens du bloc 7 sont ceux qu'Eurostat publie avec sa ventilation par fonction ; ils peuvent différer de quelques dixièmes de point des agrégats révisés plus récemment.</p>
@@ -379,22 +347,35 @@ const $ = id => document.getElementById(id);
 const NS = 'http://www.w3.org/2000/svg';
 
 /* ---------- libellés ---------- */
-/* Les dix politiques (COFOG niveau 1), chacune avec SA couleur, fixe.
-   Huit teintes pour dix fonctions : les deux régaliennes partagent le violet,
-   les deux plus petites (logement, culture) un gris neutre. Le nom est toujours
-   écrit à côté : la couleur n'est jamais le seul repère. */
+/* Les onze politiques du niveau 1, chacune avec SA couleur, fixe : les dix
+   fonctions COFOG, dont on sort les intérêts de la dette (COFOG 01.7) des
+   « services généraux » pour en faire une politique à part — c'est un choix de
+   GT (26/10/2026) : la charge de la dette ne se cache pas dans l'administration
+   générale. Huit teintes pour onze postes : les deux régaliennes partagent le
+   violet, les deux plus petites (logement, culture) un gris neutre. Le nom est
+   toujours écrit à côté : la couleur n'est jamais le seul repère. */
 const FN = {
   GF10: { n: 'Protection sociale', c: '--n1', l: 'Protection sociale' },
   GF07: { n: 'Santé', c: '--n2', l: 'Santé' },
   GF09: { n: 'Enseignement', c: '--n3', l: 'Enseignement' },
   GF04: { n: 'Affaires économiques', c: '--n4', l: 'Affaires économiques' },
-  GF01: { n: 'Services généraux', c: '--n5', l: 'Services publics généraux' },
+  GF01: { n: 'Services généraux', c: '--n5', l: 'Services publics généraux (hors intérêts de la dette)' },
+  INT: { n: 'Intérêts de la dette', c: '--n8', l: 'Intérêts de la dette publique' },
   GF05: { n: 'Environnement', c: '--n6', l: "Protection de l'environnement" },
   GF02: { n: 'Défense', c: '--n7', l: 'Défense' },
   GF03: { n: 'Sécurité et justice', c: '--n7', l: 'Ordre et sécurité publics' },
   GF06: { n: 'Logement, équipements', c: '--ink-3', l: 'Logement et équipements collectifs' },
   GF08: { n: 'Culture, sport, loisirs', c: '--ink-3', l: 'Loisirs, culture et culte' },
 };
+const FNK = Object.keys(FN);
+/* Valeur d'une politique du niveau 1 : séries (o[c][k]) ou valeurs simples (o[c]). */
+function fv(o, c, k) {
+  const g = x => { const v = o[x]; return v === undefined || v === null ? 0 : k === undefined ? v : (v[k] ?? 0); };
+  return c === 'INT' ? g('GF0107') : c === 'GF01' ? g('GF01') - g('GF0107') : g(c);
+}
+/* Sous-postes (niveau 2) d'une politique ; politique d'un sous-poste. */
+const KIDS = c => c === 'INT' ? [] : Object.keys(CF.S13).filter(x => x.length === 6 && x.startsWith(c) && x !== 'GF0107');
+const PAR = x => x === 'GF0107' ? 'INT' : x.slice(0, 4);
 const SF = {
   GF0101: 'Pouvoirs publics, finances, affaires étrangères', GF0102: 'Aide au développement', GF0103: 'Administration générale',
   GF0104: 'Recherche fondamentale', GF0105: 'Recherche (services généraux)', GF0106: 'Autres services généraux',
@@ -412,6 +393,10 @@ const SF = {
   GF1001: 'Maladie et invalidité', GF1002: 'Vieillesse', GF1003: 'Survivants (réversion)', GF1004: 'Famille et enfants', GF1005: 'Chômage',
   GF1006: 'Aides au logement', GF1007: 'Exclusion sociale (RSA, minima…)', GF1008: 'Recherche (protection sociale)', GF1009: 'Autres dépenses sociales',
 };
+/* Libellés courts du niveau 2 dans le schéma (le libellé complet reste au survol). */
+const SFC = { GF0101: 'Pouvoirs publics, finances, diplomatie', GF0401: 'Aides à l\'économie et à l\'emploi',
+  GF0602: 'Aménagement, équipements', GF0906: 'Cantine, transport, internat', GF1007: 'Exclusion (RSA, minima…)',
+  GF0407: 'Autres secteurs', GF0803: 'Audiovisuel public' };
 /* Précisions de lecture, affichées sous le nom quand elles évitent un contresens. */
 const SFX = {
   GF1001: 'indemnités journalières, pensions d\'invalidité, handicap — les soins sont en « Santé »',
@@ -455,13 +440,12 @@ const GEO_A = { DE: "l'Allemagne", IT: "l'Italie", ES: "l'Espagne", NL: 'les Pay
   SE: 'la Suède', DK: 'le Danemark', FI: 'la Finlande', EA20: 'la zone euro', EU27_2020: "l'Union européenne" };
 
 /* ---------- état de la page ---------- */
-const S = { an: D.derF, u: 'md', v: 'fonction', f: 'GF10', e: 'f', g: 'f', cmp: 'EA20' };
+const S = { an: D.derF, u: 'md', v: 'fonction', e: 'f', g: 'f', cmp: 'EA20' };
 try { const h = new URLSearchParams(location.hash.slice(1));
   if (D.an.includes(+h.get('an'))) S.an = +h.get('an');
   if (['md', 'pib', 'hab', 'cent'].includes(h.get('u'))) S.u = h.get('u');
-  if (FN[h.get('f')]) S.f = h.get('f');
 } catch (e) {}
-const hashSync = () => { try { history.replaceState(null, '', '#an=' + S.an + '&u=' + S.u + '&f=' + S.f); } catch (e) {} };
+const hashSync = () => { try { history.replaceState(null, '', '#an=' + S.an + '&u=' + S.u); } catch (e) {} };
 
 /* ---------- nombres ---------- */
 const nf = (x, d) => x.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -558,14 +542,17 @@ function tete() {
   if (y <= D.derF) {
     baseD = CF.S13.TOTAL[k]; titreD = 'Où ils vont';
     const dt0 = c => `<b>${e100(CF.S13[c][k], baseD)} €</b>`;
-    const fs = Object.keys(FN).map(c => ({ c: FN[c].c, id: c, n: FN[c].n, m: CF.S13[c][k] })).sort((a, b) => b.m - a.m);
+    const fs = FNK.map(c => ({ c: FN[c].c, id: c, n: FN[c].n, m: fv(CF.S13, c, k) })).sort((a, b) => b.m - a.m);
     const SUBS = { GF10: `dont ${dt0('GF1002')} de vieillesse (retraites pour l'essentiel), ${dt0('GF1001')} de maladie-invalidité, ${dt0('GF1004')} de famille, ${dt0('GF1005')} de chômage`,
       GF07: `dont ${dt0('GF0703')} d'hôpital, ${dt0('GF0702')} de soins de ville, ${dt0('GF0701')} de médicaments`,
-      GF01: `dont ${dt0('GF0107')} d'intérêts de la dette`,
+      GF01: `dont ${dt0('GF0103')} d'administration générale, ${dt0('GF0101')} de pouvoirs publics, finances et diplomatie`,
+      INT: 'la charge annuelle d\'intérêts ; le remboursement du capital n\'est pas une dépense',
       GF04: `dont ${dt0('GF0405')} de transports, ${dt0('GF0401')} d'aides à l'économie et à l'emploi`,
       GF09: `dont ${dt0('GF0902')} de collège-lycée, ${dt0('GF0901')} de maternelle-primaire, ${dt0('GF0904')} de supérieur` };
-    dep = fs.slice(0, 5).map(r => ({ ...r, sub: SUBS[r.id] }));
-    const reste = fs.slice(5);
+    /* les cinq premières, et toujours les intérêts de la dette */
+    const montre = fs.filter((r, i) => i < 5 || r.id === 'INT');
+    dep = montre.map(r => ({ ...r, sub: SUBS[r.id] }));
+    const reste = fs.filter(r => !montre.includes(r));
     dep.push({ c: '--ink-3', n: 'Tout le reste', m: reste.reduce((a, r) => a + r.m, 0),
       sub: reste.map(r => r.n.toLowerCase() + ' <b>' + e100(r.m, baseD) + ' €</b>').join(', ') });
   } else {
@@ -605,197 +592,188 @@ function tete() {
 
 /* ======================================================================
    1 · LE CIRCUIT (Sankey)
+   Quatre colonnes : recettes + emprunt → dépenses → niveau 1 (11 politiques)
+   → niveau 2 (sous-postes). Au niveau 2, chaque sous-poste pesant au moins
+   1 % de la dépense a son noeud ; le reste d'une politique est regroupé dans un
+   noeud « autres » de la même couleur. Les intérêts de la dette n'ont pas de
+   niveau 2 : ils sont déjà un poste unique.
+   Par nature, ou sur téléphone, trois colonnes seulement (pas de niveau 2).
    ====================================================================== */
 function circuit() {
   const k = ix(S.an), box = $('sk');
   const parPol = S.v === 'fonction' && S.an <= D.derF;
   const te = TE(k), b9 = A.S13.B9[k];
+  const W = Math.max(300, box.clientWidth), mob = W < 760;
+  const niv2 = parPol && !mob;
+
+  /* --- les noeuds --- */
   const L = REC.map(r => ({ id: 'r' + r.n, n: r.n, l: r.l, m: sum(A.S13, r.k, k), c: '--ink-2', kind: 'rec' }))
     .sort((a, b) => b.m - a.m);
   if (b9 < 0) L.push({ id: 'def', n: 'Emprunt (déficit)', l: 'Déficit financé par emprunt', m: -b9, c: '--bad', kind: 'def' });
-  let R;
-  if (parPol) R = Object.keys(FN).map(c => ({ id: c, n: FN[c].n, l: FN[c].l, m: CF.S13[c][k], c: FN[c].c, kind: 'fn' }))
-    .sort((a, b) => b.m - a.m);
-  else R = NAT.map(n => ({ id: 'n' + n.n, n: n.n, l: n.n, m: sum(A.S13, n.k, k), c: n.c, kind: 'nat', nat: n }));
-  if (b9 > 0) R.push({ id: 'exc', n: 'Excédent', l: 'Excédent', m: b9, c: '--good', kind: 'exc' });
-  R = R.filter(n => n.m > 0);
+  let P;
+  if (parPol) P = FNK.map(c => ({ id: c, n: FN[c].n, l: FN[c].l, m: fv(CF.S13, c, k), c: FN[c].c, kind: 'fn' })).sort((a, b) => b.m - a.m);
+  else P = NAT.map(n => ({ id: 'n' + n.n, n: n.n, l: n.n, m: sum(A.S13, n.k, k), c: n.c, kind: 'nat', nat: n }));
+  if (b9 > 0) P.push({ id: 'exc', n: 'Excédent', l: 'Excédent', m: b9, c: '--good', kind: 'exc' });
+  P = P.filter(n => n.m > 0);
+  const totP = parPol ? CF.S13.TOTAL[k] : te;
+  const Q = [];
+  if (niv2) {
+    const thr = 0.01 * totP;
+    for (const p of P) {
+      if (p.kind !== 'fn') continue;
+      const kids = KIDS(p.id).map(c => ({ c, m: CF.S13[c][k] })).filter(x => x.m > 0).sort((a, b) => b.m - a.m);
+      if (!kids.length) continue;
+      let big = kids.filter(x => x.m >= thr);
+      if (!big.length) big = kids.slice(0, 1);
+      p.kids = [];
+      for (const x of big) { const q = { id: x.c, n: SFC[x.c] || SF[x.c], l: SF[x.c], m: x.m, c: p.c, kind: 'sub', par: p }; Q.push(q); p.kids.push(q); }
+      const rest = kids.filter(x => !big.includes(x)), rm = p.m - big.reduce((a, x) => a + x.m, 0);
+      if (rest.length && rm > 0) { const q = { id: p.id + '-autres', n: 'autres ' + FN[p.id].n.toLowerCase().replace('affaires économiques', 'affaires éco.'), l: 'Autres postes : ' + FN[p.id].n.toLowerCase(), m: rm, c: p.c, kind: 'reste', par: p, rest }; Q.push(q); p.kids.push(q); }
+    }
+  }
 
   $('t1').textContent = `Le circuit, ${S.an}`;
   document.querySelectorAll('[data-v]').forEach(b => { b.disabled = b.dataset.v === 'fonction' && S.an > D.derF;
     b.setAttribute('aria-pressed', (b.dataset.v === 'fonction') === parPol); });
 
-  const W = Math.max(300, box.clientWidth), mob = W < 560;
-  /* Au téléphone, les petites étiquettes des deux colonnes se croisaient en bas :
-     à gauche, l'emprunt et les petites recettes passent en haut, face au gros
-     bloc de la protection sociale, et leurs étiquettes se réduisent au nom. */
+  /* --- géométrie --- */
+  const H = niv2 ? 960 : mob ? 680 : 640, top = 50, bot = 6, nw = mob ? 10 : 13;
+  const gP = mob ? 3 : 5, gQ = 3;
+  const labW = niv2 ? Math.min(280, Math.round(W * 0.23)) : 0;
+  const xL = 0;
+  const xS = W - labW - nw;
+  const xP = niv2 ? Math.round(xS * 0.6) : W - nw;
+  const xM = niv2 ? Math.round(xS * 0.29) : Math.round(W / 2 - nw / 2);
   if (mob) { const d = L.filter(n => n.kind === 'def'); L.splice(0, L.length, ...d, ...L.filter(n => n.kind !== 'def').sort((a, b) => a.m - b.m)); }
-  const H = mob ? 680 : 610, top = 46, bot = 6, nw = mob ? 10 : 14, gap = mob ? 3 : 5;
-  const sL = L.reduce((a, n) => a + n.m, 0), sR = R.reduce((a, n) => a + n.m, 0), M = Math.max(sL, sR, te);
-  const kk = (H - top - bot - gap * (Math.max(L.length, R.length) - 1)) / M;
-  const xL = 0, xM = Math.round(W / 2 - nw / 2), xR = W - nw;
-  const pose = (arr, x) => {
-    const h = arr.reduce((a, n) => a + Math.max(1.5, n.m * kk), 0) + gap * (arr.length - 1);
-    let y = top + (H - top - bot - h) / 2;
-    for (const n of arr) { n.x = x; n.h = Math.max(1.5, n.m * kk); n.y = y; y += n.h + gap; }
+  const avail = H - top - bot;
+  const kk = Math.min((avail - gP * (L.length - 1)) / L.reduce((a, n) => a + n.m, 0),
+                      (avail - gP * (P.length - 1)) / P.reduce((a, n) => a + n.m, 0),
+                      niv2 && Q.length ? (avail - gQ * (Q.length - 1) - gP * (P.length - 1)) / Q.reduce((a, n) => a + n.m, 0) : Infinity);
+  const pose = (arr, x, gap, gapAt) => {
+    const h = arr.reduce((a, n, i) => a + Math.max(1.5, n.m * kk) + (i ? (gapAt ? gapAt(arr[i - 1], n) : gap) : 0), 0);
+    let y = top + (avail - h) / 2;
+    arr.forEach((n, i) => { if (i) y += gapAt ? gapAt(arr[i - 1], n) : gap; n.x = x; n.h = Math.max(1.5, n.m * kk); n.y = y; y += n.h; });
   };
-  pose(L, xL); pose(R, xR);
-  const hM = M * kk, yM = top + (H - top - bot - hM) / 2;
+  pose(L, xL, gP); pose(P, xP, gP);
+  if (niv2) pose(Q, xS, gQ, (a, b) => a.par === b.par ? gQ : gP + 2);
+  const hM = te * kk, yM = top + (avail - hM) / 2;
+
   const svg = svgIn(box, W, H);
   const gl = el('g', {}, svg), gn = el('g', {}, svg), gt = el('g', {}, svg);
-
-  /* rubans : gauche → milieu, milieu → droite, chacun empilé sur la colonne du milieu */
-  const ruban = (x1, a1, b1, x2, a2, b2, c, cls) => {
+  const ruban = (x1, a1, b1, x2, a2, b2, c) => {
     const xm = (x1 + x2) / 2;
-    return el('path', { class: 'lk ' + cls, d: `M${x1},${a1}C${xm},${a1} ${xm},${a2} ${x2},${a2}L${x2},${b2}C${xm},${b2} ${xm},${b1} ${x1},${b1}Z`,
-      style: `fill:${col(c)}` }, gl);
+    return el('path', { class: 'lk', d: `M${x1},${a1}C${xm},${a1} ${xm},${a2} ${x2},${a2}L${x2},${b2}C${xm},${b2} ${xm},${b1} ${x1},${b1}Z`, style: `fill:${col(c)}` }, gl);
   };
   let cy = yM;
-  for (const n of L) { const h = n.m * kk; n.lk = ruban(xL + nw, n.y, n.y + n.h, xM, cy, cy + h, n.c, n.id); cy += h; }
+  for (const n of L) { const h = n.m * kk; n.lk = ruban(xL + nw, n.y, n.y + n.h, xM, cy, cy + h, n.c); cy += h; }
   cy = yM;
-  for (const n of R) { const h = n.m * kk; n.lk = ruban(xM + nw, cy, cy + h, xR, n.y, n.y + n.h, n.c, n.id); cy += h; }
+  for (const n of P) { const h = n.m * kk; n.lk = ruban(xM + nw, cy, cy + h, xP, n.y, n.y + n.h, n.c); cy += h; }
+  for (const p of P) if (p.kids) { let c2 = p.y; for (const q of p.kids) { const h = q.m * kk; q.lk = ruban(xP + nw, c2, c2 + h, xS, q.y, q.y + q.h, q.c); c2 += h; } }
 
-  /* noeuds */
   const nd = (n, cls) => {
-    const g = el('g', { class: 'nd ' + cls, tabindex: n.kind === 'fn' ? 0 : null, role: n.kind === 'fn' ? 'button' : null,
-      'aria-label': n.kind === 'fn' ? n.l + ' : ouvrir le détail' : null, 'data-tip': 1 }, gn);
-    el('rect', { x: n.x, y: n.y, width: nw, height: n.h, rx: 2, style: `fill:${col(n.c)}` }, g);
+    const g = el('g', { class: 'nd ' + cls, 'data-tip': 1 }, gn);
+    el('rect', { x: n.x, y: n.y, width: nw, height: n.h, rx: 2, style: `fill:${col(n.c)}` + (n.kind === 'reste' ? '; fill-opacity:.55' : '') }, g);
     el('rect', { x: n.x - 6, y: n.y - 2, width: nw + 12, height: n.h + 4, style: 'fill:transparent' }, g);
     return g;
   };
-  const milieu = { x: xM, y: yM, h: hM, m: te, c: '--ink', n: 'Dépenses publiques' };
+  const milieu = { x: xM, y: yM, h: hM, m: te, c: '--ink' };
   const gM = nd(milieu, 'mid');
   for (const n of L) n.g = nd(n, 'l');
-  for (const n of R) { n.g = nd(n, 'r' + (n.kind === 'fn' ? ' cl' : '') + (n.id === S.f && parPol ? ' sel' : '')); }
+  for (const n of P) n.g = nd(n, 'p' + (n.kind === 'fn' ? ' cl' : ''));
+  for (const n of Q) n.g = nd(n, 'q');
 
   /* en-têtes de colonne */
   const hd = (x, anc, a, b) => { el('text', { x, y: 13, 'text-anchor': anc, class: 'hd' }, gt).textContent = a;
-    el('text', { x, y: 31, 'text-anchor': anc, class: 'hdv m' }, gt).textContent = b; };
+    if (b) el('text', { x, y: 32, 'text-anchor': anc, class: 'hdv m' }, gt).textContent = b; };
   hd(0, 'start', b9 < 0 ? 'Recettes + emprunt' : 'Recettes', F(cv(A.S13.TR[k], k), S.u) + (b9 < 0 ? ' + ' + F(cv(-b9, k), S.u) : ''));
-  hd(W / 2, 'middle', 'Dépenses', F(cv(te, k), S.u));
-  hd(W, 'end', parPol ? 'Par politique' : 'Par nature', mob ? '' : (parPol ? '10 fonctions COFOG' : 'comptes nationaux'));
+  hd(xM + nw / 2, 'middle', 'Dépenses', F(cv(te, k), S.u));
+  if (niv2) { hd(xP + nw, 'end', 'Niveau 1', '11 politiques'); hd(xS, 'start', 'Niveau 2', 'sous-postes'); }
+  else hd(W, 'end', parPol ? 'Par politique' : 'Par nature', mob ? '' : (parPol ? '11 politiques' : 'comptes nationaux'));
 
-  /* étiquettes : sur les rubans, avec un halo de la couleur du fond ; on les
-     écarte les unes des autres quand les noeuds sont trop petits, avec un trait
-     de rappel vers leur noeud. */
-  const place = (arr, side) => {
-    const lo = top + 8, hi = H - bot - 8;
-    const p = arr.map(n => ({ n, y: n.y + n.h / 2, two: n.h >= 22 }));
-    const hh = q => q.two ? 29 : 16, d = (a, b) => (hh(a) + hh(b)) / 2 + 1;
+  /* étiquettes : deux lignes (nom, montant) si le noeud est assez haut, une
+     sinon ; écartées les unes des autres avec un trait de rappel vers leur noeud */
+  const lab = (arr, side, base) => {
+    const lo = top + 6, hi = H - bot - 4;
+    const p = arr.filter(n => !(n.kind === 'reste' && n.h < 7)).map(n => ({ n, y: n.y + n.h / 2, two: n.h >= 22 }));
+    const hh = q => q.two ? 29 : 15, d = (a, b) => (hh(a) + hh(b)) / 2 + 1;
     for (let i = 1; i < p.length; i++) p[i].y = Math.max(p[i].y, p[i - 1].y + d(p[i - 1], p[i]));
     const last = p[p.length - 1];
     if (last && last.y + hh(last) / 2 > hi) { last.y = hi - hh(last) / 2; for (let i = p.length - 2; i >= 0; i--) p[i].y = Math.min(p[i].y, p[i + 1].y - d(p[i], p[i + 1])); }
+    if (p.length && p[0].y - hh(p[0]) / 2 < lo) { p[0].y = lo + hh(p[0]) / 2; for (let i = 1; i < p.length; i++) p[i].y = Math.max(p[i].y, p[i - 1].y + d(p[i - 1], p[i])); }
     for (const q of p) {
-      const n = q.n, x = side === 'l' ? n.x + nw + 6 : n.x - 6, anc = side === 'l' ? 'start' : 'end';
+      const n = q.n, right = side !== 'r', x = right ? n.x + nw + 6 : n.x - 6, anc = right ? 'start' : 'end';
       const c0 = n.y + n.h / 2;
-      if (Math.abs(q.y - c0) > 4) el('path', { class: 'ld', d: side === 'l' ? `M${n.x + nw},${c0}L${x - 2},${q.y}` : `M${n.x},${c0}L${x + 2},${q.y}` }, gt);
-      const val = F(cv(n.m, k), S.u) + (S.u === 'cent' ? '' : ' · ' + pct(n.m, side === 'l' ? te : (parPol ? CF.S13.TOTAL[k] : te)));
-      const t = el('text', { class: 'lab', 'text-anchor': anc }, gt);
+      if (Math.abs(q.y - c0) > 4) el('path', { class: 'ld', d: right ? `M${n.x + nw},${c0}L${x - 2},${q.y}` : `M${n.x},${c0}L${x + 2},${q.y}` }, gt);
+      const val = F(cv(n.m, k), S.u) + (S.u === 'cent' ? '' : ' · ' + pct(n.m, base));
+      const t = el('text', { class: 'lab' + (n.kind === 'sub' || n.kind === 'reste' ? ' l2' : ''), 'text-anchor': anc }, gt);
       if (q.two) {
-        const a = el('tspan', { x, y: q.y - 3, class: 'n' }, t); a.textContent = n.n;
-        const b = el('tspan', { x, y: q.y + 11, class: 'v m' }, t); b.textContent = val;
+        el('tspan', { x, y: q.y - 3, class: 'n' }, t).textContent = n.n;
+        el('tspan', { x, y: q.y + 11, class: 'v m' }, t).textContent = val;
       } else {
-        const a = el('tspan', { x, y: q.y + 4, class: 'n' }, t); a.textContent = n.n + (mob ? '' : '  ');
-        if (!mob) { const b = el('tspan', { class: 'v m' }, t); b.textContent = val; }
+        el('tspan', { x, y: q.y + 4, class: 'n' }, t).textContent = n.n + (mob && side !== 's' ? '' : '  ');
+        if (!mob || side === 's') el('tspan', { class: 'v m' }, t).textContent = F(cv(n.m, k), S.u);
       }
     }
   };
-  place(L, 'l'); place(R, 'r');
+  lab(L, 'l', te); lab(P, 'r', totP); if (niv2) lab(Q, 's', totP);
 
-  /* survol : on éclaire le noeud et ses flux */
-  const allN = [...L, ...R];
-  const focus = on => { svg.classList.toggle('foc', !!on); box.classList.toggle('foc', !!on);
-    for (const n of allN) { n.lk.classList.toggle('hl', n === on); n.g.classList.toggle('hl', n === on); } };
-  const tipN = (n, side) => {
-    let h = `<div class="th"><i style="background:${col(n.c)}"></i>${n.l}</div>` + quatre(n.m, k);
-    if (side === 'l' && n.kind !== 'def') h += trow('Part des recettes', pct(n.m, A.S13.TR[k]));
-    if (n.kind === 'fn') {
-      const subs = Object.keys(CF.S13).filter(c => c.length === 6 && c.startsWith(n.id) && CF.S13[c][k] > 0)
-        .sort((a, b) => CF.S13[b][k] - CF.S13[a][k]).slice(0, 3);
-      h += `<div class="tf">Dont ${subs.map(c => SF[c].toLowerCase() + ' ' + FM(CF.S13[c][k], k, 'md')).join(', ')}.<br>Cliquer pour le détail.</div>`;
+  /* --- survol : un noeud éclaire tout son chemin --- */
+  const all = [...L, ...P, ...Q];
+  const chemin = n => n.kind === 'sub' || n.kind === 'reste' ? [n, n.par] : n.kids ? [n, ...n.kids] : [n];
+  const focus = n => {
+    const on = n ? new Set(chemin(n)) : null;
+    svg.classList.toggle('foc', !!on);
+    for (const x of all) { x.lk.classList.toggle('hl', !!on && on.has(x)); x.g.classList.toggle('hl', !!on && on.has(x)); }
+  };
+  const quiPorte = c => SECT.map(s => trow(s.n.replace(' et organismes centraux', ''), FM(Math.max(0, fv(CF[s.k], c, k)), k, 'md'))).join('');
+  const k95 = ix(1995), evo = (v95, v) => `<div class="tf">En % du PIB : ${nf(v95 / D.pib[k95] * 100, 2)} % en 1995, ${nf(v / D.pib[k] * 100, 2)} % en ${S.an}.</div>`;
+  const tipN = n => {
+    let h = `<div class="th"><i style="background:${col(n.c)}"></i>${n.l}</div>`;
+    if (n.kind === 'rec' || n.kind === 'def') {
+      h += quatre(n.m, k);
+      if (n.kind === 'rec') h += trow('Part des recettes', pct(n.m, A.S13.TR[k]));
+      else h += `<div class="tf">Les recettes ne couvrent que ${pct(A.S13.TR[k], te)} des dépenses ; le reste est emprunté et s'ajoute à la dette.</div>`;
+    } else if (n.kind === 'fn') {
+      h += quatre(n.m, k, totP) + `<div class="tf" style="margin-bottom:4px">Qui la porte (montants bruts) :</div>` + quiPorte(n.id) + evo(fv(CF.S13, n.id, k95), n.m);
+    } else if (n.kind === 'sub') {
+      h += quatre(n.m, k, totP) + trow('Part de « ' + n.par.n.toLowerCase() + ' »', pct(n.m, n.par.m))
+        + (SFX[n.id] ? `<div class="tf">${SFX[n.id]}</div>` : '') + evo(CF.S13[n.id][k95], n.m);
+    } else if (n.kind === 'reste') {
+      h += trow('Montant', FM(n.m, k, 'md')) + trow('Part de « ' + n.par.n.toLowerCase() + ' »', pct(n.m, n.par.m))
+        + `<div class="tf">${n.rest.map(x => SF[x.c] + ' ' + FM(x.m, k, 'md')).join('<br>')}</div>`;
+    } else {
+      h += quatre(n.m, k);
+      if (n.nat && n.nat.s.length) h += `<div class="tf">${n.nat.s.map(([c, t]) => t + ' : ' + FM(A.S13[c][k], k, 'md')).join('<br>')}</div>`;
     }
-    if (n.kind === 'nat' && n.nat.s.length) h += `<div class="tf">${n.nat.s.map(([c, t]) => t + ' : ' + FM(A.S13[c][k], k, 'md')).join('<br>')}</div>`;
-    if (n.kind === 'def') h += `<div class="tf">Les recettes ne couvrent que ${pct(A.S13.TR[k], te)} des dépenses ; le reste est emprunté et s'ajoute à la dette.</div>`;
     return h;
   };
-  for (const [arr, side] of [[L, 'l'], [R, 'r']]) for (const n of arr) {
-    for (const t of [n.g, n.lk]) {
-      t.addEventListener('mousemove', e => { focus(n); tipOn(e, tipN(n, side)); });
-      t.addEventListener('mouseleave', () => { focus(null); tipOff(); });
-      t.addEventListener('touchstart', e => { focus(n); tipOn(e.touches[0], tipN(n, side)); }, { passive: true });
-    }
-    if (n.kind === 'fn') {
-      const go = () => { S.f = n.id; hashSync(); circuit(); zoom(); };
-      n.g.addEventListener('click', go);
-      n.g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
-    }
+  for (const n of all) for (const t of [n.g, n.lk]) {
+    t.addEventListener('mousemove', e => { focus(n); tipOn(e, tipN(n)); });
+    t.addEventListener('mouseleave', () => { focus(null); tipOff(); });
+    t.addEventListener('touchstart', e => { focus(n); tipOn(e.touches[0], tipN(n)); }, { passive: true });
   }
   gM.addEventListener('mousemove', e => tipOn(e, `<div class="th">Dépenses publiques ${S.an}</div>` + quatre(te, k)
-    + (parPol ? `<div class="tf">Ventilées par politique : ${FM(CF.S13.TOTAL[k], k, 'md')} (publication COFOG d'Eurostat, antérieure à la dernière révision des comptes : ${nf((CF.S13.TOTAL[k] / te - 1) * 100, 2)} %).</div>` : '')));
+    + (parPol ? `<div class="tf">Ventilées par politique : ${FM(CF.S13.TOTAL[k], k, 'md')} (tableau COFOG d'Eurostat, publié avant la dernière révision des comptes : ${nf((CF.S13.TOTAL[k] / te - 1) * 100, 2)} %).</div>` : '')));
   gM.addEventListener('mouseleave', tipOff);
 
-  /* la version en chiffres */
-  const tab = (arr, titre, base) => `<tr><th>${titre}</th><th>Md€</th><th>% PIB</th><th>€/hab.</th><th>Sur 100 €</th></tr>`
-    + arr.map(n => `<tr><td>${n.l}</td><td>${FM(n.m, k, 'md')}</td><td>${FM(n.m, k, 'pib')}</td><td>${FM(n.m, k, 'hab')}</td><td>${FM(n.m, k, 'cent', base)}</td></tr>`).join('');
-  $('skTab').innerHTML = `<table class="xtable">${tab(L, 'Financement ' + S.an)}<tr class="t"><td>Total</td><td>${FM(te, k, 'md')}</td><td>${FM(te, k, 'pib')}</td><td>${FM(te, k, 'hab')}</td><td>100,0 €</td></tr>`
-    + tab(R, (parPol ? 'Dépenses par politique ' : 'Dépenses par nature ') + S.an, parPol ? CF.S13.TOTAL[k] : te) + '</table>';
+  /* --- la version en chiffres --- */
+  const tr = (n, base, cls) => `<tr${cls ? ` class="${cls}"` : ''}><td>${cls === 'l2' ? '&nbsp;&nbsp;&nbsp;' : ''}${n.l}</td><td>${FM(n.m, k, 'md')}</td><td>${FM(n.m, k, 'pib')}</td><td>${FM(n.m, k, 'hab')}</td><td>${FM(n.m, k, 'cent', base)}</td></tr>`;
+  const th = t => `<tr><th>${t}</th><th>Md€</th><th>% PIB</th><th>€/hab.</th><th>Sur 100 €</th></tr>`;
+  let tb = th('Financement ' + S.an) + L.map(n => tr(n, te)).join('')
+    + `<tr class="t"><td>Total</td><td>${FM(te, k, 'md')}</td><td>${FM(te, k, 'pib')}</td><td>${FM(te, k, 'hab')}</td><td>100,0 €</td></tr>`;
+  tb += th((parPol ? 'Dépenses par politique ' : 'Dépenses par nature ') + S.an);
+  for (const p of P) {
+    tb += tr(p, totP);
+    if (parPol) for (const c of KIDS(p.id).filter(c => CF.S13[c][k] > 0.5).sort((a, b) => CF.S13[b][k] - CF.S13[a][k]))
+      tb += tr({ l: SF[c], m: CF.S13[c][k] }, totP, 'l2');
+  }
+  $('skTab').innerHTML = `<table class="xtable">${tb}</table>`;
   $('skNote').innerHTML = parPol
-    ? `Les recettes et l'emprunt couvrent exactement les dépenses : <b>${FM(A.S13.TR[k], k, 'md')}</b> de recettes + <b>${FM(Math.max(0, -b9), k, 'md')}</b> d'emprunt = <b>${FM(te, k, 'md')}</b>. La ventilation par politique est celle de la nomenclature COFOG ; les intérêts de la dette y figurent dans « services généraux ».`
+    ? `Recettes <b>${FM(A.S13.TR[k], k, 'md')}</b> + emprunt <b>${FM(Math.max(0, -b9), k, 'md')}</b> = dépenses <b>${FM(te, k, 'md')}</b>. `
+      + `Niveau 1 : les 10 fonctions de la nomenclature internationale COFOG, les intérêts de la dette (COFOG 01.7) étant sortis des « services généraux » pour apparaître à part. `
+      + (niv2 ? `Niveau 2 : chaque sous-poste pesant au moins 1 % de la dépense ; les plus petits sont regroupés dans « autres » (détail au survol et dans le tableau).` : `Le niveau 2 s'affiche sur un écran plus large, et dans le tableau ci-dessus.`)
     : `Par nature : la forme sous laquelle l'argent sort. Les prestations sociales comptent les pensions et allocations versées en argent et les soins remboursés ; les salaires, ceux de tous les agents publics (enseignants, soignants des hôpitaux publics, policiers…).`
       + (S.an > D.derF ? ` <b>${S.an}</b> : la ventilation par politique n'est pas encore publiée.` : '');
-}
-
-/* ======================================================================
-   1b · ZOOM SUR UNE POLITIQUE
-   ====================================================================== */
-function zoom() {
-  const z = $('zoom'), k = ix(S.an);
-  if (!(S.v === 'fonction' && S.an <= D.derF)) {
-    /* vue par nature : le détail des natures */
-    const te = TE(k);
-    z.innerHTML = `<div class="zh" style="margin-top:0">Dépenses par nature, ${S.an}</div><ul class="zl">` + NAT.map(n => {
-      const m = sum(A.S13, n.k, k);
-      return `<li><span class="nm">${n.n}${n.s.length ? `<small>${n.s.map(([c, t]) => t + ' : ' + FM(A.S13[c][k], k)).join(' · ')}</small>` : ''}</span>
-        <span class="vl">${FM(m, k)}<small>${pct(m, te)}</small></span><span class="br"><i style="width:${m / A.S13.D62_D632PAY[k] * 100}%; background:${col(n.c)}"></i></span></li>`;
-    }).join('') + '</ul>' + (S.an > D.derF ? `<p class="vide">La ventilation par politique de ${S.an} n'est pas encore publiée ; elle s'arrête à ${D.derF}.</p>` : '');
-    return;
-  }
-  const f = S.f, F0 = FN[f], tot = CF.S13.TOTAL[k], v = CF.S13[f][k];
-  const subs = Object.keys(CF.S13).filter(c => c.length === 6 && c.startsWith(f) && CF.S13[c][k] > 0.5)
-    .sort((a, b) => CF.S13[b][k] - CF.S13[a][k]);
-  const mx = subs.length ? CF.S13[subs[0]][k] : 1;
-  let h = `<div class="fnav" role="group" aria-label="Politique">` + Object.keys(FN).sort((a, b) => CF.S13[b][k] - CF.S13[a][k])
-    .map(c => `<button type="button" data-f="${c}" aria-pressed="${c === f}"><i style="background:${col(FN[c].c)}"></i>${FN[c].n}</button>`).join('') + '</div>';
-  h += `<h4><i style="background:${col(F0.c)}"></i>${F0.l}</h4>
-    <div class="zv"><b>${FM(v, k, 'md')}</b> · ${FM(v, k, 'pib')} du PIB · ${FM(v, k, 'hab')} par habitant · <b>${nf(v / tot * 100, 1)} €</b> sur 100 €</div>`;
-  h += `<ul class="zl">` + subs.map(c => {
-    const m = CF.S13[c][k];
-    return `<li data-tip="1" data-c="${c}"><span class="nm">${SF[c]}${SFX[c] ? `<small>${SFX[c]}</small>` : ''}</span>
-      <span class="vl">${FM(m, k)}<small>${pct(m, v)} du poste</small></span>
-      <span class="br"><i style="width:${m / mx * 100}%; background:${col(F0.c)}"></i></span></li>`;
-  }).join('') + '</ul>';
-
-  /* qui la porte : montants bruts de chaque administration (non consolidés) */
-  const q = SECT.map(s => ({ s, m: Math.max(0, (CF[s.k][f] || [])[k] || 0) }));
-  const qm = Math.max(...q.map(x => x.m)) || 1;
-  h += `<div class="zh">Qui la porte <span style="text-transform:none; letter-spacing:0; font-weight:400">— montants bruts, transferts entre administrations compris</span></div><div class="qui">` + q.map(x =>
-    `<div><span>${x.s.n.replace(' et organismes centraux', '')}</span><span class="b"><i style="width:${x.m / qm * 100}%; background:${col(x.s.c)}"></i></span><span class="v">${FM(x.m, k)}</span></div>`).join('') + '</div>';
-
-  /* trente ans de cette politique, en % du PIB */
-  h += `<div class="zh">En % du PIB depuis 1995</div><div class="chart" id="zsp"></div>`;
-  z.innerHTML = h;
-  z.querySelectorAll('[data-f]').forEach(b => b.addEventListener('click', () => { S.f = b.dataset.f; hashSync(); circuit(); zoom(); }));
-  z.querySelectorAll('li[data-c]').forEach(li => {
-    const c = li.dataset.c, show = e => {
-      const k95 = ix(1995);
-      tipOn(e, `<div class="th"><i style="background:${col(F0.c)}"></i>${SF[c]}</div>` + quatre(CF.S13[c][k], k)
-        + trow('Part de « ' + F0.n.toLowerCase() + ' »', pct(CF.S13[c][k], v))
-        + `<div class="tf">En 1995 : ${FM(CF.S13[c][k95], k95, 'pib')} du PIB ; en ${S.an} : ${FM(CF.S13[c][k], k, 'pib')}.</div>`);
-    };
-    li.addEventListener('mousemove', show); li.addEventListener('mouseleave', tipOff);
-  });
-  const ys = D.an.filter(y => y <= D.derF);
-  lignes($('zsp'), ys, [{ n: F0.n, c: F0.c, v: ys.map(y => CF.S13[f][ix(y)] / D.pib[ix(y)] * 100), w: 2 }],
-    { h: 150, fy: x => nf(x, 1) + ' %', mark: S.an, compact: true });
 }
 
 /* ======================================================================
@@ -860,7 +838,7 @@ function sousSecteurs() {
     const a = A[s.k], b9 = a.B9[k];
     let top = '';
     if (S.an <= D.derF) {
-      const fs = Object.keys(FN).map(c => [c, (CF[s.k][c] || [])[k] || 0]).filter(x => x[1] > 0).sort((p, q) => q[1] - p[1]).slice(0, 4);
+      const fs = FNK.map(c => [c, fv(CF[s.k], c, k)]).filter(x => x[1] > 0).sort((p, q) => q[1] - p[1]).slice(0, 4);
       const tr = (CF[s.k].GF0108 || [])[k] || 0;
       top = `<div class="top">${fs.map(([c, m]) => `<div><span>${FN[c].n}</span><span>${FM(m, k)}</span></div>`).join('')}`
         + (tr > 1000 ? `<div><span>dont versé aux autres administrations</span><span>${FM(tr, k)}</span></div>` : '') + '</div>';
@@ -936,10 +914,10 @@ function trente() {
 /* 6 · Ce qui a grossi : 1995 → année choisie (ou dernière année ventilée), en points de PIB */
 function evolution() {
   const y1 = Math.min(S.an, D.derF), k0 = ix(1995), k1 = ix(y1);
-  const p = (c, k) => CF.S13[c][k] / D.pib[k] * 100;
+  const p = (c, k) => (c.length === 6 ? CF.S13[c][k] : fv(CF.S13, c, k)) / D.pib[k] * 100;
   let rows;
-  if (S.e === 'f') rows = Object.keys(FN).map(c => ({ c, n: FN[c].n, col: FN[c].c, a: p(c, k0), b: p(c, k1) }));
-  else rows = Object.keys(CF.S13).filter(c => c.length === 6).map(c => ({ c, n: SF[c], col: FN[c.slice(0, 4)].c, a: p(c, k0), b: p(c, k1) }))
+  if (S.e === 'f') rows = FNK.map(c => ({ c, n: FN[c].n, col: FN[c].c, a: p(c, k0), b: p(c, k1) }));
+  else rows = Object.keys(CF.S13).filter(c => c.length === 6).map(c => ({ c, n: SF[c], col: FN[PAR(c)].c, a: p(c, k0), b: p(c, k1) }))
     .sort((x, z) => Math.abs(z.b - z.a) - Math.abs(x.b - x.a)).slice(0, 14);
   rows.sort((x, z) => (z.b - z.a) - (x.b - x.a));
   $('t6').textContent = `Ce qui a grossi, ce qui a fondu : 1995 → ${y1}`;
@@ -961,12 +939,12 @@ function evolution() {
     t2.textContent = (d >= 0 ? '+' : '−') + nf(Math.abs(d), Math.abs(d) < 0.1 ? 2 : 1);
     g.addEventListener('mousemove', e => tipOn(e, `<div class="th"><i style="background:${col(r.col)}"></i>${r.n}</div>`
       + trow('1995', nf(r.a, 2) + ' % du PIB') + trow(String(y1), nf(r.b, 2) + ' % du PIB') + trow('Écart', (d >= 0 ? '+' : '−') + nf(Math.abs(d), 2) + ' pt')
-      + trow('En euros ' + y1, FM(CF.S13[r.c][k1], k1, 'md'))));
+      + trow('En euros ' + y1, FM(r.b * D.pib[k1] / 100, k1, 'md'))));
     g.addEventListener('mouseleave', tipOff);
   });
   $('evLg').innerHTML = `<span><svg width="12" height="12"><circle cx="6" cy="6" r="4" style="fill:var(--surface); stroke:var(--ink-2); stroke-width:2"/></svg>1995</span><span><svg width="12" height="12"><circle cx="6" cy="6" r="5" style="fill:var(--ink-2)"/></svg>${y1}</span><span style="color:var(--ink-3)">en % du PIB ; à droite, l'écart en points</span>`;
   const tot = (CF.S13.TOTAL[k1] / D.pib[k1] - CF.S13.TOTAL[k0] / D.pib[k0]) * 100;
-  const pr = Object.keys(FN).map(c => [c, p(c, k1) - p(c, k0)]).sort((a, b) => b[1] - a[1]);
+  const pr = FNK.map(c => [c, p(c, k1) - p(c, k0)]).sort((a, b) => b[1] - a[1]);
   $('evNote').innerHTML = `De 1995 à ${y1}, la dépense publique est passée de ${nf(CF.S13.TOTAL[k0] / D.pib[k0] * 100, 1)} % à ${nf(CF.S13.TOTAL[k1] / D.pib[k1] * 100, 1)} % du PIB (${tot >= 0 ? '+' : '−'}${nf(Math.abs(tot), 1)} pt). `
     + `La plus forte hausse : ${FN[pr[0][0]].n.toLowerCase()} (+${nf(pr[0][1], 1)} pt) ; la plus forte baisse : ${FN[pr[pr.length - 1][0]].n.toLowerCase()} (${nf(pr[pr.length - 1][1], 1).replace('-', '−')} pt).`;
 }
@@ -977,10 +955,10 @@ function evolution() {
 function europe() {
   const E = D.ue, fr = E.cofog.FR, cp = E.cofog[S.cmp];
   let rows;
-  if (S.g === 'f') rows = Object.keys(FN).map(c => ({ c, n: FN[c].n, col: FN[c].c }));
+  if (S.g === 'f') rows = FNK.map(c => ({ c, n: FN[c].n, col: FN[c].c }));
   else rows = Object.keys(fr).filter(c => c.length === 6 && cp[c] !== undefined)
-    .sort((a, b) => Math.abs(fr[b] - cp[b]) - Math.abs(fr[a] - cp[a])).slice(0, 15).map(c => ({ c, n: SF[c], col: FN[c.slice(0, 4)].c }));
-  rows.forEach(r => { r.a = fr[r.c]; r.b = cp[r.c]; r.d = r.a - r.b; });
+    .sort((a, b) => Math.abs(fr[b] - cp[b]) - Math.abs(fr[a] - cp[a])).slice(0, 15).map(c => ({ c, n: SF[c], col: FN[PAR(c)].c }));
+  rows.forEach(r => { r.a = r.c.length === 6 ? fr[r.c] : fv(fr, r.c); r.b = r.c.length === 6 ? cp[r.c] : fv(cp, r.c); r.d = r.a - r.b; });
   rows.sort((x, z) => z.d - x.d);
   const mx = Math.max(...rows.map(r => Math.abs(r.d)), 0.5);
   const nom = GEO[S.cmp];
@@ -993,8 +971,9 @@ function europe() {
   $('eu').querySelectorAll('.r[data-c]').forEach(r => {
     const c = r.dataset.c;
     r.addEventListener('mousemove', e => {
-      const all = E.geo.filter(g => E.cofog[g][c] !== undefined).sort((a, b) => E.cofog[b][c] - E.cofog[a][c]);
-      tipOn(e, `<div class="th">${(FN[c] || {}).n || SF[c]}, ${E.an}</div>` + all.map(g => trow(g === 'FR' ? '<b>France</b>' : GEO[g], nf(E.cofog[g][c], 1) + ' %')).join('')
+      const v = g => c.length === 6 ? E.cofog[g][c] : fv(E.cofog[g], c);
+      const all = E.geo.filter(g => v(g) !== undefined).sort((a, b) => v(b) - v(a));
+      tipOn(e, `<div class="th">${(FN[c] || {}).n || SF[c]}, ${E.an}</div>` + all.map(g => trow(g === 'FR' ? '<b>France</b>' : GEO[g], nf(v(g), 1) + ' %')).join('')
         + `<div class="tf">En % du PIB de chaque pays.</div>`);
     });
     r.addEventListener('mouseleave', tipOff);
@@ -1081,7 +1060,7 @@ sel.addEventListener('change', () => setAn(+sel.value));
 $('an-m').addEventListener('click', () => setAn(S.an - 1));
 $('an-p').addEventListener('click', () => setAn(S.an + 1));
 document.querySelectorAll('[data-u]').forEach(b => b.addEventListener('click', () => { S.u = b.dataset.u; hashSync(); tout(); }));
-document.querySelectorAll('[data-v]').forEach(b => b.addEventListener('click', () => { S.v = b.dataset.v; S.vAuto = S.v === 'fonction'; circuit(); zoom(); }));
+document.querySelectorAll('[data-v]').forEach(b => b.addEventListener('click', () => { S.v = b.dataset.v; S.vAuto = S.v === 'fonction'; circuit(); }));
 document.querySelectorAll('[data-e]').forEach(b => b.addEventListener('click', () => { S.e = b.dataset.e;
   document.querySelectorAll('[data-e]').forEach(x => x.setAttribute('aria-pressed', x === b)); evolution(); }));
 document.querySelectorAll('[data-g]').forEach(b => b.addEventListener('click', () => { S.g = b.dataset.g;
@@ -1104,7 +1083,7 @@ function tout() {
   $('an-m').disabled = S.an <= D.an[0]; $('an-p').disabled = S.an >= D.der;
   document.querySelectorAll('[data-u]').forEach(b => b.setAttribute('aria-pressed', b.dataset.u === S.u));
   $('hint').textContent = uLong[S.u];
-  tete(); circuit(); zoom(); recettes(); sousSecteurs(); trente(); europe();
+  tete(); circuit(); recettes(); sousSecteurs(); trente(); europe();
 }
 tout();
 let rz = 0, w0 = innerWidth;
