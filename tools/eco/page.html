@@ -1250,7 +1250,11 @@ function appliqueHyp() {
 function hyp() {
   const box = $('hyp'), b = $('hyp-b');
   b.setAttribute('aria-pressed', !!S.cap); b.setAttribute('aria-expanded', !!S.cap);
-  if (!RET || !S.cap) { box.hidden = true; return; }
+  /* L'hypothèse n'existe que pour les années où l'on a la distribution des pensions
+     (2023 observée, 2024-2025 estimées) : ailleurs, ni bouton ni panneau. */
+  const dispo = !!RET && hypAn(S.an);
+  b.closest('.ctl').hidden = !dispo;
+  if (!S.cap || !dispo) { box.hidden = true; return; }
   box.hidden = false;
   const y = hypAn(S.an) ? S.an : RET.ans[RET.ans.length - 1];
   const P = RET.pa(y), k = D0.an.indexOf(y), h = RET.calc(S.cap, y), O = D0.agg.S13;
@@ -1274,9 +1278,7 @@ function hyp() {
   $('hyp-y').innerHTML = RET.ans.map(a => `<button type="button" data-hy="${a}" aria-pressed="${a === S.an}" title="SMIC net : ${nf(RET.pa(a).smic, 0)} €/mois">${a}${RET.pa(a).proxy ? '*' : ''}</button>`).join('');
   const rg = $('hyp-r'); if (+rg.value !== S.cap) rg.value = S.cap;
   const ha = $('hyp-an');
-  if (!hypAn(S.an)) { ha.hidden = false; ha.style.color = 'var(--n2)'; ha.style.fontWeight = 700;
-    ha.innerHTML = `La page affiche ${S.an} : l'hypothèse ne se calcule que pour ${RET.ans.join(', ')}. Chiffres ci-dessous : ${y}.`; }
-  else if (P.proxy) { ha.hidden = false; ha.style.color = 'var(--ink-2)'; ha.style.fontWeight = 400;
+  if (P.proxy) { ha.hidden = false; ha.style.color = 'var(--ink-2)'; ha.style.fontWeight = 400;
     ha.innerHTML = `<b style="color:var(--n2)">${y} : estimation.</b> ${P.A.note}`; }
   else ha.hidden = true;
   $('hyp-v').innerHTML = `${nf(S.cap, 0)} €<small> net/mois${Math.abs(S.cap - P.smic) < 1 ? ' = SMIC net ' + y + (S.capS ? ' (suit l\'année)' : '') : ' · ' + nf(S.cap / P.smic, 2) + ' SMIC'}</small>`;
