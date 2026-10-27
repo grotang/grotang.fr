@@ -4,9 +4,10 @@
  * 1. Lecture d'un tableau : un tableau de 128 fabriqué ici, au format exact
  *    des pages Wikipédia (huit sections de 16 + carré final), avec des
  *    Français placés à la main, d'abord complet puis en cours de tournoi.
- * 2. data.json : les faits que l'histoire impose (un seul titre, Noah 1983 ;
- *    sept finales), les plafonds de chaque tour, le parcours des joueurs
- *    (il redonne le chiffre de chaque case) et les dates de chaque édition jouée.
+ * 2. data.json : les faits que l'histoire impose (un vainqueur par édition ;
+ *    pour la France, Noah 1983 et sept finales ; quelques palmarès), les
+ *    plafonds de chaque tour, une nation par joueur et par édition, et les
+ *    dates de chaque édition jouée.
  *
  * Un échec arrête le workflow avant toute écriture. */
 import fs from 'node:fs';
@@ -94,37 +95,57 @@ const attendu = (tours, r) => tours[r].filter(j => FR.has(j)).length;
 }
 
 /* --- 2 · data.json -------------------------------------------------------- */
+/* Les chiffres de chaque case se déduisent des parcours (nation par nation) :
+   on vérifie les faits que l'histoire impose. */
 const D = JSON.parse(fs.readFileSync(path.join(ICI, 'data.json'), 'utf8'));
 ok(D.tours.join() === TOURS.join(), 'data.json : colonnes dans le bon ordre');
-let titres = [], finales = [], plafond = true;
 const MAX = [256, 128, 64, 16, 8, 4, 2, 1];
+const cases = (nat) => { const out = []; for (const [an, e] of Object.entries(D.editions)) for (const [s, v] of Object.entries(e))
+  if (v === 'J') out.push([an, s, compteParcours(D.parcours?.[an]?.[s]?.[nat] || [])]); return out; };
+let speciaux = true, plafond = true, unTitre = true, idsOk = true;
 for (const [an, e] of Object.entries(D.editions)) for (const [s, v] of Object.entries(e)) {
-  if (!Array.isArray(v)) { ok(v === null || ['?', 'C', 'ND'].includes(v), `${s} ${an} : valeur spéciale « ${v} »`); continue; }
-  if (v.length !== 8 || v.some((x, i) => !Number.isInteger(x) || x < 0 || x > MAX[i])) { plafond = false; console.log('  hors plafond', s, an, v.join()); }
-  if (v[7]) titres.push(s + an);
-  if (v[6]) finales.push(s + an);
+  if (v !== 'J') { if (!(v === null || ['?', 'C', 'ND'].includes(v))) { speciaux = false; console.log('  valeur', s, an, v); } continue; }
+  const tot = [0, 0, 0, 0, 0, 0, 0, 0];
+  for (const f of Object.values(D.parcours?.[an]?.[s] || {})) {
+    compteParcours(f).forEach((x, i) => tot[i] += x);
+    if (f.some((x, j) => j % 2 === 0 && !D.joueurs[x])) idsOk = false;
+  }
+  if (tot.some((x, i) => x > MAX[i])) { plafond = false; console.log('  hors plafond', s, an, tot.join()); }
+  if (!D.ouverts?.[an]?.[s] && tot[7] !== 1) { unTitre = false; console.log('  titres', s, an, tot[7]); }
 }
-ok(plafond, 'data.json : chaque tour sous son plafond');
-ok(titres.join() === 'RG1983', `data.json : titres ${titres.join(' ')}`);
-ok(finales.length === 7, `data.json : ${finales.length} finales (${finales.join(' ')})`);
-/* parcours des joueurs : ils redonnent exactement les chiffres de chaque case */
-let parcOk = true;
-for (const [an, e] of Object.entries(D.editions)) for (const [s, v] of Object.entries(e)) {
-  if (!Array.isArray(v) || s === 'AOd') continue;
-  const p = D.parcours?.[an]?.[s] || [];
-  if (compteParcours(p).join() !== v.join() || p.some((x, j) => j % 2 === 0 && !D.joueurs[x])) { parcOk = false; console.log('  parcours', s, an); }
-}
-ok(parcOk, 'data.json : parcours des joueurs = chiffres de chaque case');
-const champion = (D.parcours?.[1983]?.RG || []).filter((x, j) => j % 2 && x === 7).length === 1
-  && D.joueurs[D.parcours[1983].RG[D.parcours[1983].RG.indexOf(7) - 1]] === 'Yannick Noah';
-ok(champion, 'data.json : titre RG 1983 = Yannick Noah');
+ok(speciaux, 'data.json : valeurs spéciales connues');
+ok(plafond, 'data.json : chaque tour sous son plafond, toutes nations réunies');
+ok(unTitre, 'data.json : un vainqueur et un seul par édition close');
+ok(idsOk, 'data.json : chaque parcours renvoie à un joueur connu');
+const fr = cases('FRA').filter(c => c[1] !== 'AOd');
+const titresFR = fr.filter(c => c[2][7]).map(c => c[1] + c[0]), finalesFR = fr.filter(c => c[2][6]).map(c => c[1] + c[0]);
+ok(titresFR.join() === 'RG1983', `France : titres ${titresFR.join(' ')}`);
+ok(finalesFR.length === 7, `France : ${finalesFR.length} finales (${finalesFR.join(' ')})`);
+const noah = (D.parcours[1983].RG.FRA || []).findIndex((x, j) => j % 2 && x === 7);
+ok(noah > 0 && D.joueurs[D.parcours[1983].RG.FRA[noah - 1]] === 'Yannick Noah', 'France : titre RG 1983 = Yannick Noah');
+const n2026 = cases('FRA').filter(c => c[0] === '2026');
+ok(n2026.find(c => c[1] === 'WIM')[2][0] === 15 && n2026.find(c => c[1] === 'USO')[2][0] === 13, 'France : 2026 WIM 15, USO 13 au 1er tour');
+/* quelques palmarès connus */
+const titresDe = nat => cases(nat).filter(c => c[1] !== 'AOd' && c[2][7]).length;
+for (const [nat, n] of [['ESP', 36], ['SUI', 23], ['SRB', 24], ['SWE', 25], ['AUS', 20]])
+  ok(titresDe(nat) >= n, `${nat} : ${titresDe(nat)} titres (au moins ${n})`);
+const ger = cases('GER').filter(c => +c[0] <= 1996 && c[2][7]).length;
+ok(ger === 7, `Allemagne (RFA comprise) : ${ger} titres jusqu'en 1996 (Becker 6, Stich 1)`);
+const medv = D.joueurs.indexOf('Daniil Medvedev');
+ok(medv >= 0 && (D.parcours[2023].USO.RUS || []).some((x, j) => j % 2 === 0 && x === medv), 'bannière neutre : Medvedev compté avec la Russie (USO 2023)');
 ok(new Set(D.joueurs).size === D.joueurs.length && Object.keys(D.alias || {}).every(k => !D.joueurs.includes(k)),
   `data.json : ${D.joueurs.length} joueurs, sans doublon ni graphie en double`);
+/* un joueur, une nation par édition */
+let uneNation = true;
+for (const [an, e] of Object.entries(D.parcours)) for (const [s, p] of Object.entries(e)) {
+  const vu = new Set();
+  for (const f of Object.values(p)) for (let j = 0; j < f.length; j += 2) { if (vu.has(f[j])) { uneNation = false; console.log('  deux nations', s, an, D.joueurs[f[j]]); } vu.add(f[j]); }
+}
+ok(uneNation, 'data.json : une seule nation par joueur et par édition');
 let sansDate = [];
 for (const [an, e] of Object.entries(D.editions)) for (const [s, v] of Object.entries(e))
-  if (Array.isArray(v) && s !== 'AOd' && !D.dates?.[an]?.[s]) sansDate.push(s + an);
+  if (v === 'J' && s !== 'AOd' && !D.dates?.[an]?.[s]) sansDate.push(s + an);
 ok(sansDate.length === 0, `data.json : dates de chaque édition jouée${sansDate.length ? ' (manque ' + sansDate.join(' ') + ')' : ''}`);
-ok(D.editions[2026] && D.editions[2026].WIM[0] === 15 && D.editions[2026].USO[0] === 13, 'data.json : 2026 WIM 15, USO 13 au 1er tour');
 
 if (ko) { console.log(`\n${ko} échec(s).`); process.exit(1); }
 console.log('\nTout est bon.');

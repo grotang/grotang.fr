@@ -18,6 +18,8 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { nav, navCSS, FAVICON, FAVICON_SVG, MANIFEST, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF } from './chrome.mjs';
 import { buildEco } from './eco/page.mjs';
+import { nation } from './tennis/nations.mjs';
+import { compteParcours } from './tennis/wiki.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
@@ -302,21 +304,41 @@ ${ANALYTICS}
    navigation et les métadonnées. */
 function buildTennis() {
   const DT = JSON.parse(read('tools/tennis/data.json'));
+  /* La page ne reçoit que les nations titrées (au moins un Grand Chelem gagné
+     depuis 1968, l'édition de décembre 1977 comprise), la France en tête puis
+     par nombre de titres, et seulement leurs joueurs, renumérotés. */
+  const titres = {};
+  for (const e of Object.values(DT.parcours)) for (const p of Object.values(e)) for (const [c, f] of Object.entries(p))
+    for (let j = 1; j < f.length; j += 2) if (f[j] === 7) titres[c] = (titres[c] || 0) + 1;
+  const codes = Object.keys(titres).sort((a, b) => (b === 'FRA') - (a === 'FRA') || titres[b] - titres[a] || a.localeCompare(b));
+  if (codes[0] !== 'FRA' || codes.length < 15) throw new Error('tennis : nations titrées incomplètes (' + codes.join(' ') + ')');
+  const inconnues = codes.filter(c => !nation(c));
+  if (inconnues.length) throw new Error('tennis : nation titrée sans nom dans tools/tennis/nations.mjs : ' + inconnues.join(' '));
+  const ids = new Map(), joueurs = [];
+  const id = k => { if (!ids.has(k)) { ids.set(k, joueurs.length); joueurs.push(DT.joueurs[k]); } return ids.get(k); };
+  const parcours = {};
+  for (const y of Object.keys(DT.parcours).sort()) for (const [s, p] of Object.entries(DT.parcours[y])) for (const c of codes) {
+    if (!p[c]) continue;
+    const f = p[c].map((v, j) => j % 2 ? v : id(v));
+    ((parcours[y] = parcours[y] || {})[s] = parcours[y][s] || {})[c] = f;
+  }
+  const PAGE = { tours: DT.tours, ouverts: DT.ouverts, editions: DT.editions, dates: DT.dates, joueurs, parcours,
+    nations: codes.map(c => ({ ...nation(c), titres: titres[c] })) };
   const brut = read('tools/tennis.src.html');
   const RE = /\/\*DATA_START\*\/[^]*?\/\*DATA_END\*\//;
   if (!RE.test(brut)) throw new Error('tennis : sentinelles DATA introuvables');
-  const src = brut.replace(RE, () => `/*DATA_START*/const DT = ${JSON.stringify(DT)};/*DATA_END*/`);
+  const src = brut.replace(RE, () => `/*DATA_START*/const DT = ${JSON.stringify(PAGE)};/*DATA_END*/`);
   let out = src.replace('<meta name="viewport" content="width=device-width, initial-scale=1.0">',
     `<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Les joueurs français tour par tour dans chaque Grand Chelem, simple messieurs, ère Open : 1er tour, 8es, quarts, demies, finales, titres. Mis à jour chaque jour.">
+<meta name="description" content="Les joueurs de chaque nation tour par tour dans les Grands Chelems, simple messieurs, ère Open : France, Espagne, États-Unis, Suisse, Serbie… 1er tour, 8es, quarts, demies, finales, titres. Mis à jour chaque jour.">
 ${VERIF}
 <link rel="canonical" href="https://grotang.fr/tennis/">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:site_name" content="grotang.fr">
-<meta property="og:title" content="Les Français en Grand Chelem, tour par tour">
-<meta property="og:description" content="Les joueurs français tour par tour dans chaque Grand Chelem, simple messieurs, ère Open : 1er tour, 8es, quarts, demies, finales, titres.">
+<meta property="og:title" content="Les Grands Chelems de tennis, nation par nation, tour par tour">
+<meta property="og:description" content="Les joueurs de chaque nation tour par tour dans les Grands Chelems, simple messieurs, ère Open : 1er tour, 8es, quarts, demies, finales, titres.">
 <meta property="og:url" content="https://grotang.fr/tennis/">
 <meta name="twitter:card" content="summary">
 ${FAVICON}
@@ -336,7 +358,7 @@ body{padding-top:0}
     v: ['AO', 'RG', 'WIM', 'USO'].map(s => {
       const v = DT.editions[y][s];
       const ouvert = DT.ouverts[y] && DT.ouverts[y][s];
-      return Array.isArray(v) && !(ouvert && ouvert[0] !== 'c') ? v[0] : null;
+      return v === 'J' && !(ouvert && ouvert[0] !== 'c') ? compteParcours(DT.parcours[y]?.[s]?.FRA || [])[0] : null;
     }) }));
   if (rows.length < 55) throw new Error('tennis : lecture des données incomplète (' + rows.length + ' lignes)');
   const full = rows.filter(r => r.v.every(v => v !== null)).map(r => ({ y: r.y, t: r.v.reduce((a, b) => a + b, 0) }));

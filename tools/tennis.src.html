@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Français aux Grands Chelems — Ère Open</title>
+<title>Les Grands Chelems par nation — Ère Open</title>
 <style>
 /* Jetons propres à la grille, déclinés dans les deux thèmes. Les couleurs des
    quatre levées sont vives sur fond sombre et doivent être assombries sur fond
@@ -63,6 +63,16 @@ td.y.dec { color:var(--ink); font-weight:700; }
 .sp { display:block; width:100%; height:100%; line-height:22px; font-size:.58rem; color:var(--ink-3); background:var(--empty); }
 td.tc { font-size:.7rem; font-weight:700; background:var(--surface-2) !important; border-left:1px solid var(--rule); }
 
+
+/* Choix de la nation */
+.nat { display:flex; flex-direction:column; align-items:center; gap:4px; margin:0 auto 10px; }
+.nat label { display:inline-flex; align-items:center; gap:7px; font-size:.7rem; color:var(--ink-3); }
+.nat select { appearance:none; font:inherit; font-size:.76rem; font-weight:700; color:var(--ink); background:var(--surface);
+  border:1px solid var(--rule); border-radius:2px; padding:5px 26px 5px 9px; cursor:pointer;
+  background-image:linear-gradient(45deg, transparent 50%, var(--ink-3) 50%), linear-gradient(135deg, var(--ink-3) 50%, transparent 50%);
+  background-position:calc(100% - 13px) 50%, calc(100% - 9px) 50%; background-size:4px 4px; background-repeat:no-repeat; }
+.nat select:focus-visible { outline:2px solid var(--tennis); outline-offset:1px; }
+.nat-note { font-size:.62rem; color:var(--ink-3); min-height:1em; text-align:center; }
 
 /* Choix du tour : même contrôle segmenté que la page UEFA */
 .tours { display:flex; justify-content:center; margin:0 auto 12px; }
@@ -139,6 +149,11 @@ td[data-s], td.tc { cursor:default; }
 <h1 id="titre">🇫🇷 Français au 1er tour — Simple Messieurs · Ère Open</h1>
 <p class="subtitle" id="soustitre">Nombre de joueurs français présents à ce tour, par Grand Chelem · Source : en.wikipedia.org, relue chaque jour</p>
 
+<div class="nat">
+  <label for="nat">Nation <select id="nat"></select></label>
+  <div class="nat-note" id="natNote"></div>
+</div>
+
 <div class="tours"><div class="seg" role="group" aria-label="Tour">
   <button type="button" data-t="T1" aria-pressed="true">1er tour</button><button type="button" data-t="T2" aria-pressed="false">2e tour</button><button type="button" data-t="T3" aria-pressed="false">3e tour</button><button type="button" data-t="H" aria-pressed="false">8es</button><button type="button" data-t="Q" aria-pressed="false">Quarts</button><button type="button" data-t="S" aria-pressed="false">Demies</button><button type="button" data-t="F" aria-pressed="false">Finale</button><button type="button" data-t="V" aria-pressed="false">Titre</button>
 </div></div>
@@ -168,7 +183,7 @@ td[data-s], td.tc { cursor:default; }
 </table>
 </div>
 
-<aside class="jr" id="jr" aria-label="Joueurs français">
+<aside class="jr" id="jr" aria-label="Joueurs de la nation choisie">
   <div class="jr-h">
     <div class="jr-t" id="jrTitre"></div>
     <div class="jr-s" id="jrSous"></div>
@@ -182,12 +197,16 @@ td[data-s], td.tc { cursor:default; }
 <p class="subtitle" style="font-size:.6rem">Site personnel non professionnel · Hébergeur : GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis · +1 877 448 4820</p>
 
 <script>
-/* Données : tools/tennis/data.json, injecté ici par tools/build.mjs (relu chaque
-   jour par le robot tennis). Une édition = 8 nombres (1er, 2e, 3e tour, 8es,
-   quarts, demies, finale, titre) ; null = pas d'édition ouverte aux pros,
-   'ND' = non disputé, 'C' = annulé, '?' = à venir. `ouverts` : les éditions en
-   cours, un état par tour (c complet, p commencé, v pas commencé). */
-/*DATA_START*/const DT = {"tours":["T1","T2","T3","H","Q","S","F","V"],"ouverts":{},"editions":{}};/*DATA_END*/
+/* Données : tools/tennis/data.json, réduit aux nations titrées et injecté ici
+   par tools/build.mjs (relu chaque jour par le robot tennis). editions : 'J'
+   = jouée ou en cours, null = pas d'édition ouverte aux pros, 'ND' = non
+   disputé, 'C' = annulé, '?' = à venir. parcours[année][tournoi][nation] :
+   paires [joueur, dernière colonne atteinte (0 = 1er tour … 7 = titre)] ; les
+   8 chiffres d'une case (1er, 2e, 3e tour, 8es, quarts, demies, finale,
+   titre) s'en déduisent. `ouverts` : les éditions en cours, un état par tour
+   (c complet, p commencé, v pas commencé). `nations` : France en tête, puis
+   par nombre de titres. */
+/*DATA_START*/const DT = {"tours":["T1","T2","T3","H","Q","S","F","V"],"ouverts":{},"editions":{},"parcours":{},"joueurs":[],"nations":[{"c":"FRA","nom":"France","as":"français","ap":"français","drap":"🇫🇷","note":"","titres":1}]};/*DATA_END*/
 
 // Echelle de chaleur : [valeur mini, fond, encre].
 // Deux rampes, pas une inversion. Sur fond sombre on part d'un vert profond et
@@ -234,13 +253,35 @@ const NOM = {T1:'au 1er tour', T2:'au 2e tour', T3:'au 3e tour', H:'en 8es de fi
 const years = Object.keys(DT.editions).map(Number).sort((a,b)=>b-a);
 let tour = 'T1';
 
+/* ---------- nation choisie ---------- */
+const NATS = DT.nations, NAT_DE = Object.fromEntries(NATS.map(n => [n.c, n]));
+let NAT = NATS[0];
+const cap = x => x.charAt(0).toUpperCase() + x.slice(1);
+/* gentilé : « Français », « Espagnol(s) » ; adjectif : « français », « espagnol(s) » */
+const G1 = () => cap(NAT.as), GP = () => cap(NAT.ap);
+/* les 8 chiffres d'une case pour la nation choisie, ou la valeur spéciale de
+   l'édition (null, 'ND', 'C', '?') */
+const CACHE = {};
+function val(y, s) {
+  const e = DT.editions[y] && DT.editions[y][s];
+  if (e !== 'J') return e === undefined ? null : e;
+  const k = NAT.c + y + s;
+  if (!(k in CACHE)) {
+    const f = (DT.parcours[y] && DT.parcours[y][s] && DT.parcours[y][s][NAT.c]) || [];
+    const n = [0,0,0,0,0,0,0,0];
+    for (let j = 1; j < f.length; j += 2) for (let i = 0; i <= f[j]; i++) n[i]++;
+    CACHE[k] = n;
+  }
+  return CACHE[k];
+}
+
 /* l'échelle de couleur suit le tour choisi : son maximum historique prend la
    couleur la plus forte, sinon les tours de fin de tableau resteraient pâles */
 const maxDe = t => { const i = TOURS.indexOf(t); let m = 1;
-  for (const y of years) for (const s of SLAMS) { const v = DT.editions[y][s]; if (Array.isArray(v)) m = Math.max(m, v[i]); }
+  for (const y of years) for (const s of SLAMS) { const v = val(y, s); if (Array.isArray(v)) m = Math.max(m, v[i]); }
   return m; };
 const maxTot = t => { const i = TOURS.indexOf(t); let m = 1;
-  for (const y of years) { let x = 0; for (const s of SLAMS) { const v = DT.editions[y][s]; if (Array.isArray(v)) x += v[i]; } m = Math.max(m, x); }
+  for (const y of years) { let x = 0; for (const s of SLAMS) { const v = val(y, s); if (Array.isArray(v)) x += v[i]; } m = Math.max(m, x); }
   return m; };
 const pas = (v, max) => v <= 0 ? 0 : max <= 1 ? 11 : Math.min(11, 1 + Math.round((v - 1) / (max - 1) * 10));
 
@@ -263,7 +304,7 @@ function draw(){
 const i = TOURS.indexOf(tour), max = maxDe(tour), mt = maxTot(tour);
 tb.innerHTML = '';
 for (const y of years) {
-  const d = DT.editions[y];
+  const d = {}; for (const s of SLAMS) d[s] = val(y, s);
   const tr = document.createElement('tr');
   if (y % 10 === 0) tr.classList.add('dec');
 
@@ -312,20 +353,33 @@ function drawLegend(){
   document.getElementById('lgmax').textContent = String(max);
 }
 function titres(){
-  const fin = years[0];
+  const fin = years[0], dr = NAT.drap ? NAT.drap + ' ' : '';
   document.getElementById('titre').textContent = tour === 'V'
-    ? `🇫🇷 Titres français — Simple Messieurs · Ère Open (1968–${fin})`
-    : `🇫🇷 Français ${NOM[tour]} — Simple Messieurs · Ère Open (1968–${fin})`;
+    ? `${dr}Titres ${NAT.ap} — Simple Messieurs · Ère Open (1968–${fin})`
+    : `${dr}${GP()} ${NOM[tour]} — Simple Messieurs · Ère Open (1968–${fin})`;
   document.getElementById('soustitre').textContent = tour === 'V'
-    ? 'Grands Chelems remportés par un Français · Source : en.wikipedia.org, relue chaque jour'
-    : `Nombre de joueurs français ${NOM[tour]}, par Grand Chelem · Source : en.wikipedia.org, relue chaque jour`;
+    ? `Grands Chelems remportés par un ${G1()} · Source : en.wikipedia.org, relue chaque jour`
+    : `Nombre de joueurs ${NAT.ap} ${NOM[tour]}, par Grand Chelem · Source : en.wikipedia.org, relue chaque jour`;
+  document.title = `${NAT.nom} en Grand Chelem — Ère Open`;
+  document.getElementById('natNote').textContent = NAT.note;
 }
-function choisir(t, garder){
+/* adresse : #ESP-Q (nation, tour) ; la France et le 1er tour s'omettent,
+   et les anciennes adresses (#Q) restent valables */
+function lireAdresse(h) {
+  let n = 'FRA', t = 'T1';
+  for (const x of h.split('-')) { if (NAT_DE[x]) n = x; else if (TOURS.includes(x)) t = x; }
+  return [n, t];
+}
+function choisir(t, garder, n){
   if (!TOURS.includes(t)) t = 'T1';
+  if (n && NAT_DE[n]) { NAT = NAT_DE[n]; document.getElementById('nat').value = n; }
   tour = t;
   document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === t)));
   titres(); draw(); drawLegend(); drawJoueurs();
-  if (garder) history.replaceState(null, '', t === 'T1' ? location.pathname : '#' + t);
+  if (garder) {
+    const h = [NAT.c !== 'FRA' ? NAT.c : '', t !== 'T1' ? t : ''].filter(Boolean).join('-');
+    history.replaceState(null, '', h ? '#' + h : location.pathname);
+  }
 }
 /* ---------- infobulles ---------- */
 /* Une case : le tournoi, ses dates, le nombre de Français au tour choisi, leurs
@@ -338,7 +392,7 @@ const MOIS_FR = ['janvier','février','mars','avril','mai','juin','juillet','ao�
 const DATES = DT.dates || {}, JOUEURS = DT.joueurs || [], PARC = DT.parcours || {};
 /* les Français d'une case : ceux dont la dernière colonne atteinte est ≥ i */
 function nomsCase(y, s, i) {
-  const p = PARC[y] && PARC[y][s]; if (!p) return [];
+  const p = PARC[y] && PARC[y][s] && PARC[y][s][NAT.c]; if (!p) return [];
   const out = []; for (let j = 0; j < p.length; j += 2) if (p[j + 1] >= i) out.push(JOUEURS[p[j]]);
   return out;
 }
@@ -353,12 +407,12 @@ function datesFr(d) {
   return `${j(a)}–${j(b)} ${MOIS_FR[b[1]-1]} ${b[0]}`;
 }
 function phrase(n, i) {
-  if (TOURS[i] === 'V') return n ? 'Titre français' : 'Pas de titre français';
-  return (n === 0 ? 'Aucun Français ' : 'Français ') + NOM[TOURS[i]];
+  if (TOURS[i] === 'V') return n ? `Titre ${NAT.as}` : `Pas de titre ${NAT.as}`;
+  return (n === 0 ? `Aucun ${G1()} ` : (n === 1 ? G1() : GP()) + ' ') + NOM[TOURS[i]];
 }
 /* subtilités des tableaux (relevées sur les pages Wikipédia) */
 function subtilite(y, s, t) {
-  const d = DT.editions[y][s];
+  const d = val(y, s);
   if (d === null) return "Janvier 1968 : tournoi encore réservé aux amateurs, avant l'ère Open.";
   if (d === 'ND') return 'Non disputé : le tournoi passe de décembre à janvier.';
   let n = '';
@@ -367,12 +421,19 @@ function subtilite(y, s, t) {
               : s === 'RG' && y === 1972 ? 64 : 0;
   if (petit && (t === 'T3' || t === 'H'))
     n = `Tableau à ${petit} joueurs${s === 'RG' ? ', après un tour préliminaire' : ''} : le 3e tour est déjà le 8e de finale.`;
-  if (s === 'AO' && y === 1977)
-    n = (n ? n + '<br>' : '') + 'Édition de janvier. Celle de décembre 1977 : 2 Français, sortis au 1er tour.';
+  if (s === 'AO' && y === 1977) {
+    /* l'édition de décembre 1977 n'a pas de case : on la résume ici */
+    const v = val(1977, 'AOd'), b = Array.isArray(v) ? v.findLastIndex(x => x > 0) : -1;
+    const det = b < 0 ? `aucun ${G1()}` : b === 7 ? `titre ${NAT.as}`
+      : `${v[0]} ${v[0] > 1 ? GP() : G1()}, meilleur parcours : ${['1er tour','2e tour','3e tour','8es','quarts','demies','finale'][b]}`;
+    n = (n ? n + '<br>' : '') + `Édition de janvier. Celle de décembre 1977 : ${det}.`;
+  }
+  if (y >= 2022 && (NAT.c === 'RUS'))
+    n = (n ? n + '<br>' : '') + 'Russes sous bannière neutre, comptés ici avec la Russie.';
   return n;
 }
 function htmlCase(y, s) {
-  const i = TOURS.indexOf(tour), d = DT.editions[y][s];
+  const i = TOURS.indexOf(tour), d = val(y, s);
   const ouv = (DT.ouverts[y] && DT.ouverts[y][s]) || '';
   let h = `<div class="th"><i style="background:${COUL[s]}"></i>${TOURNOI[s]} ${y}</div>`;
   h += `<div class="tsub">${datesFr(DATES[y] && DATES[y][s]) || '&nbsp;'}</div>`;
@@ -400,8 +461,8 @@ function htmlCase(y, s) {
   return h;
 }
 function htmlAnnee(y) {
-  const i = TOURS.indexOf(tour), e = DT.editions[y];
-  let tot = 0, h = `<div class="th">${y} · ${tour === 'V' ? 'titres' : 'Français ' + NOM[tour]}</div><div class="tsub" style="margin-left:0">les quatre Grands Chelems</div>`;
+  const i = TOURS.indexOf(tour), e = {}; for (const s of SLAMS) e[s] = val(y, s);
+  let tot = 0, h = `<div class="th">${y} · ${tour === 'V' ? 'titres ' + NAT.ap : GP() + ' ' + NOM[tour]}</div><div class="tsub" style="margin-left:0">les quatre Grands Chelems</div>`;
   const lignes = [], noms = [];
   for (const s of SLAMS) {
     const d = e[s], ouv = (DT.ouverts[y] && DT.ouverts[y][s]) || '';
@@ -456,7 +517,7 @@ let jrLignes = [], jrPin = null;
 function joueursDuTour() {
   const i = TOURS.indexOf(tour), m = new Map();
   for (const y of years) for (const s of SLAMS) {
-    const p = PARC[y] && PARC[y][s]; if (!p) continue;
+    const p = PARC[y] && PARC[y][s] && PARC[y][s][NAT.c]; if (!p) continue;
     const ouv = (DT.ouverts[y] && DT.ouverts[y][s]) || '';
     if ((ouv[i] || 'c') === 'v') continue;
     for (let j = 0; j < p.length; j += 2) if (p[j + 1] >= i) {
@@ -471,8 +532,8 @@ function joueursDuTour() {
 function drawJoueurs() {
   jrLignes = joueursDuTour(); jrPin = null; allumer(null);
   const n = jrLignes.length, mx = jrLignes.length ? jrLignes[0].n : 1;
-  document.getElementById('jrTitre').textContent = tour === 'V' ? 'Les Français titrés' : `Les Français ${NOM[tour]}`;
-  document.getElementById('jrSous').textContent = n === 0 ? 'Aucun Français'
+  document.getElementById('jrTitre').textContent = tour === 'V' ? `Les ${GP()} titrés` : `Les ${GP()} ${NOM[tour]}`;
+  document.getElementById('jrSous').textContent = n === 0 ? `Aucun ${G1()}`
     : `${n} joueur${n > 1 ? 's' : ''} · ${tour === 'V' ? 'nombre de titres' : "nombre d'éditions"} depuis 1968`;
   let rang = 0, prec = null;
   document.getElementById('jrListe').innerHTML = jrLignes.map((o, k) => {
@@ -515,7 +576,11 @@ jrListe.addEventListener('click', ev => {
   jrPin = k; li.classList.add('on'); allumer(jrLignes[k]); focusTexte(jrLignes[k]);
 });
 document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => choisir(b.dataset.t, true)));
-choisir(location.hash.slice(1), false);
+const selNat = document.getElementById('nat');
+selNat.innerHTML = NATS.map(n => `<option value="${n.c}">${n.drap ? n.drap + ' ' : ''}${esc(n.nom)} · ${n.titres} titre${n.titres > 1 ? 's' : ''}</option>`).join('');
+selNat.addEventListener('change', () => choisir(tour, true, selNat.value));
+choisir(...(([n, t]) => [t, false, n])(lireAdresse(location.hash.slice(1))));
+addEventListener('hashchange', () => { const [n, t] = lireAdresse(location.hash.slice(1)); choisir(t, false, n); });
 document.addEventListener('grotang:theme', () => { draw(); drawLegend(); if (jrPin !== null) allumer(jrLignes[jrPin]); });
 </script>
 </body>

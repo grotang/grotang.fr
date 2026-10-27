@@ -163,7 +163,7 @@ export const navCSS = `
 
 export const PAGES = [
   { href: '/uefa/',   label: 'Coefficient UEFA', key: 'uefa' },
-  { href: '/tennis/', label: 'Français en Grand Chelem', key: 'tennis' },
+  { href: '/tennis/', label: 'GC au tennis', key: 'tennis' },
   { href: '/economie/', label: 'Argent public', key: 'eco' },
 ];
 

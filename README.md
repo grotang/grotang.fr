@@ -7,7 +7,7 @@ Un site statique, en français, qui suit le classement UEFA des associations (la
 | Page | Adresse | Données |
 |---|---|---|
 | Coefficient UEFA | [grotang.fr/uefa/](https://grotang.fr/uefa/) | relues automatiquement, plusieurs fois par jour en période de match |
-| Français en Grand Chelem | [grotang.fr/tennis/](https://grotang.fr/tennis/) | tour par tour, relues sur Wikipédia trois fois par jour |
+| GC au tennis | [grotang.fr/tennis/](https://grotang.fr/tennis/) | les Grands Chelems nation par nation (France par défaut, les 21 nations titrées depuis 1968), tour par tour, relus sur Wikipédia trois fois par jour |
 | Argent public | [grotang.fr/economie/](https://grotang.fr/economie/) | comptes des administrations publiques, relus chez Eurostat chaque lundi |
 
 ---
@@ -82,7 +82,7 @@ Rien n'est construit à la main : `public/` n'est **pas** dans le dépôt. Le ro
 |---|---|---|
 | `uefa-soir.yml` « Soir de match UEFA » | Part vers 19 h 47 (Paris), second départ vers 21 h 47 | Si c'est un soir de match, reste éveillé : dès 20 h 35, relit la source et Wikipédia **toutes les dix minutes**, dépose et publie dès qu'il y a du neuf, s'arrête quand tout est à jour (source datée du soir **et** score de tous les matchs du soir), au plus tard à 3 h 30. |
 | `uefa.yml` « Rafraîchissement UEFA » | 23 h 38 et 7 h 12 (Paris) | Passages à heure fixe, en filet. Porte l'**alarme de fraîcheur** (`tools/uefa/fraicheur.mjs`) : si un soir de match est passé et que la source n'a pas bougé, le passage de 7 h échoue et GitHub envoie un e-mail. |
-| `tennis.yml` « Rafraîchissement tennis » | 7 h 47, 14 h 47, 20 h 47 UTC | Relit sur Wikipédia les tableaux de l'année en cours (`tools/tennis/refresh.mjs`), après un contrôle sur une édition close (Roland-Garros 2025). Ne dépose `tools/tennis/data.json` que si un chiffre a bougé, puis appelle `pages.yml`. |
+| `tennis.yml` « Rafraîchissement tennis » | 7 h 47, 14 h 47, 20 h 47 UTC | Relit sur Wikipédia les tableaux de l'année en cours (`tools/tennis/refresh.mjs`), après un contrôle sur une édition close (Roland-Garros 2025). Ne dépose `tools/tennis/data.json` que si un chiffre a bougé, puis appelle `pages.yml`. Toutes les éditions depuis 1968 : `node tools/tennis/refresh.mjs --tout` (≈ 1 min). |
 | `eco.yml` « Rafraîchissement économie » | Lundi 6 h 23 UTC | Relit Eurostat (`tools/eco/refresh.mjs`), contrôle, ne dépose `tools/eco/data.json` que si un chiffre a bougé, puis appelle `pages.yml`. |
 | `pages.yml` « Publication GitHub Pages » | À chaque commit sur `tools/**`, ou appelé par les robots | Fabrique le site (`node tools/build.mjs`) et le publie. |
 
@@ -122,7 +122,8 @@ tools/
     test-eco.mjs         test sans réseau de data.json
     data.json            comptes publics 1995 → dernière année (réécrit par le robot)
   tennis/
-    data.json            Français par tour, chaque Grand Chelem depuis 1968 (réécrit par le robot)
+    data.json            joueurs de toutes les nations, parcours par édition depuis 1968 (réécrit par le robot)
+    nations.mjs          noms, adjectifs et drapeaux des nations proposées sur la page
     wiki.mjs             lecture d'un tableau Wikipédia (sans dépendance)
     refresh.mjs          relit l'année en cours, contrôle, réécrit data.json
     test-tennis.mjs      test sans réseau (tableau fabriqué + faits historiques)

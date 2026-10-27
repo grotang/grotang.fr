@@ -47,6 +47,37 @@ function modele(t, i) {
 }
 
 const FRA = /\{\{\s*flag[a-z]*\s*\|[^{}]*\bFRA\b[^{}]*\}\}|\{\{\s*FRA\s*[|}]/i;
+/* La nation d'une case : le code du drapeau ({{flagicon|ESP}},
+   {{flagicon|RSA|1928}}, {{flagathlete|[[…]]|SUI}}, {{flagicon|USSR}}, {{FRA}}…),
+   celui de l'époque tel que Wikipédia l'affiche : un joueur naturalisé change
+   de nation d'une édition à l'autre. null si la case n'a pas de drapeau
+   (Russes et Biélorusses depuis 2022 : {{flagicon|}}). */
+const DRAPEAU = /\{\{\s*flag[a-z]*\s*\|([^{}]*)\}\}/i;
+/* Wikipédia mêle codes CIO, codes ISO et noms en toutes lettres : tout est
+   ramené au code CIO. FRG (RFA) est rangée avec GER : même État. TCH, URS,
+   YUG restent à part : leurs successeurs sont plusieurs. */
+export const CODE = {
+  CHE: 'SUI', SWI: 'SUI', DEU: 'GER', FRG: 'GER', ZAF: 'RSA', NLD: 'NED', CHL: 'CHI', DNK: 'DEN', GRC: 'GRE',
+  PRY: 'PAR', URY: 'URU', ZWE: 'ZIM', NGA: 'NGR', CSK: 'TCH', BHS: 'BAH', HTI: 'HAI', PRI: 'PUR', PRT: 'POR',
+  HRV: 'CRO', BGR: 'BUL', PHL: 'PHI', CRI: 'CRC', MCO: 'MON', SVN: 'SLO', LIT: 'LTU', SER: 'SRB', SPA: 'ESP',
+  ROM: 'ROU', UAR: 'EGY', FRY: 'SCG', IRI: 'IRI', IRN: 'IRI', IDN: 'INA', TWN: 'TPE', LVA: 'LAT', MAR: 'MAR', DZA: 'ALG',
+  Rhodesia: 'RHO', USSR: 'URS', 'Soviet Union': 'URS', Spain: 'ESP', Haiti: 'HAI', 'South Africa': 'RSA',
+  'SFR Yugoslavia': 'YUG', Yugoslavia: 'YUG', Czechoslovakia: 'TCH', UK: 'GBR', 'Great Britain': 'GBR',
+  'United Kingdom': 'GBR', NZ: 'NZL', 'New Zealand': 'NZL', Zimbabwe: 'ZIM', US: 'USA', 'United States': 'USA',
+  Slovakia: 'SVK', Argentina: 'ARG', France: 'FRA', Australia: 'AUS', 'West Germany': 'GER', Germany: 'GER',
+  Russia: 'RUS', Belarus: 'BLR', Italy: 'ITA', Sweden: 'SWE', Switzerland: 'SUI', Serbia: 'SRB',
+};
+const code = x => CODE[x] || (/^[A-Z]{3}$/.test(x) ? x : null);
+export function natDe(v) {
+  const m = DRAPEAU.exec(v);
+  if (m) {
+    const p = m[1].split('|').map(x => x.trim());
+    const c = p.find(x => /^[A-Z]{3}$/.test(x)) || p.find(x => CODE[x]);
+    if (c) return code(c);
+  }
+  const n = /\{\{\s*([A-Z]{3})\s*[|}]/.exec(v);
+  return n ? code(n[1]) : null;
+}
 const BYE = /\bbye\b/i;
 const GRAS = /'''/;
 const rempli = v => !!v && (/\[\[|\{\{\s*flag/i.test(v) || BYE.test(v));
@@ -98,13 +129,14 @@ export function lireTableau(t) {
 
   const etapes = {};
   const compter = (b, d, e) => {
-    const E = etapes[e] = etapes[e] || { places: 0, remplies: 0, fra: 0, gras: 0, fraGras: 0, noms: [], nomsGras: [] };
+    const E = etapes[e] = etapes[e] || { places: 0, remplies: 0, fra: 0, gras: 0, fraGras: 0, noms: [], nomsGras: [], tous: [] };
     for (const [k, v] of Object.entries(b.params)) {
       if (!cle(d).test(k)) continue;
       E.places++;
       if (rempli(v)) E.remplies++;
       if (BYE.test(v)) continue;
       const f = FRA.test(v), g = GRAS.test(v);
+      if (rempli(v)) E.tous.push({ nom: nomJoueur(v), lien: (/\[\[([^\]|]+)/.exec(v) || [])[1] || null, nat: natDe(v), gras: g });
       if (f) { E.fra++; E.noms.push(nomJoueur(v)); }
       if (g) E.gras++;
       if (f && g) { E.fraGras++; E.nomsGras.push(nomJoueur(v)); }
@@ -152,17 +184,71 @@ export function colonnes(L) {
 /* Les Français de chaque colonne, par leur nom (même découpage que
    colonnes()). Le 1er tour d'un vieux tableau à exemptés réunit les deux
    premiers tours : un joueur présent aux deux n'est compté qu'une fois. */
-export function nomsColonnes(L) {
+export function nomsColonnes(L, nat = null) {
   if (!L) return null;
   const E = L.etapes;
   const plein = e => E[e] && E[e].places === 2 ** e;
   let t1 = Math.max(...Object.keys(E).map(Number));
   if (L.prelim) while (t1 > 1 && !plein(t1)) t1--;
-  const de = e => E[e] ? [...E[e].noms] : null;
+  /* sans nation : les Français (noms relevés par le drapeau FRA) ; avec une
+     nation : les joueurs dont le drapeau porte ce code */
+  const noms = e => nat ? E[e].tous.filter(x => x.nat === nat).map(x => x.nom) : E[e].noms;
+  const gras = e => nat ? E[e].tous.filter(x => x.nat === nat && x.gras).map(x => x.nom) : E[e].nomsGras;
+  const de = e => E[e] ? [...noms(e)] : null;
   const c = { T1: de(t1), T2: de(t1 - 1), T3: de(t1 - 2), H: de(4), Q: de(3), S: de(2), F: de(1) };
-  if (!L.prelim && !plein(t1) && E[t1 - 1]) c.T1 = [...new Set([...E[t1].noms, ...E[t1 - 1].noms])];
-  c.V = E[1] ? [...E[1].nomsGras] : null;
+  if (!L.prelim && !plein(t1) && E[t1 - 1]) c.T1 = [...new Set([...noms(t1), ...noms(t1 - 1)])];
+  c.V = E[1] ? [...gras(1)] : null;
   return c;
+}
+
+/* Cases sans drapeau : depuis 2022, Russes et Biélorusses jouent sous bannière
+   neutre ({{flagicon|}}). `f(nom)` rend leur nation (RUS, BLR) ou null ; la
+   case reçoit alors 'NEU'. Modifie le tableau lu. */
+export function resoudreNeutres(L, f) {
+  for (const E of Object.values(L.etapes)) for (const x of E.tous)
+    if (!x.nat && !BYE.test(x.nom)) x.nat = f(x.nom) || 'NEU';
+  return L;
+}
+
+/* Une nation par joueur et par édition. Wikipédia n'est pas toujours d'accord
+   avec lui-même : Lendl est TCH dans une case de 1989 et CZE dans la suivante.
+   1. le code est ramené à l'époque (CZE, SVK avant 1993 → TCH ; RUS avant
+      1992 → URS, et l'inverse) ;
+   2. un joueur garde la nation qu'il porte le plus souvent dans le tableau
+      (à égalité : celle de son premier tour). Modifie le tableau lu. */
+export function natEpoque(c, an) {
+  if ((c === 'CZE' || c === 'SVK') && an < 1993) return 'TCH';
+  if (c === 'TCH' && an >= 1993) return 'CZE';
+  if (c === 'RUS' && an < 1992) return 'URS';
+  if (c === 'URS' && an >= 1992) return 'RUS';
+  return c;
+}
+export function unifierNations(L, an, canon = x => x) {
+  const vu = {};
+  const etapes = Object.keys(L.etapes).map(Number).sort((a, b) => b - a);  /* du 1er tour à la finale */
+  etapes.forEach((e, rang) => {
+    for (const x of L.etapes[e].tous) {
+      if (!x.nat || BYE.test(x.nom)) continue;
+      x.nat = natEpoque(x.nat, +an);
+      const v = vu[canon(x.nom)] = vu[canon(x.nom)] || {};
+      v[x.nat] = v[x.nat] || [0, rang]; v[x.nat][0]++;
+    }
+  });
+  const choix = {};
+  for (const [n, v] of Object.entries(vu))
+    choix[n] = Object.entries(v).sort((a, b) => b[1][0] - a[1][0] || a[1][1] - b[1][1])[0][0];
+  for (const E of Object.values(L.etapes)) for (const x of E.tous) if (x.nat && choix[canon(x.nom)]) x.nat = choix[canon(x.nom)];
+  return L;
+}
+
+/* Les nations présentes dans un tableau, et les cases sans drapeau lisible. */
+export function nationsTableau(L) {
+  const n = new Set(); let sans = 0;
+  for (const E of Object.values(L.etapes)) for (const x of E.tous) {
+    if (/\bbye\b/i.test(x.nom)) continue;
+    if (x.nat) n.add(x.nat); else sans++;
+  }
+  return { nations: [...n].sort(), sans };
 }
 
 /* Dates d'un tournoi, lues dans l'infobox de sa page (« | date = 25 May –
@@ -192,11 +278,15 @@ export function lireDates(t, an) {
 
 /* data.json, écrit toujours de la même façon (une ligne par année, ordre
    fixe) : deux écritures du même contenu donnent les mêmes octets.
-   editions : les chiffres ; dates : début et fin de chaque tournoi ;
-   joueurs : les Français, dans l'ordre de leur première apparition (un
-   numéro ne change jamais) ; alias : autre graphie d'un même joueur sur
-   Wikipédia → nom retenu ; parcours : pour chaque édition, des paires
-   [numéro du joueur, dernière colonne atteinte (0 = 1er tour … 7 = titre)]. */
+   editions : l'état de chaque édition ('J' jouée ou en cours, null pas
+   ouverte aux pros, 'ND' non disputée, 'C' annulée, '?' à venir) ; dates :
+   début et fin de chaque tournoi ; joueurs : tous les joueurs, dans l'ordre
+   de leur première apparition (un numéro ne change jamais) ; neutres : la
+   nation retenue pour un joueur sous bannière neutre ; alias : autre graphie
+   d'un même joueur sur Wikipédia → nom retenu ; parcours : pour chaque
+   édition et chaque nation, des paires [numéro du joueur, dernière colonne
+   atteinte (0 = 1er tour … 7 = titre)]. Les chiffres de chaque case s'en
+   déduisent (compteParcours). */
 const ORDRE = ['AO', 'AOd', 'RG', 'WIM', 'USO'];
 export function ecrireData(d) {
   const bloc = o => {
@@ -209,6 +299,7 @@ export function ecrireData(d) {
   return '{\n  "tours": ' + JSON.stringify(d.tours) + ',\n  "ouverts": ' + JSON.stringify(d.ouverts || {}) +
     ',\n  "editions": ' + bloc(d.editions) + ',\n  "dates": ' + bloc(d.dates) +
     ',\n  "joueurs": ' + JSON.stringify(d.joueurs || []) +
+    ',\n  "neutres": ' + JSON.stringify(Object.fromEntries(Object.entries(d.neutres || {}).sort())) +
     ',\n  "alias": ' + (alias.length ? '{\n' + alias.map(k => `    ${JSON.stringify(k)}: ${JSON.stringify(d.alias[k])}`).join(',\n') + '\n  }' : '{}') +
     ',\n  "parcours": ' + bloc(d.parcours) + '\n}\n';
 }
