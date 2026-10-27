@@ -942,7 +942,7 @@ footer .legal{margin-top:3px; font-size:11px}
     <div class="ptitle" id="projection"><span class="no">9</span><h3>La projection</h3>
       <span class="sub"><span class="ctl"><span class="lb">Horizon</span><span class="seg" role="group" aria-label="Horizon">
         <button type="button" id="h-ligue" aria-pressed="false">Fin de phase de ligue</button><button type="button" id="h-saison" aria-pressed="true">Fin de saison</button><button type="button" id="h-5ans" aria-pressed="false">À 5 ans</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
-        <button type="button" id="j-top" aria-pressed="false">Les 8 premières</button><button type="button" id="j-all" aria-pressed="true">Toutes</button></span></span></span></div>
+        <button type="button" id="j-top" aria-pressed="true">Les 8 premières</button><button type="button" id="j-all" aria-pressed="false">Toutes</button></span></span></span></div>
     <figure>
       <div class="chartbox" id="boxPrj"><svg id="chartPrj" role="img" aria-label="Projection du coefficient de saison"></svg><div class="tip" id="tipPrj" hidden></div></div>
       <figcaption id="capPrj"></figcaption>
@@ -4450,9 +4450,9 @@ const legende = segs => segs.map(s =>
       return { n, q, dv, rgFR, devFR, ecarts: S.ecarts, calendrier: S.calendrier, moteur: S.moteur, pronos: (S.pronos || []).map(x => [x.k, x.dom, x.ext, x.p[0], x.p[2]]), ...(opts && opts.rangs ? { rangs: S.rangs } : {}), maj: D.meta.lastUpdated };
     };
 
-    /* Toutes les nations par defaut : la projection est le bloc ou l'on vient
-       chercher sa propre nation, pas seulement les huit premieres. */
-    let porteeP = 'all';
+    /* Les 8 premières par défaut (choix de GT, 27/10/2026) ; « Toutes » reste
+       à un clic pour qui vient chercher sa propre nation. */
+    let porteeP = 'top';
     const jeuP = () => porteeP === 'top' ? GRP : ENGAGEES.map(n => n.c);
     const lignes = (tirages) => {
       const P = prj(tirages);
