@@ -73,8 +73,9 @@ console.log('\ndata.json : tout est cohérent.');
   const d = R.distribution, q = d.queue;
   const s = d.parts.reduce((a, b) => a + b, 0) + d.au_dessus_4500;
   const moy = (d.parts.reduce((a, p, i) => a + p * (i + 0.5) * d.pas, 0) + (d.au_dessus_4500 - q.part) * (4500 + q.seuil) / 2 + q.part * q.moyenne) / 100;
-  const masse = R.effectif * R.moyenne_brute * 12 / 1e9;
+  const A0 = R.annees[R.masse_annee], masse = A0.effectif * A0.moyenne_brute * 12 / 1e9;
   console.log(Math.abs(s - 100) < 0.05 ? '  ok ' : 'ÉCHEC', `retraites : parts sommées ${s.toFixed(1)} %`); if (Math.abs(s - 100) >= 0.05) process.exitCode = 1;
   console.log(Math.abs(moy / d.moyenne_publiee - 1) < 0.01 ? '  ok ' : 'ÉCHEC', `retraites : moyenne reconstituée ${moy.toFixed(0)} € = publiée ${d.moyenne_publiee} € (fin 2020)`); if (Math.abs(moy / d.moyenne_publiee - 1) >= 0.01) process.exitCode = 1;
-  console.log(Math.abs(masse / R.masse_droit_direct_md - 1) < 0.03 ? '  ok ' : 'ÉCHEC', `retraites : masse reconstituée ${masse.toFixed(1)} Md€ ≈ publiée ${R.masse_droit_direct_md} Md€ (${R.annee})`); if (Math.abs(masse / R.masse_droit_direct_md - 1) >= 0.03) process.exitCode = 1;
+  for (const [y, a] of Object.entries(R.annees)) if (!(a.effectif > 1e7 && a.moyenne_brute > 1000 && a.moyenne_nette < a.moyenne_brute && a.smic_net > 1000)) { console.log('ÉCHEC', `retraites : année ${y} incomplète`); process.exitCode = 1; }
+  console.log(Math.abs(masse / R.masse_droit_direct_md - 1) < 0.03 ? '  ok ' : 'ÉCHEC', `retraites : masse reconstituée ${masse.toFixed(1)} Md€ ≈ publiée ${R.masse_droit_direct_md} Md€ (${R.masse_annee})`); if (Math.abs(masse / R.masse_droit_direct_md - 1) >= 0.03) process.exitCode = 1;
 }

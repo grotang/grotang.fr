@@ -803,7 +803,7 @@ function circuit() {
   const ecart = n => {
     if (!hypOn()) return '';
     const O = D0.cofog.S13, a0 = n.kind === 'fn' ? fv(O, n.id, k) : n.kind === 'sub' ? O[n.id][k] : n.kind === 'def' ? -D0.agg.S13.B9[k]
-      : n.kind === 'rec' ? sum(D0.agg.S13, REC.find(r => 'r' + r.n === n.id).k, k) : null;
+      : n.kind === 'rec' ? sum(D0.agg.S13, REC.find(r => 'r' + r.n === n.id).k, k) : n.kind === 'nat' ? sum(D0.agg.S13, n.nat.k, k) : null;
     return a0 !== null && a0 - n.m > 500 ? '  (−' + F(cv(a0 - n.m, k), S.u) + ')' : '';
   };
   /* étiquettes : deux lignes (nom, montant) si le noeud est assez haut, une
@@ -827,7 +827,7 @@ function circuit() {
         el('tspan', { x, y: q.y + 11, class: 'v m' }, t).textContent = val;
       } else {
         el('tspan', { x, y: q.y + 4, class: 'n' }, t).textContent = n.n + (mob && side !== 's' ? '' : '  ');
-        if (!mob || side === 's') el('tspan', { class: 'v m' }, t).textContent = F(cv(n.m, k), S.u);
+        if (!mob || side === 's') el('tspan', { class: 'v m' }, t).textContent = F(cv(n.m, k), S.u) + ecart(n);
       }
     }
   };
@@ -1179,7 +1179,6 @@ const RET = (() => {
   const parts = d.parts, mid = d.au_dessus_4500 - q.part, lo2 = parts.length * w;
   const a = q.moyenne / (q.moyenne - q.seuil);                   // Pareto de même moyenne au-delà du seuil
   const moy0 = (parts.reduce((s, p, i) => s + p * (i + 0.5) * w, 0) + mid * (lo2 + q.seuil) / 2 + q.part * q.moyenne) / 100;
-  const g = RT.moyenne_brute / moy0, r = RT.moyenne_nette / RT.moyenne_brute;
   /* E[max(0, X − c)] et P(X > c), X en euros bruts de fin 2020 */
   const exces = c => {
     let e = 0, p = 0;
@@ -1190,30 +1189,34 @@ const RET = (() => {
     else { e += q.part / 100 * Math.pow(q.seuil, a) * Math.pow(c, 1 - a) / (a - 1); p += q.part * Math.pow(q.seuil / c, a); }
     return { e, p };
   };
-  const calc = capNet => {
-    const c = capNet / r / g, x = exces(c);
-    const brut = x.e * g * RT.effectif * 12 / 1e6;               // millions d'euros par an
-    const touches = RT.effectif * x.p / 100;
-    return { brut, net: brut * r, prelev: brut * (1 - r), part: x.p, touches,
-      perte: touches ? brut * r * 1e6 / 12 / touches : 0 };
+  const ans = Object.keys(RT.annees).map(Number).sort();
+  /* paramètres d'une année : facteur d'échelle de la distribution, rapport net/brut */
+  const pa = y => { const A = RT.annees[y]; return A && { A, g: A.moyenne_brute / moy0, r: A.moyenne_nette / A.moyenne_brute, smic: A.smic_net, proxy: A.statut !== 'observé' }; };
+  const calc = (capNet, y) => {
+    const P = pa(y), c = capNet / P.r / P.g, x = exces(c);
+    const brut = x.e * P.g * P.A.effectif * 12 / 1e6;           // millions d'euros par an
+    const touches = P.A.effectif * x.p / 100;
+    return { brut, net: brut * P.r, prelev: brut * (1 - P.r), part: x.p, touches,
+      perte: touches ? brut * P.r * 1e6 / 12 / touches : 0 };
   };
-  return { calc, g, r, parts, w, mid, lo2, an: RT.annee, smic: RT.smic.net };
+  return { calc, pa, ans, parts, w, lo2 };
 })();
-const hypOn = () => !!(RET && S.cap && S.an === RET.an);
-const hypTag = () => hypOn() ? `<span class="hyptag">retraites ≤ ${nf(S.cap, 0)} € net</span>` : '';
+const hypAn = y => !!(RET && RET.pa(y) && D0.an.includes(y));
+const hypOn = () => !!(S.cap && hypAn(S.an));
+const hypTag = () => hypOn() ? `<span class="hyptag">retraites ≤ ${nf(S.cap, 0)} € net${RET.pa(S.an).proxy ? ' · estimation' : ''}</span>` : '';
 
-/* Les données corrigées : l'année RET.an seulement. Les pensions sont versées
-   par les régimes de sécurité sociale et, pour les fonctionnaires de l'État,
-   par l'État : l'économie est répartie entre les deux au prorata de leur
-   dépense « vieillesse ». Les prélèvements perdus (CSG, CRDS, Casa) sont
-   des recettes de la Sécurité sociale. */
+/* Les données corrigées, pour l'année affichée seulement. Les pensions sont
+   versées par les régimes de sécurité sociale et, pour les fonctionnaires de
+   l'État, par l'État : l'économie est répartie entre les deux au prorata de
+   leur dépense « vieillesse » (dernière année connue si celle-ci manque). Les
+   prélèvements perdus (CSG, CRDS, Casa) sont des recettes de la Sécurité sociale. */
 function appliqueHyp() {
-  if (!RET || !S.cap) { setD(D0); return; }
-  const X = structuredClone(D0), k = X.an.indexOf(RET.an);
-  if (k < 0) { setD(D0); return; }
-  const h = RET.calc(S.cap), G = h.brut, L = h.prelev;
-  const moins = (o, key, v) => { if (o && o[key] && o[key][k] !== null) o[key][k] -= v; };
-  const vE = X.cofog.S1311.GF1002[k], vS = X.cofog.S1314.GF1002[k], pE = vE / (vE + vS);
+  if (!hypOn()) { setD(D0); return; }
+  const y = S.an, X = structuredClone(D0), k = X.an.indexOf(y);
+  const h = RET.calc(S.cap, y), G = h.brut, L = h.prelev;
+  const moins = (o, key, v) => { if (o && o[key] && o[key][k] !== null && o[key][k] !== undefined) o[key][k] -= v; };
+  const kE = X.cofog.S1311.GF1002[k] !== null ? k : X.an.indexOf(X.derF);
+  const vE = X.cofog.S1311.GF1002[kE], vS = X.cofog.S1314.GF1002[kE], pE = vE / (vE + vS);
   for (const [sct, part] of [['S13', 1], ['S1311', pE], ['S1314', 1 - pE]]) {
     const ag = X.agg[sct], cf = X.cofog[sct], v = G * part;
     for (const key of ['TE', 'D62_D632PAY', 'D62PAY']) moins(ag, key, v);
@@ -1222,7 +1225,7 @@ function appliqueHyp() {
   }
   for (const sct of ['S13', 'S1314']) { const ag = X.agg[sct]; for (const key of ['TR', 'D5REC']) moins(ag, key, L); moins(ag, 'B9', L); }
   for (const key of ['D5', 'D51A_C1']) moins(X.imp, key, L);
-  if (X.natf) { const i = RET.an - X.natf.debut; for (const c of ['GF1002', 'GF10', 'TOTAL']) { const z = X.natf.c[c] && X.natf.c[c].D62; if (z && z[i] !== null) z[i] -= G; } }
+  if (X.natf) { const i = y - X.natf.debut; for (const c of ['GF1002', 'GF10', 'TOTAL']) { const z = X.natf.c[c] && X.natf.c[c].D62; if (z && z[i] !== null && z[i] !== undefined) z[i] -= G; } }
   setD(X);
 }
 
@@ -1231,37 +1234,45 @@ function hyp() {
   b.setAttribute('aria-pressed', !!S.cap); b.setAttribute('aria-expanded', !!S.cap);
   if (!RET || !S.cap) { box.hidden = true; return; }
   box.hidden = false;
-  const k = D0.an.indexOf(RET.an), h = RET.calc(S.cap), O = D0.agg.S13;
-  const b0 = -O.B9[k], b1 = b0 - h.net, vieil = D0.cofog.S13.GF1002[k];
+  const y = hypAn(S.an) ? S.an : RET.ans[RET.ans.length - 1];
+  const P = RET.pa(y), k = D0.an.indexOf(y), h = RET.calc(S.cap, y), O = D0.agg.S13;
+  const b0 = -O.B9[k], b1 = b0 - h.net;
+  const vieil = D0.cofog.S13.GF1002[k], vLab = vieil !== null ? 'Dépense vieillesse' : 'Prestations en argent', vRef = vieil !== null ? vieil : O.D62PAY[k];
   const md = m => nf(m / 1000, m >= 10000 ? 0 : 1);
-  const presets = [[RET.smic, 'SMIC'], [Math.round(RET.smic * 1.5), '1,5 SMIC'], [Math.round(RET.smic * 2), '2 SMIC'], [3000, '3 000 €'], [4000, '4 000 €']];
+  const presets = [[P.smic, 'SMIC'], [Math.round(P.smic * 1.5), '1,5 SMIC'], [Math.round(P.smic * 2), '2 SMIC'], [3000, '3 000 €'], [4000, '4 000 €']];
   const neuf = !box.querySelector('input');
   if (neuf) box.innerHTML = `<div class="hh"><h3>Et si toutes les retraites étaient plafonnées ?</h3><button type="button" class="x" id="hyp-x">Fermer l'hypothèse</button></div>
-    <p class="hsub">Toute pension de retraite au-dessus du plafond est ramenée au plafond, pour tous les retraités et tous les régimes (base, complémentaires, fonctionnaires). Calcul sur ${RET.an}, dernière année où la Drees publie les pensions : la page passe en ${RET.an} et ses chiffres intègrent l'économie.</p>
+    <p class="hsub">Toute pension de retraite au-dessus du plafond est ramenée au plafond, pour tous les retraités et tous les régimes (base, complémentaires, fonctionnaires). Le calcul porte sur l'année affichée (${RET.ans.join(', ')}) ; les chiffres de toute la page intègrent l'économie.</p>
     <div class="hc"><label for="hyp-r">Plafond, pension nette par mois</label>
       <input type="range" id="hyp-r" min="1000" max="5000" step="10" aria-describedby="hyp-v">
       <span class="cap" id="hyp-v"></span>
-      <span class="seg" role="group" aria-label="Plafonds types">${presets.map(([v, l]) => `<button type="button" data-cap="${v}">${l}</button>`).join('')}</span></div>
-    <p class="hsub" id="hyp-an" style="color:var(--n2); font-weight:700" hidden></p>
+      <span class="seg" role="group" aria-label="Plafonds types" id="hyp-p"></span>
+      <span class="ctl"><span class="lb">Année</span><span class="seg" role="group" aria-label="Année du calcul" id="hyp-y"></span></span></div>
+    <p class="hsub" id="hyp-an" hidden></p>
     <div class="res" id="hyp-res"></div>
     <div class="hist" id="hyp-h"></div>
-    <p class="hn">Méthode : distribution des pensions de droit direct par tranche de 100 € (Drees, retraités résidant en France, fin 2020), recalée sur la moyenne et l'effectif de fin ${RET.an} (${nf(RT.moyenne_brute, 0)} € brut, ${nf(RT.effectif / 1e6, 1)} millions de retraités) ; passage du brut au net par le rapport moyen publié (le net vaut ${nf(RET.r * 100, 1)} % du brut). La reconstitution redonne la pension moyenne publiée à 0,3 % près. Hors champ : les pensions de réversion (${nf(RT.masse_reversion_md, 1)} Md€ en ${RET.an}), les retraités vivant à l'étranger, l'impôt sur le revenu perdu, et tout effet sur les comportements (départs, épargne, consommation). C'est un ordre de grandeur comptable, pas une réforme chiffrée. Source : <a href="${RT.source.url}" rel="noopener">${RT.source.titre}</a>.</p>`;
-  const rg = $('hyp-r'); rg.value = S.cap;
-  const ha = $('hyp-an'); ha.hidden = S.an === RET.an;
-  if (S.an !== RET.an) { ha.innerHTML = `La page affiche ${S.an} : l'hypothèse ne porte que sur ${RET.an}. <button type="button" class="x" id="hyp-go" style="margin-left:6px">Revenir en ${RET.an}</button>`;
-    $('hyp-go').addEventListener('click', () => setAn(RET.an)); }
-  $('hyp-v').innerHTML = `${nf(S.cap, 0)} €<small> net/mois${Math.abs(S.cap - RET.smic) < 1 ? ' = SMIC ' + RET.an : ' · ' + nf(S.cap / RET.smic, 2) + ' SMIC'}</small>`;
-  box.querySelectorAll('[data-cap]').forEach(x => x.setAttribute('aria-pressed', Math.abs(+x.dataset.cap - S.cap) < 1));
+    <p class="hn" id="hyp-m"></p>`;
+  $('hyp-p').innerHTML = presets.map(([v, l]) => `<button type="button" data-cap="${v}" aria-pressed="${Math.abs(v - S.cap) < 1}">${l}</button>`).join('');
+  $('hyp-y').innerHTML = RET.ans.map(a => `<button type="button" data-hy="${a}" aria-pressed="${a === S.an}">${a}${RET.pa(a).proxy ? '*' : ''}</button>`).join('');
+  const rg = $('hyp-r'); if (+rg.value !== S.cap) rg.value = S.cap;
+  const ha = $('hyp-an');
+  if (!hypAn(S.an)) { ha.hidden = false; ha.style.color = 'var(--n2)'; ha.style.fontWeight = 700;
+    ha.innerHTML = `La page affiche ${S.an} : l'hypothèse ne se calcule que pour ${RET.ans.join(', ')}. Chiffres ci-dessous : ${y}.`; }
+  else if (P.proxy) { ha.hidden = false; ha.style.color = 'var(--ink-2)'; ha.style.fontWeight = 400;
+    ha.innerHTML = `<b style="color:var(--n2)">${y} : estimation.</b> ${P.A.note}`; }
+  else ha.hidden = true;
+  $('hyp-v').innerHTML = `${nf(S.cap, 0)} €<small> net/mois${Math.abs(S.cap - P.smic) < 1 ? ' = SMIC ' + y : ' · ' + nf(S.cap / P.smic, 2) + ' SMIC'}</small>`;
   const tile = (k_, v, d, cls) => `<div class="r ${cls || ''}"><div class="k">${k_}</div><div class="v">${v}</div><div class="d">${d}</div></div>`;
   $('hyp-res').innerHTML =
-    tile('Économie par an', `${md(h.net)}<small>Md€</small>`, `<b>${md(h.brut)} Md€</b> de pensions en moins, dont <b>${md(h.prelev)} Md€</b> de CSG, CRDS et Casa qui ne rentrent plus`, 'ok') +
+    tile(`Économie ${y}`, `${md(h.net)}<small>Md€</small>`, `<b>${md(h.brut)} Md€</b> de pensions en moins, dont <b>${md(h.prelev)} Md€</b> de CSG, CRDS et Casa qui ne rentrent plus`, 'ok') +
     tile('Retraités touchés', `${nf(h.touches / 1e6, 1)}<small>millions</small>`, `<b>${nf(h.part, 0)} %</b> des retraités ; ils perdent en moyenne <b>${nf(h.perte, 0)} €</b> net par mois`) +
-    tile(`Déficit ${RET.an}`, `${md(Math.max(0, b1))}<small>Md€</small>`, `au lieu de <b>${md(b0)} Md€</b> : ${b1 <= 0 ? '<b>comblé</b>' : '−' + nf(h.net / b0 * 100, 0) + ' %'} ; ${nf(b1 / D0.pib[k] * 100, 1)} % du PIB au lieu de ${nf(b0 / D0.pib[k] * 100, 1)} %`) +
-    tile('Dépense vieillesse', `−${nf(h.brut / vieil * 100, 0)}<small>%</small>`, `de <b>${md(vieil)}</b> à <b>${md(vieil - h.brut)} Md€</b> ; la dépense publique passe de ${nf(O.TE[k] / D0.pib[k] * 100, 1)} % à ${nf((O.TE[k] - h.brut) / D0.pib[k] * 100, 1)} % du PIB`);
+    tile(`Déficit ${y}`, `${md(Math.max(0, b1))}<small>Md€</small>`, `au lieu de <b>${md(b0)} Md€</b> : ${b1 <= 0 ? '<b>comblé</b>' : '−' + nf(h.net / b0 * 100, 0) + ' %'} ; ${nf(b1 / D0.pib[k] * 100, 1)} % du PIB au lieu de ${nf(b0 / D0.pib[k] * 100, 1)} %`) +
+    tile(vLab, `−${nf(h.brut / vRef * 100, 0)}<small>%</small>`, `de <b>${md(vRef)}</b> à <b>${md(vRef - h.brut)} Md€</b> ; la dépense publique passe de ${nf(O.TE[k] / D0.pib[k] * 100, 1)} % à ${nf((O.TE[k] - h.brut) / D0.pib[k] * 100, 1)} % du PIB`);
+  $('hyp-m').innerHTML = `Méthode : distribution des pensions de droit direct par tranche de 100 € (Drees, retraités résidant en France, fin 2020 — la dernière publiée), recalée sur l'effectif et la pension moyenne de l'année : ${y}, ${nf(P.A.effectif / 1e6, 2)} millions de retraités, ${nf(P.A.moyenne_brute, 0)} € brut et ${nf(P.A.moyenne_nette, 0)} € net en moyenne (${P.proxy ? 'estimation, voir ci-dessus' : 'publié'}). Recalculée sur 2020, la distribution redonne la pension moyenne publiée à 0,3 % près. 2024 et 2025* : ${RT.proxy_methode} Hors champ : les pensions de réversion (${nf(RT.masse_reversion_md, 1)} Md€ en ${RT.masse_annee}), les retraités vivant à l'étranger, l'impôt sur le revenu perdu, et tout effet sur les comportements (départs, épargne, consommation). C'est un ordre de grandeur comptable, pas une réforme chiffrée. Sources : <a href="${RT.source.url}" rel="noopener">${RT.source.titre}</a> ; Drees, EACR 2024.`;
 
-  /* histogramme des pensions nettes, la part au-dessus du plafond en couleur */
+  /* histogramme des pensions nettes de l'année, la part au-dessus du plafond en couleur */
   const hb = $('hyp-h'), W = Math.max(300, hb.clientWidth), H = 170, pl = 6, pr = 6, pt = 18, pb = 22;
-  const svg = svgIn(hb, W, H), f = RET.g * RET.r, xmax = 5000, sx = v => pl + Math.min(v, xmax) / xmax * (W - pl - pr - 40);
+  const svg = svgIn(hb, W, H), f = P.g * P.r, xmax = 5000, sx = v => pl + Math.min(v, xmax) / xmax * (W - pl - pr - 40);
   const mx = Math.max(...RET.parts), sy = v => pt + (1 - v / mx) * (H - pt - pb);
   const capX = sx(S.cap);
   RET.parts.forEach((p, i) => {
@@ -1276,7 +1287,7 @@ function hyp() {
   el('rect', { x: xt, y: H - pb - Math.min(ht, H - pt - pb), width: 26, height: Math.min(ht, H - pt - pb), style: `fill:${S.cap < RET.lo2 * f ? 'var(--n2)' : 'var(--ink-3)'}` }, svg);
   el('text', { x: xt + 26, y: H - 6, 'text-anchor': 'end' }, svg).textContent = '+ de ' + nf(RET.lo2 * f, 0) + ' €';
   const mob = W < 600;
-  if (!mob) el('text', { x: W - pr, y: 13, 'text-anchor': 'end' }, svg).textContent = 'pension nette par mois, ' + RET.an;
+  if (!mob) el('text', { x: W - pr, y: 13, 'text-anchor': 'end' }, svg).textContent = 'pension nette par mois, ' + y + (P.proxy ? ' (estimation)' : '');
   for (const v of mob ? [0, 2000, 4000] : [0, 1000, 2000, 3000, 4000]) el('text', { x: sx(v), y: H - 6, 'text-anchor': v ? 'middle' : 'start' }, svg).textContent = nf(v, 0) + ' €';
   el('line', { x1: capX, x2: capX, y1: 4, y2: H - pb, style: 'stroke:var(--ink); stroke-width:1.5' }, svg);
   el('text', { x: capX + (capX > W - 160 ? -6 : 6), y: 13, 'text-anchor': capX > W - 160 ? 'end' : 'start', style: 'fill:var(--ink); font-weight:700' }, svg).textContent = mob ? `${nf(h.part, 0)} % au-dessus` : `plafond ${nf(S.cap, 0)} € · ${nf(h.part, 0)} % des retraités au-dessus`;
@@ -1284,21 +1295,27 @@ function hyp() {
   if (neuf) {
     let t = 0;
     rg.addEventListener('input', () => { S.cap = +rg.value; clearTimeout(t); hyp(); t = setTimeout(() => { appliqueHyp(); hashSync(); tout(); }, 120); });
-    box.querySelectorAll('[data-cap]').forEach(x => x.addEventListener('click', () => { S.cap = +x.dataset.cap; appliqueHyp(); hashSync(); tout(); }));
+    box.addEventListener('click', e => {
+      const c = e.target.closest('[data-cap]'), a = e.target.closest('[data-hy]');
+      if (c) { S.cap = +c.dataset.cap; appliqueHyp(); hashSync(); tout(); }
+      if (a) setAn(+a.dataset.hy);
+    });
     $('hyp-x').addEventListener('click', () => basculeHyp(false));
   }
 }
 let anAvantHyp = null;
 function basculeHyp(on) {
   if (!RET) return;
-  if (on) { S.cap = S.cap || RET.smic; if (S.an !== RET.an) { anAvantHyp = S.an; S.an = RET.an; if (S.vAuto) S.v = 'fonction'; } }
+  if (on) { S.cap = S.cap || RET.pa(hypAn(S.an) ? S.an : RET.ans[RET.ans.length - 1]).smic;
+    if (!hypAn(S.an)) { anAvantHyp = S.an; S.an = RET.ans[RET.ans.length - 1]; if (S.an > D0.derF) S.v = 'nature'; } }
   else { S.cap = null; $('hyp').innerHTML = ''; if (anAvantHyp !== null) { S.an = anAvantHyp; anAvantHyp = null; } }
   appliqueHyp(); hashSync(); tout();
   if (on) $('hyp').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 $('hyp-b').addEventListener('click', () => basculeHyp(!S.cap));
 if (!RET) $('hyp-b').closest('.ctl').hidden = true;
-if (S.cap) { if (RET) { S.an = RET.an; appliqueHyp(); } else S.cap = null; }
+if (S.cap && !RET) S.cap = null;
+appliqueHyp();
 
 /* ======================================================================
    Commandes, tampon, sources
@@ -1309,7 +1326,7 @@ const cmp = $('cmp');
 for (const g of D.ue.geo.filter(g => g !== 'FR')) { const op = document.createElement('option'); op.value = g; op.textContent = GEO[g]; cmp.appendChild(op); }
 cmp.value = S.cmp;
 
-function setAn(y) { if (!D.an.includes(y)) return; S.an = y; if (y > D.derF) S.v = 'nature'; else if (S.vAuto) S.v = 'fonction'; hashSync(); tout(); }
+function setAn(y) { if (!D0.an.includes(y)) return; S.an = y; if (y > D0.derF) S.v = 'nature'; else if (S.vAuto) S.v = 'fonction'; appliqueHyp(); hashSync(); tout(); }
 sel.addEventListener('change', () => setAn(+sel.value));
 $('an-m').addEventListener('click', () => setAn(S.an - 1));
 $('an-p').addEventListener('click', () => setAn(S.an + 1));
