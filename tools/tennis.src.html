@@ -83,6 +83,11 @@ td.y.dec { color:var(--ink); font-weight:700; }
 td.tc { font-size:.7rem; font-weight:700; background:var(--surface-2) !important; border-left:1px solid var(--rule); }
 
 
+/* Listes déroulantes : la liste qui s'ouvre est dessinée par le système ; on
+   lui impose fond et encre du thème, sinon en sombre elle peut sortir texte
+   clair sur fond blanc (Windows) et devenir illisible. */
+select option, select optgroup { background-color:var(--surface); color:var(--ink); }
+
 /* Choix de la nation */
 .nat { display:flex; flex-direction:column; align-items:center; gap:4px; margin:0 auto 10px; }
 .nat label { display:inline-flex; align-items:center; gap:7px; font-size:.7rem; color:var(--ink-3); }
@@ -181,7 +186,7 @@ td.tc { font-size:.7rem; font-weight:700; background:var(--surface-2) !important
 .cmp-lab { font-size:.64rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-3); min-width:74px; }
 .cmp-nat { display:inline-flex; align-items:center; border:1px solid var(--rule); border-radius:3px; background:var(--surface); }
 .cmp-nat i { width:4px; align-self:stretch; border-radius:3px 0 0 3px; }
-.cmp-nat select { appearance:none; border:0; background:transparent; font:inherit; font-size:.76rem; font-weight:700; color:var(--ink);
+.cmp-nat select { appearance:none; border:0; background-color:var(--surface); border-radius:0 3px 3px 0; font:inherit; font-size:.76rem; font-weight:700; color:var(--ink);
   padding:6px 22px 6px 8px; cursor:pointer;
   background-image:linear-gradient(45deg, transparent 50%, var(--ink-3) 50%), linear-gradient(135deg, var(--ink-3) 50%, transparent 50%);
   background-position:calc(100% - 11px) 50%, calc(100% - 7px) 50%; background-size:4px 4px; background-repeat:no-repeat; }
@@ -1061,9 +1066,12 @@ function dessinerMatrice() {
   const rows = NATS.map(n => n.c).sort((a, b) => desc ? cle(b) - cle(a) : cle(a) - cle(b));
   /* couleur : vert du passage (même rampe que la grille), rouille de la déperdition */
   const SC = isDark() ? SC_DARK : SC_LIGHT;
-  const fond = x => { if (M === 'vol') { const k = x <= 0 ? 0 : Math.min(11, 1 + Math.round(Math.log10(x * 50) / Math.log10(1200) * 10)); return [SC[k][1], SC[k][2]]; }
-    if (M === 'pass') { const k = Math.max(0, Math.min(11, Math.round((x - 25) / 50 * 11))); return [SC[k][1], SC[k][2]]; }
-    const t = Math.max(0, Math.min(1, (x - 25) / 55)); return [`color-mix(in srgb, var(--loss) ${Math.round(t * 85)}%, var(--loss-bg))`, t > .5 ? '#fff' : 'var(--ink)']; };
+  /* encre lisible sur chaque fond : sombre sur fond clair, claire sur fond sombre */
+  const lum = h => { const n = parseInt(h.slice(1), 16), c = [n >> 16, n >> 8 & 255, n & 255].map(v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
+  const encre = bg => lum(bg) > .22 ? '#0F141D' : '#F3F6FA';
+  const fond = x => { if (M === 'vol') { const k = x <= 0 ? 0 : Math.max(1, Math.min(11, 1 + Math.round(Math.log10(x * 50) / Math.log10(1200) * 10))); return [SC[k][1], encre(SC[k][1])]; }
+    if (M === 'pass') { const k = Math.max(1, Math.min(11, Math.round((x - 25) / 50 * 11))); return [SC[k][1], encre(SC[k][1])]; }
+    const t = Math.max(0, Math.min(1, (x - 25) / 55)); return [`color-mix(in srgb, var(--loss) ${Math.round(t * 85)}%, var(--loss-bg))`, t > .5 ? (isDark() ? '#1A0E08' : '#fff') : 'var(--ink)']; };
   const th = (k, l) => `<th data-k="${k}" class="${CMP.mxTri === k ? 'on' : ''}" title="Trier">${l}${CMP.mxTri === k ? (desc ? ' ▾' : ' ▴') : ''}</th>`;
   tb.innerHTML = `<thead><tr><th></th>${th(-1, 'Engagés')}${cols.map(i => th(i, M === 'vol' ? RONDS_C[i] : RONDS_C[i - 1] + '→' + RONDS_C[i])).join('')}</tr></thead><tbody>` +
     rows.map(c => { const sel = CMP.sel.includes(c);
