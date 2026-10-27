@@ -8,10 +8,12 @@
 /* Jetons propres à la grille, déclinés dans les deux thèmes. Les couleurs des
    quatre levées sont vives sur fond sombre et doivent être assombries sur fond
    clair, sinon elles vibrent et deviennent illisibles. */
-:root{ --ao:#0F73A8; --rg:#C1461F; --wim:#0F7040; --uso:#7B3FA0;
+:root{ --loss:#B43E12; --loss-bg:#FCE9E0; --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --sctx:#C9CFD9;
+       --ao:#0F73A8; --rg:#C1461F; --wim:#0F7040; --uso:#7B3FA0;
        --empty:#EDF0F5; --empty-ink:#C3CAD6; --cellrule:rgba(15,20,29,.06);
        --hoverfx:brightness(.94); }
-:root[data-theme="dark"]{ --ao:#4fc3f7; --rg:#ff8a65; --wim:#69f0ae; --uso:#ce93d8;
+:root[data-theme="dark"]{ --loss:#FF9B6B; --loss-bg:#3A2218; --s1:#3987e5; --s2:#d95926; --s3:#199e70; --sctx:#3A4050;
+       --ao:#4fc3f7; --rg:#ff8a65; --wim:#69f0ae; --uso:#ce93d8;
        --empty:#1a1a28; --empty-ink:#2d2d40; --cellrule:rgba(255,255,255,.04);
        --hoverfx:brightness(1.35); }
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -94,7 +96,14 @@ td.tc { font-size:.7rem; font-weight:700; background:var(--surface-2) !important
 /* Choix du tour : même contrôle segmenté que la page UEFA */
 .tours { display:flex; justify-content:center; margin:0 auto 12px; }
 .seg { display:grid; grid-template-columns:repeat(8, 1fr); width:min(600px, 100%); gap:1px; background:var(--rule);
-  border:1px solid var(--rule); border-radius:3px; overflow:hidden; }
+  border:1px solid var(--rule); border-radius:3px; margin-top:10px; }
+.seg button { position:relative; }
+/* Déperdition : part des joueurs perdus en arrivant à ce tour, posée sur la
+   frontière avec le tour précédent */
+.seg .dep { position:absolute; top:-10px; left:0; transform:translateX(-50%); z-index:1; pointer-events:none;
+  font-size:.6rem; font-weight:700; line-height:14px; padding:0 5px; border-radius:7px; white-space:nowrap;
+  color:var(--loss); background:var(--loss-bg); box-shadow:0 0 0 2px var(--ground); font-variant-numeric:tabular-nums; }
+.legend .dep-k { color:var(--loss); background:var(--loss-bg); font-weight:700; border-radius:7px; padding:0 5px; }
 .seg button { appearance:none; border:0; background:var(--surface); color:var(--ink-2);
   font:inherit; font-size:.7rem; height:30px; padding:0 4px; cursor:pointer; white-space:nowrap; text-align:center; }
 .seg button[aria-pressed="true"] { background:var(--ink); color:var(--surface); }
@@ -150,6 +159,9 @@ td.tc { font-size:.7rem; font-weight:700; background:var(--surface-2) !important
   /* téléphone : deux rangées de quatre, toute la largeur du tableau */
   .seg { grid-template-columns:repeat(4, 1fr); width:100%; max-width:420px; }
   .seg button { height:38px; font-size:.78rem; }
+  .seg { row-gap:14px; background:none; border:0; }
+  .seg button { border:1px solid var(--rule); margin:-1px 0 0 -1px; }
+  .seg button:nth-child(4n+1) .dep { transform:translateX(-2px); }
   .legend { gap:2px; font-size:.6rem; }
   .legend > span[style] { margin-left:0 !important; flex-basis:100%; text-align:center; }
   .nat label { width:100%; max-width:420px; }
@@ -157,6 +169,78 @@ td.tc { font-size:.7rem; font-weight:700; background:var(--surface-2) !important
   h1 { font-size:.95rem; }
   .jr-l li { height:34px; font-size:.78rem; }
   .jr-f { min-height:0; }
+}
+
+/* ---------- Comparer les nations ---------- */
+.cmp { max-width:980px; margin:44px auto 0; display:flex; flex-direction:column; gap:16px; }
+.cmp-h h2 { font-size:1.05rem; margin:0; color:var(--ink); letter-spacing:.01em; }
+.cmp-h p { font-size:.72rem; color:var(--ink-3); margin:3px 0 0; line-height:1.45; max-width:70ch; }
+.cmp-ctl { background:var(--ground); padding:10px 0;
+  border-bottom:1px solid var(--rule); display:flex; flex-direction:column; gap:9px; }
+.cmp-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; }
+.cmp-lab { font-size:.64rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-3); min-width:74px; }
+.cmp-nat { display:inline-flex; align-items:center; border:1px solid var(--rule); border-radius:3px; background:var(--surface); }
+.cmp-nat i { width:4px; align-self:stretch; border-radius:3px 0 0 3px; }
+.cmp-nat select { appearance:none; border:0; background:transparent; font:inherit; font-size:.76rem; font-weight:700; color:var(--ink);
+  padding:6px 22px 6px 8px; cursor:pointer;
+  background-image:linear-gradient(45deg, transparent 50%, var(--ink-3) 50%), linear-gradient(135deg, var(--ink-3) 50%, transparent 50%);
+  background-position:calc(100% - 11px) 50%, calc(100% - 7px) 50%; background-size:4px 4px; background-repeat:no-repeat; }
+.cmp-nat select:focus-visible, .cmp-ex input:focus-visible { outline:2px solid var(--tennis); outline-offset:1px; }
+.cmp-ex { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+.cmp-ex input { font:inherit; font-size:.74rem; color:var(--ink); background:var(--surface); border:1px solid var(--rule);
+  border-radius:3px; padding:6px 9px; width:200px; }
+.chip { display:inline-flex; align-items:center; gap:5px; font:inherit; font-size:.7rem; font-weight:700; border-radius:12px;
+  padding:3px 9px; cursor:pointer; border:1px solid var(--rule); background:var(--surface); color:var(--ink-2); white-space:nowrap; }
+.chip:hover { border-color:var(--ink-3); }
+.chip.out { background:var(--ink); color:var(--surface); border-color:var(--ink); }
+.chip.out::after { content:'✕'; font-size:.62rem; opacity:.75; }
+.chip small { font-weight:400; opacity:.75; }
+.cmp-sum { font-size:.68rem; color:var(--ink-3); }
+.cmp-sum b { color:var(--ink); }
+.cmp-sum button { font:inherit; color:var(--ink-2); background:none; border:0; text-decoration:underline; cursor:pointer; padding:0 2px; }
+.cmp-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.card { background:var(--surface); border:1px solid var(--rule); border-radius:4px; padding:14px 16px 12px; min-width:0;
+  display:flex; flex-direction:column; gap:10px; }
+.card.wide { grid-column:1 / -1; }
+.card-h { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap:8px 14px; }
+.card-h h3 { font-size:.85rem; margin:0; color:var(--ink); }
+.card-h p { font-size:.68rem; color:var(--ink-3); margin:2px 0 0; max-width:60ch; line-height:1.4; }
+.card .sg { display:inline-grid; grid-auto-flow:column; gap:1px; background:var(--rule); border:1px solid var(--rule); border-radius:3px; overflow:hidden; }
+.card .sg button { appearance:none; border:0; background:var(--surface); color:var(--ink-2); font:inherit; font-size:.68rem;
+  padding:5px 8px; cursor:pointer; white-space:nowrap; }
+.card .sg button[aria-pressed="true"] { background:var(--ink); color:var(--surface); }
+.card .sg button:focus-visible { outline:2px solid var(--tennis); outline-offset:-2px; }
+.card .sg.tr button { padding:5px 6px; }
+.viz { width:100%; position:relative; }
+.viz svg { display:block; width:100%; height:auto; overflow:visible; }
+.viz text { font-family:inherit; }
+.card-f { font-size:.64rem; color:var(--ink-3); line-height:1.4; }
+.mx-w { overflow-x:auto; }
+table.mx { border-collapse:separate; border-spacing:2px; width:100%; min-width:680px; font-size:.7rem; font-variant-numeric:tabular-nums; }
+.mx thead { position:static; }
+.mx thead th { position:static; background:none; text-transform:none; letter-spacing:0; box-shadow:none; }
+.mx td { border:0; padding:0 3px; }
+.mx td.nm { position:sticky; left:0; z-index:1; background:var(--surface); }
+.mx th:first-child, .mx td.nm { width:132px; min-width:132px; }
+.mx th { font-size:.62rem; color:var(--ink-3); font-weight:700; padding:3px 2px; cursor:pointer; white-space:nowrap; user-select:none; }
+.mx th.on { color:var(--ink); }
+.mx th:first-child { text-align:left; cursor:default; }
+.mx td { text-align:center; height:22px; border-radius:2px; font-weight:700; min-width:34px; }
+.mx td.nm { text-align:left; font-weight:600; color:var(--ink); white-space:nowrap; padding-right:6px; }
+.mx td.eng { color:var(--ink-2); font-weight:600; background:var(--surface-2); }
+.mx tr.sel td.nm { box-shadow:inset 3px 0 0 var(--c); padding-left:7px; }
+@media (min-width:761px){ .cmp-ctl { position:sticky; top:var(--navh, 0px); z-index:6; } }
+@media (max-width:760px){ .cmp-grid { grid-template-columns:1fr; } }
+@media (max-width:560px){
+  .cmp { margin-top:30px; }
+  .cmp-lab { min-width:0; width:100%; }
+  #cmpNats { display:grid; grid-template-columns:1fr; gap:6px; width:100%; }
+  .cmp-nat select { width:100%; }
+  .cmp-row:has(#cmpStars) .cmp-lab { display:none; }
+  .cmp-ex input { flex:1; min-width:0; width:auto; font-size:.8rem; padding:8px 9px; }
+  .cmp-nat select { font-size:.8rem; padding:8px 22px 8px 8px; }
+  .card { padding:12px 12px 10px; }
+  .card .sg { max-width:100%; overflow-x:auto; }
 }
 
 /* Infobulle d'une case : même habillage que la page UEFA */
@@ -206,6 +290,7 @@ td[data-s], td.tc { cursor:default; }
   <span id="sws"></span>
   <span class="legend-label" id="lgmax"></span>
   <span style="margin-left:10px">— = pas d'édition ouverte aux pros</span>
+  <span style="margin-left:10px"><span class="dep-k">−49 %</span> = joueurs perdus depuis le tour précédent (1968–2026)</span>
   <span style="margin-left:10px">✕ = annulé · ··· = à venir · <i style="text-decoration:underline dotted">4</i> = tour en cours</span>
 </div>
 
@@ -238,7 +323,54 @@ td[data-s], td.tc { cursor:default; }
 </aside>
 </div>
 
-<p class="subtitle" style="margin-top:18px;margin-bottom:2px">© 2026 Tanguy Drouin — grotang.fr. Tous droits réservés.</p>
+<section class="cmp" id="cmp" aria-labelledby="cmpT">
+  <div class="cmp-h">
+    <h2 id="cmpT">Comparer les nations</h2>
+    <p>Simple messieurs, toutes les éditions closes depuis 1968, cumulées. On peut retirer des joueurs pour voir ce que vaut une nation sans sa star.</p>
+  </div>
+  <div class="cmp-ctl">
+    <div class="cmp-row"><span class="cmp-lab">Nations</span><span id="cmpNats" class="cmp-row"></span></div>
+    <div class="cmp-row"><span class="cmp-lab">Sans</span>
+      <div class="cmp-ex"><input id="cmpQ" type="search" list="cmpL" placeholder="Retirer un joueur…" autocomplete="off" aria-label="Retirer un joueur"><datalist id="cmpL"></datalist></div>
+      <span id="cmpOut" class="cmp-ex"></span>
+    </div>
+    <div class="cmp-row"><span class="cmp-lab"></span><span id="cmpStars" class="cmp-ex"></span></div>
+    <div class="cmp-sum" id="cmpSum"></div>
+  </div>
+  <div class="cmp-grid">
+    <div class="card wide">
+      <div class="card-h"><div><h3>L'entonnoir</h3><p id="fnP"></p></div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px"><div class="sg" id="fnM"><button type="button" data-m="surv" aria-pressed="true">Sur 100 au départ</button><button type="button" data-m="pass" aria-pressed="false">% passage</button><button type="button" data-m="vol" aria-pressed="false">Joueurs par édition</button></div>
+        <div class="sg" id="fnZ"><button type="button" data-m="0" aria-pressed="true">Dès le 1er tour</button><button type="button" data-m="3" aria-pressed="false">Dès les 8es</button></div></div></div>
+      <div class="viz" id="fnV"></div>
+      <div class="card-f">Survoler (ou toucher) un tour pour lire les valeurs. Lignes grises : les autres nations titrées.</div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div><h3>Sur 100 au départ, combien arrivent…</h3><p id="rkP"></p></div></div>
+      <div class="sg tr" id="rkT"></div>
+      <div class="viz" id="rkV"></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div><h3>Volume ou rendement</h3><p>Joueurs envoyés au 1er tour (→) contre la part qui va loin (↑).</p></div></div>
+      <div class="sg tr" id="scT"></div>
+      <div class="viz" id="scV"></div>
+    </div>
+    <div class="card wide">
+      <div class="card-h"><div><h3>Décennie par décennie</h3><p>Joueurs par édition au tour choisi, en moyenne sur la décennie.</p></div>
+        <div class="sg tr" id="dcT"></div></div>
+      <div class="viz" id="dcV"></div>
+      <div class="card-f">1968–69 : 7 éditions seulement. 2020s : de 2020 à 2026.</div>
+    </div>
+    <div class="card wide">
+      <div class="card-h"><div><h3>Toutes les nations, marche par marche</h3><p>Triées par joueurs engagés au 1er tour. Cliquer un en-tête pour trier autrement.</p></div>
+        <div class="sg" id="mxM"><button type="button" data-m="pass" aria-pressed="true">% passage</button><button type="button" data-m="loss" aria-pressed="false">% déperdition</button><button type="button" data-m="vol" aria-pressed="false">Joueurs par édition</button></div></div>
+      <div class="mx-w"><table class="mx" id="mx"></table></div>
+      <div class="card-f">Jusqu'en 1981, l'Open d'Australie se jouait à 48–64 joueurs : son 3e tour était déjà un 8e de finale, ce qui gonfle un peu le passage 3e tour → 8es des années 70.</div>
+    </div>
+  </div>
+</section>
+
+<p class="subtitle" style="margin-top:28px;margin-bottom:2px">© 2026 Tanguy Drouin — grotang.fr. Tous droits réservés.</p>
 <p class="subtitle" style="font-size:.6rem">Site personnel non professionnel · Hébergeur : GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis · +1 877 448 4820</p>
 
 <script>
@@ -437,7 +569,7 @@ function choisir(t, garder, n){
   if (n && NAT_DE[n]) { NAT = NAT_DE[n]; document.getElementById('nat').value = n; }
   tour = t;
   document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === t)));
-  titres(); draw(); drawLegend(); drawJoueurs();
+  titres(); draw(); drawLegend(); drawJoueurs(); deperdition();
   document.getElementById('ctxT').textContent = `${NAT.drap ? NAT.drap + ' ' : ''}${NAT.nom} · ${COURT_TOUR[t]}`;
   colle();
   if (garder) {
@@ -646,6 +778,306 @@ selNat.addEventListener('change', () => choisir(tour, true, selNat.value));
 choisir(...(([n, t]) => [t, false, n])(lireAdresse(location.hash.slice(1))));
 addEventListener('hashchange', () => { const [n, t] = lireAdresse(location.hash.slice(1)); choisir(t, false, n); });
 document.addEventListener('grotang:theme', () => { draw(); drawLegend(); if (jrPin !== null) allumer(jrLignes[jrPin]); });
+
+/* ---------- déperdition (barre des tours) ---------- */
+/* Pour la nation choisie, toutes éditions closes cumulées : part des joueurs
+   d'un tour qui ne sont plus là au tour suivant. Pastille sur le bouton du
+   tour d'arrivée, à cheval sur la frontière. */
+function cumul(nat, sans) {
+  const n = [0,0,0,0,0,0,0,0];
+  for (const y of years) for (const s of SLAMS) {
+    if (DT.editions[y][s] !== 'J' || (DT.ouverts[y] && DT.ouverts[y][s])) continue;
+    const f = DT.parcours[y] && DT.parcours[y][s] && DT.parcours[y][s][nat]; if (!f) continue;
+    for (let j = 0; j < f.length; j += 2) { if (sans && sans.has(f[j])) continue; for (let i = 0; i <= f[j + 1]; i++) n[i]++; }
+  }
+  return n;
+}
+function deperdition() {
+  const n = cumul(NAT.c);
+  document.querySelectorAll('.seg button').forEach((b, i) => {
+    let d = b.querySelector('.dep');
+    if (!i) { if (d) d.remove(); return; }
+    if (!d) { d = document.createElement('span'); d.className = 'dep'; b.appendChild(d); }
+    const p = n[i - 1] ? 1 - n[i] / n[i - 1] : null;
+    d.textContent = p === null ? '–' : `−${Math.round(100 * p)} %`;
+    const TL = ['1er tour', '2e tour', '3e tour', '8es', 'quarts', 'demies', 'finale', 'titre'];
+    b.title = p === null ? '' : `${TL[i - 1]} → ${TL[i]} : ${n[i - 1]} présences ${NAT.ap}, ${n[i]} passent (${Math.round(100 * (1 - p))} %), depuis 1968`;
+  });
+}
+
+/* ---------- comparer les nations ---------- */
+/* Tout se recalcule dans la page depuis les parcours : retirer un joueur
+   enlève ses présences de chaque case, et les taux de passage suivent. */
+const CMP = { sel: ['FRA', 'USA', 'ESP'].filter(c => NAT_DE[c]), sans: new Set(), fn: 'surv', fnZ: '0', rk: 4, sc: 4, dc: 4, mx: 'pass', mxTri: -1 };
+const RONDS = ['1er', '2e', '3e', '8es', 'Quarts', 'Demies', 'Finale', 'Titre'];
+const RONDS_C = ['1er', '2e', '3e', '8es', '¼', '½', 'F', '🏆'];
+const cv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const SLOT = ['--s1', '--s2', '--s3'];
+const coul = c => { const k = CMP.sel.indexOf(c); return cv(k >= 0 ? SLOT[k] : '--sctx'); };
+const nf = (v, d = 1) => v.toLocaleString('fr-FR', { maximumFractionDigits: v > 0 && v < .1 ? 3 : d, minimumFractionDigits: 0 });
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, at, parent, txt) { const e = document.createElementNS(NS, tag); for (const k in at) e.setAttribute(k, at[k]); if (txt !== undefined) e.textContent = txt; if (parent) parent.appendChild(e); return e; }
+
+/* agrégats : total, par décennie, éditions par décennie */
+let AG = null;
+function agreger() {
+  const tot = {}, dec = {}, edDec = {}; let ed = 0;
+  for (const n of NATS) { tot[n.c] = [0,0,0,0,0,0,0,0]; dec[n.c] = {}; }
+  for (const y of years) for (const s of SLAMS) {
+    if (DT.editions[y][s] !== 'J' || (DT.ouverts[y] && DT.ouverts[y][s])) continue;
+    ed++; const d = y < 1970 ? 1960 : Math.floor(y / 10) * 10; edDec[d] = (edDec[d] || 0) + 1;
+    const P = DT.parcours[y] && DT.parcours[y][s] || {};
+    for (const n of NATS) {
+      const f = P[n.c]; if (!f) continue;
+      const D = dec[n.c][d] = dec[n.c][d] || [0,0,0,0,0,0,0,0];
+      for (let j = 0; j < f.length; j += 2) { if (CMP.sans.has(f[j])) continue; for (let i = 0; i <= f[j + 1]; i++) { tot[n.c][i]++; D[i]++; } }
+    }
+  }
+  AG = { tot, dec, edDec, ed };
+}
+const surv = c => AG.tot[c].map(v => AG.tot[c][0] ? 100 * v / AG.tot[c][0] : 0);
+const passe = c => AG.tot[c].map((v, i) => i && AG.tot[c][i - 1] ? 100 * v / AG.tot[c][i - 1] : null);
+const parEd = c => AG.tot[c].map(v => v / AG.ed);
+const ordreDessin = () => [...NATS.map(n => n.c).filter(c => !CMP.sel.includes(c)), ...CMP.sel.slice().reverse()];
+
+/* infobulle commune aux graphiques */
+const ctip = document.createElement('div'); ctip.className = 'tip'; ctip.setAttribute('role', 'tooltip'); document.body.appendChild(ctip);
+function cMontrer(x, y, h) { ctip.innerHTML = h; ctip.classList.add('on');
+  const w = ctip.offsetWidth, hh = ctip.offsetHeight; let l = x + 14, t = y + 14;
+  if (l + w > innerWidth - 6) l = x - w - 14; if (l < 6) l = 6; if (t + hh > innerHeight - 6) t = y - hh - 12;
+  ctip.style.left = l + 'px'; ctip.style.top = Math.max(6, t) + 'px'; }
+const cCacher = () => ctip.classList.remove('on');
+addEventListener('scroll', cCacher, { passive: true });
+const pastille = c => `<i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${coul(c)};margin-right:5px"></i>`;
+
+/* --- commandes --- */
+function cmpCommandes() {
+  const box = document.getElementById('cmpNats'); box.innerHTML = '';
+  CMP.sel.forEach((c, k) => {
+    const w = document.createElement('label'); w.className = 'cmp-nat';
+    w.innerHTML = `<i style="background:${cv(SLOT[k])}"></i><select aria-label="Nation ${k + 1}">${NATS.map(n => `<option value="${n.c}"${n.c === c ? ' selected' : ''}>${n.drap ? n.drap + ' ' : ''}${esc(n.nom)}</option>`).join('')}</select>`;
+    w.querySelector('select').onchange = e => { const v = e.target.value, o = CMP.sel.indexOf(v);
+      if (o >= 0 && o !== k) CMP.sel[o] = CMP.sel[k]; CMP.sel[k] = v; cmpTout(); };
+    box.appendChild(w);
+  });
+  /* joueurs retirés */
+  document.getElementById('cmpOut').innerHTML = [...CMP.sans].map(id => `<button type="button" class="chip out" data-id="${id}" title="Remettre ${esc(JOUEURS[id])}">${esc(JOUEURS[id])}</button>`).join('');
+  /* raccourcis : les plus titrés des nations choisies, puis les grands noms */
+  const stars = STARS.filter(o => CMP.sel.includes(o.nat) && !CMP.sans.has(o.id)).slice(0, 4)
+    .concat(STARS.filter(o => !CMP.sel.includes(o.nat) && !CMP.sans.has(o.id))).slice(0, 7);
+  document.getElementById('cmpStars').innerHTML = stars.map(o => `<button type="button" class="chip" data-id="${o.id}" title="Retirer ${esc(o.nom)} (${o.t} titres)">${o.drap ? o.drap + ' ' : ''}${esc(o.nom)} <small>${o.t}</small></button>`).join('');
+  document.querySelectorAll('#cmpOut .chip, #cmpStars .chip').forEach(b => b.onclick = () => { const id = +b.dataset.id;
+    CMP.sans.has(id) ? CMP.sans.delete(id) : CMP.sans.add(id); cmpTout(); });
+  const sum = document.getElementById('cmpSum');
+  if (!CMP.sans.size) sum.innerHTML = 'Tous les joueurs comptent. Exemple : retirer Djokovic et Federer pour juger la Serbie et la Suisse sans eux.';
+  else { let pres = 0, tit = 0;
+    for (const y of years) for (const s of SLAMS) { const P = DT.parcours[y] && DT.parcours[y][s] || {};
+      for (const f of Object.values(P)) for (let j = 0; j < f.length; j += 2) if (CMP.sans.has(f[j])) { pres++; if (f[j + 1] === 7) tit++; } }
+    sum.innerHTML = `<b>${CMP.sans.size} joueur${CMP.sans.size > 1 ? 's' : ''} retiré${CMP.sans.size > 1 ? 's' : ''}</b> : ${pres} présences et ${tit} titre${tit > 1 ? 's' : ''} en moins. <button type="button" id="cmpRaz">Tout remettre</button>`;
+    document.getElementById('cmpRaz').onclick = () => { CMP.sans.clear(); cmpTout(); }; }
+}
+/* les grands noms : 3 titres et plus, du plus titré au moins titré */
+const STARS = (() => { const t = new Map();
+  for (const y of years) for (const s of SLAMS) { const P = DT.parcours[y] && DT.parcours[y][s] || {};
+    for (const [c, f] of Object.entries(P)) for (let j = 0; j < f.length; j += 2) if (f[j + 1] === 7) {
+      const o = t.get(f[j]) || { id: f[j], nom: JOUEURS[f[j]], nat: c, drap: (NAT_DE[c] || {}).drap || '', t: 0 }; o.t++; t.set(f[j], o); } }
+  return [...t.values()].filter(o => o.t >= 3).sort((a, b) => b.t - a.t); })();
+(() => { /* recherche : tous les joueurs des nations proposées */
+  const ids = new Set();
+  for (const y of years) for (const s of SLAMS) { const P = DT.parcours[y] && DT.parcours[y][s] || {};
+    for (const f of Object.values(P)) for (let j = 0; j < f.length; j += 2) ids.add(f[j]); }
+  const tri = [...ids].sort((a, b) => JOUEURS[a].localeCompare(JOUEURS[b], 'fr'));
+  document.getElementById('cmpL').innerHTML = tri.map(id => `<option value="${esc(JOUEURS[id])}"></option>`).join('');
+  const q = document.getElementById('cmpQ');
+  const prendre = () => { const id = JOUEURS.indexOf(q.value.trim()); if (id >= 0 && ids.has(id)) { CMP.sans.add(id); q.value = ''; cmpTout(); } };
+  q.addEventListener('change', prendre); q.addEventListener('keydown', e => { if (e.key === 'Enter') prendre(); });
+})();
+function segTours(id, cle, debut) {
+  const box = document.getElementById(id);
+  box.innerHTML = RONDS.slice(debut).map((r, k) => `<button type="button" data-i="${k + debut}" aria-pressed="${k + debut === CMP[cle]}">${r}</button>`).join('');
+  box.querySelectorAll('button').forEach(b => b.onclick = () => { CMP[cle] = +b.dataset.i; box.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); cmpDessiner(); });
+}
+function segMetrique(id, cle) {
+  const box = document.getElementById(id);
+  box.querySelectorAll('button').forEach(b => b.onclick = () => { CMP[cle] = b.dataset.m; box.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); cmpDessiner(); });
+}
+segTours('rkT', 'rk', 1); segTours('scT', 'sc', 1); segTours('dcT', 'dc', 0); segMetrique('fnM', 'fn'); segMetrique('fnZ', 'fnZ'); segMetrique('mxM', 'mx');
+
+/* --- outils de tracé --- */
+const largeur = v => Math.max(300, Math.round(v.getBoundingClientRect().width));
+function cadre(v, w, h) { v.innerHTML = ''; return el('svg', { viewBox: `0 0 ${w} ${h}`, width: w, height: h, role: 'img' }, v); }
+function txt(svg, x, y, t, o = {}) {
+  return el('text', { x, y, 'font-size': o.fs || 10.5, fill: o.fill || cv('--ink-3'), 'text-anchor': o.a || 'start', 'dominant-baseline': 'middle', 'font-weight': o.fw || 400 }, svg, t);
+}
+/* étiquettes de fin de ligne : écartées d'au moins 13 px */
+function etiquettes(svg, labs, ymin, ymax) {
+  labs.sort((a, b) => a.y - b.y);
+  for (let k = 1; k < labs.length; k++) if (labs[k].y - labs[k - 1].y < 13) labs[k].y = labs[k - 1].y + 13;
+  const deb = labs.length ? labs[labs.length - 1].y - ymax : 0; if (deb > 0) labs.forEach(l => l.y -= deb);
+  for (const l of labs) txt(svg, l.x, Math.max(ymin, l.y), l.t, { fill: cv('--ink'), fw: 700, fs: 11 });
+}
+
+/* --- 1 · entonnoir --- */
+function dessinerEntonnoir() {
+  const v = document.getElementById('fnV'), W = largeur(v), H = W < 500 ? 250 : 300, m = { t: 12, r: W < 500 ? 78 : 110, b: 26, l: 34 };
+  const svg = cadre(v, W, H), M = CMP.fn;
+  /* « dès les 8es » : l'échelle se recale sur la fin de tableau, illisible sinon */
+  const z = +CMP.fnZ, xs = [0,1,2,3,4,5,6,7].filter(i => i >= Math.max(z, M === 'pass' ? 1 : 0));
+  const val = c => M === 'surv' ? surv(c) : M === 'pass' ? passe(c) : parEd(c);
+  const haut = Math.max(...CMP.sel.flatMap(c => xs.map(i => val(c)[i] || 0)), ...NATS.flatMap(n => xs.map(i => (val(n.c)[i] || 0) * .8)));
+  const ymax = M === 'pass' ? 100 : M === 'surv' && !z ? 100 : Math.max(haut * 1.1, .01);
+  const X = i => m.l + (xs.indexOf(i) + .5) * (W - m.l - m.r) / xs.length, Y = y => H - m.b - (Math.min(y, ymax) / ymax) * (H - m.t - m.b);
+  const pas = M === 'pass' || (M === 'surv' && !z) ? 25 : [10, 5, 2, 1, .5, .2, .1, .05, .02].find(p => ymax / p >= 3.5) || .01;
+  for (let g = 0; g <= ymax + 1e-9; g += pas) { el('line', { x1: m.l, x2: W - m.r, y1: Y(g), y2: Y(g), stroke: cv('--rule-soft'), 'stroke-width': 1 }, svg);
+    txt(svg, m.l - 6, Y(g), nf(+g.toFixed(2)) + (M === 'pass' ? ' %' : ''), { a: 'end' }); }
+  xs.forEach(i => txt(svg, X(i), H - 9, M === 'pass' ? RONDS_C[i - 1] + '→' + RONDS_C[i] : (W < 500 ? RONDS_C[i] : RONDS[i]), { a: 'middle', fill: cv('--ink-2') }));
+  const labs = [];
+  for (const c of ordreDessin()) {
+    const sel = CMP.sel.includes(c), pts = xs.map(i => [i, val(c)[i]]).filter(p => p[1] !== null);
+    el('path', { d: pts.map((p, k) => (k ? 'L' : 'M') + X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1)).join(''), fill: 'none', stroke: coul(c), 'stroke-width': sel ? 2.5 : 1.1, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, svg);
+    if (sel) {
+      pts.forEach(p => el('circle', { cx: X(p[0]), cy: Y(p[1]), r: 3.5, fill: coul(c), stroke: cv('--surface'), 'stroke-width': 1.5 }, svg));
+      const l = pts[pts.length - 1];
+      labs.push({ x: X(l[0]) + 9, y: Y(l[1]), t: `${NAT_DE[c].nom} ${M === 'vol' ? nf(l[1], 2) : nf(l[1], 1) + (M === 'pass' ? ' %' : '')}` });
+    }
+  }
+  etiquettes(svg, labs, m.t, H - m.b);
+  /* lecture par tour : bande verticale + valeurs des nations choisies, et rang */
+  const hl = el('rect', { y: m.t, height: H - m.t - m.b, width: (W - m.l - m.r) / xs.length, fill: cv('--ink'), opacity: 0 }, svg);
+  xs.forEach(i => { const bw = (W - m.l - m.r) / xs.length;
+    const r = el('rect', { x: X(i) - bw / 2, y: 0, width: bw, height: H, fill: 'transparent' }, svg);
+    const on = ev => { hl.setAttribute('x', X(i) - bw / 2); hl.setAttribute('opacity', .05);
+      const tous = NATS.map(n => [n.c, val(n.c)[i]]).filter(p => p[1] !== null).sort((a, b) => b[1] - a[1]);
+      const rang = c => tous.findIndex(p => p[0] === c) + 1;
+      const t = M === 'pass' ? `${RONDS[i - 1]} → ${RONDS[i]}` : RONDS[i];
+      const pt = ev.touches ? ev.touches[0] : ev;
+      cMontrer(pt.clientX, pt.clientY, `<div class="th">${t}</div><div class="tsub" style="margin-left:0">${M === 'surv' ? 'sur 100 au 1er tour' : M === 'pass' ? 'part qui passe' : 'joueurs par édition'}</div>` +
+        CMP.sel.map(c => { const x = val(c)[i]; return `<div style="display:flex;justify-content:space-between;gap:14px;line-height:1.6"><span>${pastille(c)}${esc(NAT_DE[c].nom)}</span><span><b>${M === 'vol' ? nf(x, 2) : nf(x, 1) + (M === 'pass' ? ' %' : '')}</b> <span style="color:var(--ink-3);font-size:11px">${rang(c)}e/${tous.length}</span></span></div>`; }).join(''));
+    };
+    r.addEventListener('pointermove', on); r.addEventListener('pointerdown', on); r.addEventListener('pointerleave', () => { hl.setAttribute('opacity', 0); cCacher(); });
+  });
+  const f = surv(CMP.sel[0]), g = CMP.sel.map(c => [c, surv(c)[4]]).sort((a, b) => b[1] - a[1]);
+  document.getElementById('fnP').textContent = M === 'surv' ? `Sur 100 joueurs au 1er tour, combien atteignent chaque tour. En quarts : ${g.map(([c, x]) => NAT_DE[c].nom + ' ' + nf(x, 1)).join(', ')}.`
+    : M === 'pass' ? 'Part des joueurs d’un tour qui passent au suivant. Une courbe qui plonge = une nation qui cale.' : 'Joueurs présents à chaque tour, en moyenne par édition.';
+}
+
+/* --- 2 · classement sur 100 --- */
+function dessinerClassement() {
+  const v = document.getElementById('rkV'), W = largeur(v), i = CMP.rk;
+  const rows = NATS.map(n => [n.c, surv(n.c)[i]]).sort((a, b) => b[1] - a[1]);
+  const bh = 19, H = rows.length * bh + 4, ml = W < 380 ? 96 : 118, mr = 40;
+  const svg = cadre(v, W, H), mx = Math.max(...rows.map(r => r[1]), .1);
+  rows.forEach(([c, x], k) => { const y = k * bh + 2, sel = CMP.sel.includes(c), wbar = (W - ml - mr) * x / mx;
+    if (sel) el('rect', { x: 0, y, width: W, height: bh, fill: cv('--surface-2') }, svg);
+    txt(svg, ml - 8, y + bh / 2, `${NAT_DE[c].drap ? NAT_DE[c].drap + ' ' : ''}${NAT_DE[c].nom}`, { a: 'end', fill: sel ? cv('--ink') : cv('--ink-2'), fw: sel ? 700 : 400, fs: 10.5 });
+    el('rect', { x: ml, y: y + 4, width: Math.max(1.5, wbar), height: bh - 8, rx: 2, fill: coul(c) }, svg);
+    txt(svg, ml + wbar + 5, y + bh / 2, nf(x, x < 10 ? 1 : 0), { fill: cv('--ink'), fw: 700, fs: 10.5 });
+    const hit = el('rect', { x: 0, y, width: W, height: bh, fill: 'transparent' }, svg);
+    const on = ev => { const pt = ev.touches ? ev.touches[0] : ev; const T = AG.tot[c];
+      cMontrer(pt.clientX, pt.clientY, `<div class="th">${pastille(c)}${esc(NAT_DE[c].nom)}</div><div style="margin-top:4px">${T[0]} présences au 1er tour<br>${T[i]} ${i === 7 ? 'titres' : 'arrivées en ' + RONDS[i].toLowerCase()}</div><div class="big" style="margin-top:4px"><b>${nf(x, 1)}</b><span>pour 100</span></div>`); };
+    hit.addEventListener('pointermove', on); hit.addEventListener('pointerdown', on); hit.addEventListener('pointerleave', cCacher);
+  });
+  const quoi = i === 7 ? 'au titre' : 'en ' + RONDS[i].toLowerCase() + (i >= 4 ? '' : (i === 3 ? '' : ' tour'));
+  document.getElementById('rkP').textContent = `Arrivés ${quoi}, pour 100 joueurs au 1er tour.`;
+}
+
+/* --- 3 · volume / rendement --- */
+function dessinerNuage() {
+  const v = document.getElementById('scV'), W = largeur(v), H = Math.round(Math.min(380, Math.max(280, W * .78))), i = CMP.sc;
+  const m = { t: 22, r: 14, b: 32, l: 34 }, svg = cadre(v, W, H);
+  const pts = NATS.map(n => ({ c: n.c, x: parEd(n.c)[0], y: surv(n.c)[i] })).filter(p => p.x > 0);
+  const lx0 = Math.log(.35), lx1 = Math.log(Math.max(...pts.map(p => p.x)) * 1.25);
+  const ymax = Math.max(...pts.map(p => p.y)) * 1.15 || 1;
+  const X = x => m.l + (Math.log(x) - lx0) / (lx1 - lx0) * (W - m.l - m.r), Y = y => H - m.b - y / ymax * (H - m.t - m.b);
+  /* médianes : quatre quadrants */
+  const med = a => { const s = a.slice().sort((p, q) => p - q); return s[Math.floor(s.length / 2)]; };
+  const mx = med(pts.map(p => p.x)), my = med(pts.map(p => p.y));
+  el('rect', { x: X(mx), y: m.t, width: W - m.r - X(mx), height: Y(my) - m.t, fill: cv('--surface-2') }, svg);
+  el('line', { x1: X(mx), x2: X(mx), y1: m.t, y2: H - m.b, stroke: cv('--rule'), 'stroke-dasharray': '3 3' }, svg);
+  el('line', { x1: m.l, x2: W - m.r, y1: Y(my), y2: Y(my), stroke: cv('--rule'), 'stroke-dasharray': '3 3' }, svg);
+  txt(svg, W - m.r - 4, m.t + 8, 'beaucoup, et loin', { a: 'end', fs: 9.5 });
+  txt(svg, m.l + 4, m.t + 8, 'peu, mais loin', { fs: 9.5 });
+  txt(svg, W - m.r - 4, H - m.b - 8, 'beaucoup, pas loin', { a: 'end', fs: 9.5 });
+  const pas = ymax > 40 ? 10 : ymax > 15 ? 5 : ymax > 6 ? 2 : ymax > 3 ? 1 : .5;
+  for (let g = 0; g <= ymax; g += pas) txt(svg, m.l - 6, Y(g), nf(g), { a: 'end' });
+  [.5, 1, 2, 5, 10, 20].filter(x => Math.log(x) > lx0 && Math.log(x) < lx1).forEach(x => txt(svg, X(x), H - m.b + 12, nf(x), { a: 'middle' }));
+  txt(svg, W - m.r, H - 6, 'joueurs au 1er tour, par édition →', { a: 'end', fs: 9.5 });
+  txt(svg, m.l - 28, 8, `↑ sur 100, arrivés ${i === 7 ? 'au titre' : 'en ' + RONDS[i].toLowerCase()}`, { fs: 9.5 });
+  /* points : gris d'abord, nations choisies au-dessus ; étiquettes sans chevauchement */
+  const ord = [...pts.filter(p => !CMP.sel.includes(p.c)), ...pts.filter(p => CMP.sel.includes(p.c))];
+  const pris = [];
+  const libre = (x, y, w) => !pris.some(b => x < b.x + b.w && x + w > b.x && Math.abs(y - b.y) < 11);
+  for (const p of ord.slice().reverse()) { const sel = CMP.sel.includes(p.c), w = NAT_DE[p.c].nom.length * (sel ? 6.2 : 5.2) + 4;
+    for (const [dx, dy, a] of [[9, 0, 'start'], [-9, 0, 'end'], [0, -11, 'middle'], [0, 12, 'middle']]) {
+      const lx = a === 'start' ? X(p.x) + dx : a === 'end' ? X(p.x) + dx - w : X(p.x) - w / 2, ly = Y(p.y) + dy;
+      if (lx < m.l - 30 || lx + w > W) continue;
+      if (libre(lx, ly, w)) { pris.push({ x: lx, y: ly, w }); p.lab = { x: X(p.x) + dx, y: ly, a }; break; } }
+    if (!p.lab && sel) { const ly = Y(p.y) - 12 - 11 * CMP.sel.indexOf(p.c); pris.push({ x: X(p.x) - w / 2, y: ly, w }); p.lab = { x: X(p.x), y: ly, a: 'middle' }; } }
+  for (const p of ord) { const sel = CMP.sel.includes(p.c);
+    const dot = el('circle', { cx: X(p.x), cy: Y(p.y), r: sel ? 6.5 : 4.5, fill: coul(p.c), stroke: cv('--surface'), 'stroke-width': 2 }, svg);
+    if (p.lab) txt(svg, p.lab.x, p.lab.y, NAT_DE[p.c].nom, { a: p.lab.a, fill: sel ? cv('--ink') : cv('--ink-3'), fw: sel ? 700 : 400, fs: sel ? 11 : 9.5 });
+    const hit = el('circle', { cx: X(p.x), cy: Y(p.y), r: 12, fill: 'transparent' }, svg);
+    const on = ev => { const pt = ev.touches ? ev.touches[0] : ev;
+      cMontrer(pt.clientX, pt.clientY, `<div class="th">${pastille(p.c)}${esc(NAT_DE[p.c].nom)}</div><div style="margin-top:4px">${nf(p.x, 1)} joueurs par édition au 1er tour<br><b>${nf(p.y, 1)}</b> sur 100 arrivés ${i === 7 ? 'au titre' : 'en ' + RONDS[i].toLowerCase()}</div>`); };
+    hit.addEventListener('pointermove', on); hit.addEventListener('pointerdown', on); hit.addEventListener('pointerleave', cCacher); }
+}
+
+/* --- 4 · décennies --- */
+function dessinerDecennies() {
+  const v = document.getElementById('dcV'), W = largeur(v), H = W < 500 ? 230 : 270, i = CMP.dc;
+  const decs = Object.keys(AG.edDec).map(Number).sort((a, b) => a - b);
+  const m = { t: 12, r: W < 500 ? 70 : 96, b: 24, l: 34 }, svg = cadre(v, W, H);
+  const val = c => decs.map(d => ((AG.dec[c][d] || [])[i] || 0) / AG.edDec[d]);
+  const ymax = Math.max(...NATS.map(n => Math.max(...val(n.c)))) * 1.08 || 1;
+  const X = k => m.l + (k + .5) * (W - m.l - m.r) / decs.length, Y = y => H - m.b - y / ymax * (H - m.t - m.b);
+  const pas = ymax > 15 ? 5 : ymax > 6 ? 2 : ymax > 3 ? 1 : ymax > 1.5 ? .5 : ymax > .6 ? .2 : .1;
+  for (let g = 0; g <= ymax + 1e-9; g += pas) { el('line', { x1: m.l, x2: W - m.r, y1: Y(g), y2: Y(g), stroke: cv('--rule-soft') }, svg); txt(svg, m.l - 6, Y(g), nf(+g.toFixed(2)), { a: 'end' }); }
+  decs.forEach((d, k) => txt(svg, X(k), H - 8, d === 1960 ? '68–69' : (W < 500 ? "'" + String(d).slice(2) : d + 's'), { a: 'middle', fill: cv('--ink-2') }));
+  const labs = [];
+  for (const c of ordreDessin()) { const sel = CMP.sel.includes(c), y = val(c);
+    el('path', { d: y.map((q, k) => (k ? 'L' : 'M') + X(k).toFixed(1) + ',' + Y(q).toFixed(1)).join(''), fill: 'none', stroke: coul(c), 'stroke-width': sel ? 2.5 : 1.1, 'stroke-linejoin': 'round' }, svg);
+    if (sel) { y.forEach((q, k) => el('circle', { cx: X(k), cy: Y(q), r: 3, fill: coul(c), stroke: cv('--surface'), 'stroke-width': 1.5 }, svg));
+      labs.push({ x: X(decs.length - 1) + 9, y: Y(y[y.length - 1]), t: NAT_DE[c].nom }); } }
+  etiquettes(svg, labs, m.t, H - m.b);
+  const hl = el('rect', { y: m.t, height: H - m.t - m.b, width: (W - m.l - m.r) / decs.length, fill: cv('--ink'), opacity: 0 }, svg);
+  decs.forEach((d, k) => { const bw = (W - m.l - m.r) / decs.length;
+    const r = el('rect', { x: X(k) - bw / 2, y: 0, width: bw, height: H, fill: 'transparent' }, svg);
+    const on = ev => { hl.setAttribute('x', X(k) - bw / 2); hl.setAttribute('opacity', .05); const pt = ev.touches ? ev.touches[0] : ev;
+      const top = NATS.map(n => [n.c, val(n.c)[k]]).sort((a, b) => b[1] - a[1]);
+      const lst = [...CMP.sel.map(c => [c, val(c)[k]]), ...top.filter(p => !CMP.sel.includes(p[0])).slice(0, 2)];
+      cMontrer(pt.clientX, pt.clientY, `<div class="th">${d === 1960 ? '1968–1969' : 'Années ' + d}</div><div class="tsub" style="margin-left:0">${RONDS[i]}${i < 3 ? ' tour' : ''} · joueurs par édition</div>` +
+        lst.map(([c, x]) => `<div style="display:flex;justify-content:space-between;gap:14px;line-height:1.6"><span>${pastille(c)}${esc(NAT_DE[c].nom)}</span><b>${nf(x, 2)}</b></div>`).join('')); };
+    r.addEventListener('pointermove', on); r.addEventListener('pointerdown', on); r.addEventListener('pointerleave', () => { hl.setAttribute('opacity', 0); cCacher(); }); });
+}
+
+/* --- 5 · matrice --- */
+function dessinerMatrice() {
+  const tb = document.getElementById('mx'), M = CMP.mx;
+  const cols = M === 'vol' ? [0,1,2,3,4,5,6,7] : [1,2,3,4,5,6,7];
+  const val = c => M === 'vol' ? parEd(c) : passe(c).map(x => x === null ? null : M === 'pass' ? x : 100 - x);
+  if (CMP.mxTri >= 0 && !cols.includes(CMP.mxTri)) CMP.mxTri = -1;
+  const cle = c => CMP.mxTri < 0 ? parEd(c)[0] : val(c)[CMP.mxTri];
+  const desc = !(M === 'loss' && CMP.mxTri >= 0);
+  const rows = NATS.map(n => n.c).sort((a, b) => desc ? cle(b) - cle(a) : cle(a) - cle(b));
+  /* couleur : vert du passage (même rampe que la grille), rouille de la déperdition */
+  const SC = isDark() ? SC_DARK : SC_LIGHT;
+  const fond = x => { if (M === 'vol') { const k = x <= 0 ? 0 : Math.min(11, 1 + Math.round(Math.log10(x * 50) / Math.log10(1200) * 10)); return [SC[k][1], SC[k][2]]; }
+    if (M === 'pass') { const k = Math.max(0, Math.min(11, Math.round((x - 25) / 50 * 11))); return [SC[k][1], SC[k][2]]; }
+    const t = Math.max(0, Math.min(1, (x - 25) / 55)); return [`color-mix(in srgb, var(--loss) ${Math.round(t * 85)}%, var(--loss-bg))`, t > .5 ? '#fff' : 'var(--ink)']; };
+  const th = (k, l) => `<th data-k="${k}" class="${CMP.mxTri === k ? 'on' : ''}" title="Trier">${l}${CMP.mxTri === k ? (desc ? ' ▾' : ' ▴') : ''}</th>`;
+  tb.innerHTML = `<thead><tr><th></th>${th(-1, 'Engagés')}${cols.map(i => th(i, M === 'vol' ? RONDS_C[i] : RONDS_C[i - 1] + '→' + RONDS_C[i])).join('')}</tr></thead><tbody>` +
+    rows.map(c => { const sel = CMP.sel.includes(c);
+      return `<tr class="${sel ? 'sel' : ''}" style="--c:${coul(c)}"><td class="nm">${NAT_DE[c].drap ? NAT_DE[c].drap + ' ' : ''}${esc(NAT_DE[c].nom)}</td><td class="eng">${nf(parEd(c)[0], 1)}</td>` +
+        cols.map(i => { const x = val(c)[i]; if (x === null) return '<td>–</td>'; const [bg, fg] = fond(x);
+          return `<td style="background:${bg};color:${fg}">${M === 'vol' ? nf(x, x < 1 ? 2 : 1) : Math.round(x)}</td>`; }).join('') + '</tr>'; }).join('') + '</tbody>';
+  tb.querySelectorAll('th[data-k]').forEach(h => h.onclick = () => { CMP.mxTri = +h.dataset.k; dessinerMatrice(); });
+}
+
+function cmpDessiner() { dessinerEntonnoir(); dessinerClassement(); dessinerNuage(); dessinerDecennies(); dessinerMatrice(); }
+function cmpTout() { agreger(); cmpCommandes(); cmpDessiner(); }
+cmpTout();
+let cmpRz; new ResizeObserver(() => { clearTimeout(cmpRz); cmpRz = setTimeout(cmpDessiner, 120); }).observe(document.getElementById('cmp'));
+document.addEventListener('grotang:theme', () => { cmpCommandes(); cmpDessiner(); });
 </script>
 </body>
 </html>
