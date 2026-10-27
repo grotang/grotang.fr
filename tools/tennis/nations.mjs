@@ -39,8 +39,7 @@ const N = {
 /* précisions affichées sous le choix de la nation */
 const NOTE = {
   GER: "RFA jusqu'en 1990, puis Allemagne réunifiée.",
-  TCH: "Jusqu'en 1992. Ensuite : Tchéquie et Slovaquie.",
-  CZE: 'Depuis 1993. Avant : Tchécoslovaquie.',
+  CZE: "Tchécoslovaquie jusqu'en 1992 (Slovaques compris, comme Mečíř).",
   RUS: "Depuis 1992. Depuis 2022, les Russes jouent sous bannière neutre : ils sont comptés ici avec la Russie.",
   SRB: 'Sous ce nom depuis 2006 (avant : Serbie-et-Monténégro, Yougoslavie).',
 };

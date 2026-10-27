@@ -307,6 +307,13 @@ function buildTennis() {
   /* La page ne reçoit que les nations titrées (au moins un Grand Chelem gagné
      depuis 1968, l'édition de décembre 1977 comprise), la France en tête puis
      par nombre de titres, et seulement leurs joueurs, renumérotés. */
+  /* Tchécoslovaquie → Tchéquie, pour suivre une seule nation sur toute l'ère
+     Open (Kodeš, Lendl, puis Korda). Les Slovaques d'avant 1993 (Mečíř…)
+     y sont donc comptés. data.json garde le code d'époque, TCH. */
+  for (const e of Object.values(DT.parcours)) for (const p of Object.values(e)) {
+    if (!p.TCH) continue;
+    p.CZE = (p.CZE || []).concat(p.TCH); delete p.TCH;
+  }
   const titres = {};
   for (const e of Object.values(DT.parcours)) for (const p of Object.values(e)) for (const [c, f] of Object.entries(p))
     for (let j = 1; j < f.length; j += 2) if (f[j] === 7) titres[c] = (titres[c] || 0) + 1;
