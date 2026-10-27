@@ -140,6 +140,13 @@ svg .m{font-variant-numeric:tabular-nums}
 .lgd i.sq{height:10px; width:10px}
 
 /* ---------- 1 · le circuit (Sankey) ---------- */
+.skx{overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain; position:relative}
+.skx.dfl{margin:0 -4px; padding:0 4px 8px; background:linear-gradient(to right,var(--surface) 30%,transparent) left/24px 100% no-repeat local,linear-gradient(to left,var(--surface) 30%,transparent) right/24px 100% no-repeat local,radial-gradient(farthest-side at 0 50%,rgba(0,0,0,.18),transparent) left/10px 100% no-repeat scroll,radial-gradient(farthest-side at 100% 50%,rgba(0,0,0,.18),transparent) right/10px 100% no-repeat scroll}
+.skx.dfl .sk{width:auto; display:inline-block}
+.skx.dfl .sk svg{max-width:none}
+.skx:focus-visible{outline:2px solid var(--ink); outline-offset:2px}
+.skh{margin:0 0 8px; font-size:12.5px; color:var(--ink-2)}
+.skh::before{content:'⇠ '; font-weight:700}
 .sk .lk{fill-opacity:.2; transition:fill-opacity .12s}
 .sk .lk.hl{fill-opacity:.55}
 .sk.foc .lk:not(.hl){fill-opacity:.08}
@@ -271,7 +278,8 @@ svg .m{font-variant-numeric:tabular-nums}
     <div class="ptitle"><span class="no">1</span><h3 id="t1">Le circuit</h3>
       <span class="sub"><span class="ctl"><span class="lb">Dépenses</span><span class="seg" role="group" aria-label="Ventilation des dépenses">
         <button type="button" data-v="fonction" aria-pressed="true">Par politique</button><button type="button" data-v="nature" aria-pressed="false">Par nature</button></span></span></span></div>
-    <div class="chart sk" id="sk" role="img" aria-label="Diagramme des flux : recettes et emprunt vers les dépenses publiques, puis 11 politiques et leurs sous-postes"></div>
+    <p class="skh" id="skh" hidden>Schéma complet : faites-le glisser vers la gauche pour suivre l'argent jusqu'aux sous-postes. Touchez un flux pour le chiffrer.</p>
+    <div class="skx" id="skx" tabindex="0" aria-label="Schéma défilant horizontalement"><div class="chart sk" id="sk" role="img" aria-label="Diagramme des flux : recettes et emprunt vers les dépenses publiques, puis 11 politiques et leurs sous-postes"></div></div>
     <details class="xfold"><summary>Les chiffres du schéma, poste par poste</summary><div class="in" id="skTab"></div></details>
     <p class="figc" id="skNote"></p>
   </div>
@@ -592,8 +600,12 @@ function tipOn(ev, html) {
   if (y + r.height > vh - 8) y = Math.max(8, ev.clientY - r.height - 14);
   tip.style.left = x + 'px'; tip.style.top = y + 'px';
 }
-const tipOff = () => { tip.hidden = true; };
-document.addEventListener('touchstart', e => { if (!e.target.closest('[data-tip]')) tipOff(); }, { passive: true });
+/* Sur écran tactile, le navigateur peut émettre un « mouseleave » juste après le
+   toucher : on l'ignore un instant, l'infobulle reste jusqu'au toucher suivant. */
+let tTouch = 0;
+const touchRecent = () => Date.now() - tTouch < 1200;
+const tipOff = force => { if (force !== true && touchRecent()) return; tip.hidden = true; };
+document.addEventListener('touchstart', e => { if (e.target.closest('[data-tip]')) tTouch = Date.now(); else { tipOff(true); const v = document.querySelector('#sk svg.foc'); if (v) { v.classList.remove('foc'); v.querySelectorAll('.hl').forEach(x => x.classList.remove('hl')); } } }, { passive: true, capture: true });
 const trow = (a, b) => '<div class="tr"><span>' + a + '</span><b>' + b + '</b></div>';
 /* Les quatre lectures d'un même montant : le lecteur n'a pas à changer d'unité pour comparer. */
 const quatre = (m, k, base, baseLab) => trow('Montant', FM(m, k, 'md')) + trow('Part du PIB', FM(m, k, 'pib') )
@@ -713,8 +725,12 @@ function circuit() {
   const k = ix(S.an), box = $('sk');
   const parPol = S.v === 'fonction' && S.an <= D.derF;
   const te = TE(k), b9 = A.S13.B9[k];
-  const W = Math.max(300, box.clientWidth), mob = W < 760;
-  const niv2 = parPol && !mob;
+  /* Le schéma garde sa largeur de lecture ; sur un écran plus étroit, il défile
+     horizontalement au lieu d'être tassé (le niveau 2 reste visible). */
+  const sx = $('skx'), Wc = Math.max(300, sx.clientWidth), Wmin = parPol ? 1040 : 720;
+  const W = Math.max(Wc, Wmin), mob = false, dfl = W > Wc;
+  const niv2 = parPol;
+  sx.classList.toggle('dfl', dfl); $('skh').hidden = !dfl;
 
   /* --- les noeuds --- */
   const L = REC.map(r => ({ id: 'r' + r.n, n: r.n, l: r.l, m: sum(A.S13, r.k, k), c: '--ink-2', kind: 'rec' }))
@@ -749,7 +765,7 @@ function circuit() {
   /* --- géométrie --- */
   const H = niv2 ? 960 : mob ? 680 : 640, top = 50, bot = 6, nw = mob ? 10 : 13;
   const gP = mob ? 3 : 5, gQ = 3;
-  const labW = niv2 ? Math.min(280, Math.round(W * 0.23)) : 0;
+  const labW = niv2 ? (dfl ? 300 : Math.min(280, Math.round(W * 0.23))) : 0;
   const xL = 0;
   const xS = W - labW - nw;
   const xP = niv2 ? Math.round(xS * 0.6) : W - nw;
@@ -769,10 +785,11 @@ function circuit() {
   const hM = te * kk, yM = top + (avail - hM) / 2;
 
   const svg = svgIn(box, W, H);
+  svg.style.width = W + 'px';
   const gl = el('g', {}, svg), gn = el('g', {}, svg), gt = el('g', {}, svg);
   const ruban = (x1, a1, b1, x2, a2, b2, c) => {
     const xm = (x1 + x2) / 2;
-    return el('path', { class: 'lk', d: `M${x1},${a1}C${xm},${a1} ${xm},${a2} ${x2},${a2}L${x2},${b2}C${xm},${b2} ${xm},${b1} ${x1},${b1}Z`, style: `fill:${col(c)}` }, gl);
+    return el('path', { class: 'lk', 'data-tip': 1, d: `M${x1},${a1}C${xm},${a1} ${xm},${a2} ${x2},${a2}L${x2},${b2}C${xm},${b2} ${xm},${b1} ${x1},${b1}Z`, style: `fill:${col(c)}` }, gl);
   };
   let cy = yM;
   for (const n of L) { const h = n.m * kk; n.lk = ruban(xL + nw, n.y, n.y + n.h, xM, cy, cy + h, n.c); cy += h; }
@@ -866,7 +883,7 @@ function circuit() {
   };
   for (const n of all) for (const t of [n.g, n.lk]) {
     t.addEventListener('mousemove', e => { focus(n); tipOn(e, tipN(n)); });
-    t.addEventListener('mouseleave', () => { focus(null); tipOff(); });
+    t.addEventListener('mouseleave', () => { if (touchRecent()) return; focus(null); tipOff(); });
     t.addEventListener('touchstart', e => { focus(n); tipOn(e.touches[0], tipN(n)); }, { passive: true });
   }
   gM.addEventListener('mousemove', e => tipOn(e, `<div class="th">Dépenses publiques ${S.an}</div>` + quatre(te, k)
