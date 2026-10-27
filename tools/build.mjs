@@ -518,7 +518,7 @@ const majUefa   = dateGit('tools/uefa/page.html', ...COMMUN)
   || dateSitemap('/uefa/',   PRECEDENT,   uefa.html,   true);
 const majTennis = dateGit('tools/tennis.src.html', 'tools/tennis/data.json', ...COMMUN)
   || dateSitemap('/tennis/', PREC_TENNIS, tennis.html, false);
-const majEco    = dateGit('tools/eco/page.html', 'tools/eco/data.json', 'tools/eco/page.mjs', ...COMMUN)
+const majEco    = dateGit('tools/eco/page.html', 'tools/eco/data.json', 'tools/eco/retraites.json', 'tools/eco/page.mjs', ...COMMUN)
   || dateSitemap('/economie/', PREC_ECO, eco.html, false);
 
 /* Matchs club par club (bloc 6b, survol des gaufres) : fichier à part, chargé

@@ -34,6 +34,11 @@ export function buildEco() {
   });
 
   let out = brut.replace(RE, () => `/*DATA_START*/const DE = ${JSON.stringify(D)};/*DATA_END*/`);
+  /* Distribution des retraites (Drees, relevée à la main) pour le simulateur. */
+  const RT = JSON.parse(fs.readFileSync(path.join(ICI, 'retraites.json'), 'utf8'));
+  const RE2 = /\/\*RT_START\*\/[^]*?\/\*RT_END\*\//;
+  if (!RE2.test(out)) throw new Error('économie : sentinelles RT introuvables');
+  out = out.replace(RE2, () => `/*RT_START*/const RT = ${JSON.stringify(RT)};/*RT_END*/`);
   out = out.replace(/<title>[^<]*<\/title>/, () => `<title>${titre}</title>`);
   out = out.replace('<meta name="viewport" content="width=device-width, initial-scale=1.0">',
     () => `<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -58,6 +63,6 @@ ${navCSS}
 </style>`);
   out = out.replace('<body>\n', () => `<body>\n${nav('eco')}\n`);
   out = out.replace('</body>', () => `${THEME_JS}\n${ANALYTICS}\n</body>`);
-  if (!out.includes('gnav') || !out.includes('const DE = {')) throw new Error('économie : injection ratée');
+  if (!out.includes('gnav') || !out.includes('const DE = {') || !out.includes('const RT = {')) throw new Error('économie : injection ratée');
   return { html: out, der: D.der };
 }

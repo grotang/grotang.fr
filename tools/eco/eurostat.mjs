@@ -43,6 +43,13 @@ const NA_TAX = ['D2', 'D21', 'D211', 'D214A', 'D29', 'D29A', 'D29C', 'D5', 'D51A
   'D61', 'D611', 'D612', 'D613', 'D613CE', 'D613CS', 'D613CN', 'D995'];
 
 /* Comparaison européenne : les voisins de taille comparable et les deux agrégats. */
+/* Dépenses par fonction ET par nature (gov_10a_exp), pour l'ensemble des
+   administrations : ce que paie concrètement chaque sous-poste (salaires,
+   achats, prestations, investissement…). Leur somme est exactement le total
+   de la fonction : contrôlé plus bas. */
+export const NATF_DEBUT = 2015;
+export const NAT_F = ['D1', 'P2', 'D62', 'D632', 'D3', 'D7', 'D9', 'OP5ANP', 'D4', 'D29_D5_D8'];
+
 export const UE_GEO = ['FR', 'DE', 'IT', 'ES', 'NL', 'BE', 'AT', 'SE', 'DK', 'FI', 'EA20', 'EU27_2020'];
 
 export async function construire(get) {
@@ -72,7 +79,7 @@ export async function construire(get) {
   }
   const charge = async (ds, p) => lit(await get(req(ds, p)));
 
-  const [M, X, T, G, P, D, U, H] = await Promise.all([
+  const [M, X, T, G, P, D, U, H, XN] = await Promise.all([
     charge('gov_10a_main', { geo: 'FR', unit: 'MIO_EUR', sector: SECTEURS, na_item: NA_MAIN, sinceTimePeriod: DEBUT }),
     charge('gov_10a_exp', { geo: 'FR', unit: 'MIO_EUR', sector: SECTEURS, na_item: 'TE', sinceTimePeriod: DEBUT }),
     charge('gov_10a_taxag', { geo: 'FR', unit: 'MIO_EUR', sector: SECT_TAX, na_item: NA_TAX, sinceTimePeriod: DEBUT }),
@@ -81,6 +88,7 @@ export async function construire(get) {
     charge('gov_10dd_edpt1', { geo: 'FR', unit: 'MIO_EUR', sector: 'S13', na_item: 'GD', sinceTimePeriod: DEBUT }),
     charge('gov_10a_exp', { geo: UE_GEO, unit: 'PC_GDP', sector: 'S13', na_item: 'TE', sinceTimePeriod: 2015 }),
     charge('gov_10a_main', { geo: UE_GEO, unit: 'PC_GDP', sector: 'S13', na_item: ['TE', 'TR', 'B9'], sinceTimePeriod: DEBUT }),
+    charge('gov_10a_exp', { geo: 'FR', unit: 'MIO_EUR', sector: 'S13', na_item: NAT_F, sinceTimePeriod: DEBUT }),
   ]);
 
   /* Deux « dernières années ».
@@ -105,6 +113,13 @@ export async function construire(get) {
   const codes = X.cats('cofog99');
   const cofog = {};
   for (const s of SECTEURS) { cofog[s] = {}; for (const c of codes) { const z = serie(X, { sector: s, cofog99: c }); if (z.some(v => v !== null)) cofog[s][c] = z; } }
+  /* natf[code][nature] : séries de l'ensemble des administrations ; les natures
+     toujours nulles pour un poste ne sont pas écrites. */
+  /* Dix ans suffisent pour expliquer ce que recouvre chaque poste : on ne garde
+     que 2015 → dernière année (le fichier reste léger, la page aussi). */
+  const natf = { debut: NATF_DEBUT, c: {} };
+  const anN = an.filter(y => y >= NATF_DEBUT);
+  for (const c of codes) { const o = {}; for (const n of NAT_F) { const z = anN.map(y => ent(XN.v({ cofog99: c, na_item: n, time: String(y) }))); if (z.some(v => v)) o[n] = z; } if (Object.keys(o).length) natf.c[c] = o; }
 
   const imp = {};
   for (const n of NA_TAX) { const z = serie(T, { na_item: n }); if (z.some(v => v !== null)) imp[n] = z; }
@@ -159,6 +174,14 @@ export async function construire(get) {
     }
   }
   ok(true, `${derF} : chaque fonction = Σ de ses sous-fonctions, dans les 4 secteurs`);
+  /* Chaque poste, chaque année : Σ des natures = total du poste. */
+  let nKo = 0;
+  for (const y of an.filter(y => y <= derF)) for (const c of codes) {
+    const tot = brut(X, { sector: 'S13', cofog99: c }, y);
+    const sn = NAT_F.reduce((a, n) => a + brut(XN, { cofog99: c, na_item: n }, y), 0);
+    if (Math.abs(sn - tot) > Math.max(3, Math.abs(tot) * 0.002)) { nKo++; if (nKo <= 5) ok(false, `${y} ${c} : Σ natures ${sn.toFixed(0)} ≠ total ${tot}`); }
+  }
+  if (!nKo) ok(true, `1995 → ${derF} : chaque poste = Σ de ses natures (salaires, achats, prestations…), ${codes.length} postes`);
   /* Détail fiscal contre agrégat : deux présentations d'Eurostat, à moins de 1 %. */
   for (const [t, m] of [['D2', 'D2REC'], ['D5', 'D5REC'], ['D61', 'D61REC'], ['D91', 'D91REC']]) {
     const a = brut(T, { na_item: t }, derT), b = brut(M, { sector: 'S13', na_item: m }, derT);
@@ -175,7 +198,7 @@ export async function construire(get) {
   return {
     data: {
       source: { maj: M.maj, majCofog: X.maj, majImpots: T.maj },
-      an, der, derF, derT, pib, pop, dette, agg, cofog, imp, ue, hist,
+      an, der, derF, derT, pib, pop, dette, agg, cofog, natf, imp, ue, hist,
     },
     ctrl,
   };

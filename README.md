@@ -38,7 +38,8 @@ Toutes les saisons depuis 2021/22 sont consultables ; un seul sélecteur de sais
 | Bloc | Ce qu'il montre |
 |---|---|
 | En-tête | Dépenses, recettes, déficit, dette ; la phrase « sur 100 € de dépense publique… ». |
-| **1** Le circuit | Sankey recettes + emprunt → dépenses → 10 politiques (COFOG) ou 9 natures ; un clic ouvre une politique : ses sous-postes, qui la porte, son évolution en % du PIB. |
+| Hypothèse | « Plafonner les retraites » : curseur du plafond (pension nette), économie, retraités touchés, déficit ; les chiffres de toute la page passent sous l'hypothèse (année 2023, dernière distribution Drees). Données : `tools/eco/retraites.json`, relevé à la main. |
+| **1** Le circuit | Sankey recettes + emprunt → dépenses → niveau 1 (11 politiques : les 10 fonctions COFOG, intérêts de la dette à part) → niveau 2 (sous-postes ≥ 1 % de la dépense). Au survol : définition concrète du poste et ce qu'il paie par nature (salaires, achats, prestations, investissement…). |
 | **2** Impôt par impôt | TVA, IR-CSG, IS, cotisations, taxes foncières… |
 | **3–4** Qui dépense | Les trois administrations ; les soldes empilés depuis 1995 (le déficit est celui de l'État). |
 | **5–6** Trente ans | Dépenses et recettes en % du PIB ; ce qui a grossi ou fondu depuis 1995, par politique ou sous-poste. |

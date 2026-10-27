@@ -41,6 +41,14 @@ for (const s of SECTEURS) for (const y of D.an.filter(y => y <= D.derF)) {
 }
 ok(n === 0, `COFOG : total = Σ 10 fonctions = Σ sous-fonctions, 1995 → ${D.derF}, 4 secteurs`);
 
+n = 0;
+{ const N = D.natf, k0 = D.an.indexOf(N.debut);
+  for (const [c, o] of Object.entries(N.c)) for (let i = 0; D.an[k0 + i] <= D.derF; i++) {
+    const sn = Object.values(o).reduce((a, z) => a + (z[i] || 0), 0), t = D.cofog.S13[c][k0 + i];
+    if (Math.abs(sn - t) > Math.max(12, Math.abs(t) * 0.003)) { n++; if (n < 4) ok(false, `${D.an[k0 + i]} ${c} : Σ natures ${sn} ≠ ${t}`); }
+  } }
+ok(n === 0, `chaque poste = Σ de ses natures, ${D.natf.debut} → ${D.derF}`);
+
 for (const g of D.ue.geo) {
   const C = D.ue.cofog[g], s = Object.keys(C).filter(c => /^GF\d\d$/.test(c)).reduce((a, c) => a + C[c], 0);
   ok(Math.abs(s - C.TOTAL) <= 0.6, `Europe ${g} : Σ fonctions ${s.toFixed(1)} ≈ ${C.TOTAL} % du PIB (arrondis au dixième)`);
@@ -56,3 +64,17 @@ ok(D.cofog.S13.GF1002[i(2023)] > D.cofog.S13.GF07[i(2023)], '2023 : la vieilless
 
 if (ko) { console.error(`\n${ko} échec(s).`); process.exit(1); }
 console.log('\ndata.json : tout est cohérent.');
+
+/* retraites.json (Drees) : la distribution relevée doit redonner la moyenne
+   publiée, et la masse reconstituée (effectif × moyenne × 12) la masse publiée
+   des pensions de droit direct, à l'écart des retraités vivant à l'étranger près. */
+{
+  const R = JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'retraites.json'), 'utf8'));
+  const d = R.distribution, q = d.queue;
+  const s = d.parts.reduce((a, b) => a + b, 0) + d.au_dessus_4500;
+  const moy = (d.parts.reduce((a, p, i) => a + p * (i + 0.5) * d.pas, 0) + (d.au_dessus_4500 - q.part) * (4500 + q.seuil) / 2 + q.part * q.moyenne) / 100;
+  const masse = R.effectif * R.moyenne_brute * 12 / 1e9;
+  console.log(Math.abs(s - 100) < 0.05 ? '  ok ' : 'ÉCHEC', `retraites : parts sommées ${s.toFixed(1)} %`); if (Math.abs(s - 100) >= 0.05) process.exitCode = 1;
+  console.log(Math.abs(moy / d.moyenne_publiee - 1) < 0.01 ? '  ok ' : 'ÉCHEC', `retraites : moyenne reconstituée ${moy.toFixed(0)} € = publiée ${d.moyenne_publiee} € (fin 2020)`); if (Math.abs(moy / d.moyenne_publiee - 1) >= 0.01) process.exitCode = 1;
+  console.log(Math.abs(masse / R.masse_droit_direct_md - 1) < 0.03 ? '  ok ' : 'ÉCHEC', `retraites : masse reconstituée ${masse.toFixed(1)} Md€ ≈ publiée ${R.masse_droit_direct_md} Md€ (${R.annee})`); if (Math.abs(masse / R.masse_droit_direct_md - 1) >= 0.03) process.exitCode = 1;
+}

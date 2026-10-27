@@ -57,6 +57,29 @@ h1{font-size:clamp(32px,5vw,52px); font-weight:600; line-height:1.02; letter-spa
 @media (max-width:560px){ .filtres{top:auto; position:static} .seg button{padding:7px 9px; font-size:12px} }
 
 /* ---------- chiffres de tête ---------- */
+.hyp{margin-top:12px; background:var(--surface); border:1px solid var(--rule); border-left:4px solid var(--n2); border-radius:3px; padding:clamp(14px,2vw,20px) clamp(14px,2.2vw,22px)}
+.hyp .hh{display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 14px}
+.hyp .hh h3{font-size:19px; font-weight:600}
+.hyp .hh .x{margin-left:auto; appearance:none; border:1px solid var(--rule); background:var(--surface-2); color:var(--ink-2); font:inherit; font-size:12px; font-weight:600; border-radius:2px; padding:3px 10px; cursor:pointer}
+.hyp .hsub{font-size:13px; color:var(--ink-2); margin:4px 0 12px; max-width:110ch}
+.hyp .hc{display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px; margin-bottom:14px}
+.hyp .hc label{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700; color:var(--ink-3)}
+.hyp .hc input[type=range]{width:min(420px,100%); accent-color:var(--n2)}
+.hyp .hc .cap{font-size:24px; font-weight:700; font-variant-numeric:tabular-nums; min-width:7.5ch}
+.hyp .hc .cap small{font-size:12.5px; font-weight:400; color:var(--ink-3)}
+.hyp .res{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px}
+@media (max-width:900px){ .hyp .res{grid-template-columns:repeat(2,minmax(0,1fr))} }
+.hyp .r{background:var(--surface-2); border-radius:3px; padding:10px 12px}
+.hyp .r .k{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700; color:var(--ink-3)}
+.hyp .r .v{font-size:26px; font-weight:700; line-height:1.15; margin-top:3px; letter-spacing:-.01em}
+.hyp .r .v small{font-size:13px; font-weight:400; color:var(--ink-2); margin-left:3px}
+.hyp .r .d{font-size:12px; color:var(--ink-2); margin-top:2px; line-height:1.4}
+.hyp .r .d b{color:var(--ink)}
+.hyp .r.ok .v{color:var(--good)}
+.hyp .hist{margin-top:14px}
+.hyp .hist svg text{font-size:11px; fill:var(--ink-3)}
+.hyp .hn{font-size:12px; color:var(--ink-3); margin:10px 0 0; line-height:1.5; max-width:130ch}
+.hyptag{display:inline-block; font-family:Calibri,Carlito,sans-serif; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--ink); background:color-mix(in srgb,var(--n2) 22%,transparent); border:1px solid var(--n2); border-radius:2px; padding:0 6px; vertical-align:.25em; margin-left:8px}
 .tiles{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-top:18px}
 .tile{background:var(--surface); border:1px solid var(--rule); border-radius:3px; padding:13px 15px 12px}
 .tile .k{font-size:11px; letter-spacing:.08em; text-transform:uppercase; font-weight:700; color:var(--ink-3)}
@@ -200,7 +223,7 @@ svg .m{font-variant-numeric:tabular-nums}
 
 /* ---------- infobulle ---------- */
 .tip{position:fixed; z-index:60; pointer-events:none; background:var(--surface); border:1px solid var(--rule); border-radius:3px;
-  padding:9px 11px 10px; box-shadow:0 6px 22px rgba(0,0,0,.16); font-size:12.5px; color:var(--ink); min-width:200px; max-width:320px}
+  padding:9px 11px 10px; box-shadow:0 6px 22px rgba(0,0,0,.16); font-size:12.5px; color:var(--ink); min-width:200px; max-width:360px}
 .tip[hidden]{display:none}
 .tip .th{display:flex; align-items:center; gap:6px; font-size:11px; letter-spacing:.06em; text-transform:uppercase; font-weight:700; color:var(--ink-2); margin-bottom:5px}
 .tip .th i{width:9px; height:9px; border-radius:2px; flex:none}
@@ -208,6 +231,7 @@ svg .m{font-variant-numeric:tabular-nums}
 .tip .tr span{color:var(--ink-2)}
 .tip .tr b{font-variant-numeric:tabular-nums; font-weight:600; font-size:12px; white-space:nowrap}
 .tip .tf{margin-top:6px; padding-top:6px; border-top:1px solid var(--rule-soft); font-size:11.5px; color:var(--ink-3)}
+.tip .tdesc{font-size:12px; line-height:1.45; color:var(--ink-2); margin:0 0 7px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -230,8 +254,11 @@ svg .m{font-variant-numeric:tabular-nums}
   <span class="ctl"><span class="lb">Unité</span>
     <span class="seg" role="group" aria-label="Unité">
       <button type="button" data-u="md" aria-pressed="true">Milliards €</button><button type="button" data-u="pib" aria-pressed="false">% du PIB</button><button type="button" data-u="hab" aria-pressed="false">€ par habitant</button><button type="button" data-u="cent" aria-pressed="false">Sur 100 €</button></span></span>
+  <span class="ctl"><span class="lb">Hypothèse</span>
+    <span class="seg"><button type="button" id="hyp-b" aria-pressed="false" aria-expanded="false" aria-controls="hyp">Plafonner les retraites</button></span></span>
   <span class="hint" id="hint"></span>
 </div>
+<div class="hyp" id="hyp" hidden></div>
 
 <div class="tiles" id="tiles"></div>
 <div class="cent" id="cent" aria-label="Sur 100 € de dépense publique : où ils vont, qui les paie"></div>
@@ -338,10 +365,14 @@ svg .m{font-variant-numeric:tabular-nums}
 
 <script>
 /*DATA_START*/const DE = null;/*DATA_END*/
+/*RT_START*/const RT = null;/*RT_END*/
 (function () {
 'use strict';
-const D = DE;
-const A = D.agg, CF = D.cofog, IM = D.imp;
+/* D0 : les données publiées ; D : celles qu'affiche la page — les mêmes, ou une
+   copie corrigée quand une hypothèse (plafond des retraites) est active. */
+const D0 = DE;
+let D = D0, A = D.agg, CF = D.cofog, IM = D.imp;
+const setD = x => { D = x; A = x.agg; CF = x.cofog; IM = x.imp; };
 const ix = y => D.an.indexOf(y);
 const $ = id => document.getElementById(id);
 const NS = 'http://www.w3.org/2000/svg';
@@ -397,16 +428,91 @@ const SF = {
 const SFC = { GF0101: 'Pouvoirs publics, finances, diplomatie', GF0401: 'Aides à l\'économie et à l\'emploi',
   GF0602: 'Aménagement, équipements', GF0906: 'Cantine, transport, internat', GF1007: 'Exclusion (RSA, minima…)',
   GF0407: 'Autres secteurs', GF0803: 'Audiovisuel public' };
-/* Précisions de lecture, affichées sous le nom quand elles évitent un contresens. */
-const SFX = {
-  GF1001: 'indemnités journalières, pensions d\'invalidité, handicap — les soins sont en « Santé »',
-  GF1002: 'retraites pour l\'essentiel, et dépendance des personnes âgées',
-  GF0107: 'charge d\'intérêts ; le remboursement du capital n\'est pas une dépense',
-  GF0103: 'personnel et services communs des administrations',
-  GF0401: 'dont aides à l\'emploi et soutiens d\'urgence aux entreprises',
-  GF0704: 'tests et vaccins covid en 2020-2022',
-  GF0602: 'voirie, urbanisme, équipements des communes',
+/* Ce que recouvre chaque poste, en clair, avec des exemples. Rédigé à partir
+   des définitions de la nomenclature COFOG (manuel Eurostat) ; quand un chiffre
+   est avancé, il vient des données de la page (dépenses par nature). Affiché au
+   survol, au-dessus des montants. */
+const DESC = {
+  GF10: 'L\'argent versé aux ménages face aux aléas de la vie : retraite, chômage, enfants, handicap, pauvreté. Attention : au sens européen, les soins n\'en font pas partie (ils sont dans « Santé ») ; au sens français de la Drees, la « protection sociale » inclut la santé.',
+  GF07: 'Les soins : hôpitaux publics, remboursements de l\'Assurance maladie (médecins, médicaments, analyses…), prévention. Les arrêts maladie et l\'invalidité sont des revenus de remplacement : ils sont dans « Protection sociale ».',
+  GF04: 'L\'argent public mis dans l\'économie : réseaux de transport, aides aux entreprises et à l\'emploi, énergie, agriculture, recherche appliquée.',
+  GF09: 'Écoles, collèges, lycées, universités publics, et les salaires des enseignants du privé sous contrat.',
+  GF01: 'Le fonctionnement de l\'appareil public : mairies et conseils départementaux et régionaux, ministères, administration fiscale, diplomatie, contribution au budget européen, recherche fondamentale. Hors intérêts de la dette, comptés à part.',
+  INT: 'Les intérêts payés chaque année sur la dette publique. Le remboursement du capital n\'est pas une dépense : il est refinancé par de nouveaux emprunts.',
+  GF02: 'Les armées : soldes des militaires, équipements (avions, navires, munitions, véhicules), opérations extérieures.',
+  GF03: 'Police, gendarmerie, pompiers, tribunaux, prisons.',
+  GF08: 'Piscines, stades, musées, bibliothèques, conservatoires (souvent communaux), audiovisuel public, soutien aux associations.',
+  GF06: 'Aménagement des villes et villages, aides au logement social et à la rénovation, eau potable, éclairage public.',
+  GF05: 'Collecte et traitement des ordures, assainissement des eaux usées, lutte contre la pollution, biodiversité.',
+  GF1002: 'Les retraites de tous les régimes (régime général, retraites complémentaires Agirc-Arrco, fonctionnaires, régimes spéciaux), le minimum vieillesse et l\'aide aux personnes âgées dépendantes (APA).',
+  GF1001: 'Revenus de remplacement liés à la maladie et au handicap : indemnités journalières des arrêts de travail, pensions d\'invalidité, allocation aux adultes handicapés (AAH), financement des établissements pour personnes handicapées. Les soins eux-mêmes sont en « Santé ».',
+  GF1004: 'Allocations familiales et autres prestations des CAF, congés maternité et paternité, aide sociale à l\'enfance des départements, places en crèche.',
+  GF1005: 'Allocations chômage versées par France Travail pour l\'Unédic. En 2020-2021, l\'activité partielle (chômage partiel du covid) y est comptée : +30 Md€ en 2020.',
+  GF1003: 'Pensions de réversion : la part de retraite du conjoint décédé versée au veuf ou à la veuve.',
+  GF1007: 'RSA, prime d\'activité, minima sociaux, hébergement d\'urgence et aide aux personnes sans domicile.',
+  GF1006: 'Aides personnelles au logement (APL, ALF, ALS) versées par les CAF, le plus souvent directement au bailleur.',
+  GF1009: 'Dépenses sociales non ventilées : gestion des caisses, action sociale.',
+  GF0703: 'Le fonctionnement des hôpitaux publics : salaires des médecins, infirmiers, aides-soignants et autres agents, achats (médicaments délivrés à l\'hôpital, matériel, repas, énergie), investissement.',
+  GF0702: 'Ce que l\'Assurance maladie rembourse hors de l\'hôpital : consultations de médecins, dentistes, infirmiers, kinés, analyses de laboratoire, transports sanitaires.',
+  GF0701: 'Médicaments achetés en pharmacie, lunettes, audioprothèses, fauteuils et appareils, remboursés par l\'Assurance maladie.',
+  GF0704: 'Prévention, vaccination, dépistage, agences sanitaires ; les tests et vaccins covid en 2020-2022.',
+  GF0705: 'Recherche médicale publique (Inserm, recherche des CHU…).',
+  GF0405: 'Routes (construction, entretien), transports en commun et ferroviaire : subventions d\'exploitation et investissements. Par exemple, Île-de-France Mobilités paie la RATP et la SNCF pour faire rouler métros, RER et bus ; ailleurs, les régions paient les TER, les agglomérations leurs bus et tramways ; s\'y ajoutent le réseau ferré et les chantiers comme le Grand Paris Express.',
+  GF0401: 'Aides générales aux entreprises et à l\'emploi : aides à l\'embauche et à l\'apprentissage, fonctionnement du service public de l\'emploi. Le crédit d\'impôt compétitivité (CICE) y figurait de 2013 à 2018, les aides d\'urgence covid (fonds de solidarité) en 2020-2021.',
+  GF0403: 'Énergie : soutien aux énergies renouvelables, et en 2022-2023 les boucliers tarifaires sur l\'électricité et le gaz (25,7 Md€ de subventions en 2022).',
+  GF0408: 'Recherche publique appliquée à l\'économie : espace (CNES), nucléaire civil et énergie (CEA), programmes d\'innovation.',
+  GF0402: 'Agriculture, forêt et pêche : aides nationales, forêts publiques, services vétérinaires.',
+  GF0407: 'Tourisme, commerce, artisanat, aides sectorielles diverses.',
+  GF0406: 'Télécommunications : déploiement de la fibre (plan France très haut débit).',
+  GF0901: 'Écoles maternelles et élémentaires : salaires des professeurs des écoles (payés par l\'État), agents des communes (Atsem), entretien et construction des écoles (communes).',
+  GF0902: 'Collèges et lycées : salaires des enseignants du second degré, public et privé sous contrat ; fonctionnement et construction des collèges (départements) et des lycées (régions).',
+  GF0904: 'Universités et grandes écoles publiques : enseignants-chercheurs, fonctionnement. La recherche est pour partie classée en « recherche fondamentale ».',
+  GF0906: 'Cantines, transport scolaire, internats, bourses, médecine scolaire.',
+  GF0905: 'Dépenses d\'enseignement non rattachées à un niveau : administration de l\'Éducation nationale, examens, formation des adultes.',
+  GF0103: 'Le personnel et les services communs des administrations, surtout les collectivités : services généraux des mairies, conseils départementaux et régionaux ; services centraux des ministères.',
+  GF0101: 'Parlement, Élysée, administration des finances publiques (impôts), réseau diplomatique, et la contribution de la France au budget de l\'Union européenne.',
+  GF0104: 'Recherche fondamentale : CNRS et autres organismes de recherche.',
+  GF0102: 'Aide publique au développement.',
+  GF0107: 'Intérêts de la dette publique.',
+  GF0201: 'Défense militaire : soldes, équipements, opérations.',
+  GF0301: 'Police nationale, gendarmerie, polices municipales.',
+  GF0302: 'Pompiers (services départementaux d\'incendie et de secours), sécurité civile.',
+  GF0303: 'Tribunaux et services judiciaires.',
+  GF0304: 'Prisons et réinsertion.',
+  GF0602: 'Aménagement urbain et rural, équipements collectifs des communes.',
+  GF0601: 'Aides à la construction et à la rénovation de logements, logement social.',
+  GF0603: 'Distribution d\'eau potable.',
+  GF0604: 'Éclairage public.',
+  GF0501: 'Collecte et traitement des ordures ménagères.',
+  GF0502: 'Assainissement des eaux usées.',
+  GF0503: 'Lutte contre la pollution de l\'air et des sols.',
+  GF0504: 'Biodiversité, espaces naturels, paysages.',
+  GF0801: 'Piscines, stades, gymnases, équipements de loisirs.',
+  GF0802: 'Musées, bibliothèques, conservatoires, monuments, spectacle vivant.',
+  GF0803: 'Audiovisuel public (France Télévisions, Radio France…) et édition publique.',
+  GF0804: 'Cultes (entretien des édifices) et vie associative.',
 };
+/* Les natures de dépense, telles qu'Eurostat les croise avec les fonctions. */
+const NATL = { D1: 'salaires des agents (cotisations employeur comprises)', P2: 'achats de fonctionnement', D62: 'prestations versées en argent',
+  D632: 'remboursements et prestations en nature', D3: 'subventions', D7: 'transferts courants', D9: 'aides à l\'investissement, transferts en capital',
+  OP5ANP: 'investissement', D4: 'intérêts', D29_D5_D8: 'impôts et taxes payés' };
+/* « Ce que ça paie » : un poste décomposé par nature, l'année k (données depuis D.natf.debut). */
+function natHtml(c, k, n) {
+  const N = D.natf; if (!N) return '';
+  const i = k - D.an.indexOf(N.debut); if (i < 0) return '';
+  const g = x => { const o = N.c[x] || {}; const r = {}; for (const [a, z] of Object.entries(o)) r[a] = z[i] || 0; return r; };
+  let v;
+  if (c === 'INT') v = g('GF0107');
+  else if (c === 'GF01') { const a = g('GF01'), b = g('GF0107'); v = {}; for (const x in a) v[x] = a[x] - (b[x] || 0); }
+  else v = g(c);
+  const tot = Object.values(v).reduce((a, b) => a + b, 0);
+  if (!(tot > 0)) return '';
+  const l = Object.entries(v).filter(([, m]) => m / tot >= 0.02).sort((a, b) => b[1] - a[1]).slice(0, n || 4);
+  if (!l.length) return '';
+  if (l[0][1] / tot > 0.985) return `<div class="tf">Ce que ça paie : entièrement des ${NATL[l[0][0]]}.</div>`;
+  return `<div class="tf" style="margin-bottom:3px">Ce que ça paie :</div>` + l.map(([a, m]) => trow(NATL[a], FM(m, k, 'md') + ' · ' + nf(m / tot * 100, 0) + ' %')).join('');
+}
+const desc = c => DESC[c] ? `<div class="tdesc">${DESC[c]}</div>` : '';
 /* Recettes (gov_10a_main) : leur somme est EXACTEMENT les recettes totales. */
 const REC = [
   { k: 'D61REC', n: 'Cotisations sociales', l: 'Cotisations sociales (employeurs, salariés, indépendants)' },
@@ -440,12 +546,13 @@ const GEO_A = { DE: "l'Allemagne", IT: "l'Italie", ES: "l'Espagne", NL: 'les Pay
   SE: 'la Suède', DK: 'le Danemark', FI: 'la Finlande', EA20: 'la zone euro', EU27_2020: "l'Union européenne" };
 
 /* ---------- état de la page ---------- */
-const S = { an: D.derF, u: 'md', v: 'fonction', e: 'f', g: 'f', cmp: 'EA20' };
+const S = { an: D.derF, u: 'md', v: 'fonction', e: 'f', g: 'f', cmp: 'EA20', cap: null };
 try { const h = new URLSearchParams(location.hash.slice(1));
   if (D.an.includes(+h.get('an'))) S.an = +h.get('an');
   if (['md', 'pib', 'hab', 'cent'].includes(h.get('u'))) S.u = h.get('u');
+  if (RT && +h.get('rp') >= 800 && +h.get('rp') <= 6000) S.cap = +h.get('rp');
 } catch (e) {}
-const hashSync = () => { try { history.replaceState(null, '', '#an=' + S.an + '&u=' + S.u); } catch (e) {} };
+const hashSync = () => { try { history.replaceState(null, '', '#an=' + S.an + '&u=' + S.u + (S.cap ? '&rp=' + S.cap : '')); } catch (e) {} };
 
 /* ---------- nombres ---------- */
 const nf = (x, d) => x.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -515,14 +622,16 @@ function niceTicks(lo, hi, n) {
 function tete() {
   const k = ix(S.an), y = S.an;
   const te = A.S13.TE[k], tr = A.S13.TR[k], b9 = A.S13.B9[k], dt = D.dette[k];
+  const O = D0.agg.S13, hy = hypOn();
+  const avant = (m0, m) => hy && Math.abs(m0 - m) > 1 ? `<br><span style="color:var(--n2); font-weight:700">sans plafond : ${FM(m0, k, 'md')}</span>` : '';
   const tile = (cl, lab, m, extra) => `<div class="tile ${cl}"><div class="k">${lab} ${y}</div>
     <div class="v">${F(cv(m, k, 'md'), 'md').replace(' Md€', '<small>Md€</small>')}</div>
     <div class="d"><b>${FM(m, k, 'pib')}</b> du PIB · <b>${FM(m, k, 'hab')}</b> par habitant${extra || ''}</div></div>`;
   $('tiles').innerHTML =
-    tile('', 'Dépenses', te) +
-    tile('', 'Recettes', tr) +
-    (b9 < 0 ? tile('def', 'Déficit', -b9, `<br>soit <b>${nf(-b9 / te * 100, 1)} €</b> empruntés sur 100 € dépensés`)
-            : tile('', 'Excédent', b9)) +
+    tile('', 'Dépenses', te, avant(O.TE[k], te)) +
+    tile('', 'Recettes', tr, avant(O.TR[k], tr)) +
+    (b9 < 0 ? tile('def', 'Déficit', -b9, `<br>soit <b>${nf(-b9 / te * 100, 1)} €</b> empruntés sur 100 € dépensés` + avant(-O.B9[k], -b9))
+            : tile('', 'Excédent', b9, avant(O.B9[k], b9))) +
     tile('', 'Dette fin', dt, `<br>soit <b>${nf(dt / te, 1).replace(',0', '')}</b> années de dépense`);
 
   /* « Sur 100 € » : deux colonnes qui se lisent en face l'une de l'autre.
@@ -532,7 +641,7 @@ function tete() {
      et la même couleur. Les montants sont rapportés au total de la colonne, donc
      chaque colonne fait exactement 100 €. */
   const e100 = (m, base) => nf(m / base * 100, 1);
-  const ligne = (r, base) => `<li data-tip="1" data-m="${r.m}"${r.cls ? ` class="${r.cls}"` : ''}><i class="sw" style="background:${col(r.c)}"></i>`
+  const ligne = (r, base) => `<li data-tip="1" data-m="${r.m}" data-id="${r.id || ''}"${r.cls ? ` class="${r.cls}"` : ''}><i class="sw" style="background:${col(r.c)}"></i>`
     + `<span class="nm">${r.n}</span><span class="v">${e100(r.m, base)}<small>€</small></span>`
     + (r.sub ? `<span class="sub">${r.sub}</span>` : '') + '</li>';
   const barre = (rows, base) => '<div class="bar" aria-hidden="true">'
@@ -571,13 +680,13 @@ function tete() {
   if (b9 < 0) fin.push({ c: '--bad', n: 'Emprunt', m: -b9, cls: 'emp', sub: 'le déficit, qui s\'ajoute à la dette' });
   const baseF = fin.reduce((a, r) => a + r.m, 0);   // = dépenses totales (recettes + emprunt)
 
-  $('cent').innerHTML = `<div class="ch"><h3>Sur 100 € de dépense publique en ${y}</h3>`
+  $('cent').innerHTML = `<div class="ch"><h3>Sur 100 € de dépense publique en ${y}${hypTag()}</h3>`
     + `<span>${FM(te, k, 'md')} au total, soit ${FM(te, k, 'hab')} par habitant</span></div>`
     + `<div class="cols"><div><h4>${titreD}</h4>${barre(dep, baseD)}<ul>${dep.map(r => ligne(r, baseD)).join('')}</ul></div>`
     + `<div><h4>Qui les paie</h4>${barre(fin, baseF)}<ul>${fin.map(r => ligne(r, baseF)).join('')}</ul></div></div>`;
   $('cent').querySelectorAll('li[data-m]').forEach(li => {
-    const m = +li.dataset.m, n = li.querySelector('.nm').textContent;
-    li.addEventListener('mousemove', e => tipOn(e, `<div class="th">${n}, ${y}</div>` + trow('Montant', FM(m, k, 'md'))
+    const m = +li.dataset.m, n = li.querySelector('.nm').textContent, id = li.dataset.id;
+    li.addEventListener('mousemove', e => tipOn(e, `<div class="th">${n}, ${y}</div>` + (id ? desc(id) : '') + trow('Montant', FM(m, k, 'md'))
       + trow('Part du PIB', FM(m, k, 'pib')) + trow('Par habitant', FM(m, k, 'hab'))));
     li.addEventListener('mouseleave', tipOff);
   });
@@ -632,7 +741,7 @@ function circuit() {
     }
   }
 
-  $('t1').textContent = `Le circuit, ${S.an}`;
+  $('t1').innerHTML = `Le circuit, ${S.an}` + hypTag();
   document.querySelectorAll('[data-v]').forEach(b => { b.disabled = b.dataset.v === 'fonction' && S.an > D.derF;
     b.setAttribute('aria-pressed', (b.dataset.v === 'fonction') === parPol); });
 
@@ -690,6 +799,13 @@ function circuit() {
   if (niv2) { hd(xP + nw, 'end', 'Niveau 1', '11 politiques'); hd(xS, 'start', 'Niveau 2', 'sous-postes'); }
   else hd(W, 'end', parPol ? 'Par politique' : 'Par nature', mob ? '' : (parPol ? '11 politiques' : 'comptes nationaux'));
 
+  /* sous hypothèse : ce que le noeud a perdu par rapport aux données publiées */
+  const ecart = n => {
+    if (!hypOn()) return '';
+    const O = D0.cofog.S13, a0 = n.kind === 'fn' ? fv(O, n.id, k) : n.kind === 'sub' ? O[n.id][k] : n.kind === 'def' ? -D0.agg.S13.B9[k]
+      : n.kind === 'rec' ? sum(D0.agg.S13, REC.find(r => 'r' + r.n === n.id).k, k) : null;
+    return a0 !== null && a0 - n.m > 500 ? '  (−' + F(cv(a0 - n.m, k), S.u) + ')' : '';
+  };
   /* étiquettes : deux lignes (nom, montant) si le noeud est assez haut, une
      sinon ; écartées les unes des autres avec un trait de rappel vers leur noeud */
   const lab = (arr, side, base) => {
@@ -704,7 +820,7 @@ function circuit() {
       const n = q.n, right = side !== 'r', x = right ? n.x + nw + 6 : n.x - 6, anc = right ? 'start' : 'end';
       const c0 = n.y + n.h / 2;
       if (Math.abs(q.y - c0) > 4) el('path', { class: 'ld', d: right ? `M${n.x + nw},${c0}L${x - 2},${q.y}` : `M${n.x},${c0}L${x + 2},${q.y}` }, gt);
-      const val = F(cv(n.m, k), S.u) + (S.u === 'cent' ? '' : ' · ' + pct(n.m, base));
+      const val = F(cv(n.m, k), S.u) + (S.u === 'cent' ? '' : ' · ' + pct(n.m, base)) + ecart(n);
       const t = el('text', { class: 'lab' + (n.kind === 'sub' || n.kind === 'reste' ? ' l2' : ''), 'text-anchor': anc }, gt);
       if (q.two) {
         el('tspan', { x, y: q.y - 3, class: 'n' }, t).textContent = n.n;
@@ -728,16 +844,16 @@ function circuit() {
   const quiPorte = c => SECT.map(s => trow(s.n.replace(' et organismes centraux', ''), FM(Math.max(0, fv(CF[s.k], c, k)), k, 'md'))).join('');
   const k95 = ix(1995), evo = (v95, v) => `<div class="tf">En % du PIB : ${nf(v95 / D.pib[k95] * 100, 2)} % en 1995, ${nf(v / D.pib[k] * 100, 2)} % en ${S.an}.</div>`;
   const tipN = n => {
-    let h = `<div class="th"><i style="background:${col(n.c)}"></i>${n.l}</div>`;
+    let h = `<div class="th"><i style="background:${col(n.c)}"></i>${n.l}</div>` + (n.kind === 'fn' || n.kind === 'sub' ? desc(n.id) : '');
     if (n.kind === 'rec' || n.kind === 'def') {
       h += quatre(n.m, k);
       if (n.kind === 'rec') h += trow('Part des recettes', pct(n.m, A.S13.TR[k]));
       else h += `<div class="tf">Les recettes ne couvrent que ${pct(A.S13.TR[k], te)} des dépenses ; le reste est emprunté et s'ajoute à la dette.</div>`;
     } else if (n.kind === 'fn') {
-      h += quatre(n.m, k, totP) + `<div class="tf" style="margin-bottom:4px">Qui la porte (montants bruts) :</div>` + quiPorte(n.id) + evo(fv(CF.S13, n.id, k95), n.m);
+      h += quatre(n.m, k, totP) + natHtml(n.id, k) + `<div class="tf" style="margin-bottom:3px">Qui la porte (montants bruts) :</div>` + quiPorte(n.id) + evo(fv(CF.S13, n.id, k95), n.m);
     } else if (n.kind === 'sub') {
       h += quatre(n.m, k, totP) + trow('Part de « ' + n.par.n.toLowerCase() + ' »', pct(n.m, n.par.m))
-        + (SFX[n.id] ? `<div class="tf">${SFX[n.id]}</div>` : '') + evo(CF.S13[n.id][k95], n.m);
+        + natHtml(n.id, k) + evo(CF.S13[n.id][k95], n.m);
     } else if (n.kind === 'reste') {
       h += trow('Montant', FM(n.m, k, 'md')) + trow('Part de « ' + n.par.n.toLowerCase() + ' »', pct(n.m, n.par.m))
         + `<div class="tf">${n.rest.map(x => SF[x.c] + ' ' + FM(x.m, k, 'md')).join('<br>')}</div>`;
@@ -1047,6 +1163,144 @@ function lignes(box, xs, series, o) {
 }
 
 /* ======================================================================
+   HYPOTHÈSE : plafonner toutes les retraites
+   Distribution des pensions de droit direct (Drees, EIR fin 2020, tranches de
+   100 €), recalée sur fin 2023 : même forme, moyenne portée à la moyenne
+   publiée de 2023, effectif de 2023. Le plafond porte sur la pension NETTE ;
+   on passe du brut au net par le rapport moyen publié (net / brut).
+   Ce qui est économisé : la part de chaque pension au-dessus du plafond,
+   douze mois. Ce qui est perdu : la CSG, la CRDS et la Casa prélevées sur
+   cette part (brut − net). Pas d'effet de comportement, pas d'impôt sur le
+   revenu, pensions de réversion et retraités à l'étranger hors champ.
+   ====================================================================== */
+const RET = (() => {
+  if (!RT) return null;
+  const d = RT.distribution, q = d.queue, w = d.pas;
+  const parts = d.parts, mid = d.au_dessus_4500 - q.part, lo2 = parts.length * w;
+  const a = q.moyenne / (q.moyenne - q.seuil);                   // Pareto de même moyenne au-delà du seuil
+  const moy0 = (parts.reduce((s, p, i) => s + p * (i + 0.5) * w, 0) + mid * (lo2 + q.seuil) / 2 + q.part * q.moyenne) / 100;
+  const g = RT.moyenne_brute / moy0, r = RT.moyenne_nette / RT.moyenne_brute;
+  /* E[max(0, X − c)] et P(X > c), X en euros bruts de fin 2020 */
+  const exces = c => {
+    let e = 0, p = 0;
+    const unif = (s, lo, hi) => { if (hi <= c) return; const a0 = Math.max(lo, c), f = (hi - a0) / (hi - lo); e += s / 100 * f * ((hi + a0) / 2 - c); p += s * f; };
+    parts.forEach((s, i) => unif(s, i * w, (i + 1) * w));
+    unif(mid, lo2, q.seuil);
+    if (c <= q.seuil) { e += q.part / 100 * (q.moyenne - c); p += q.part; }
+    else { e += q.part / 100 * Math.pow(q.seuil, a) * Math.pow(c, 1 - a) / (a - 1); p += q.part * Math.pow(q.seuil / c, a); }
+    return { e, p };
+  };
+  const calc = capNet => {
+    const c = capNet / r / g, x = exces(c);
+    const brut = x.e * g * RT.effectif * 12 / 1e6;               // millions d'euros par an
+    const touches = RT.effectif * x.p / 100;
+    return { brut, net: brut * r, prelev: brut * (1 - r), part: x.p, touches,
+      perte: touches ? brut * r * 1e6 / 12 / touches : 0 };
+  };
+  return { calc, g, r, parts, w, mid, lo2, an: RT.annee, smic: RT.smic.net };
+})();
+const hypOn = () => !!(RET && S.cap && S.an === RET.an);
+const hypTag = () => hypOn() ? `<span class="hyptag">retraites ≤ ${nf(S.cap, 0)} € net</span>` : '';
+
+/* Les données corrigées : l'année RET.an seulement. Les pensions sont versées
+   par les régimes de sécurité sociale et, pour les fonctionnaires de l'État,
+   par l'État : l'économie est répartie entre les deux au prorata de leur
+   dépense « vieillesse ». Les prélèvements perdus (CSG, CRDS, Casa) sont
+   des recettes de la Sécurité sociale. */
+function appliqueHyp() {
+  if (!RET || !S.cap) { setD(D0); return; }
+  const X = structuredClone(D0), k = X.an.indexOf(RET.an);
+  if (k < 0) { setD(D0); return; }
+  const h = RET.calc(S.cap), G = h.brut, L = h.prelev;
+  const moins = (o, key, v) => { if (o && o[key] && o[key][k] !== null) o[key][k] -= v; };
+  const vE = X.cofog.S1311.GF1002[k], vS = X.cofog.S1314.GF1002[k], pE = vE / (vE + vS);
+  for (const [sct, part] of [['S13', 1], ['S1311', pE], ['S1314', 1 - pE]]) {
+    const ag = X.agg[sct], cf = X.cofog[sct], v = G * part;
+    for (const key of ['TE', 'D62_D632PAY', 'D62PAY']) moins(ag, key, v);
+    moins(ag, 'B9', -v);
+    for (const key of ['GF1002', 'GF10', 'TOTAL']) moins(cf, key, v);
+  }
+  for (const sct of ['S13', 'S1314']) { const ag = X.agg[sct]; for (const key of ['TR', 'D5REC']) moins(ag, key, L); moins(ag, 'B9', L); }
+  for (const key of ['D5', 'D51A_C1']) moins(X.imp, key, L);
+  if (X.natf) { const i = RET.an - X.natf.debut; for (const c of ['GF1002', 'GF10', 'TOTAL']) { const z = X.natf.c[c] && X.natf.c[c].D62; if (z && z[i] !== null) z[i] -= G; } }
+  setD(X);
+}
+
+function hyp() {
+  const box = $('hyp'), b = $('hyp-b');
+  b.setAttribute('aria-pressed', !!S.cap); b.setAttribute('aria-expanded', !!S.cap);
+  if (!RET || !S.cap) { box.hidden = true; return; }
+  box.hidden = false;
+  const k = D0.an.indexOf(RET.an), h = RET.calc(S.cap), O = D0.agg.S13;
+  const b0 = -O.B9[k], b1 = b0 - h.net, vieil = D0.cofog.S13.GF1002[k];
+  const md = m => nf(m / 1000, m >= 10000 ? 0 : 1);
+  const presets = [[RET.smic, 'SMIC'], [Math.round(RET.smic * 1.5), '1,5 SMIC'], [Math.round(RET.smic * 2), '2 SMIC'], [3000, '3 000 €'], [4000, '4 000 €']];
+  const neuf = !box.querySelector('input');
+  if (neuf) box.innerHTML = `<div class="hh"><h3>Et si toutes les retraites étaient plafonnées ?</h3><button type="button" class="x" id="hyp-x">Fermer l'hypothèse</button></div>
+    <p class="hsub">Toute pension de retraite au-dessus du plafond est ramenée au plafond, pour tous les retraités et tous les régimes (base, complémentaires, fonctionnaires). Calcul sur ${RET.an}, dernière année où la Drees publie les pensions : la page passe en ${RET.an} et ses chiffres intègrent l'économie.</p>
+    <div class="hc"><label for="hyp-r">Plafond, pension nette par mois</label>
+      <input type="range" id="hyp-r" min="1000" max="5000" step="10" aria-describedby="hyp-v">
+      <span class="cap" id="hyp-v"></span>
+      <span class="seg" role="group" aria-label="Plafonds types">${presets.map(([v, l]) => `<button type="button" data-cap="${v}">${l}</button>`).join('')}</span></div>
+    <p class="hsub" id="hyp-an" style="color:var(--n2); font-weight:700" hidden></p>
+    <div class="res" id="hyp-res"></div>
+    <div class="hist" id="hyp-h"></div>
+    <p class="hn">Méthode : distribution des pensions de droit direct par tranche de 100 € (Drees, retraités résidant en France, fin 2020), recalée sur la moyenne et l'effectif de fin ${RET.an} (${nf(RT.moyenne_brute, 0)} € brut, ${nf(RT.effectif / 1e6, 1)} millions de retraités) ; passage du brut au net par le rapport moyen publié (le net vaut ${nf(RET.r * 100, 1)} % du brut). La reconstitution redonne la pension moyenne publiée à 0,3 % près. Hors champ : les pensions de réversion (${nf(RT.masse_reversion_md, 1)} Md€ en ${RET.an}), les retraités vivant à l'étranger, l'impôt sur le revenu perdu, et tout effet sur les comportements (départs, épargne, consommation). C'est un ordre de grandeur comptable, pas une réforme chiffrée. Source : <a href="${RT.source.url}" rel="noopener">${RT.source.titre}</a>.</p>`;
+  const rg = $('hyp-r'); rg.value = S.cap;
+  const ha = $('hyp-an'); ha.hidden = S.an === RET.an;
+  if (S.an !== RET.an) { ha.innerHTML = `La page affiche ${S.an} : l'hypothèse ne porte que sur ${RET.an}. <button type="button" class="x" id="hyp-go" style="margin-left:6px">Revenir en ${RET.an}</button>`;
+    $('hyp-go').addEventListener('click', () => setAn(RET.an)); }
+  $('hyp-v').innerHTML = `${nf(S.cap, 0)} €<small> net/mois${Math.abs(S.cap - RET.smic) < 1 ? ' = SMIC ' + RET.an : ' · ' + nf(S.cap / RET.smic, 2) + ' SMIC'}</small>`;
+  box.querySelectorAll('[data-cap]').forEach(x => x.setAttribute('aria-pressed', Math.abs(+x.dataset.cap - S.cap) < 1));
+  const tile = (k_, v, d, cls) => `<div class="r ${cls || ''}"><div class="k">${k_}</div><div class="v">${v}</div><div class="d">${d}</div></div>`;
+  $('hyp-res').innerHTML =
+    tile('Économie par an', `${md(h.net)}<small>Md€</small>`, `<b>${md(h.brut)} Md€</b> de pensions en moins, dont <b>${md(h.prelev)} Md€</b> de CSG, CRDS et Casa qui ne rentrent plus`, 'ok') +
+    tile('Retraités touchés', `${nf(h.touches / 1e6, 1)}<small>millions</small>`, `<b>${nf(h.part, 0)} %</b> des retraités ; ils perdent en moyenne <b>${nf(h.perte, 0)} €</b> net par mois`) +
+    tile(`Déficit ${RET.an}`, `${md(Math.max(0, b1))}<small>Md€</small>`, `au lieu de <b>${md(b0)} Md€</b> : ${b1 <= 0 ? '<b>comblé</b>' : '−' + nf(h.net / b0 * 100, 0) + ' %'} ; ${nf(b1 / D0.pib[k] * 100, 1)} % du PIB au lieu de ${nf(b0 / D0.pib[k] * 100, 1)} %`) +
+    tile('Dépense vieillesse', `−${nf(h.brut / vieil * 100, 0)}<small>%</small>`, `de <b>${md(vieil)}</b> à <b>${md(vieil - h.brut)} Md€</b> ; la dépense publique passe de ${nf(O.TE[k] / D0.pib[k] * 100, 1)} % à ${nf((O.TE[k] - h.brut) / D0.pib[k] * 100, 1)} % du PIB`);
+
+  /* histogramme des pensions nettes, la part au-dessus du plafond en couleur */
+  const hb = $('hyp-h'), W = Math.max(300, hb.clientWidth), H = 170, pl = 6, pr = 6, pt = 18, pb = 22;
+  const svg = svgIn(hb, W, H), f = RET.g * RET.r, xmax = 5000, sx = v => pl + Math.min(v, xmax) / xmax * (W - pl - pr - 40);
+  const mx = Math.max(...RET.parts), sy = v => pt + (1 - v / mx) * (H - pt - pb);
+  const capX = sx(S.cap);
+  RET.parts.forEach((p, i) => {
+    const x0 = i * RET.w * f, x1 = (i + 1) * RET.w * f;
+    const base = { y: sy(p), height: H - pb - sy(p) };
+    if (x1 <= S.cap) el('rect', { x: sx(x0), width: Math.max(1, sx(x1) - sx(x0) - 1), ...base, style: 'fill:var(--ink-3); fill-opacity:.35' }, svg);
+    else if (x0 >= S.cap) el('rect', { x: sx(x0), width: Math.max(1, sx(x1) - sx(x0) - 1), ...base, style: 'fill:var(--n2)' }, svg);
+    else { el('rect', { x: sx(x0), width: Math.max(0, capX - sx(x0)), ...base, style: 'fill:var(--ink-3); fill-opacity:.35' }, svg);
+           el('rect', { x: capX, width: Math.max(1, sx(x1) - capX - 1), ...base, style: 'fill:var(--n2)' }, svg); }
+  });
+  const xt = sx(xmax) + 8, ht = H - pb - sy(RT.distribution.au_dessus_4500);
+  el('rect', { x: xt, y: H - pb - Math.min(ht, H - pt - pb), width: 26, height: Math.min(ht, H - pt - pb), style: `fill:${S.cap < RET.lo2 * f ? 'var(--n2)' : 'var(--ink-3)'}` }, svg);
+  el('text', { x: xt + 26, y: H - 6, 'text-anchor': 'end' }, svg).textContent = '+ de ' + nf(RET.lo2 * f, 0) + ' €';
+  const mob = W < 600;
+  if (!mob) el('text', { x: W - pr, y: 13, 'text-anchor': 'end' }, svg).textContent = 'pension nette par mois, ' + RET.an;
+  for (const v of mob ? [0, 2000, 4000] : [0, 1000, 2000, 3000, 4000]) el('text', { x: sx(v), y: H - 6, 'text-anchor': v ? 'middle' : 'start' }, svg).textContent = nf(v, 0) + ' €';
+  el('line', { x1: capX, x2: capX, y1: 4, y2: H - pb, style: 'stroke:var(--ink); stroke-width:1.5' }, svg);
+  el('text', { x: capX + (capX > W - 160 ? -6 : 6), y: 13, 'text-anchor': capX > W - 160 ? 'end' : 'start', style: 'fill:var(--ink); font-weight:700' }, svg).textContent = mob ? `${nf(h.part, 0)} % au-dessus` : `plafond ${nf(S.cap, 0)} € · ${nf(h.part, 0)} % des retraités au-dessus`;
+
+  if (neuf) {
+    let t = 0;
+    rg.addEventListener('input', () => { S.cap = +rg.value; clearTimeout(t); hyp(); t = setTimeout(() => { appliqueHyp(); hashSync(); tout(); }, 120); });
+    box.querySelectorAll('[data-cap]').forEach(x => x.addEventListener('click', () => { S.cap = +x.dataset.cap; appliqueHyp(); hashSync(); tout(); }));
+    $('hyp-x').addEventListener('click', () => basculeHyp(false));
+  }
+}
+let anAvantHyp = null;
+function basculeHyp(on) {
+  if (!RET) return;
+  if (on) { S.cap = S.cap || RET.smic; if (S.an !== RET.an) { anAvantHyp = S.an; S.an = RET.an; if (S.vAuto) S.v = 'fonction'; } }
+  else { S.cap = null; $('hyp').innerHTML = ''; if (anAvantHyp !== null) { S.an = anAvantHyp; anAvantHyp = null; } }
+  appliqueHyp(); hashSync(); tout();
+  if (on) $('hyp').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+$('hyp-b').addEventListener('click', () => basculeHyp(!S.cap));
+if (!RET) $('hyp-b').closest('.ctl').hidden = true;
+if (S.cap) { if (RET) { S.an = RET.an; appliqueHyp(); } else S.cap = null; }
+
+/* ======================================================================
    Commandes, tampon, sources
    ====================================================================== */
 const sel = $('an');
@@ -1083,7 +1337,7 @@ function tout() {
   $('an-m').disabled = S.an <= D.an[0]; $('an-p').disabled = S.an >= D.der;
   document.querySelectorAll('[data-u]').forEach(b => b.setAttribute('aria-pressed', b.dataset.u === S.u));
   $('hint').textContent = uLong[S.u];
-  tete(); circuit(); recettes(); sousSecteurs(); trente(); europe();
+  tete(); circuit(); recettes(); sousSecteurs(); trente(); europe(); hyp();
 }
 tout();
 let rz = 0, w0 = innerWidth;
