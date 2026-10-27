@@ -274,6 +274,28 @@ td[data-s], td.tc { cursor:default; }
 
 /* tour en cours : chiffre provisoire, en italique et souligné en pointillé */
 .v.prov { font-style:italic; text-decoration:underline dotted; text-underline-offset:3px; }
+
+/* Ordinateur et tablette : le téléphone a ses propres tailles (plus haut).
+   Les tailles en rem suivent la taille racine ; les tailles en px (cases,
+   colonnes, panneau) sont reprises ici. Le bandeau du site est en px : il ne
+   bouge pas. */
+@media (min-width:561px){
+  html { font-size:18.5px; }
+  td { height:27px; }
+  .v, .na, .sp { line-height:27px; }
+  .th-y, .th-t { width:52px; }
+  .th-ao, .th-rg, .th-wim, .th-uso { width:62px; }
+  .seg button { height:36px; }
+  .seg .dep { line-height:16px; top:-11px; }
+  .jr { width:350px; }
+  .jr-l li { height:27px; grid-template-columns:26px minmax(0,1fr) 92px 30px; }
+  .tip { font-size:13.5px; min-width:210px; max-width:310px; }
+  .tip .th, .tip .tsub, .tip .tfoot, .tip .noms li u { font-size:12px; }
+  .tip .big b { font-size:25px; }
+  .tip .parc span { font-size:10.5px; } .tip .parc b { height:19px; line-height:19px; font-size:11.5px; }
+  .mx td { height:26px; }
+  .cmp-ex input { width:240px; }
+}
 </style>
 </head>
 <body>
@@ -911,20 +933,22 @@ segTours('rkT', 'rk', 1); segTours('scT', 'sc', 1); segTours('dcT', 'dc', 0); se
 /* --- outils de tracé --- */
 const largeur = v => Math.max(300, Math.round(v.getBoundingClientRect().width));
 function cadre(v, w, h) { v.innerHTML = ''; return el('svg', { viewBox: `0 0 ${w} ${h}`, width: w, height: h, role: 'img' }, v); }
+/* texte des graphiques : un cran plus grand hors téléphone */
+const ECH = () => innerWidth > 560 ? 1.2 : 1;
 function txt(svg, x, y, t, o = {}) {
-  return el('text', { x, y, 'font-size': o.fs || 10.5, fill: o.fill || cv('--ink-3'), 'text-anchor': o.a || 'start', 'dominant-baseline': 'middle', 'font-weight': o.fw || 400 }, svg, t);
+  return el('text', { x, y, 'font-size': ((o.fs || 10.5) * ECH()).toFixed(1), fill: o.fill || cv('--ink-3'), 'text-anchor': o.a || 'start', 'dominant-baseline': 'middle', 'font-weight': o.fw || 400 }, svg, t);
 }
 /* étiquettes de fin de ligne : écartées d'au moins 13 px */
 function etiquettes(svg, labs, ymin, ymax) {
   labs.sort((a, b) => a.y - b.y);
-  for (let k = 1; k < labs.length; k++) if (labs[k].y - labs[k - 1].y < 13) labs[k].y = labs[k - 1].y + 13;
+  for (let k = 1; k < labs.length; k++) if (labs[k].y - labs[k - 1].y < 13 * ECH()) labs[k].y = labs[k - 1].y + 13 * ECH();
   const deb = labs.length ? labs[labs.length - 1].y - ymax : 0; if (deb > 0) labs.forEach(l => l.y -= deb);
   for (const l of labs) txt(svg, l.x, Math.max(ymin, l.y), l.t, { fill: cv('--ink'), fw: 700, fs: 11 });
 }
 
 /* --- 1 · entonnoir --- */
 function dessinerEntonnoir() {
-  const v = document.getElementById('fnV'), W = largeur(v), H = W < 500 ? 250 : 300, m = { t: 12, r: W < 500 ? 78 : 110, b: 26, l: 34 };
+  const v = document.getElementById('fnV'), W = largeur(v), H = W < 500 ? 250 : 330, m = { t: 12, r: W < 500 ? 78 : 140, b: 28, l: 40 };
   const svg = cadre(v, W, H), M = CMP.fn;
   /* « dès les 8es » : l'échelle se recale sur la fin de tableau, illisible sinon */
   const z = +CMP.fnZ, xs = [0,1,2,3,4,5,6,7].filter(i => i >= Math.max(z, M === 'pass' ? 1 : 0));
@@ -970,7 +994,7 @@ function dessinerEntonnoir() {
 function dessinerClassement() {
   const v = document.getElementById('rkV'), W = largeur(v), i = CMP.rk;
   const rows = NATS.map(n => [n.c, surv(n.c)[i]]).sort((a, b) => b[1] - a[1]);
-  const bh = 19, H = rows.length * bh + 4, ml = W < 380 ? 96 : 118, mr = 40;
+  const bh = Math.round(19 * ECH()), H = rows.length * bh + 4, ml = W < 380 ? 96 : Math.round(118 * ECH()), mr = 46;
   const svg = cadre(v, W, H), mx = Math.max(...rows.map(r => r[1]), .1);
   rows.forEach(([c, x], k) => { const y = k * bh + 2, sel = CMP.sel.includes(c), wbar = (W - ml - mr) * x / mx;
     if (sel) el('rect', { x: 0, y, width: W, height: bh, fill: cv('--surface-2') }, svg);
@@ -1011,8 +1035,8 @@ function dessinerNuage() {
   /* points : gris d'abord, nations choisies au-dessus ; étiquettes sans chevauchement */
   const ord = [...pts.filter(p => !CMP.sel.includes(p.c)), ...pts.filter(p => CMP.sel.includes(p.c))];
   const pris = [];
-  const libre = (x, y, w) => !pris.some(b => x < b.x + b.w && x + w > b.x && Math.abs(y - b.y) < 11);
-  for (const p of ord.slice().reverse()) { const sel = CMP.sel.includes(p.c), w = NAT_DE[p.c].nom.length * (sel ? 6.2 : 5.2) + 4;
+  const libre = (x, y, w) => !pris.some(b => x < b.x + b.w && x + w > b.x && Math.abs(y - b.y) < 11 * ECH());
+  for (const p of ord.slice().reverse()) { const sel = CMP.sel.includes(p.c), w = NAT_DE[p.c].nom.length * (sel ? 6.2 : 5.2) * ECH() + 4;
     for (const [dx, dy, a] of [[9, 0, 'start'], [-9, 0, 'end'], [0, -11, 'middle'], [0, 12, 'middle']]) {
       const lx = a === 'start' ? X(p.x) + dx : a === 'end' ? X(p.x) + dx - w : X(p.x) - w / 2, ly = Y(p.y) + dy;
       if (lx < m.l - 30 || lx + w > W) continue;
@@ -1029,9 +1053,9 @@ function dessinerNuage() {
 
 /* --- 4 · décennies --- */
 function dessinerDecennies() {
-  const v = document.getElementById('dcV'), W = largeur(v), H = W < 500 ? 230 : 270, i = CMP.dc;
+  const v = document.getElementById('dcV'), W = largeur(v), H = W < 500 ? 230 : 300, i = CMP.dc;
   const decs = Object.keys(AG.edDec).map(Number).sort((a, b) => a - b);
-  const m = { t: 12, r: W < 500 ? 70 : 96, b: 24, l: 34 }, svg = cadre(v, W, H);
+  const m = { t: 12, r: W < 500 ? 70 : 120, b: 26, l: 40 }, svg = cadre(v, W, H);
   const val = c => decs.map(d => ((AG.dec[c][d] || [])[i] || 0) / AG.edDec[d]);
   const ymax = Math.max(...NATS.map(n => Math.max(...val(n.c)))) * 1.08 || 1;
   const X = k => m.l + (k + .5) * (W - m.l - m.r) / decs.length, Y = y => H - m.b - y / ymax * (H - m.t - m.b);
