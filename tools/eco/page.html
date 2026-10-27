@@ -239,6 +239,85 @@ svg .m{font-variant-numeric:tabular-nums}
 .tip .tr b{font-variant-numeric:tabular-nums; font-weight:600; font-size:12px; white-space:nowrap}
 .tip .tf{margin-top:6px; padding-top:6px; border-top:1px solid var(--rule-soft); font-size:11.5px; color:var(--ink-3)}
 .tip .tdesc{font-size:12px; line-height:1.45; color:var(--ink-2); margin:0 0 7px}
+
+/* ---------- Budget 2027 : le bac à sable ---------- */
+.b27 .ptitle .no{background:var(--n2)}
+.b27 .ptitle .sub .x{appearance:none; border:1px solid var(--rule); background:var(--surface-2); color:var(--ink-2); font:inherit; font-size:12px; font-weight:600; border-radius:2px; padding:4px 10px; cursor:pointer}
+.b27 .ptitle .sub .x:focus-visible{outline:2px solid var(--fr); outline-offset:1px}
+.bgrid{display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:18px; align-items:start}
+@media (max-width:980px){ .bgrid{grid-template-columns:1fr} }
+.bres{position:sticky; top:118px; display:grid; gap:12px}
+@media (max-width:980px){ .bres{position:static} }
+.levs{display:grid; gap:10px}
+.lv{border:1px solid var(--rule); border-radius:3px; background:var(--surface); padding:12px 14px; transition:border-color .15s}
+.lv[data-on="1"]{border-color:var(--ink-3); box-shadow:inset 3px 0 0 var(--good)}
+.lv .lh{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.lv h4{margin:0; font-size:15px; font-weight:700; flex:1 1 220px; line-height:1.3}
+.lv .amt{font-size:18px; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; color:var(--ink-3)}
+.lv[data-on="1"] .amt{color:var(--good)}
+.lv .amt small{font-size:12px; font-weight:400; color:var(--ink-3); margin-left:2px}
+.pill{font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; border-radius:2px; padding:1px 6px; white-space:nowrap; border:1px solid}
+.pill.officiel{color:var(--good); border-color:var(--good)}
+.pill.estimation{color:var(--ink-2); border-color:var(--ink-3)}
+.pill.controverse{color:var(--n2); border-color:var(--n2)}
+.pill.sens{color:var(--ink-3); border-color:var(--rule)}
+.sw{position:relative; display:inline-block; width:38px; height:22px; flex:none; cursor:pointer}
+.sw input{position:absolute; opacity:0; inset:0; margin:0; cursor:pointer; z-index:1; width:100%; height:100%}
+.sw span{position:absolute; inset:0; background:var(--rule); border-radius:11px; transition:background .15s}
+.sw span::after{content:""; position:absolute; left:3px; top:3px; width:16px; height:16px; border-radius:50%; background:var(--surface); transition:transform .15s; box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.sw input:checked + span{background:var(--good)}
+.sw input:checked + span::after{transform:translateX(16px)}
+.sw input:focus-visible + span{outline:2px solid var(--fr); outline-offset:2px}
+.lv .ch{font-size:13px; color:var(--ink-2); margin:6px 0 0; line-height:1.45}
+.lv .lc{margin-top:10px}
+.lv .lc .rg{display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap}
+.lv .lc input[type=range]{flex:1 1 200px; accent-color:var(--good)}
+.lv .lc .val{font-size:17px; font-weight:700; font-variant-numeric:tabular-nums; min-width:9ch}
+.lv .lc .val small{font-size:12px; font-weight:400; color:var(--ink-3)}
+.lv .lq{font-size:12.5px; color:var(--ink-2); margin-top:8px}
+.lv .lq b{color:var(--ink)}
+.lv .an1{font-size:12.5px; margin-top:6px; color:var(--ink-2); background:var(--surface-2); border-radius:2px; padding:5px 8px}
+.lv details{margin-top:8px; font-size:12.5px; color:var(--ink-2)}
+.lv details summary{cursor:pointer; color:var(--ink-3); font-weight:600}
+.lv details p{margin:6px 0 0; line-height:1.5}
+.lv details a{word-break:break-word}
+.nl{display:grid; gap:2px; margin-top:4px}
+.nl label{display:grid; grid-template-columns:18px minmax(0,1fr) auto; gap:2px 8px; align-items:baseline; padding:4px 4px; border-radius:2px; cursor:pointer; font-size:13px}
+.nl label:hover{background:var(--surface-2)}
+.nl input{margin:0; accent-color:var(--good); transform:translateY(2px)}
+.nl .nm{font-weight:600}
+.nl .nm i{display:block; font-style:normal; font-weight:400; font-size:11.5px; color:var(--ink-3)}
+.nl .m{font-variant-numeric:tabular-nums; color:var(--ink-2); white-space:nowrap}
+.nl label.on .m{color:var(--good); font-weight:700}
+.nq{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:4px}
+.nq button{appearance:none; border:1px solid var(--rule); background:var(--surface); color:var(--ink-2); font:inherit; font-size:12px; font-weight:600; border-radius:2px; padding:2px 8px; cursor:pointer}
+.bk{background:var(--surface-2); border-radius:3px; padding:12px 14px}
+.bk .k{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700; color:var(--ink-3)}
+.bk .big{font-size:34px; font-weight:700; line-height:1.1; letter-spacing:-.015em; font-variant-numeric:tabular-nums; margin-top:2px}
+.bk .big small{font-size:14px; font-weight:400; color:var(--ink-2); margin-left:4px}
+.bk .d{font-size:13px; color:var(--ink-2); margin-top:3px}
+.bk .d b{color:var(--ink)}
+.bk.ok .big{color:var(--good)}
+.bk4{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px}
+.bk4 .bk{padding:9px 11px}
+.bk4 .bk .big{font-size:20px}
+@media (max-width:520px){ .bk4{gap:6px} .bk4 .bk{padding:8px} .bk4 .bk .k{font-size:9.5px; letter-spacing:.04em} .bk4 .bk .big{font-size:18px} .bk4 .bk .d{font-size:11.5px} }
+.cas svg{display:block; width:100%; height:auto; overflow:visible}
+.cas text{font-size:12px; fill:var(--ink-2)}
+.cas text.l{fill:var(--ink); font-weight:600}
+.cas text.v{font-variant-numeric:tabular-nums; font-weight:700; fill:var(--ink)}
+.cas text.g{fill:var(--good)}
+.cas .ref{stroke:var(--ink-3); stroke-dasharray:3 3; stroke-width:1}
+.cas text.rl{font-size:10.5px; fill:var(--ink-3)}
+.phr{font-size:14px; line-height:1.5; border-left:3px solid var(--n2); padding:4px 0 4px 10px; margin:0}
+.phr b{font-weight:700}
+.bmob{display:none}
+@media (max-width:980px){
+  .bmob{display:flex; position:fixed; left:0; right:0; bottom:0; z-index:40; gap:10px; align-items:baseline; justify-content:space-between;
+    background:var(--ink); color:var(--surface); padding:9px 16px calc(9px + env(safe-area-inset-bottom)); font-size:13px; transform:translateY(110%); transition:transform .2s}
+  .bmob.on{transform:none}
+  .bmob b{font-size:17px; font-variant-numeric:tabular-nums}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -283,6 +362,27 @@ svg .m{font-variant-numeric:tabular-nums}
     <details class="xfold"><summary>Les chiffres du schéma, poste par poste</summary><div class="in" id="skTab"></div></details>
     <p class="figc" id="skNote"></p>
   </div>
+</section>
+
+<section id="budget-2027">
+  <div class="shead"><h2>Et en 2027 ? Faites votre budget</h2>
+    <p>Partez du budget que le gouvernement propose pour 2027 et actionnez des leviers. Chaque levier est chiffré, sourcé, et dit ce qu'on ignore.</p></div>
+  <div class="panel b27">
+    <div class="ptitle"><span class="no">2027</span><h3>Votre budget 2027</h3>
+      <span class="sub">
+        <span class="ctl"><span class="lb">Horizon</span><span class="seg" role="group" aria-label="Horizon du chiffrage" id="b27-h">
+          <button type="button" data-bh="a1" aria-pressed="true">Effet en 2027</button><button type="button" data-bh="mat" aria-pressed="false">À maturité</button></span></span>
+        <span class="ctl"><span class="lb">Chiffrages</span><span class="seg" role="group" aria-label="Fourchette des chiffrages" id="b27-f">
+          <button type="button" data-bf="prudente" aria-pressed="false">Prudents</button><button type="button" data-bf="centrale" aria-pressed="true">Centraux</button><button type="button" data-bf="favorable" aria-pressed="false">Favorables</button></span></span>
+        <button type="button" class="x" id="b27-zr">Tout remettre à zéro</button>
+      </span></div>
+    <div class="bgrid">
+      <div class="levs" id="b27-l"></div>
+      <aside class="bres" id="b27-r" aria-live="polite"></aside>
+    </div>
+    <p class="figc" id="b27-n"></p>
+  </div>
+  <div class="bmob" id="b27-m" aria-hidden="true"></div>
 </section>
 
 <section>
@@ -374,6 +474,7 @@ svg .m{font-variant-numeric:tabular-nums}
 <script>
 /*DATA_START*/const DE = null;/*DATA_END*/
 /*RT_START*/const RT = null;/*RT_END*/
+/*LV_START*/const LV = null;/*LV_END*/
 (function () {
 'use strict';
 /* D0 : les données publiées ; D : celles qu'affiche la page — les mêmes, ou une
@@ -561,7 +662,20 @@ try { const h = new URLSearchParams(location.hash.slice(1));
   if (RT && +h.get('rp') >= 1000 && +h.get('rp') <= 5000) S.cap = +h.get('rp');
   if (S.cap && [1, 1.5, 2].includes(+h.get('rs'))) S.capS = +h.get('rs');
 } catch (e) {}
-const hashSync = () => { try { history.replaceState(null, '', '#an=' + S.an + '&u=' + S.u + (S.cap ? '&rp=' + S.cap + (S.capS ? '&rs=' + S.capS : '') : '')); } catch (e) {} };
+/* Budget 2027 : horizon (a1 = effet la première année, mat = à maturité),
+   fourchette, niches supprimées, âge légal, taux Zucman, plafond des retraites. */
+const B = { h: 'a1', f: 'centrale', n: new Set(), age: 64, z: 0, p: 0 };
+try { const h = new URLSearchParams(location.hash.slice(1));
+  if (h.get('bh') === 'mat') B.h = 'mat';
+  if (['prudente', 'favorable'].includes(h.get('bf'))) B.f = h.get('bf');
+  if (LV && h.get('bn')) { const ok = new Set([...LV.leviers[0].items.map(x => x.id), 'autres']); h.get('bn').split('.').filter(x => ok.has(x)).forEach(x => B.n.add(x)); }
+  if (+h.get('ba') > 64 && +h.get('ba') <= 68) B.age = Math.round(+h.get('ba') * 2) / 2;
+  if (+h.get('bz') >= 0.5 && +h.get('bz') <= 3) B.z = Math.round(+h.get('bz') * 2) / 2;
+  if (+h.get('bp') >= 1000 && +h.get('bp') <= 5000) B.p = Math.round(+h.get('bp'));
+} catch (e) {}
+const bHash = () => (B.h === 'mat' ? '&bh=mat' : '') + (B.f !== 'centrale' ? '&bf=' + B.f : '') + (B.n.size ? '&bn=' + [...B.n].join('.') : '')
+  + (B.age > 64 ? '&ba=' + B.age : '') + (B.z ? '&bz=' + B.z : '') + (B.p ? '&bp=' + B.p : '');
+const hashSync = () => { try { history.replaceState(null, '', '#an=' + S.an + '&u=' + S.u + (S.cap ? '&rp=' + S.cap + (S.capS ? '&rs=' + S.capS : '') : '') + bHash()); } catch (e) {} };
 
 /* ---------- nombres ---------- */
 const nf = (x, d) => x.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -1371,12 +1485,184 @@ $('srcList').innerHTML = ds('gov_10a_main', 'recettes et dépenses par nature, s
   + ds('gov_10dd_edpt1', 'dette publique au sens de Maastricht')
   + ds('nama_10_gdp', 'PIB en valeur') + ds('nama_10_pe', 'population');
 
+/* ======================================================================
+   BUDGET 2027 : partir du PLF, actionner des leviers, voir le déficit
+   ====================================================================== */
+const budget27 = (() => {
+  if (!LV) { const x = $('budget-2027'); if (x) x.hidden = true; return () => {}; }
+  const LB = LV.base, PIB = LB.pib_md, base = -LB.solde_pct / 100 * PIB;
+  const L = id => LV.leviers.find(l => l.id === id);
+  const N = L('niches'), AG = L('age'), Z = L('zucman'), PL = L('plafond');
+  const NI = [...N.items, N.autres];
+  const bas = t => /^.[a-zà-ÿ ]/.test(t) ? t[0].toLowerCase() + t.slice(1) : t;
+  const md = (x, d) => nf(x, d === undefined ? (Math.abs(x) >= 100 ? 0 : 1) : d);
+  const pc = x => nf(x / PIB * 100, 1) + ' %';
+  const FIAB = { officiel: 'coût officiel', estimation: 'estimation', controverse: 'chiffrage disputé' };
+  const k25 = D0.an.indexOf(PL.an_modele);
+  const plafondOK = !!(RET && RET.pa(PL.an_modele) && k25 >= 0);
+
+  /* chaque levier : montant en Md€ dans l'horizon et la fourchette choisis */
+  const calc = () => {
+    const f = B.f, a1 = B.h === 'a1', out = [];
+    const nm = NI.filter(x => B.n.has(x.id)).reduce((a, x) => a + x.m, 0) / 1000;
+    const nv = nm * N.garde[f] * (a1 ? N.an1 : 1);
+    out.push({ id: 'niches', on: B.n.size > 0, md: nv, rec: nv, dep: 0, brut: nm, qui: [(() => { const t = NI.filter(x => B.n.has(x.id)).sort((a, b) => b.m - a.m).slice(0, 2).map(x => /^.[a-zà-ÿ]/.test(x.nom) ? x.nom[0].toLowerCase() + x.nom.slice(1) : x.nom);
+      return 'les bénéficiaires des niches supprimées (' + t.join(', ') + (B.n.size > 2 ? '…' : '') + ')'; })()] });
+    const yrs = B.age - AG.ref, am = yrs * AG.par_an_pct_pib[f] / 100 * PIB;
+    out.push({ id: 'age', on: yrs > 0, md: a1 ? am * AG.an1 : am, rec: 0, dep: a1 ? am * AG.an1 : am, mat: am, qui: ['les générations nées après 1964'] });
+    const zv = B.z ? Z.rendement_2pct_md[f] * B.z / Z.taux_ref : 0;
+    out.push({ id: 'zucman', on: B.z > 0, md: zv, rec: zv, dep: 0, qui: ['1 800 foyers à plus de 100 M€'] });
+    let pv = { md: 0, rec: 0, dep: 0 };
+    if (B.p && plafondOK) { const h = RET.calc(B.p, PL.an_modele), q = PIB * 1000 / D0.pib[k25];
+      pv = { md: h.net / 1000 * q, dep: h.brut / 1000 * q, rec: -h.prelev / 1000 * q, part: h.part, touches: h.touches }; }
+    out.push({ id: 'plafond', on: B.p > 0, ...pv, qui: ['les retraités au-dessus du plafond'] });
+    return out;
+  };
+
+  /* --- les cartes (construites une fois, mises à jour ensuite) --- */
+  const src = l => `<details><summary>Comment c'est chiffré, sources</summary>`
+    + [l.garde_note, l.par_an_note, l.rendement_note, l.note, l.an1_note].filter(Boolean).map(t => `<p>${t}</p>`).join('')
+    + `<p>${l.sources.map(x => `<a href="${x.u}" rel="noopener">${x.t}</a>`).join('<br>')}</p></details>`;
+  const head = (l, sw) => `<div class="lh">${sw ? `<label class="sw"><input type="checkbox" data-sw="${l.id}" aria-label="${l.titre}"><span></span></label>` : ''}<h4>${l.titre}</h4>`
+    + `<span class="pill ${l.fiab}">${FIAB[l.fiab]}</span><span class="pill sens">${l.sens === 'recette' ? 'recette en plus' : 'dépense en moins'}</span><span class="amt" id="b27-a-${l.id}"></span></div><p class="ch">${l.chapo}</p>`;
+  const cards = () => {
+    const box = $('b27-l');
+    box.innerHTML =
+      `<div class="lv" data-l="niches">${head(N, true)}<div class="lc"><div class="nq"><button type="button" data-nq="top5">Les 5 plus coûteuses</button><button type="button" data-nq="tout">Toutes celles-ci</button><button type="button" data-nq="rien">Aucune</button></div>`
+      + `<div class="nl">${NI.map(x => `<label data-n="${x.id}" title="${x.def.replace(/"/g, '&quot;')}"><input type="checkbox" value="${x.id}"><span class="nm">${x.nom}<i>${x.qui}</i></span><span class="m">${md(x.m / 1000)} Md€</span></label>`).join('')}</div></div>`
+      + `<div class="lq" id="b27-q-niches"></div>${src(N)}</div>`
+      + `<div class="lv" data-l="age">${head(AG, true)}<div class="lc"><div class="rg"><input type="range" id="b27-age" min="${AG.min}" max="${AG.max}" step="${AG.pas}" aria-label="Âge légal cible"><span class="val" id="b27-age-v"></span></div></div>`
+      + `<div class="an1" id="b27-age-1"></div><div class="lq"><b>Qui paie :</b> ${bas(AG.qui)}.</div>${src(AG)}</div>`
+      + `<div class="lv" data-l="zucman">${head(Z, true)}<div class="lc"><div class="rg"><input type="range" id="b27-z" min="${Z.min}" max="${Z.max}" step="${Z.pas}" aria-label="Taux de l'impôt plancher"><span class="val" id="b27-z-v"></span></div></div>`
+      + `<div class="lq"><b>Qui paie :</b> ${bas(Z.qui)}.</div><div class="lq" id="b27-z-f"></div>${src(Z)}</div>`
+      + (plafondOK ? `<div class="lv" data-l="plafond">${head(PL, true)}<div class="lc"><div class="rg"><input type="range" id="b27-p" min="1000" max="5000" step="10" aria-label="Plafond de pension nette par mois"><span class="val" id="b27-p-v"></span></div>`
+        + `<div class="nq" style="margin-top:6px">${[[1, 'SMIC'], [1.5, '1,5 SMIC'], [2, '2 SMIC']].map(([m, t]) => `<button type="button" data-bp="${Math.round(RET.pa(PL.an_modele).smic * m)}">${t}</button>`).join('')}<button type="button" data-bp="3000">3 000 €</button></div></div>`
+        + `<div class="lq" id="b27-q-plafond"></div>${src(PL)}</div>` : '');
+    box.addEventListener('change', e => {
+      const t = e.target;
+      if (t.dataset.sw) {
+        const on = t.checked;
+        if (t.dataset.sw === 'niches') { B.n.clear(); if (on) N.items.forEach(x => B.n.add(x.id)); }
+        if (t.dataset.sw === 'age') B.age = on ? AG.max : AG.ref;
+        if (t.dataset.sw === 'zucman') B.z = on ? Z.taux_ref : 0;
+        if (t.dataset.sw === 'plafond') B.p = on ? Math.round(RET.pa(PL.an_modele).smic) : 0;
+      } else if (t.closest('.nl')) { if (t.checked) B.n.add(t.value); else B.n.delete(t.value); }
+      else return;
+      maj(true);
+    });
+    box.addEventListener('input', e => {
+      const t = e.target;
+      if (t.id === 'b27-age') B.age = +t.value; else if (t.id === 'b27-z') B.z = +t.value; else if (t.id === 'b27-p') B.p = +t.value; else return;
+      maj(true);
+    });
+    box.addEventListener('click', e => {
+      const q = e.target.closest('[data-nq]'), p = e.target.closest('[data-bp]');
+      if (q) { B.n.clear(); if (q.dataset.nq === 'top5') [...N.items].sort((a, b) => b.m - a.m).slice(0, 5).forEach(x => B.n.add(x.id)); if (q.dataset.nq === 'tout') N.items.forEach(x => B.n.add(x.id)); maj(true); }
+      if (p) { B.p = +p.dataset.bp; maj(true); }
+    });
+  };
+
+  /* --- la cascade : du déficit du gouvernement au vôtre --- */
+  const cascade = (box, rows, fin) => {
+    const W = Math.max(300, box.clientWidth), mob = W < 480, lw = mob ? 118 : 170, vw = mob ? 74 : 92, rh = 24, g = 7, top = 30;
+    const lo = Math.min(0, ...rows.map(r => Math.min(r.a, r.b)));
+    const H = top + rows.length * (rh + g) + 4, x0 = lw + 4, x1 = W - vw, sx = v => x0 + (v - lo) / (base - lo) * (x1 - x0);
+    box.innerHTML = '';
+    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'img', 'aria-label': fin >= 0 ? `Déficit 2027 : ${md(fin)} milliards d'euros` : `Excédent 2027 : ${md(-fin)} milliards d'euros` }, box);
+    if (lo < 0) { el('line', { x1: sx(0), x2: sx(0), y1: top - 6, y2: H, style: 'stroke:var(--ink);stroke-width:1' }, svg);
+      el('text', { x: sx(0) - 4, y: top - 10, 'text-anchor': 'end', class: 'rl' }, svg).textContent = 'équilibre'; }
+    for (const [v, t, anc] of [[0.03 * PIB, mob ? '3 %' : '3 % du PIB', 'end'], [-LB.solde_stabilisant_pct / 100 * PIB, mob ? 'dette stable' : 'la dette cesse de monter', 'start']]) {
+      el('line', { x1: sx(v), x2: sx(v), y1: top - 6, y2: H, class: 'ref' }, svg);
+      el('text', { x: sx(v) + (anc === 'end' ? -4 : 4), y: top - 10, 'text-anchor': anc, class: 'rl' }, svg).textContent = t;
+    }
+    rows.forEach((r, i) => {
+      const y = top + i * (rh + g);
+      const t = el('text', { x: 0, y: y + rh / 2 + 4, class: r.k === 'lev' ? '' : 'l' }, svg);
+      t.textContent = mob && r.l.length > 17 ? r.l.slice(0, 16) + '…' : r.l;
+      const a = Math.min(r.a, r.b), b = Math.max(r.a, r.b);
+      const fill = r.k === 'base' ? 'var(--ink-3)' : r.k === 'lev' ? 'var(--good)' : (fin <= 0.03 * PIB ? 'var(--good)' : 'var(--n2)');
+      el('rect', { x: sx(a), y, width: Math.max(1.5, sx(b) - sx(a)), height: rh, rx: 2, style: `fill:${fill}` + (r.k === 'lev' ? ';fill-opacity:.85' : '') }, svg);
+      if (r.k === 'lev' && i > 0) el('line', { x1: sx(r.b), x2: sx(r.b), y1: y - g, y2: y, style: 'stroke:var(--ink-3);stroke-width:1' }, svg);
+      el('text', { x: W, y: y + rh / 2 + 4, 'text-anchor': 'end', class: 'v' + (r.k === 'lev' ? ' g' : '') }, svg).textContent = r.k === 'lev' ? '−' + md(r.b - r.a) : r.k === 'fin' && fin < 0 ? '+' + md(-fin, 0) + ' Md€' : md(r.b, 0) + ' Md€';
+    });
+  };
+
+  const maj = (user) => {
+    const R = calc(), on = R.filter(x => x.on), tot = on.reduce((a, x) => a + x.md, 0), fin = base - tot;
+    const rec = on.reduce((a, x) => a + x.rec, 0), dep = on.reduce((a, x) => a + x.dep, 0);
+    /* boutons globaux */
+    document.querySelectorAll('[data-bh]').forEach(b => b.setAttribute('aria-pressed', b.dataset.bh === B.h));
+    document.querySelectorAll('[data-bf]').forEach(b => b.setAttribute('aria-pressed', b.dataset.bf === B.f));
+    /* cartes */
+    for (const x of R) {
+      const c = document.querySelector(`.lv[data-l="${x.id}"]`); if (!c) continue;
+      c.dataset.on = x.on ? 1 : 0;
+      const sw = c.querySelector('[data-sw]'); if (sw) sw.checked = x.on;
+      const a = $('b27-a-' + x.id);
+      a.innerHTML = !x.on ? '' : x.id === 'age' && B.h === 'a1' ? `≈ 0<small>en 2027</small>` : `−${md(x.md)}<small>Md€</small>`;
+    }
+    document.querySelectorAll('.nl label').forEach(l => { const on = B.n.has(l.dataset.n); l.classList.toggle('on', on); l.querySelector('input').checked = on; });
+    const nm = R[0].brut;
+    $('b27-q-niches').innerHTML = B.n.size ? `<b>${B.n.size} niche${B.n.size > 1 ? 's' : ''} supprimée${B.n.size > 1 ? 's' : ''}</b> : ${md(nm)} Md€ de coût officiel, dont ${nf(N.garde[B.f] * 100, 0)} % récupérés (chiffrage ${B.f === 'prudente' ? 'prudent' : B.f === 'centrale' ? 'central' : 'favorable'}).` : '<b>Qui paie :</b> les bénéficiaires de chaque niche (indiqués sous son nom).';
+    const ra = $('b27-age'); if (+ra.value !== B.age) ra.value = B.age;
+    const yrs = B.age - AG.ref;
+    $('b27-age-v').innerHTML = `${nf(Math.floor(B.age), 0)} ans${B.age % 1 ? ' et 6 mois' : ''}<small>${yrs ? ' · +' + nf(yrs, 1) + ' an' + (yrs > 1 ? 's' : '') : ' · loi actuelle'}</small>`;
+    $('b27-age-1').innerHTML = yrs ? (B.h === 'a1' ? `<b>En 2027 : quasi rien.</b> À maturité : <b>−${md(R[1].mat)} Md€ par an</b> (fourchette ${md(yrs * AG.par_an_pct_pib.prudente / 100 * PIB, 0)} à ${md(yrs * AG.par_an_pct_pib.favorable / 100 * PIB, 0)} Md€). Passez l'horizon sur « À maturité » pour le compter.`
+      : `À maturité : <b>−${md(R[1].mat)} Md€ par an</b>, appliqués au budget 2027 (fourchette ${md(yrs * AG.par_an_pct_pib.prudente / 100 * PIB, 0)} à ${md(yrs * AG.par_an_pct_pib.favorable / 100 * PIB, 0)} Md€). La première année, l'économie est quasi nulle.`) : AG.an1_note;
+    const rz = $('b27-z'); if (+rz.value !== (B.z || Z.taux_ref)) rz.value = B.z || Z.taux_ref;
+    $('b27-z-v').innerHTML = B.z ? `${nf(B.z, 1)} %<small> par an</small>` : `<small>désactivée</small>`;
+    $('b27-z-f').innerHTML = `Rendement à ${nf(B.z || Z.taux_ref, 1)} % : de ${md(Z.rendement_2pct_md.prudente * (B.z || 2) / 2)} Md€ (prudent) à ${md(Z.rendement_2pct_md.favorable * (B.z || 2) / 2)} Md€ (favorable). C'est le levier le plus disputé.`;
+    if (plafondOK) {
+      const rp = $('b27-p'), sm = RET.pa(PL.an_modele).smic; if (+rp.value !== (B.p || Math.round(sm))) rp.value = B.p || Math.round(sm);
+      $('b27-p-v').innerHTML = B.p ? `${nf(B.p, 0)} €<small> net/mois · ${nf(B.p / sm, 2)} SMIC</small>` : `<small>désactivé</small>`;
+      $('b27-q-plafond').innerHTML = B.p ? `<b>Qui paie :</b> ${nf(R[3].touches / 1e6, 1)} million${R[3].touches >= 2e6 ? 's' : ''} de retraités (${nf(R[3].part, 0)} %). Pensions en moins : ${md(R[3].dep)} Md€, dont ${md(-R[3].rec)} Md€ de CSG et CRDS qui ne rentrent plus.` : `<b>Qui paie :</b> ${bas(PL.qui)}.`;
+    }
+    /* résultat */
+    const rows = [{ l: 'Budget du gouvernement', a: 0, b: base, k: 'base' }];
+    let run = base;
+    for (const x of on) { if (x.md <= 0.05) continue; rows.push({ l: { niches: 'Niches fiscales', age: 'Âge légal ' + nf(B.age, B.age % 1 ? 1 : 0) + ' ans', zucman: 'Taxe Zucman ' + nf(B.z, 1) + ' %', plafond: 'Plafond ' + nf(B.p, 0) + ' €' }[x.id], a: run - x.md, b: run, k: 'lev' }); run -= x.md; }
+    rows.push({ l: 'Votre budget 2027', a: 0, b: fin, k: 'fin' });
+    const dette = LB.dette_pct - tot / PIB * 100;
+    const qui = on.filter(x => x.md > 0.05).sort((a, b) => b.md - a.md).flatMap(x => x.qui).slice(0, 3);
+    const box = $('b27-r');
+    box.innerHTML = `<div class="bk ${tot > 0.05 ? 'ok' : ''}"><div class="k">${fin >= 0 ? 'Déficit' : 'Excédent'} public ${LB.annee}</div><div class="big">${pc(Math.abs(fin))}<small>du PIB · ${md(Math.abs(fin), 0)} Md€</small></div>`
+      + `<div class="d">${tot > 0.05 ? `au lieu de <b>${pc(base)}</b> (${md(base, 0)} Md€) dans le budget du gouvernement : <b>−${md(tot)} Md€</b>` : `prévu par le gouvernement. Actionnez des leviers à gauche.`}</div></div>`
+      + `<div class="cas" id="b27-c"></div>`
+      + `<div class="bk4"><div class="bk"><div class="k">Dette fin ${LB.annee}</div><div class="big">${nf(dette, 1)} %</div><div class="d">du PIB (${nf(LB.dette_pct, 1)} % prévu)</div></div>`
+      + `<div class="bk"><div class="k">Impôts en plus</div><div class="big">${md(Math.max(0, rec))}</div><div class="d">Md€</div></div>`
+      + `<div class="bk"><div class="k">Dépenses en moins</div><div class="big">${md(dep)}</div><div class="d">Md€</div></div></div>`
+      + `<p class="phr" id="b27-ph"></p>`
+      + `<div class="nq"><button type="button" id="b27-cp">Copier le lien de ce budget</button></div>`;
+    cascade($('b27-c'), rows, fin);
+    const seuil = fin < 0 ? '' : fin <= 0.03 * PIB ? ' Sous les 3 % des règles européennes.' : fin <= -LB.solde_stabilisant_pct / 100 * PIB ? ' La dette cesse de monter en % du PIB.' : '';
+    $('b27-ph').innerHTML = tot > 0.05
+      ? `<b>Mon budget ${LB.annee}</b> : ${fin >= 0 ? `déficit ramené de ${pc(base)} à <b>${pc(fin)}</b> du PIB` : `déficit de ${pc(base)} du PIB transformé en <b>excédent de ${pc(-fin)}</b>`}, ${md(tot)} Md€ de moins${B.h === 'mat' ? ' (mesures à maturité)' : ''}. Payé surtout par ${qui.length > 1 ? qui.slice(0, -1).join(', ') + ' et ' + qui[qui.length - 1] : qui[0]}.${seuil}`
+      : `Le gouvernement prévoit ${md(base, 0)} Md€ de déficit en ${LB.annee}, ${pc(base)} du PIB, après ${nf(-LB.solde_2026_pct, 1)} % en 2026. Pour stabiliser la dette, il faudrait descendre à ${nf(-LB.solde_stabilisant_pct, 1)} %.`;
+    $('b27-cp').addEventListener('click', () => { const b = $('b27-cp');
+      const fait = () => { b.textContent = 'Lien copié'; setTimeout(() => { b.textContent = 'Copier le lien de ce budget'; }, 1600); };
+      try { hashSync(); navigator.clipboard.writeText(location.href).then(fait, () => {}); } catch (e) {} });
+    $('b27-m').innerHTML = `<span>${fin >= 0 ? 'Déficit' : 'Excédent'} ${LB.annee}</span><b>${pc(Math.abs(fin))}</b><span>${tot > 0.05 ? '−' + md(tot) + ' Md€' : 'budget du gouvernement'}</span>`;
+    $('b27-n').innerHTML = `<b>Point de départ</b> : ${LB.source} (<a href="${LB.url}" rel="noopener">Trésor</a>) : PIB ${md(PIB, 0)} Md€, déficit ${nf(-LB.solde_pct, 1)} %, dette ${nf(LB.dette_pct, 1)} %. ${LB.avis} (<a href="${LB.avis_url}" rel="noopener">avis</a>). `
+      + `<b>Horizon</b> : « Effet en 2027 » compte ce qu'une mesure votée pour 2027 rapporterait dès cette année-là ; « À maturité » applique au budget 2027 ce qu'elle rapporterait une fois montée en charge : un ordre de grandeur, pas une prévision. `
+      + `<b>Chiffrages</b> : prudents, centraux ou favorables, selon les fourchettes de chaque levier (dépliez « Comment c'est chiffré »). <b>Limites</b> : ${LV.limites} Dette : effet de la seule année 2027. Relevé du ${dateFR(LV.releve)}.`;
+    if (user) hashSync();
+  };
+
+  cards();
+  document.querySelectorAll('[data-bh]').forEach(b => b.addEventListener('click', () => { B.h = b.dataset.bh; maj(true); }));
+  document.querySelectorAll('[data-bf]').forEach(b => b.addEventListener('click', () => { B.f = b.dataset.bf; maj(true); }));
+  $('b27-zr').addEventListener('click', () => { B.n.clear(); B.age = AG.ref; B.z = 0; B.p = 0; maj(true); });
+  /* téléphone : le déficit reste visible en bas d'écran tant qu'on joue avec les leviers */
+  try { new IntersectionObserver(es => es.forEach(e => $('b27-m').classList.toggle('on', e.isIntersecting)), { rootMargin: '-35% 0px -35% 0px' }).observe($('b27-l')); } catch (e) {}
+  return maj;
+})();
+
 function tout() {
   sel.value = S.an;
   $('an-m').disabled = S.an <= D.an[0]; $('an-p').disabled = S.an >= D.der;
   document.querySelectorAll('[data-u]').forEach(b => b.setAttribute('aria-pressed', b.dataset.u === S.u));
   $('hint').textContent = uLong[S.u];
-  tete(); circuit(); recettes(); sousSecteurs(); trente(); europe(); hyp();
+  tete(); circuit(); recettes(); sousSecteurs(); trente(); europe(); hyp(); budget27();
 }
 tout();
 let rz = 0, w0 = innerWidth;

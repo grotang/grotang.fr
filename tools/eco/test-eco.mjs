@@ -79,3 +79,21 @@ console.log('\ndata.json : tout est cohérent.');
   for (const [y, a] of Object.entries(R.annees)) if (!(a.effectif > 1e7 && a.moyenne_brute > 1000 && a.moyenne_nette < a.moyenne_brute && a.smic_net > 1000)) { console.log('ÉCHEC', `retraites : année ${y} incomplète`); process.exitCode = 1; }
   console.log(Math.abs(masse / R.masse_droit_direct_md - 1) < 0.03 ? '  ok ' : 'ÉCHEC', `retraites : masse reconstituée ${masse.toFixed(1)} Md€ ≈ publiée ${R.masse_droit_direct_md} Md€ (${R.masse_annee})`); if (Math.abs(masse / R.masse_droit_direct_md - 1) >= 0.03) process.exitCode = 1;
 }
+
+/* leviers.json (simulateur Budget 2027, relevé à la main dans le PLF 2027) :
+   la base doit être cohérente (déficit = solde × PIB, dépense = ratio × PIB),
+   les niches détaillées + « autres » doivent redonner le total publié, et
+   chaque fourchette doit aller du prudent au favorable. */
+{
+  const L = JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'leviers.json'), 'utf8'));
+  const t = (c, m) => { console.log(c ? '  ok ' : 'ÉCHEC', m); if (!c) process.exitCode = 1; };
+  const B = L.base;
+  t(Math.abs(B.depense_md / B.pib_md * 100 - B.depense_pct) < 0.15, `budget 2027 : dépense ${B.depense_md} Md€ = ${(B.depense_md / B.pib_md * 100).toFixed(2)} % du PIB ≈ ${B.depense_pct} %`);
+  t(Math.abs(B.po_md / B.pib_md * 100 - B.po_pct) < 0.15, `budget 2027 : prélèvements ${B.po_md} Md€ = ${(B.po_md / B.pib_md * 100).toFixed(2)} % du PIB ≈ ${B.po_pct} %`);
+  const N = L.leviers.find(l => l.id === 'niches'), sN = N.items.reduce((a, x) => a + x.m, 0) + N.autres.m;
+  t(Math.abs(sN / 1000 - N.total_md) < 0.06, `niches : Σ détail + autres = ${(sN / 1000).toFixed(2)} Md€ = total ${N.total_md} Md€`);
+  t(new Set(N.items.map(x => x.id)).size === N.items.length, 'niches : identifiants uniques');
+  const asc = o => o.prudente <= o.centrale && o.centrale <= o.favorable;
+  for (const l of L.leviers) for (const k of ['garde', 'par_an_pct_pib', 'rendement_2pct_md']) if (l[k]) t(asc(l[k]), `${l.id} : fourchette ${k} croissante`);
+  t(L.leviers.every(l => l.sources && l.sources.length && l.sources.every(s => /^https:\/\//.test(s.u))), 'leviers : chaque levier est sourcé');
+}
