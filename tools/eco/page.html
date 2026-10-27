@@ -546,13 +546,14 @@ const GEO_A = { DE: "l'Allemagne", IT: "l'Italie", ES: "l'Espagne", NL: 'les Pay
   SE: 'la Suède', DK: 'le Danemark', FI: 'la Finlande', EA20: 'la zone euro', EU27_2020: "l'Union européenne" };
 
 /* ---------- état de la page ---------- */
-const S = { an: D.derF, u: 'md', v: 'fonction', e: 'f', g: 'f', cmp: 'EA20', cap: null };
+const S = { an: D.derF, u: 'md', v: 'fonction', e: 'f', g: 'f', cmp: 'EA20', cap: null, capS: 0 };
 try { const h = new URLSearchParams(location.hash.slice(1));
   if (D.an.includes(+h.get('an'))) S.an = +h.get('an');
   if (['md', 'pib', 'hab', 'cent'].includes(h.get('u'))) S.u = h.get('u');
-  if (RT && +h.get('rp') >= 800 && +h.get('rp') <= 6000) S.cap = +h.get('rp');
+  if (RT && +h.get('rp') >= 1000 && +h.get('rp') <= 5000) S.cap = +h.get('rp');
+  if (S.cap && [1, 1.5, 2].includes(+h.get('rs'))) S.capS = +h.get('rs');
 } catch (e) {}
-const hashSync = () => { try { history.replaceState(null, '', '#an=' + S.an + '&u=' + S.u + (S.cap ? '&rp=' + S.cap : '')); } catch (e) {} };
+const hashSync = () => { try { history.replaceState(null, '', '#an=' + S.an + '&u=' + S.u + (S.cap ? '&rp=' + S.cap + (S.capS ? '&rs=' + S.capS : '') : '')); } catch (e) {} };
 
 /* ---------- nombres ---------- */
 const nf = (x, d) => x.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -1239,7 +1240,7 @@ function hyp() {
   const b0 = -O.B9[k], b1 = b0 - h.net;
   const vieil = D0.cofog.S13.GF1002[k], vLab = vieil !== null ? 'Dépense vieillesse' : 'Prestations en argent', vRef = vieil !== null ? vieil : O.D62PAY[k];
   const md = m => nf(m / 1000, m >= 10000 ? 0 : 1);
-  const presets = [[P.smic, 'SMIC'], [Math.round(P.smic * 1.5), '1,5 SMIC'], [Math.round(P.smic * 2), '2 SMIC'], [3000, '3 000 €'], [4000, '4 000 €']];
+  const presets = [[P.smic, 'SMIC', 1], [Math.round(P.smic * 1.5), '1,5 SMIC', 1.5], [Math.round(P.smic * 2), '2 SMIC', 2], [3000, '3 000 €'], [4000, '4 000 €']];
   const neuf = !box.querySelector('input');
   if (neuf) box.innerHTML = `<div class="hh"><h3>Et si toutes les retraites étaient plafonnées ?</h3><button type="button" class="x" id="hyp-x">Fermer l'hypothèse</button></div>
     <p class="hsub">Toute pension de retraite au-dessus du plafond est ramenée au plafond, pour tous les retraités et tous les régimes (base, complémentaires, fonctionnaires). Le calcul porte sur l'année affichée (${RET.ans.join(', ')}) ; les chiffres de toute la page intègrent l'économie.</p>
@@ -1252,8 +1253,8 @@ function hyp() {
     <div class="res" id="hyp-res"></div>
     <div class="hist" id="hyp-h"></div>
     <p class="hn" id="hyp-m"></p>`;
-  $('hyp-p').innerHTML = presets.map(([v, l]) => `<button type="button" data-cap="${v}" aria-pressed="${Math.abs(v - S.cap) < 1}">${l}</button>`).join('');
-  $('hyp-y').innerHTML = RET.ans.map(a => `<button type="button" data-hy="${a}" aria-pressed="${a === S.an}">${a}${RET.pa(a).proxy ? '*' : ''}</button>`).join('');
+  $('hyp-p').innerHTML = presets.map(([v, l, m]) => `<button type="button" data-cap="${v}" data-m="${m || ''}" aria-pressed="${Math.abs(v - S.cap) < 1}">${l}</button>`).join('');
+  $('hyp-y').innerHTML = RET.ans.map(a => `<button type="button" data-hy="${a}" aria-pressed="${a === S.an}" title="SMIC net : ${nf(RET.pa(a).smic, 0)} €/mois">${a}${RET.pa(a).proxy ? '*' : ''}</button>`).join('');
   const rg = $('hyp-r'); if (+rg.value !== S.cap) rg.value = S.cap;
   const ha = $('hyp-an');
   if (!hypAn(S.an)) { ha.hidden = false; ha.style.color = 'var(--n2)'; ha.style.fontWeight = 700;
@@ -1261,7 +1262,7 @@ function hyp() {
   else if (P.proxy) { ha.hidden = false; ha.style.color = 'var(--ink-2)'; ha.style.fontWeight = 400;
     ha.innerHTML = `<b style="color:var(--n2)">${y} : estimation.</b> ${P.A.note}`; }
   else ha.hidden = true;
-  $('hyp-v').innerHTML = `${nf(S.cap, 0)} €<small> net/mois${Math.abs(S.cap - P.smic) < 1 ? ' = SMIC ' + y : ' · ' + nf(S.cap / P.smic, 2) + ' SMIC'}</small>`;
+  $('hyp-v').innerHTML = `${nf(S.cap, 0)} €<small> net/mois${Math.abs(S.cap - P.smic) < 1 ? ' = SMIC net ' + y + (S.capS ? ' (suit l\'année)' : '') : ' · ' + nf(S.cap / P.smic, 2) + ' SMIC'}</small>`;
   const tile = (k_, v, d, cls) => `<div class="r ${cls || ''}"><div class="k">${k_}</div><div class="v">${v}</div><div class="d">${d}</div></div>`;
   $('hyp-res').innerHTML =
     tile(`Économie ${y}`, `${md(h.net)}<small>Md€</small>`, `<b>${md(h.brut)} Md€</b> de pensions en moins, dont <b>${md(h.prelev)} Md€</b> de CSG, CRDS et Casa qui ne rentrent plus`, 'ok') +
@@ -1294,21 +1295,23 @@ function hyp() {
 
   if (neuf) {
     let t = 0;
-    rg.addEventListener('input', () => { S.cap = +rg.value; clearTimeout(t); hyp(); t = setTimeout(() => { appliqueHyp(); hashSync(); tout(); }, 120); });
+    rg.addEventListener('input', () => { S.cap = +rg.value; S.capS = 0; clearTimeout(t); hyp(); t = setTimeout(() => { appliqueHyp(); hashSync(); tout(); }, 120); });
     box.addEventListener('click', e => {
       const c = e.target.closest('[data-cap]'), a = e.target.closest('[data-hy]');
-      if (c) { S.cap = +c.dataset.cap; appliqueHyp(); hashSync(); tout(); }
+      if (c) { S.cap = +c.dataset.cap; S.capS = +c.dataset.m || 0; appliqueHyp(); hashSync(); tout(); }
       if (a) setAn(+a.dataset.hy);
     });
     $('hyp-x').addEventListener('click', () => basculeHyp(false));
   }
 }
 let anAvantHyp = null;
+/* Plafond exprimé en SMIC (boutons SMIC, 1,5, 2) : il suit le SMIC de l'année affichée. Curseur ou montant en euros : il reste fixe. */
+function capSuit() { if (!S.cap || !S.capS || !RET || !RET.pa(S.an)) return; const m = RET.pa(S.an).smic; S.cap = S.capS === 1 ? m : Math.round(m * S.capS); }
 function basculeHyp(on) {
   if (!RET) return;
-  if (on) { S.cap = S.cap || RET.pa(hypAn(S.an) ? S.an : RET.ans[RET.ans.length - 1]).smic;
-    if (!hypAn(S.an)) { anAvantHyp = S.an; S.an = RET.ans[RET.ans.length - 1]; if (S.an > D0.derF) S.v = 'nature'; } }
-  else { S.cap = null; $('hyp').innerHTML = ''; if (anAvantHyp !== null) { S.an = anAvantHyp; anAvantHyp = null; } }
+  if (on) { if (!S.cap) { S.cap = RET.pa(hypAn(S.an) ? S.an : RET.ans[RET.ans.length - 1]).smic; S.capS = 1; }
+    if (!hypAn(S.an)) { anAvantHyp = S.an; S.an = RET.ans[RET.ans.length - 1]; if (S.an > D0.derF) S.v = 'nature'; } capSuit(); }
+  else { S.cap = null; S.capS = 0; $('hyp').innerHTML = ''; if (anAvantHyp !== null) { S.an = anAvantHyp; anAvantHyp = null; } }
   appliqueHyp(); hashSync(); tout();
   if (on) $('hyp').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -1326,7 +1329,7 @@ const cmp = $('cmp');
 for (const g of D.ue.geo.filter(g => g !== 'FR')) { const op = document.createElement('option'); op.value = g; op.textContent = GEO[g]; cmp.appendChild(op); }
 cmp.value = S.cmp;
 
-function setAn(y) { if (!D0.an.includes(y)) return; S.an = y; if (y > D0.derF) S.v = 'nature'; else if (S.vAuto) S.v = 'fonction'; appliqueHyp(); hashSync(); tout(); }
+function setAn(y) { if (!D0.an.includes(y)) return; S.an = y; capSuit(); if (y > D0.derF) S.v = 'nature'; else if (S.vAuto) S.v = 'fonction'; appliqueHyp(); hashSync(); tout(); }
 sel.addEventListener('change', () => setAn(+sel.value));
 $('an-m').addEventListener('click', () => setAn(S.an - 1));
 $('an-p').addEventListener('click', () => setAn(S.an + 1));
