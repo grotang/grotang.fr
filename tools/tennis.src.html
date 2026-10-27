@@ -33,14 +33,31 @@ h1 { text-align:center; font-size:1rem; font-weight:700; color:var(--ink); margi
 .legend-label { margin:0 4px; }
 .sw { width:20px; height:11px; border-radius:2px; display:inline-block; }
 
-.wrap { overflow-x:auto; }
+/* pas d'overflow sur l'enveloppe : il casserait l'en-tête collant (le tableau
+   tient de toute façon dans un téléphone) */
+.wrap { overflow:visible; }
 table { border-collapse:collapse; margin:0 auto; }
 
+/* En-tête collant, sous le bandeau du site (--navh, mesuré en JS) : on sait
+   toujours quel Grand Chelem est quelle colonne, et ce qu'on regarde. */
+thead { position:sticky; top:var(--navh, 0px); z-index:4; }
 thead th {
-  font-size:.7rem; font-weight:700; padding:6px 0; text-align:center;
+  font-size:.7rem; font-weight:700; padding:6px 0 5px; text-align:center;
   letter-spacing:.05em; text-transform:uppercase;
-  background:var(--ground); position:sticky; top:0; z-index:3;
+  background:var(--ground);
 }
+thead tr.cols th { box-shadow:inset 0 -3px 0 currentColor; }
+thead tr.cols th.th-y { box-shadow:none; }
+thead.colle tr.cols th { box-shadow:inset 0 -3px 0 currentColor, 0 6px 8px -6px rgba(0,0,0,.25); }
+thead tr.ctx th { font-size:.68rem; letter-spacing:0; text-transform:none; font-weight:600; color:var(--ink-2);
+  padding:6px 0 4px; text-align:left; }
+.ctx-in { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.ctx-t { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ctx-j { display:none; font:inherit; font-size:.66rem; font-weight:700; color:var(--ink); background:var(--surface);
+  border:1px solid var(--rule); border-radius:2px; padding:3px 7px; cursor:pointer; white-space:nowrap; text-decoration:none; }
+/* le bandeau de contexte n'apparaît qu'une fois les commandes sorties de l'écran */
+thead tr.ctx { display:none; }
+thead.colle tr.ctx { display:table-row; }
 .th-y { width:42px; text-align:left; color:var(--ink-3); }
 .th-ao { color:var(--ao); width:50px; }
 .th-rg { color:var(--rg); width:50px; }
@@ -87,7 +104,7 @@ td.tc { font-size:.7rem; font-weight:700; background:var(--surface-2) !important
 /* Grille et tableau des joueurs côte à côte (empilés au téléphone) */
 .duo { display:flex; justify-content:center; align-items:flex-start; gap:28px; }
 .duo .wrap { flex:none; }
-.jr { width:300px; flex:none; position:sticky; top:12px; max-height:calc(100vh - 24px); display:flex; flex-direction:column;
+.jr { width:300px; flex:none; position:sticky; top:calc(var(--navh, 0px) + 12px); max-height:calc(100vh - var(--navh, 0px) - 24px); display:flex; flex-direction:column;
   background:var(--surface); border:1px solid var(--rule); border-radius:3px; }
 .jr-h { padding:10px 12px 8px; border-bottom:1px solid var(--rule-soft); }
 .jr-t { font-size:.74rem; font-weight:700; color:var(--ink); }
@@ -113,7 +130,34 @@ td.tc { font-size:.7rem; font-weight:700; background:var(--surface-2) !important
 #tb.foc td.y.hl { opacity:1; color:var(--ink); }
 @media (max-width:720px){
   .duo { flex-direction:column; align-items:center; gap:18px; }
-  .jr { position:static; width:100%; max-width:420px; max-height:70vh; }
+  .duo .wrap { width:100%; max-width:420px; }
+  .jr { position:static; width:100%; max-width:420px; max-height:70vh; scroll-margin-top:calc(var(--navh, 0px) + 8px); }
+  .ctx-j { display:inline-block; }
+}
+/* Téléphone : tableau pleine largeur, cases plus hautes (on les touche du
+   doigt), tours sur une seule ligne qui défile, légende resserrée */
+@media (max-width:560px){
+  body { padding-left:12px; padding-right:12px; }
+  .gnav { margin-left:-12px; margin-right:-12px; }
+  table { width:100%; table-layout:fixed; }
+  col.c-y, col.c-t { width:42px; }
+  .th-ao, .th-rg, .th-wim, .th-uso { width:auto; }
+  .th-y { width:40px; } .th-t { width:40px; }
+  td { height:30px; }
+  .v, .na, .sp { line-height:30px; font-size:.8rem; }
+  td.y { font-size:.74rem; padding-right:6px; }
+  td.tc { font-size:.76rem; }
+  thead th { font-size:.74rem; padding:8px 0 6px; }
+  .tours { justify-content:flex-start; overflow-x:auto; scrollbar-width:none; margin-left:-12px; margin-right:-12px; padding:0 12px; }
+  .tours::-webkit-scrollbar { display:none; }
+  .seg { flex-wrap:nowrap; flex:none; }
+  .seg button { padding:8px 11px; font-size:.74rem; }
+  .legend { gap:2px; font-size:.6rem; }
+  .legend > span[style] { margin-left:0 !important; flex-basis:100%; text-align:center; }
+  .nat select { font-size:.85rem; padding:8px 28px 8px 10px; }
+  h1 { font-size:.95rem; }
+  .jr-l li { height:34px; font-size:.78rem; }
+  .jr-f { min-height:0; }
 }
 
 /* Infobulle d'une case : même habillage que la page UEFA */
@@ -169,8 +213,10 @@ td[data-s], td.tc { cursor:default; }
 <div class="duo">
 <div class="wrap">
 <table>
-<thead>
-  <tr>
+<colgroup><col class="c-y"><col><col><col><col><col class="c-t"></colgroup>
+<thead id="th">
+  <tr class="ctx"><th colspan="6"><div class="ctx-in"><span class="ctx-t" id="ctxT"></span><a class="ctx-j" href="#jr">Joueurs ↓</a></div></th></tr>
+  <tr class="cols">
     <th class="th-y"></th>
     <th class="th-ao">AO</th>
     <th class="th-rg">RG</th>
@@ -370,12 +416,34 @@ function lireAdresse(h) {
   for (const x of h.split('-')) { if (NAT_DE[x]) n = x; else if (TOURS.includes(x)) t = x; }
   return [n, t];
 }
+/* hauteur du bandeau du site (collant) : l'en-tête du tableau se cale dessous */
+function mesurerNav() {
+  const g = document.querySelector('.gnav');
+  const h = g && getComputedStyle(g).position === 'sticky' ? g.getBoundingClientRect().height : 0;
+  document.documentElement.style.setProperty('--navh', h + 'px');
+}
+mesurerNav(); addEventListener('resize', mesurerNav);
+if (window.ResizeObserver && document.querySelector('.gnav')) new ResizeObserver(mesurerNav).observe(document.querySelector('.gnav'));
+/* l'en-tête est-il « collé » ? (les commandes du haut sont sorties de l'écran) */
+const thead = document.getElementById('th');
+function colle() {
+  const r = document.querySelector('.tours').getBoundingClientRect();
+  const nh = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--navh')) || 0;
+  thead.classList.toggle('colle', r.bottom < nh);
+}
+addEventListener('scroll', colle, {passive:true}); addEventListener('resize', colle);
+const COURT_TOUR = {T1:'1er tour', T2:'2e tour', T3:'3e tour', H:'8es', Q:'Quarts', S:'Demies', F:'Finale', V:'Titres'};
 function choisir(t, garder, n){
   if (!TOURS.includes(t)) t = 'T1';
   if (n && NAT_DE[n]) { NAT = NAT_DE[n]; document.getElementById('nat').value = n; }
   tour = t;
   document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === t)));
+  /* téléphone : le tour choisi reste visible dans la barre qui défile */
+  const bt = document.querySelector(`.seg button[data-t="${t}"]`), tr = document.querySelector('.tours');
+  if (bt && tr.scrollWidth > tr.clientWidth) tr.scrollLeft = Math.max(0, bt.offsetLeft - tr.clientWidth / 2 + bt.offsetWidth / 2);
   titres(); draw(); drawLegend(); drawJoueurs();
+  document.getElementById('ctxT').textContent = `${NAT.drap ? NAT.drap + ' ' : ''}${NAT.nom} · ${COURT_TOUR[t]}`;
+  colle();
   if (garder) {
     const h = [NAT.c !== 'FRA' ? NAT.c : '', t !== 'T1' ? t : ''].filter(Boolean).join('-');
     history.replaceState(null, '', h ? '#' + h : location.pathname);
