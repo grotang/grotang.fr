@@ -93,13 +93,12 @@ td.tc { font-size:.7rem; font-weight:700; background:var(--surface-2) !important
 
 /* Choix du tour : même contrôle segmenté que la page UEFA */
 .tours { display:flex; justify-content:center; margin:0 auto 12px; }
-.seg { display:inline-flex; flex-wrap:wrap; justify-content:center; border:1px solid var(--rule); border-radius:2px; overflow:hidden; }
-.seg button { appearance:none; border:0; border-right:1px solid var(--rule); background:var(--surface); color:var(--ink-2);
-  font:inherit; font-size:.7rem; padding:5px 9px; cursor:pointer; white-space:nowrap; }
-.seg button:last-child { border-right:0; }
+.seg { display:grid; grid-template-columns:repeat(8, 1fr); width:min(600px, 100%); gap:1px; background:var(--rule);
+  border:1px solid var(--rule); border-radius:3px; overflow:hidden; }
+.seg button { appearance:none; border:0; background:var(--surface); color:var(--ink-2);
+  font:inherit; font-size:.7rem; height:30px; padding:0 4px; cursor:pointer; white-space:nowrap; text-align:center; }
 .seg button[aria-pressed="true"] { background:var(--ink); color:var(--surface); }
 .seg button:focus-visible { outline:2px solid var(--tennis); outline-offset:-2px; }
-@media (max-width:520px){ .seg button { padding:6px 7px; font-size:.68rem; } }
 
 /* Grille et tableau des joueurs côte à côte (empilés au téléphone) */
 .duo { display:flex; justify-content:center; align-items:flex-start; gap:28px; }
@@ -148,13 +147,13 @@ td.tc { font-size:.7rem; font-weight:700; background:var(--surface-2) !important
   td.y { font-size:.74rem; padding-right:6px; }
   td.tc { font-size:.76rem; }
   thead th { font-size:.74rem; padding:8px 0 6px; }
-  .tours { justify-content:flex-start; overflow-x:auto; scrollbar-width:none; margin-left:-12px; margin-right:-12px; padding:0 12px; }
-  .tours::-webkit-scrollbar { display:none; }
-  .seg { flex-wrap:nowrap; flex:none; }
-  .seg button { padding:8px 11px; font-size:.74rem; }
+  /* téléphone : deux rangées de quatre, toute la largeur du tableau */
+  .seg { grid-template-columns:repeat(4, 1fr); width:100%; max-width:420px; }
+  .seg button { height:38px; font-size:.78rem; }
   .legend { gap:2px; font-size:.6rem; }
   .legend > span[style] { margin-left:0 !important; flex-basis:100%; text-align:center; }
-  .nat select { font-size:.85rem; padding:8px 28px 8px 10px; }
+  .nat label { width:100%; max-width:420px; }
+  .nat select { flex:1; min-width:0; height:38px; font-size:.85rem; padding:0 28px 0 10px; }
   h1 { font-size:.95rem; }
   .jr-l li { height:34px; font-size:.78rem; }
   .jr-f { min-height:0; }
@@ -438,9 +437,6 @@ function choisir(t, garder, n){
   if (n && NAT_DE[n]) { NAT = NAT_DE[n]; document.getElementById('nat').value = n; }
   tour = t;
   document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === t)));
-  /* téléphone : le tour choisi reste visible dans la barre qui défile */
-  const bt = document.querySelector(`.seg button[data-t="${t}"]`), tr = document.querySelector('.tours');
-  if (bt && tr.scrollWidth > tr.clientWidth) tr.scrollLeft = Math.max(0, bt.offsetLeft - tr.clientWidth / 2 + bt.offsetWidth / 2);
   titres(); draw(); drawLegend(); drawJoueurs();
   document.getElementById('ctxT').textContent = `${NAT.drap ? NAT.drap + ' ' : ''}${NAT.nom} · ${COURT_TOUR[t]}`;
   colle();
