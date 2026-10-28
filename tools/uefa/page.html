@@ -489,13 +489,16 @@ section > .famille + .panel{margin-top:22px}
 /* téléphone : chaque soir dans un cadre teinté, aligné d'une nation à l'autre ;
    un soir sans match garde son cadre vide, l'absence se voit */
 @media (max-width:680px){
-  .sgA{column-gap:6px}
+  .sgA{column-gap:4px}
   .sgA > .sj + .sj::before{display:none}
-  .sgA .sp{width:22px; height:22px; font-size:10px}
-  .sgA > .sj{gap:4px 3px; align-self:stretch; min-height:30px; padding:4px 5px 6px; border-radius:6px;
+  .sgA .sp{width:17px; height:17px; font-size:8px; border-radius:4px}
+  .sgA .sp::after{left:3px; right:3px; bottom:-3px; height:2px}
+  .sgA > .sj{gap:2px; align-self:stretch; min-height:25px; padding:3px 3px 5px; border-radius:5px;
     background:var(--surface-2); box-shadow:inset 0 0 0 1px var(--rule-soft)}
   .semrow.me .sgA > .sj{background:color-mix(in srgb, var(--surface) 70%, transparent)}
-  .hdA > span{padding:0 5px}
+  /* les soirs, affirmés : un onglet par colonne, au-dessus des cadres (choix de GT, 28/10) */
+  .hdA > span{padding:4px 0 3px; text-align:center; border-radius:5px; background:var(--ink); color:var(--surface);
+    font-size:10px; letter-spacing:.06em}
 }
 .semrow.semj{display:none}
 .sp{width:24px; height:24px; border-radius:5px; display:grid; place-items:center; font:700 11px/1 "IBM Plex Mono",monospace; color:#fff;
@@ -535,12 +538,24 @@ section > .famille + .panel{margin-top:22px}
 .tipsem .kl{display:grid; grid-template-columns:auto 1fr auto; gap:4px 8px; align-items:center; font-size:12px; color:var(--ink-2)}
 .tipsem .kl b{font-family:"IBM Plex Mono",monospace; color:var(--ink); text-align:right}
 @media (max-width:680px){
-  .semrow{grid-template-columns:22px minmax(0,1fr) 82px; gap:6px 8px}
-  .semrow .spills{grid-column:2 / -1; order:4}
-  .semrow .sgain{grid-column:2 / -1; order:5}
-  .semrow .sbil{order:3}
+  /* téléphone (28/10) : une nation = un bloc de deux lignes serrées. À gauche
+     le rang et la nation, dessous la barre et le coefficient ; à droite, sur
+     la même hauteur, les soirs. Le bilan V/N/D, redit par les pastilles, est
+     masqué. */
+  .semrow{grid-template-columns:14px 88px minmax(0,1fr); grid-template-rows:auto auto; gap:2px 6px; padding:6px 4px 7px}
+  .semrow .rk{grid-column:1; grid-row:1; font-size:10px; font-weight:600}
+  .semrow .nm{grid-column:2; grid-row:1; gap:5px; font-size:12.5px; font-weight:600}
+  .semrow .nm i{width:7px; height:7px}
+  .semrow .md{font-size:11px}
+  .semrow .sgain{grid-column:2; grid-row:2; grid-template-columns:minmax(0,1fr) 38px; gap:5px}
+  .semrow .sgain .gb{height:4px; border-radius:2px}
+  .semrow .sgain b{font-size:11px; font-weight:600}
+  .semrow .sbil{display:none}
+  .semrow .spills{grid-column:3; grid-row:1 / 3; display:block}
+  .semrow .spills .sgA{width:100%}
   .semrow.hd{display:none}
-  .semrow.semj{display:grid; border:0; padding:0 8px 2px; font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-3)}
+  .semrow.semj{display:grid; grid-template-rows:auto; border:0; padding:0 4px 4px; font-size:10px; font-weight:700; text-transform:uppercase}
+  .semrow.semj .spills{grid-column:3; grid-row:1}
   .semrow.semj:hover{background:none}
   .semnav .semlab{min-width:100px}
 }
@@ -5577,7 +5592,7 @@ document.getElementById('anomaly').innerHTML = anomalous.length
     const JOURS = [...new Set(SEMS[k].map(m => m[0]))].sort();
     const jourL = d => new Date(d + 'T12:00:00Z').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', timeZone: 'UTC' });
     const maxJ = JOURS.map(d => Math.max(1, ...rows.map(t => t.M.filter(([m]) => m[0] === d).length)));
-    const pw = MOB() ? 25 : 28, COLW = maxJ.map(n => (n * pw - (pw - 24) + (MOB() ? 10 : 0)) + 'px').join(' ');
+    const pw = MOB() ? 19 : 28, COLW = maxJ.map(n => MOB() ? `minmax(${n * pw + 4}px,${n + 1}fr)` : (n * pw - (pw - 24)) + 'px').join(' ');
     /* les soirs de la semaine en en-tête de colonne (au téléphone : une ligne à part, l'en-tête étant masqué) */
     const hdM = `<span class="sgA hdA" style="grid-template-columns:${COLW}">${JOURS.map(d => `<span>${jourL(d)}</span>`).join('')}</span>`;
     list.innerHTML = `<div class="semrow hd"><span></span><span>Nation</span><span>${hdM}</span><span>Coefficient gagné</span><span style="text-align:right">Bilan</span></div>`
@@ -5591,7 +5606,7 @@ document.getElementById('anomaly').innerHTML = anomalous.length
         /* une colonne par soir de match, alignée d'une nation à l'autre */
         const pills = `<span class="sgA" style="grid-template-columns:${COLW}">` + parJour.map(L => `<span class="sj">${L.map(([x, j]) => pill(x, j)).join('')}</span>`).join('') + '</span>';
         return `<div class="semrow${t.c === 'FRA' ? ' me' : ''}"><span class="rk">${t.v + t.n + t.d ? t.rang : '–'}</span>`
-          + `<span class="nm" data-r="${i}"><i style="background:${col}"></i><span>${name(t.c)}</span>${md}</span>`
+          + `<span class="nm" data-r="${i}"><i style="background:${col}"></i><span>${nomPays(t.c)}</span>${md}</span>`
           + `<span class="spills">${pills}</span>`
           + `<span class="sgain" data-r="${i}"><span class="gb"><i style="width:${(t.g / gmax * 100).toFixed(1)}%;background:${col}"></i></span><b>${t.v + t.n + t.d ? (t.g > 0 ? '+' + nfx(t.g) : '0') : '—'}</b></span>`
           + `<span class="sbil" data-r="${i}"><span class="v">${t.v}V</span> · ${t.n}N · <span class="d">${t.d}D</span></span></div>`; }).join('')
