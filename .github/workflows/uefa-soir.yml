@@ -20,15 +20,25 @@ name: Soir de match UEFA
 # Coût : rien. Les minutes de GitHub Actions sont gratuites pour un dépôt public,
 # y compris celles où la tâche attend.
 #
-#   17 47 UTC → 19 h 47 été · 18 h 47 hiver
+#   47 17 UTC → 19 h 47 été · 18 h 47 hiver
 #   47 19 UTC → 21 h 47 été · 20 h 47 hiver   (second départ, en filet)
+#
+# SEULEMENT LES SOIRS POSSIBLES (depuis le 30/10/2026). Avant : tous les jours,
+# 730 départs par an pour environ 80 soirs de match. Le calendrier 2026/27 :
+# 78 soirs, tous mardi, mercredi ou jeudi, sauf la finale de la Ligue des
+# champions (samedi). D'où mardi → jeudi toute l'année, plus le samedi en mai et
+# juin. Le test « Ce soir, y a-t-il match ? » reste en place : un mardi sans
+# match, la tâche s'arrête toujours en quelques secondes.
+# Si l'UEFA programme un jour un soir hors de ces cases, le passage du
+# lendemain matin (uefa.yml) ne le rattrapera pas non plus : ajouter le jour ici
+# ET dans uefa.yml.
 #
 # Lancée à la main (bouton « Run workflow ») : un tour tout de suite, puis la
 # veille continue si c'est un soir de match.
 on:
   schedule:
-    - cron: '47 17 * * *'
-    - cron: '47 19 * * *'
+    - cron: '47 17,19 * * 2-4'   # mardi → jeudi
+    - cron: '47 17,19 * 5,6 6'   # samedi, en mai et juin (finale de C1)
   workflow_dispatch:
 
 permissions:

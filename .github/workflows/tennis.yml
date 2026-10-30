@@ -2,25 +2,29 @@ name: Rafraîchissement tennis
 
 # LA PAGE /tennis/ SE MET À JOUR TOUTE SEULE (depuis le 25/10/2026).
 #
-# Trois passages par jour, toute l'année. Hors Grand Chelem, un passage relit
-# quatre pages Wikipédia, ne trouve rien de neuf et sort sans rien écrire ; il
-# ne coûte rien (minutes gratuites pour un dépôt public). Pendant un Grand
-# Chelem, chaque passage reprend le tableau là où Wikipédia en est.
+# Trois passages par jour, pendant les mois de Grand Chelem seulement (depuis le
+# 30/10/2026 ; avant, toute l'année : 1 095 départs dont ~95 % à vide) :
+#   janvier + 1er au 3 février → Open d'Australie (finale parfois le 1er février)
+#   mai, juin                  → Roland-Garros (tirage au sort fin mai)
+#   juin, juillet              → Wimbledon
+#   août, septembre            → US Open (tirage fin août, finale mi-septembre)
+# Le passage du 1er janvier ouvre les pages de la nouvelle année. Pendant un
+# Grand Chelem, chaque passage reprend le tableau là où Wikipédia en est ; les
+# jours sans match, il ne trouve rien de neuf et sort sans rien écrire.
 #
 # Les heures suivent la fin des sessions de jeu :
 #   47 07 UTC → après la session de nuit de l'US Open (New York)
 #   47 14 UTC → après la session de nuit de l'Open d'Australie (Melbourne)
 #   47 20 UTC → après la journée de Roland-Garros ou de Wimbledon
-# et tombent hors des passages du robot UEFA (21 h 38, 22 h 38, 5 h 12, 6 h 12
+# et tombent hors des passages du robot UEFA (5 h 12, 6 h 12, 17 h 47, 19 h 47
 # UTC). La minute n'est jamais 00 (« High load times include the start of
 # every hour »).
 #
 # Lancé à la main (« Run workflow ») : un passage tout de suite.
 on:
   schedule:
-    - cron: '47 7 * * *'
-    - cron: '47 14 * * *'
-    - cron: '47 20 * * *'
+    - cron: '47 7,14,20 * 1,5-9 *'   # janvier, mai → septembre
+    - cron: '47 7,14,20 1-3 2 *'     # 1er au 3 février (fin de l'Open d'Australie)
   workflow_dispatch:
 
 # Écrire dans le dépôt, et appeler pages.yml (un push du robot ne le réveille
