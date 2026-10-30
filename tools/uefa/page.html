@@ -5624,7 +5624,7 @@ document.getElementById('anomaly').innerHTML = anomalous.length
     const jourL = d => new Date(d + 'T12:00:00Z').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', timeZone: 'UTC' });
     const maxJ = JOURS.map(d => Math.max(1, ...rows.map(t => t.M.filter(([m]) => m[0] === d).length)));
     /* ordinateur : une largeur unique par soir, toutes les semaines (choix de GT, 30/10) ; téléphone : au prorata */
-    const pw = MOB() ? 19 : 26, COLW = maxJ.map(n => MOB() ? `minmax(${n * pw + 4}px,${n + 1}fr)` : '170px').join(' ');
+    const pw = MOB() ? 19 : 26, COLW = maxJ.map(n => MOB() ? `minmax(${n * pw + 4}px,${n + 1}fr)` : '136px').join(' ');
     /* les soirs de la semaine en en-tête de colonne (au téléphone : une ligne à part, l'en-tête étant masqué) */
     const hdM = `<span class="sgA hdA" style="grid-template-columns:${COLW}">${JOURS.map(d => `<span>${jourL(d)}</span>`).join('')}</span>`;
     list.innerHTML = `<div class="semrow hd"><span></span><span>Nation</span><span>${hdM}</span><span>Coefficient gagné</span><span style="text-align:right">Bilan</span></div>`
