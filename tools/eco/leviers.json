@@ -17,9 +17,31 @@
   "source": "Gouvernement, Rapport économique, social et financier du PLF 2027 (6 octobre 2026), tableaux 2, 4 et 14 et annexe macro ; charge d'intérêts : avis du HCFP n° 2026-5",
   "url": "https://www.tresor.economie.gouv.fr/Articles/2026/10/06/le-rapport-economique-social-et-financier-resf-2027-est-publie",
   "avis": "Le Haut Conseil des finances publiques juge la croissance de 1 % en 2027 « optimiste » et la baisse du déficit affichée « un minimum » ; elle suppose que toutes les mesures du PLF soient votées.",
-  "avis_url": "https://www.hcfp.fr/sites/default/files/2026-10/Avis%20HCFP%202026-5%20-%20PLF-PLFSS%202027.pdf"
+  "avis_url": "https://www.hcfp.fr/sites/default/files/2026-10/Avis%20HCFP%202026-5%20-%20PLF-PLFSS%202027.pdf",
+  "croissance_nominale": 2.8
  },
  "leviers": [
+  {
+   "id": "convergence",
+   "titre": "Converger vers nos voisins, politique par politique",
+   "sens": "depense",
+   "fiab": "officiel",
+   "chapo": "La France dépense nettement plus que la zone euro en part du PIB, et l'écart est concentré sur les retraites, le reste de la protection sociale et la santé. Choisissez une référence, puis jusqu'où chaque politique s'en rapproche.",
+   "ref_defaut": "EA20",
+   "ans_defaut": 5,
+   "ans_min": 1,
+   "ans_max": 10,
+   "note": "Écarts en points de PIB de 2024 (Eurostat, dépenses des administrations publiques par fonction, COFOG), appliqués au PIB de 2027. Services généraux hors intérêts de la dette. Le chiffrage est mécanique : aucune fourchette, aucun effet de comportement.",
+   "an1_note": "Une convergence ne se fait pas en un an : choisissez en combien d'années. « Effet en 2027 » compte la première année (écart total divisé par le nombre d'années) ; « À maturité » compte l'écart entier.",
+   "avertissement": "Un écart n'est pas un gaspillage en soi : âge de départ, démographie et partage entre public et privé diffèrent d'un pays à l'autre (retraites par capitalisation aux Pays-Bas ou au Danemark, assurance santé). Converger, c'est changer de modèle, pas seulement couper.",
+   "qui": "Les bénéficiaires et les agents des politiques concernées",
+   "sources": [
+    {
+     "t": "Eurostat, gov_10a_exp, dépenses des administrations publiques par fonction (COFOG), 2024",
+     "u": "https://ec.europa.eu/eurostat/databrowser/view/gov_10a_exp/default/table"
+    }
+   ]
+  },
   {
    "id": "niches",
    "titre": "Supprimer des niches fiscales",

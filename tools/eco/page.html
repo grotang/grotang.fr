@@ -311,6 +311,37 @@ svg .m{font-variant-numeric:tabular-nums}
 .cas text.rl{font-size:10.5px; fill:var(--ink-3)}
 .phr{font-size:14px; line-height:1.5; border-left:3px solid var(--n2); padding:4px 0 4px 10px; margin:0}
 .phr b{font-weight:700}
+.defis{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:-2px 0 14px}
+.defis .lb{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700; color:var(--ink-3); margin-right:2px}
+.defis button{appearance:none; font:inherit; font-size:13px; font-weight:600; color:var(--ink); background:var(--surface); border:1px solid var(--rule); border-radius:16px; padding:5px 13px; cursor:pointer}
+.defis button[aria-pressed="true"]{background:var(--n2); border-color:var(--n2); color:#fff}
+.defis button:focus-visible{outline:2px solid var(--fr); outline-offset:2px}
+.defis button .ok{margin-left:6px; color:var(--good); font-weight:700}
+.defis button[aria-pressed="true"] .ok{color:#fff}
+.lv[data-lock="1"]{opacity:.45}
+.lv[data-lock="1"] .lh h4::after{content:" · exclu par le défi"; font-weight:400; font-size:12.5px; color:var(--n2)}
+.dbox{border:2px solid var(--n2); border-radius:3px; padding:10px 12px}
+.dbox .k{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700; color:var(--n2)}
+.dbox .t{font-size:16px; font-weight:700; margin-top:2px}
+.dbox .s{font-size:13px; color:var(--ink-2); margin-top:4px; line-height:1.45}
+.dbox .s b{color:var(--ink)}
+.dbox .bar{height:8px; background:var(--surface-2); border-radius:4px; margin-top:8px; overflow:hidden}
+.dbox .bar i{display:block; height:100%; background:var(--n2); border-radius:4px; transition:width .2s}
+.dbox.win{border-color:var(--good)}
+.dbox.win .k{color:var(--good)}
+.dbox.win .bar i{background:var(--good)}
+.cvl{margin-top:8px}
+.cr{display:grid; grid-template-columns:minmax(0,1fr) minmax(90px,130px) 74px; gap:0 10px; align-items:center; padding:6px 2px; border-top:1px solid var(--rule)}
+.cr .cn{font-size:13px; font-weight:600; line-height:1.3}
+.cr .cn i{display:block; font-style:normal; font-weight:400; font-size:11.5px; color:var(--ink-3)}
+.cr input{width:100%; accent-color:var(--good); margin:0}
+.cr .cm{text-align:right; font-variant-numeric:tabular-nums; font-size:13px; color:var(--ink-3); white-space:nowrap}
+.cr .cm b{display:block; font-size:11px; font-weight:400}
+.cr.on .cm{color:var(--good); font-weight:700}
+.cr.cost.on .cm{color:var(--bad)}
+.cr .cf{grid-column:1 / -1; font-size:11.5px; color:var(--ink-3); font-variant-numeric:tabular-nums}
+@media (max-width:560px){ .cr{grid-template-columns:minmax(0,1fr) 78px; gap:4px 10px} .cr .cn{grid-column:1 / -1} .cr .cn i{display:inline; margin-left:4px} }
+.warn{font-size:12.5px; color:var(--ink); background:color-mix(in srgb,var(--n2) 14%,transparent); border-left:3px solid var(--n2); padding:6px 9px; border-radius:2px}
 .bmob{display:none}
 @media (max-width:980px){
   .bmob{display:flex; position:fixed; left:0; right:0; bottom:0; z-index:40; gap:10px; align-items:baseline; justify-content:space-between;
@@ -376,6 +407,7 @@ svg .m{font-variant-numeric:tabular-nums}
           <button type="button" data-bf="prudente" aria-pressed="false">Prudents</button><button type="button" data-bf="centrale" aria-pressed="true">Centraux</button><button type="button" data-bf="favorable" aria-pressed="false">Favorables</button></span></span>
         <button type="button" class="x" id="b27-zr">Tout remettre à zéro</button>
       </span></div>
+    <div class="defis" id="b27-d" role="group" aria-label="Défis"></div>
     <div class="bgrid">
       <div class="levs" id="b27-l"></div>
       <aside class="bres" id="b27-r" aria-live="polite"></aside>
@@ -664,17 +696,22 @@ try { const h = new URLSearchParams(location.hash.slice(1));
 } catch (e) {}
 /* Budget 2027 : horizon (a1 = effet la première année, mat = à maturité),
    fourchette, niches supprimées, âge légal, taux Zucman, plafond des retraites. */
-const B = { h: 'a1', f: 'centrale', n: new Set(), age: 64, z: 0, p: 0 };
+const B = { h: 'a1', f: 'centrale', n: new Set(), age: 64, z: 0, p: 0, d: '', cr: 'EA20', cv: {}, cy: 5 };
 try { const h = new URLSearchParams(location.hash.slice(1));
   if (h.get('bh') === 'mat') B.h = 'mat';
   if (['prudente', 'favorable'].includes(h.get('bf'))) B.f = h.get('bf');
-  if (LV && h.get('bn')) { const ok = new Set([...LV.leviers[0].items.map(x => x.id), 'autres']); h.get('bn').split('.').filter(x => ok.has(x)).forEach(x => B.n.add(x)); }
+  if (LV && h.get('bn')) { const ok = new Set([...LV.leviers.find(l => l.id === 'niches').items.map(x => x.id), 'autres']); h.get('bn').split('.').filter(x => ok.has(x)).forEach(x => B.n.add(x)); }
   if (+h.get('ba') > 64 && +h.get('ba') <= 68) B.age = Math.round(+h.get('ba') * 2) / 2;
   if (+h.get('bz') >= 0.5 && +h.get('bz') <= 3) B.z = Math.round(+h.get('bz') * 2) / 2;
   if (+h.get('bp') >= 1000 && +h.get('bp') <= 5000) B.p = Math.round(+h.get('bp'));
+  if (/^[a-z]{2,12}$/.test(h.get('bd') || '')) B.d = h.get('bd');
+  if (DE && DE.ue && DE.ue.geo.includes(h.get('bcr')) && h.get('bcr') !== 'FR') B.cr = h.get('bcr');
+  if (+h.get('bcy') >= 1 && +h.get('bcy') <= 10) B.cy = Math.round(+h.get('bcy'));
+  (h.get('bcv') || '').split('.').forEach(t => { const [c, v] = t.split(':'); if (/^GF[0-9R]{2,4}$/.test(c) && +v > 0 && +v <= 100) B.cv[c] = Math.round(+v / 10) * 10; });
 } catch (e) {}
 const bHash = () => (B.h === 'mat' ? '&bh=mat' : '') + (B.f !== 'centrale' ? '&bf=' + B.f : '') + (B.n.size ? '&bn=' + [...B.n].join('.') : '')
-  + (B.age > 64 ? '&ba=' + B.age : '') + (B.z ? '&bz=' + B.z : '') + (B.p ? '&bp=' + B.p : '');
+  + (B.age > 64 ? '&ba=' + B.age : '') + (B.z ? '&bz=' + B.z : '') + (B.p ? '&bp=' + B.p : '') + (B.d ? '&bd=' + B.d : '')
+  + (Object.keys(B.cv).length ? '&bcv=' + Object.entries(B.cv).map(([c, v]) => c + ':' + v).join('.') + (B.cr !== 'EA20' ? '&bcr=' + B.cr : '') + (B.cy !== 5 ? '&bcy=' + B.cy : '') : '');
 const hashSync = () => { try { history.replaceState(null, '', '#an=' + S.an + '&u=' + S.u + (S.cap ? '&rp=' + S.cap + (S.capS ? '&rs=' + S.capS : '') : '') + bHash()); } catch (e) {} };
 
 /* ---------- nombres ---------- */
@@ -1492,7 +1529,24 @@ const budget27 = (() => {
   if (!LV) { const x = $('budget-2027'); if (x) x.hidden = true; return () => {}; }
   const LB = LV.base, PIB = LB.pib_md, base = -LB.solde_pct / 100 * PIB;
   const L = id => LV.leviers.find(l => l.id === id);
-  const N = L('niches'), AG = L('age'), Z = L('zucman'), PL = L('plafond');
+  const N = L('niches'), AG = L('age'), Z = L('zucman'), PL = L('plafond'), CV = L('convergence');
+  /* Convergence : les politiques du niveau 1, la protection sociale coupée en deux
+     (retraites / le reste), services généraux hors intérêts. En % du PIB, Eurostat. */
+  const UE = D0.ue, CVR = [
+    { c: 'GF1002', n: 'Retraites (vieillesse)', v: o => o.GF1002 },
+    { c: 'GF10R', n: 'Reste de la protection sociale', d: 'maladie, invalidité, famille, chômage, logement, exclusion', v: o => o.GF10 - o.GF1002 },
+    { c: 'GF07', n: 'Santé', v: o => o.GF07 },
+    { c: 'GF09', n: 'Enseignement', v: o => o.GF09 },
+    { c: 'GF04', n: 'Affaires économiques', d: 'transports, aides aux entreprises, agriculture, énergie', v: o => o.GF04 },
+    { c: 'GF01', n: 'Services généraux', d: 'hors intérêts de la dette', v: o => o.GF01 - (o.GF0107 || 0) },
+    { c: 'GF02', n: 'Défense', v: o => o.GF02 },
+    { c: 'GF03', n: 'Sécurité et justice', v: o => o.GF03 },
+    { c: 'GF06', n: 'Logement, équipements', v: o => o.GF06 },
+    { c: 'GF08', n: 'Culture, sport, loisirs', v: o => o.GF08 },
+    { c: 'GF05', n: 'Environnement', v: o => o.GF05 },
+  ];
+  const cvOK = !!(CV && UE && UE.cofog && UE.cofog.FR);
+  const ecartCV = (row, g) => (row.v(UE.cofog.FR) - row.v(UE.cofog[g])) / 100 * PIB;   // Md€ de 2027, > 0 : la France dépense plus
   const NI = [...N.items, N.autres];
   const bas = t => /^.[a-zà-ÿ ]/.test(t) ? t[0].toLowerCase() + t.slice(1) : t;
   const md = (x, d) => nf(x, d === undefined ? (Math.abs(x) >= 100 ? 0 : 1) : d);
@@ -1502,8 +1556,12 @@ const budget27 = (() => {
   const plafondOK = !!(RET && RET.pa(PL.an_modele) && k25 >= 0);
 
   /* chaque levier : montant en Md€ dans l'horizon et la fourchette choisis */
-  const calc = () => {
-    const f = B.f, a1 = B.h === 'a1', out = [];
+  const calc = (hz = B.h) => {
+    const f = B.f, a1 = hz === 'a1', out = [];
+    if (cvOK) { const det = CVR.map(r => ({ r, m: ecartCV(r, B.cr) * (B.cv[r.c] || 0) / 100 })).filter(x => x.m !== 0);
+      const tm = det.reduce((a, x) => a + x.m, 0), v = a1 ? tm / B.cy : tm;
+      out.push({ id: 'convergence', on: det.length > 0, md: v, rec: 0, dep: v, mat: tm, det,
+        qui: ['les bénéficiaires et les agents des politiques réduites (' + det.filter(x => x.m > 0).sort((a, b) => b.m - a.m).slice(0, 2).map(x => x.r.n.replace(/ \(.*\)/, '').toLowerCase()).join(', ') + ')'] }); }
     const nm = NI.filter(x => B.n.has(x.id)).reduce((a, x) => a + x.m, 0) / 1000;
     const nv = nm * N.garde[f] * (a1 ? N.an1 : 1);
     out.push({ id: 'niches', on: B.n.size > 0, md: nv, rec: nv, dep: 0, brut: nm, qui: [(() => { const t = NI.filter(x => B.n.has(x.id)).sort((a, b) => b.m - a.m).slice(0, 2).map(x => /^.[a-zà-ÿ]/.test(x.nom) ? x.nom[0].toLowerCase() + x.nom.slice(1) : x.nom);
@@ -1519,6 +1577,20 @@ const budget27 = (() => {
     return out;
   };
 
+  /* --- les défis : un objectif de déficit, parfois une contrainte (sens de levier exclu) --- */
+  const stab = -LB.solde_stabilisant_pct / 100 * PIB;
+  const DEFIS = [
+    { id: 'sansimpot', t: '3 % sans hausse d\'impôts', obj: 0.03 * PIB, objT: '3 % du PIB', sauf: 'recette', d: 'Revenir sous les 3 % du PIB en ne jouant que sur les dépenses.' },
+    { id: 'sansdep', t: '3 % sans baisse de dépenses', obj: 0.03 * PIB, objT: '3 % du PIB', sauf: 'depense', d: 'Revenir sous les 3 % du PIB en ne jouant que sur les recettes.' },
+    { id: 'dette', t: 'Stabiliser la dette', obj: stab, objT: nf(-LB.solde_stabilisant_pct, 1) + ' % du PIB', sauf: '', d: `Descendre sous ${nf(-LB.solde_stabilisant_pct, 1)} % de déficit : à ce niveau, la dette cesse de monter en % du PIB (croissance nominale de ${nf(LB.croissance_nominale, 1)} % prévue en 2027).` },
+    { id: 'equilibre', t: 'Zéro déficit', obj: 0, objT: 'l\'équilibre', sauf: '', d: 'Un budget à l\'équilibre : la France n\'en a plus voté depuis 1974.' },
+  ];
+  const defi = () => DEFIS.find(x => x.id === B.d);
+  const SENS = { convergence: CV && CV.sens, niches: N.sens, age: AG.sens, zucman: Z.sens, plafond: PL.sens };
+  const exclu = id => { const x = defi(); return !!(x && x.sauf && SENS[id] === x.sauf); };
+  const coupe = () => { if (exclu('convergence')) B.cv = {}; if (exclu('niches')) B.n.clear(); if (exclu('age')) B.age = AG.ref; if (exclu('zucman')) B.z = 0; if (exclu('plafond')) B.p = 0; };
+  const finDe = hz => base - calc(hz).filter(x => x.on).reduce((a, x) => a + x.md, 0);
+
   /* --- les cartes (construites une fois, mises à jour ensuite) --- */
   const src = l => `<details><summary>Comment c'est chiffré, sources</summary>`
     + [l.garde_note, l.par_an_note, l.rendement_note, l.note, l.an1_note].filter(Boolean).map(t => `<p>${t}</p>`).join('')
@@ -1526,9 +1598,15 @@ const budget27 = (() => {
   const head = (l, sw) => `<div class="lh">${sw ? `<label class="sw"><input type="checkbox" data-sw="${l.id}" aria-label="${l.titre}"><span></span></label>` : ''}<h4>${l.titre}</h4>`
     + `<span class="pill ${l.fiab}">${FIAB[l.fiab]}</span><span class="pill sens">${l.sens === 'recette' ? 'recette en plus' : 'dépense en moins'}</span><span class="amt" id="b27-a-${l.id}"></span></div><p class="ch">${l.chapo}</p>`;
   const cards = () => {
+    $('b27-d').innerHTML = `<span class="lb">Défis</span>` + DEFIS.map(x => `<button type="button" data-bd="${x.id}" aria-pressed="false" title="${x.d}">${x.t}<span class="ok"></span></button>`).join('');
+    $('b27-d').addEventListener('click', e => { const b = e.target.closest('[data-bd]'); if (!b) return; B.d = B.d === b.dataset.bd ? '' : b.dataset.bd; coupe(); maj(true); });
     const box = $('b27-l');
-    box.innerHTML =
-      `<div class="lv" data-l="niches">${head(N, true)}<div class="lc"><div class="nq"><button type="button" data-nq="top5">Les 5 plus coûteuses</button><button type="button" data-nq="tout">Toutes celles-ci</button><button type="button" data-nq="rien">Aucune</button></div>`
+    box.innerHTML = (cvOK ? `<div class="lv" data-l="convergence">${head(CV, true)}`
+      + `<div class="lc"><div class="rg" style="gap:8px 12px"><span class="ctl"><span class="lb">Référence</span><span class="sel"><select id="b27-cr" aria-label="Pays ou zone de référence">${UE.geo.filter(g => g !== 'FR').map(g => `<option value="${g}">${GEO[g] || g}</option>`).join('')}</select></span></span>`
+      + `<span class="ctl"><span class="lb">En</span><span class="sel"><select id="b27-cy" aria-label="Durée de la convergence">${Array.from({ length: CV.ans_max - CV.ans_min + 1 }, (_, i) => CV.ans_min + i).map(a => `<option value="${a}">${a} an${a > 1 ? 's' : ''}</option>`).join('')}</select></span></span></div>`
+      + `<div class="nq" style="margin-top:8px"><button type="button" data-cq="tout">Tout aligner</button><button type="button" data-cq="top3">Les 3 plus gros écarts</button><button type="button" data-cq="rien">Rien</button></div>`
+      + `<div class="cvl" id="b27-cvl">${CVR.map(r => `<div class="cr" data-cr="${r.c}"><span class="cn">${r.n}${r.d ? `<i>${r.d}</i>` : ''}</span><input type="range" min="0" max="100" step="10" value="0" data-cv="${r.c}" aria-label="Convergence : ${r.n}"><span class="cm" id="b27-cm-${r.c}"></span><span class="cf" id="b27-cf-${r.c}"></span></div>`).join('')}</div></div><div class="an1" id="b27-cv-1"></div><p class="lq" style="color:var(--ink-3)">${CV.avertissement}</p>${src(CV)}</div>` : '')
+      + `<div class="lv" data-l="niches">${head(N, true)}<div class="lc"><div class="nq"><button type="button" data-nq="top5">Les 5 plus coûteuses</button><button type="button" data-nq="tout">Toutes celles-ci</button><button type="button" data-nq="rien">Aucune</button></div>`
       + `<div class="nl">${NI.map(x => `<label data-n="${x.id}" title="${x.def.replace(/"/g, '&quot;')}"><input type="checkbox" value="${x.id}"><span class="nm">${x.nom}<i>${x.qui}</i></span><span class="m">${md(x.m / 1000)} Md€</span></label>`).join('')}</div></div>`
       + `<div class="lq" id="b27-q-niches"></div>${src(N)}</div>`
       + `<div class="lv" data-l="age">${head(AG, true)}<div class="lc"><div class="rg"><input type="range" id="b27-age" min="${AG.min}" max="${AG.max}" step="${AG.pas}" aria-label="Âge légal cible"><span class="val" id="b27-age-v"></span></div></div>`
@@ -1540,8 +1618,11 @@ const budget27 = (() => {
         + `<div class="lq" id="b27-q-plafond"></div>${src(PL)}</div>` : '');
     box.addEventListener('change', e => {
       const t = e.target;
+      if (t.id === 'b27-cr') { B.cr = t.value; maj(true); return; }
+      if (t.id === 'b27-cy') { B.cy = +t.value; maj(true); return; }
       if (t.dataset.sw) {
         const on = t.checked;
+        if (t.dataset.sw === 'convergence') { B.cv = {}; if (on) CVR.forEach(r => { if (ecartCV(r, B.cr) > 0) B.cv[r.c] = 100; }); }
         if (t.dataset.sw === 'niches') { B.n.clear(); if (on) N.items.forEach(x => B.n.add(x.id)); }
         if (t.dataset.sw === 'age') B.age = on ? AG.max : AG.ref;
         if (t.dataset.sw === 'zucman') B.z = on ? Z.taux_ref : 0;
@@ -1552,10 +1633,14 @@ const budget27 = (() => {
     });
     box.addEventListener('input', e => {
       const t = e.target;
-      if (t.id === 'b27-age') B.age = +t.value; else if (t.id === 'b27-z') B.z = +t.value; else if (t.id === 'b27-p') B.p = +t.value; else return;
+      if (t.dataset.cv) { if (+t.value) B.cv[t.dataset.cv] = +t.value; else delete B.cv[t.dataset.cv]; }
+      else if (t.id === 'b27-age') B.age = +t.value; else if (t.id === 'b27-z') B.z = +t.value; else if (t.id === 'b27-p') B.p = +t.value; else return;
       maj(true);
     });
     box.addEventListener('click', e => {
+      const cq = e.target.closest('[data-cq]');
+      if (cq) { B.cv = {}; const pos = CVR.filter(r => ecartCV(r, B.cr) > 0).sort((a, b) => ecartCV(b, B.cr) - ecartCV(a, B.cr));
+        (cq.dataset.cq === 'tout' ? pos : cq.dataset.cq === 'top3' ? pos.slice(0, 3) : []).forEach(r => { B.cv[r.c] = 100; }); maj(true); return; }
       const q = e.target.closest('[data-nq]'), p = e.target.closest('[data-bp]');
       if (q) { B.n.clear(); if (q.dataset.nq === 'top5') [...N.items].sort((a, b) => b.m - a.m).slice(0, 5).forEach(x => B.n.add(x.id)); if (q.dataset.nq === 'tout') N.items.forEach(x => B.n.add(x.id)); maj(true); }
       if (p) { B.p = +p.dataset.bp; maj(true); }
@@ -1571,7 +1656,9 @@ const budget27 = (() => {
     const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'img', 'aria-label': fin >= 0 ? `Déficit 2027 : ${md(fin)} milliards d'euros` : `Excédent 2027 : ${md(-fin)} milliards d'euros` }, box);
     if (lo < 0) { el('line', { x1: sx(0), x2: sx(0), y1: top - 6, y2: H, style: 'stroke:var(--ink);stroke-width:1' }, svg);
       el('text', { x: sx(0) - 4, y: top - 10, 'text-anchor': 'end', class: 'rl' }, svg).textContent = 'équilibre'; }
-    for (const [v, t, anc] of [[0.03 * PIB, mob ? '3 %' : '3 % du PIB', 'end'], [-LB.solde_stabilisant_pct / 100 * PIB, mob ? 'dette stable' : 'la dette cesse de monter', 'start']]) {
+    const refs = [[0.03 * PIB, mob ? '3 %' : '3 % du PIB', 'end'], [stab, mob ? 'dette stable' : 'la dette cesse de monter', 'start']];
+    const D_ = defi(); if (D_ && D_.obj === 0) refs.push([0, 'objectif : équilibre', 'start']);
+    for (const [v, t, anc] of refs) {
       el('line', { x1: sx(v), x2: sx(v), y1: top - 6, y2: H, class: 'ref' }, svg);
       el('text', { x: sx(v) + (anc === 'end' ? -4 : 4), y: top - 10, 'text-anchor': anc, class: 'rl' }, svg).textContent = t;
     }
@@ -1580,10 +1667,10 @@ const budget27 = (() => {
       const t = el('text', { x: 0, y: y + rh / 2 + 4, class: r.k === 'lev' ? '' : 'l' }, svg);
       t.textContent = mob && r.l.length > 17 ? r.l.slice(0, 16) + '…' : r.l;
       const a = Math.min(r.a, r.b), b = Math.max(r.a, r.b);
-      const fill = r.k === 'base' ? 'var(--ink-3)' : r.k === 'lev' ? 'var(--good)' : (fin <= 0.03 * PIB ? 'var(--good)' : 'var(--n2)');
+      const fill = r.k === 'base' ? 'var(--ink-3)' : r.k === 'lev' ? (r.b >= r.a ? 'var(--good)' : 'var(--bad)') : (fin <= 0.03 * PIB ? 'var(--good)' : 'var(--n2)');
       el('rect', { x: sx(a), y, width: Math.max(1.5, sx(b) - sx(a)), height: rh, rx: 2, style: `fill:${fill}` + (r.k === 'lev' ? ';fill-opacity:.85' : '') }, svg);
       if (r.k === 'lev' && i > 0) el('line', { x1: sx(r.b), x2: sx(r.b), y1: y - g, y2: y, style: 'stroke:var(--ink-3);stroke-width:1' }, svg);
-      el('text', { x: W, y: y + rh / 2 + 4, 'text-anchor': 'end', class: 'v' + (r.k === 'lev' ? ' g' : '') }, svg).textContent = r.k === 'lev' ? '−' + md(r.b - r.a) : r.k === 'fin' && fin < 0 ? '+' + md(-fin, 0) + ' Md€' : md(r.b, 0) + ' Md€';
+      el('text', { x: W, y: y + rh / 2 + 4, 'text-anchor': 'end', class: 'v' + (r.k === 'lev' && r.b >= r.a ? ' g' : '') }, svg).textContent = r.k === 'lev' ? (r.b >= r.a ? '−' : '+') + md(Math.abs(r.b - r.a)) : r.k === 'fin' && fin < 0 ? '+' + md(-fin, 0) + ' Md€' : md(r.b, 0) + ' Md€';
     });
   };
 
@@ -1593,44 +1680,75 @@ const budget27 = (() => {
     /* boutons globaux */
     document.querySelectorAll('[data-bh]').forEach(b => b.setAttribute('aria-pressed', b.dataset.bh === B.h));
     document.querySelectorAll('[data-bf]').forEach(b => b.setAttribute('aria-pressed', b.dataset.bf === B.f));
+    /* défis */
+    const D_ = defi(), fa1 = finDe('a1'), fmat = finDe('mat');
+    document.querySelectorAll('[data-bd]').forEach(b => { const x = DEFIS.find(z => z.id === b.dataset.bd); b.setAttribute('aria-pressed', b.dataset.bd === B.d);
+      b.querySelector('.ok').textContent = x.id === B.d && fa1 <= x.obj + 0.05 ? '✓' : ''; });
     /* cartes */
     for (const x of R) {
       const c = document.querySelector(`.lv[data-l="${x.id}"]`); if (!c) continue;
-      c.dataset.on = x.on ? 1 : 0;
+      c.dataset.on = x.on ? 1 : 0; c.dataset.lock = exclu(x.id) ? 1 : 0;
+      c.querySelectorAll('input,button').forEach(i => { i.disabled = exclu(x.id); });
       const sw = c.querySelector('[data-sw]'); if (sw) sw.checked = x.on;
       const a = $('b27-a-' + x.id);
-      a.innerHTML = !x.on ? '' : x.id === 'age' && B.h === 'a1' ? `≈ 0<small>en 2027</small>` : `−${md(x.md)}<small>Md€</small>`;
+      a.innerHTML = !x.on ? '' : x.id === 'age' && B.h === 'a1' ? `≈ 0<small>en 2027</small>` : `${x.md >= 0 ? '−' : '+'}${md(Math.abs(x.md))}<small>Md€</small>`;
+    }
+    if (cvOK) {
+      $('b27-cr').value = B.cr; $('b27-cy').value = B.cy;
+      const gN = GEO[B.cr] || B.cr, gA = { EA20: 'ZE', EU27_2020: 'UE' }[B.cr] || B.cr;
+      for (const r of CVR) {
+        const e = ecartCV(r, B.cr), v = B.cv[r.c] || 0, row = document.querySelector(`[data-cr="${r.c}"]`), inp = row.querySelector('input');
+        if (+inp.value !== v) inp.value = v;
+        row.classList.toggle('on', v > 0); row.classList.toggle('cost', e < 0);
+        $('b27-cm-' + r.c).innerHTML = (v ? (e >= 0 ? '−' : '+') + md(Math.abs(e * v / 100)) + ' Md€' : '0') + `<b>${v} %${v ? ' de l\'écart' : ''}</b>`;
+        $('b27-cf-' + r.c).textContent = `France ${nf(r.v(UE.cofog.FR), 1)} % du PIB · ${gN} ${nf(r.v(UE.cofog[B.cr]), 1)} % · écart ${e >= 0 ? '+' : '−'}${nf(Math.abs(r.v(UE.cofog.FR) - r.v(UE.cofog[B.cr])), 1)} pt, soit ${md(Math.abs(e))} Md€${e < 0 ? ' : la France dépense moins, converger coûte' : ''}`;
+      }
+      const C = R.find(x => x.id === 'convergence');
+      $('b27-cv-1').innerHTML = C.on ? (B.h === 'a1' ? `<b>En 2027</b> : ${C.mat >= 0 ? '−' : '+'}${md(Math.abs(C.md))} Md€, première des ${B.cy} année${B.cy > 1 ? 's' : ''} de convergence. Écart total : <b>${md(Math.abs(C.mat))} Md€</b> par an une fois atteint (horizon « À maturité »).`
+        : `<b>À maturité</b> : ${md(Math.abs(C.mat))} Md€ par an, atteints en ${B.cy} an${B.cy > 1 ? 's' : ''}.`) : CV.an1_note;
     }
     document.querySelectorAll('.nl label').forEach(l => { const on = B.n.has(l.dataset.n); l.classList.toggle('on', on); l.querySelector('input').checked = on; });
-    const nm = R[0].brut;
+    const RI = id => R.find(x => x.id === id) || {};
+    const nm = RI('niches').brut;
     $('b27-q-niches').innerHTML = B.n.size ? `<b>${B.n.size} niche${B.n.size > 1 ? 's' : ''} supprimée${B.n.size > 1 ? 's' : ''}</b> : ${md(nm)} Md€ de coût officiel, dont ${nf(N.garde[B.f] * 100, 0)} % récupérés (chiffrage ${B.f === 'prudente' ? 'prudent' : B.f === 'centrale' ? 'central' : 'favorable'}).` : '<b>Qui paie :</b> les bénéficiaires de chaque niche (indiqués sous son nom).';
     const ra = $('b27-age'); if (+ra.value !== B.age) ra.value = B.age;
     const yrs = B.age - AG.ref;
     $('b27-age-v').innerHTML = `${nf(Math.floor(B.age), 0)} ans${B.age % 1 ? ' et 6 mois' : ''}<small>${yrs ? ' · +' + nf(yrs, 1) + ' an' + (yrs > 1 ? 's' : '') : ' · loi actuelle'}</small>`;
-    $('b27-age-1').innerHTML = yrs ? (B.h === 'a1' ? `<b>En 2027 : quasi rien.</b> À maturité : <b>−${md(R[1].mat)} Md€ par an</b> (fourchette ${md(yrs * AG.par_an_pct_pib.prudente / 100 * PIB, 0)} à ${md(yrs * AG.par_an_pct_pib.favorable / 100 * PIB, 0)} Md€). Passez l'horizon sur « À maturité » pour le compter.`
-      : `À maturité : <b>−${md(R[1].mat)} Md€ par an</b>, appliqués au budget 2027 (fourchette ${md(yrs * AG.par_an_pct_pib.prudente / 100 * PIB, 0)} à ${md(yrs * AG.par_an_pct_pib.favorable / 100 * PIB, 0)} Md€). La première année, l'économie est quasi nulle.`) : AG.an1_note;
+    $('b27-age-1').innerHTML = yrs ? (B.h === 'a1' ? `<b>En 2027 : quasi rien.</b> À maturité : <b>−${md(RI('age').mat)} Md€ par an</b> (fourchette ${md(yrs * AG.par_an_pct_pib.prudente / 100 * PIB, 0)} à ${md(yrs * AG.par_an_pct_pib.favorable / 100 * PIB, 0)} Md€). Passez l'horizon sur « À maturité » pour le compter.`
+      : `À maturité : <b>−${md(RI('age').mat)} Md€ par an</b>, appliqués au budget 2027 (fourchette ${md(yrs * AG.par_an_pct_pib.prudente / 100 * PIB, 0)} à ${md(yrs * AG.par_an_pct_pib.favorable / 100 * PIB, 0)} Md€). La première année, l'économie est quasi nulle.`) : AG.an1_note;
     const rz = $('b27-z'); if (+rz.value !== (B.z || Z.taux_ref)) rz.value = B.z || Z.taux_ref;
     $('b27-z-v').innerHTML = B.z ? `${nf(B.z, 1)} %<small> par an</small>` : `<small>désactivée</small>`;
     $('b27-z-f').innerHTML = `Rendement à ${nf(B.z || Z.taux_ref, 1)} % : de ${md(Z.rendement_2pct_md.prudente * (B.z || 2) / 2)} Md€ (prudent) à ${md(Z.rendement_2pct_md.favorable * (B.z || 2) / 2)} Md€ (favorable). C'est le levier le plus disputé.`;
     if (plafondOK) {
       const rp = $('b27-p'), sm = RET.pa(PL.an_modele).smic; if (+rp.value !== (B.p || Math.round(sm))) rp.value = B.p || Math.round(sm);
       $('b27-p-v').innerHTML = B.p ? `${nf(B.p, 0)} €<small> net/mois · ${nf(B.p / sm, 2)} SMIC</small>` : `<small>désactivé</small>`;
-      $('b27-q-plafond').innerHTML = B.p ? `<b>Qui paie :</b> ${nf(R[3].touches / 1e6, 1)} million${R[3].touches >= 2e6 ? 's' : ''} de retraités (${nf(R[3].part, 0)} %). Pensions en moins : ${md(R[3].dep)} Md€, dont ${md(-R[3].rec)} Md€ de CSG et CRDS qui ne rentrent plus.` : `<b>Qui paie :</b> ${bas(PL.qui)}.`;
+      $('b27-q-plafond').innerHTML = B.p ? `<b>Qui paie :</b> ${nf(RI('plafond').touches / 1e6, 1)} million${RI('plafond').touches >= 2e6 ? 's' : ''} de retraités (${nf(RI('plafond').part, 0)} %). Pensions en moins : ${md(RI('plafond').dep)} Md€, dont ${md(-RI('plafond').rec)} Md€ de CSG et CRDS qui ne rentrent plus.` : `<b>Qui paie :</b> ${bas(PL.qui)}.`;
     }
     /* résultat */
     const rows = [{ l: 'Budget du gouvernement', a: 0, b: base, k: 'base' }];
     let run = base;
-    for (const x of on) { if (x.md <= 0.05) continue; rows.push({ l: { niches: 'Niches fiscales', age: 'Âge légal ' + nf(B.age, B.age % 1 ? 1 : 0) + ' ans', zucman: 'Taxe Zucman ' + nf(B.z, 1) + ' %', plafond: 'Plafond ' + nf(B.p, 0) + ' €' }[x.id], a: run - x.md, b: run, k: 'lev' }); run -= x.md; }
+    for (const x of on) { if (Math.abs(x.md) <= 0.05) continue; rows.push({ l: { convergence: 'Convergence ' + ({ EA20: 'zone euro', EU27_2020: 'UE' }[B.cr] || GEO[B.cr]), niches: 'Niches fiscales', age: 'Âge légal ' + nf(B.age, B.age % 1 ? 1 : 0) + ' ans', zucman: 'Taxe Zucman ' + nf(B.z, 1) + ' %', plafond: 'Plafond ' + nf(B.p, 0) + ' €' }[x.id], a: run - x.md, b: run, k: 'lev' }); run -= x.md; }
     rows.push({ l: 'Votre budget 2027', a: 0, b: fin, k: 'fin' });
     const dette = LB.dette_pct - tot / PIB * 100;
     const qui = on.filter(x => x.md > 0.05).sort((a, b) => b.md - a.md).flatMap(x => x.qui).slice(0, 3);
     const box = $('b27-r');
-    box.innerHTML = `<div class="bk ${tot > 0.05 ? 'ok' : ''}"><div class="k">${fin >= 0 ? 'Déficit' : 'Excédent'} public ${LB.annee}</div><div class="big">${pc(Math.abs(fin))}<small>du PIB · ${md(Math.abs(fin), 0)} Md€</small></div>`
+    let dh = '';
+    if (D_) {
+      const gagne1 = fa1 <= D_.obj + 0.05, gagneM = fmat <= D_.obj + 0.05, manque = fin - D_.obj, prog = Math.max(0, Math.min(1, (base - fin) / (base - D_.obj)));
+      dh = `<div class="dbox ${gagne1 ? 'win' : ''}"><div class="k">${gagne1 ? 'Défi réussi' : 'Défi en cours'}</div><div class="t">${D_.t}</div>`
+        + `<div class="s">${D_.d}${D_.sauf ? ` Les leviers de ${D_.sauf === 'recette' ? 'recette' : 'dépense'} sont exclus.` : ''}</div>`
+        + `<div class="bar"><i style="width:${(prog * 100).toFixed(1)}%"></i></div>`
+        + `<div class="s">${gagne1 ? `Objectif (${D_.objT}) atteint <b>dès 2027</b>.`
+          : gagneM ? `Atteint <b>à maturité seulement</b> : en 2027, il manque encore <b>${md(fa1 - D_.obj)} Md€</b> (déficit de ${pc(fa1)}).`
+          : `Il manque <b>${md(manque)} Md€</b> pour atteindre ${D_.objT}${B.h === 'mat' ? ', même à maturité' : ''}.`}</div></div>`;
+    }
+    box.innerHTML = dh + `<div class="bk ${tot > 0.05 ? 'ok' : ''}"><div class="k">${fin >= 0 ? 'Déficit' : 'Excédent'} public ${LB.annee}</div><div class="big">${pc(Math.abs(fin))}<small>du PIB · ${md(Math.abs(fin), 0)} Md€</small></div>`
       + `<div class="d">${tot > 0.05 ? `au lieu de <b>${pc(base)}</b> (${md(base, 0)} Md€) dans le budget du gouvernement : <b>−${md(tot)} Md€</b>` : `prévu par le gouvernement. Actionnez des leviers à gauche.`}</div></div>`
       + `<div class="cas" id="b27-c"></div>`
       + `<div class="bk4"><div class="bk"><div class="k">Dette fin ${LB.annee}</div><div class="big">${nf(dette, 1)} %</div><div class="d">du PIB (${nf(LB.dette_pct, 1)} % prévu)</div></div>`
       + `<div class="bk"><div class="k">Impôts en plus</div><div class="big">${md(Math.max(0, rec))}</div><div class="d">Md€</div></div>`
       + `<div class="bk"><div class="k">Dépenses en moins</div><div class="big">${md(dep)}</div><div class="d">Md€</div></div></div>`
+      + (B.cv.GF1002 && (B.age > AG.ref || B.p) ? `<p class="warn">Retraites comptées deux fois : la convergence sur les retraites et ${B.age > AG.ref && B.p ? 'l\'âge légal et le plafond' : B.age > AG.ref ? 'l\'âge légal' : 'le plafond'} visent les mêmes pensions. Gardez l'un ou l'autre pour un total honnête.</p>` : '')
       + `<p class="phr" id="b27-ph"></p>`
       + `<div class="nq"><button type="button" id="b27-cp">Copier le lien de ce budget</button></div>`;
     cascade($('b27-c'), rows, fin);
@@ -1648,10 +1766,10 @@ const budget27 = (() => {
     if (user) hashSync();
   };
 
-  cards();
+  cards(); coupe();
   document.querySelectorAll('[data-bh]').forEach(b => b.addEventListener('click', () => { B.h = b.dataset.bh; maj(true); }));
   document.querySelectorAll('[data-bf]').forEach(b => b.addEventListener('click', () => { B.f = b.dataset.bf; maj(true); }));
-  $('b27-zr').addEventListener('click', () => { B.n.clear(); B.age = AG.ref; B.z = 0; B.p = 0; maj(true); });
+  $('b27-zr').addEventListener('click', () => { B.n.clear(); B.age = AG.ref; B.z = 0; B.p = 0; B.d = ''; B.cv = {}; maj(true); });
   /* téléphone : le déficit reste visible en bas d'écran tant qu'on joue avec les leviers */
   try { new IntersectionObserver(es => es.forEach(e => $('b27-m').classList.toggle('on', e.isIntersecting)), { rootMargin: '-35% 0px -35% 0px' }).observe($('b27-l')); } catch (e) {}
   return maj;
