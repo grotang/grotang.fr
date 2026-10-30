@@ -292,3 +292,18 @@ deux jours plus tard.
   « reprogrammé ».
 - Jamais bloquant : UEFA injoignable → on applique les corrections déjà connues.
 - Correction automatique seulement, pas d'alarme (choix de GT).
+
+## Saisons closes des blocs 1 et 2 : calendrier et semaine européenne (30/10/2026)
+
+L'archive (`matchs-saisons.json`) n'a pas de dates. Les dates, heures (CET/CEST, comme
+l'UEFA) et scores des saisons 2021/22 à 2025/26 viennent de Wikipédia (en), wikitexte brut
+des pages « qualifying », « group stage » / « league phase », « knockout phase » et finale
+de chaque compétition — relevé unique, pas un passage du robot (`archive/calendrier/`).
+Chaque match est recoupé avec l'archive (compétition, tour, nations, score) : les 4 344
+matchs joués y sont tous ; seule l'archive porte en plus Leipzig–Spartak 2022 (aller et
+retour, jamais joués : Spartak exclu), laissé de côté.
+Six scores différaient : vérifiés sur l'API UEFA pour Ferencváros–Ludogorets 2025 et
+Djurgården–Pafos 2025, Wikipédia avait raison ; on garde donc partout le score de Wikipédia.
+Les noms de clubs sont ceux de l'archive (pour passer par NOMCLUB comme la saison en cours),
+les diviseurs ceux de `vnd-saisons.json` (clubs engagés cette saison-là).
+

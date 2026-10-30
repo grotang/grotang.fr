@@ -818,14 +818,14 @@ footer .legal{margin-top:3px; font-size:11px}
      français, Les 55 associations. Les commentaires datés d'avant le 24/10 gardent
      l'ancienne numérotation. -->
     <div class="ptitle"><span class="no">1</span><h3>Où en est la saison</h3>
-      <span class="sub"><span class="ctl"><span class="seg" role="group" aria-label="Phase qualificative"><button type="button" id="cal-qual" aria-pressed="false">Afficher la phase qualificative</button></span></span></span></div>
+      <span class="sub"><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelCal" aria-label="Saison"></select></span></span><span class="ctl"><span class="seg" role="group" aria-label="Phase qualificative"><button type="button" id="cal-qual" aria-pressed="false">Afficher la phase qualificative</button></span></span></span></div>
     <p class="calmeta" id="calmeta"></p>
     <div class="calwrap"><div class="cal" id="cal"></div><div class="tip tipcal" id="tipCal" hidden></div></div>
   </div>
 
   <div class="panel" id="semPanel">
     <div class="ptitle"><span class="no">2</span><h3>La semaine européenne</h3>
-      <span class="sub"><span class="ctl"><span class="lb">Semaine</span><span class="seg semnav" role="group" aria-label="Semaine"><button type="button" id="sem-prev" aria-label="Semaine précédente">‹</button><button type="button" id="sem-lab" class="semlab" aria-pressed="true"></button><button type="button" id="sem-next" aria-label="Semaine suivante">›</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations"><button type="button" id="sem-top" aria-pressed="true">Les 8 premières</button><button type="button" id="sem-all" aria-pressed="false">Toutes</button></span></span></span></div>
+      <span class="sub"><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelSem" aria-label="Saison"></select></span></span><span class="ctl"><span class="lb">Semaine</span><span class="seg semnav" role="group" aria-label="Semaine"><button type="button" id="sem-prev" aria-label="Semaine précédente">‹</button><button type="button" id="sem-lab" class="semlab" aria-pressed="true"></button><button type="button" id="sem-next" aria-label="Semaine suivante">›</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations"><button type="button" id="sem-top" aria-pressed="true">Les 8 premières</button><button type="button" id="sem-all" aria-pressed="false">Toutes</button></span></span></span></div>
     <div class="semmeta"><span class="semfil" id="semFil" aria-label="Phase"></span><span class="semks" id="semKs" aria-label="Compétitions"></span><span class="semtxt" id="semMeta"></span></div>
     <div class="semwrap" id="semBox"><div class="semlist" id="semList"></div><div class="tip tipsem" id="tipSem" hidden></div></div>
     <p class="figc" id="semNote"></p>
@@ -1578,6 +1578,15 @@ document.getElementById('stamp').innerHTML =
    sont finies depuis août, et les étaler en permanence tasserait la phase de
    ligue, qui est ce qu'on vient lire. */
 let calQual = false;
+/* Saison montrée par les blocs 1 et 2 (sélecteur commun de la page). Les saisons
+   closes viennent de saisons.json, chargé au premier choix d'une saison passée :
+   calendrier, affiches françaises et semaine européenne, relevés sur Wikipédia et
+   recoupés match par match avec l'archive du site (tools/uefa/archive/calendrier). */
+let calY = 'cur', PASSE = null, PASSE_P = null;
+let drawSem = () => {};   /* bloc 2, rempli plus bas */
+const chargePasse = () => PASSE_P || (PASSE_P = fetch('saisons.json').then(r => r.ok ? r.json() : null).then(j => (PASSE = j)).catch(() => { PASSE_P = null; return null; }));
+const CUR_P = { CAL, KO, QUAL, AFF, grp: false };
+const pk = () => (calY !== 'cur' && PASSE && PASSE[calY]) || CUR_P;
 /* ---------- téléphone ----------
    Deux traitements. Les courbes (3, 4) sont redessinées plus étroites : moins
    d'unités de dessin pour la même largeur d'écran, donc un texte plus gros.
@@ -1626,8 +1635,12 @@ function glisser(box, svg, largeur, epingle){
   else requestAnimationFrame(() => { if (box.scrollWidth > box.clientWidth + 4) indice(); });
 }
 function drawCal(){
+  const P = pk(), { CAL, KO, QUAL } = P, passee = P !== CUR_P;
   const all = [0,1,2].flatMap(k => CAL[k].map(([iso]) => iso)).sort();
-  const q0 = [0,1,2].map(k => QUAL[k][0][1]).sort()[0];
+  const q0 = [0,1,2].flatMap(k => QUAL[k].filter(Boolean).map(q => q[1])).sort()[0];
+  const ko0 = [0,1,2].map(k => KO[k][0][1]).sort()[0];
+  const KOL = [0,1,2].map(k => KO[k]).sort((a, b) => b.length - a.length)[0];   /* avant 2024, la C1 n'a pas de barrages KO */
+  const PH = P.grp ? 'Phase de groupes' : 'Phase de ligue';
   /* KO et KOLAB sont définis plus haut, avec CAL : le tampon d'en-tête compte les
      jours jusqu'au prochain match, et ce match peut être un tour à élimination
      directe. Une seule table de dates pour toute la page. */
@@ -1640,7 +1653,7 @@ function drawCal(){
      une poignée de jours vides à gauche ; ça vaut mieux qu'une date fausse. */
   const debut = dOf(calQual ? q0 : all[0]);
   const t0 = new Date(debut.getFullYear(), debut.getMonth(), 1).getTime();
-  const t1 = dOf('2027-06-05').getTime();
+  const t1 = Math.max(...[0,1,2].map(k => dOf(KO[k][KO[k].length-1][1]).getTime()));
   const tLeague = dOf(all[all.length-1]).getTime();
   const W = 1000, mL = 46, mR = 30, mT = 62, LANE = 36, H = mT + 3*LANE + 44;
   const span = (t1 - t0) || 1;
@@ -1674,7 +1687,7 @@ function drawCal(){
      qui en montre l'étendue exacte. Le vocabulaire est celui du bloc 3 —
      « phase de ligue » et « phase finale » — pour qu'on parle de la même chose
      d'un bloc à l'autre. */
-  { const xa = (X(CAL[0][7][0]) + X('2027-02-16')) / 2;
+  { const xa = (X(CAL[0][CAL[0].length-1][0]) + X(ko0)) / 2;
     /* Les trois phases ne sont pas trois morceaux du même continuum : on ne passe
        pas de juillet à septembre, on change de régime. Les qualifications sont
        réservées aux mal classés, la phase de ligue met tout le monde ensemble, la
@@ -1698,17 +1711,17 @@ function drawCal(){
     };
     if (calQual) {
       const xq = (X(QUAL[0][3][2]) + X(CAL[0][0][0])) / 2;
-      s += zone(mL, xq, 'Phase qualificative', '--n4') + zone(xq, xa, 'Phase de ligue', '--fr') + zone(xa, W - mR, 'Phase finale', '--n7');
+      s += zone(mL, xq, 'Phase qualificative', '--n4') + zone(xq, xa, PH, '--fr') + zone(xa, W - mR, 'Phase finale', '--n7');
       /* mêmes étiquettes de tour qu'en phase finale, au même endroit, à la même
          taille : c'est la cohérence qui fait qu'on lit les deux bouts de la
          saison avec la même grille de lecture. */
-      QUAL[0].forEach(([lab, a, r]) => s += `<text x="${((X(a)+X(r))/2).toFixed(1)}" y="${mT-8}" text-anchor="middle" font-size="10" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${lab}</text>`);
-    } else s += zone(mL, xa, 'Phase de ligue', '--fr') + zone(xa, W - mR, 'Phase finale', '--n7');
+      QUAL[0].filter(Boolean).forEach(([lab, a, r]) => s += `<text x="${((X(a)+X(r))/2).toFixed(1)}" y="${mT-8}" text-anchor="middle" font-size="10" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${lab}</text>`);
+    } else s += zone(mL, xa, PH, '--fr') + zone(xa, W - mR, 'Phase finale', '--n7');
     /* les tours, au-dessus de leur zone : à deux jours près les trois compétitions
        jouent ensemble, donc une seule série d'étiquettes suffit. */
     /* Le libellé se centre sur la confrontation entière, pas sur son seul aller :
        sinon il tire vers la gauche et ne désigne plus la capsule qu'il nomme. */
-    KO[0].forEach(([lab, a, r]) => { const x = r ? (X(a)+X(r))/2 : X(a);
+    KOL.forEach(([lab, a, r]) => { const x = r ? (X(a)+X(r))/2 : X(a);
       s += `<text x="${Math.min(x, W-mR).toFixed(1)}" y="${mT-8}" text-anchor="${x > W-mR-12 ? 'end':'middle'}" font-size="10" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${lab}</text>`; }); }
 
   /* Une confrontation aller-retour se dessine en capsule : un fond arrondi qui
@@ -1731,7 +1744,7 @@ function drawCal(){
     /* Aller et retour reliés, cercle plein si joué : exactement la forme des tours
        à élimination directe. Un tour de qualification EST un aller-retour — lui
        donner une autre forme aurait inventé une différence qui n'existe pas. */
-    if (calQual) QUAL[k].forEach(([lab, a, r], qi) => {
+    if (calQual) QUAL[k].forEach((q, qi) => { if (!q) return; const [lab, a, r] = q;
       const xa2 = X(a), xr2 = X(r), da = passe(a), dr = passe(r);
       s += `<g data-t="${k}:q${qi}">` + capsule(xa2, xr2, y, k, da)
         +  `<line x1="${xa2.toFixed(1)}" y1="${y}" x2="${xr2.toFixed(1)}" y2="${y}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${da?.8:.4}"/>`
@@ -1757,17 +1770,17 @@ function drawCal(){
 
     /* élimination directe : un aller, un retour, reliés. La finale est un match sec,
        donc un losange plutôt qu'une paire — la forme dit la différence. */
-    KO[k].forEach(([lab, a, r], ki) => {
-      const xa = X(a), done = passe(a);
+    KO[k].forEach(([lab, a, r, et], ki) => {
+      const xa = X(a), done = passe(a), tk = et ?? 8 + ki;
       const op = done ? 1 : .55;
       if (r) { const xr = X(r), dr = passe(r);
-        s += `<g data-t="${k}:${8+ki}">` + capsule(xa, xr, y, k, done)
+        s += `<g data-t="${k}:${tk}">` + capsule(xa, xr, y, k, done)
           +  `<line x1="${xa.toFixed(1)}" y1="${y}" x2="${xr.toFixed(1)}" y2="${y}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${op*.8}"/>`
           +  `<circle cx="${xa.toFixed(1)}" cy="${y}" r="4.2" fill="${done?`var(${KVAR[k]})`:'var(--surface)'}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${op}"/>`
           +  `<circle cx="${xr.toFixed(1)}" cy="${y}" r="4.2" fill="${dr?`var(${KVAR[k]})`:'var(--surface)'}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${dr?1:.55}"/>`
           +  `<rect x="${(xa-9).toFixed(1)}" y="${y-12}" width="${(xr-xa+18).toFixed(1)}" height="24" fill="transparent"/></g>`;
       } else {
-        s += `<g data-t="${k}:${8+ki}">`
+        s += `<g data-t="${k}:${tk}">`
           +  `<path d="M ${xa.toFixed(1)} ${y-6.4} L ${(xa+6.4).toFixed(1)} ${y} L ${xa.toFixed(1)} ${y+6.4} L ${(xa-6.4).toFixed(1)} ${y} Z"`
           +  ` fill="${done?`var(${KVAR[k]})`:'var(--surface)'}" stroke="var(${KVAR[k]})" stroke-width="1.6" opacity="${op}"/></g>`
           +  `<text x="${(xa).toFixed(1)}" y="${y+19}" text-anchor="middle" font-size="8.5" font-weight="600" fill="var(--ink-3)">${String(dOf(a).getDate()).padStart(2,'0')}/${String(dOf(a).getMonth()+1).padStart(2,'0')}</text>`;
@@ -1783,8 +1796,9 @@ function drawCal(){
          : done === CAL[k].length ? `<b>${KSHORT[k]}</b> a fini sa phase de ligue`
          : `<b>${KSHORT[k]}</b> en est à ${done}/${CAL[k].length}, prochaine le ${frDate(CAL[k][done][0])}`; };
   const notyet = [0,1,2].filter(k => !passe(CAL[k][0][0]));
-  document.getElementById('calmeta').innerHTML =
-    st(0) + ' · ' + st(1) + ' · ' + st(2) + '. '
+  document.getElementById('calmeta').innerHTML = (passee
+    ? `Saison ${(SEAS.find(x => x[0] === calY) || [, calY])[1]}, terminée. `
+    : st(0) + ' · ' + st(1) + ' · ' + st(2) + '. ')
     + `Finales : ${[0,1,2].map(k=>`${KSHORT[k]} le ${frDate(KO[k][KO[k].length-1][1])}`).join(', ')}.`;
 }
 /* Survol d'une journée (ou d'un tour) : les matchs des clubs français de cette
@@ -1803,7 +1817,7 @@ function reprog(d, h, rp) {
   if (!cal || !tip) return;
   const nm = n => { const f = nomClub(n); return (typeof CLUB_COURT !== 'undefined' && CLUB_COURT[f]) || f; };
   const jour = iso => dOf(iso).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' });
-  const aFr = k => [0,1,2,3,4,5,6,7].some(j => (AFF[k + ':' + j] || []).length) || [0,1,2,3].some(q => (AFF[k + ':q' + q] || []).length);
+  const aFr = k => { const { AFF } = pk(); return [0,1,2,3,4,5,6,7].some(j => (AFF[k + ':' + j] || []).length) || [0,1,2,3].some(q => (AFF[k + ':q' + q] || []).length); };
   const ligne = (m, quali) => {
     const [d, h, nh, ch, na, ca, gh, ga] = m, joue = gh != null, fh = ch === 'FRA', fa = ca === 'FRA';
     let gauche;
@@ -1817,6 +1831,7 @@ function reprog(d, h, rp) {
       + (m[8] ? `<div class="rp">${reprog(m[0], m[1], m[8])}</div>` : '');
   };
   function contenu(t){
+    const P = pk(), { CAL, KO, QUAL, AFF } = P;
     const [ks, js] = t.split(':'), k = +ks, L = AFF[t] || [];
     let titre, quand, a = null, r = null, futur, legs = null, vide;
     if (js[0] === 'q') { const [lab, a1, r1] = QUAL[k][+js.slice(1)]; a = a1; r = r1;
@@ -1824,11 +1839,12 @@ function reprog(d, h, rp) {
       legs = [[`Aller · ${frDate(a)}`, L.filter(m => m[0] === 0)], [`Retour · ${frDate(r)}`, L.filter(m => m[0] === 1)]];
       vide = 'Aucun club français à ce tour.'; }
     else if (+js < 8) { const j = +js; titre = `Journée ${j + 1}`; quand = CAL[k][j][1]; futur = !passe(CAL[k][j][0]);
-      vide = aFr(k) ? 'Affiches pas encore publiées.' : `Aucun club français en ${KNAME[k].split(' · ')[1]}.`; }
-    else { const [lab, a1, r1] = KO[k][+js - 8]; a = a1; r = r1; titre = KOLAB[lab] === 'Barrages' ? 'Barrages à élimination directe' : KOLAB[lab];
+      vide = aFr(k) && P === CUR_P ? 'Affiches pas encore publiées.' : `Aucun club français en ${KNAME[k].split(' · ')[1]}.`; }
+    else { const [lab, a1, r1] = KO[k].find((x, i) => (x[3] ?? 8 + i) === +js); a = a1; r = r1; titre = KOLAB[lab] === 'Barrages' ? 'Barrages à élimination directe' : KOLAB[lab];
       quand = r ? `${frDate(a)} et ${frDate(r)}` : frDate(a); futur = !passe(a);
       if (r) legs = [[`Aller · ${frDate(a)}`, L.filter(m => m[0] < r)], [`Retour · ${frDate(r)}`, L.filter(m => m[0] >= r)]];
       vide = futur ? 'Affiches connues après le tirage.' : 'Aucun club français à ce tour.'; }
+    if (P.grp && js[0] !== 'q' && +js < 8) titre += ' (phase de groupes)';
     let html = `<div class="th">${titre} · ${KNAME[k]}</div><div class="tsub">${quand}${futur ? ' · à venir' : ''}</div>`;
     if (!L.length) return html + `<div class="tfoot" style="margin-top:0;border:0;padding-top:0">${vide}</div>`;
     const q = js[0] === 'q';
@@ -2740,7 +2756,7 @@ let drawSk = () => {};   /* bloc 7d (Sankey), rempli plus bas (même raison) */
    s'abonnent ici pour suivre le sélecteur commun, et le pilotent à leur tour. */
 const SEASON_HOOKS = [];
 function syncSeason(){
-  ['seasonSel','seasonSelZ','seasonSelM','seasonSelK','seasonSelC','seasonSelD','seasonSelS','seasonSelV','seasonSelB'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=selY; });
+  ['seasonSel','seasonSelZ','seasonSelM','seasonSelK','seasonSelC','seasonSelD','seasonSelS','seasonSelV','seasonSelB','seasonSelCal','seasonSelSem'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=selY; });
   drawK(); drawClubs(); drawDec(); drawL(); drawZ(); drawM(); drawSk(); drawSv(); drawCsHook();
   SEASON_HOOKS.forEach(f => f());
 }
@@ -3075,7 +3091,11 @@ function drawM(){
 })();
 
 /* Les trois listes de saison, une fois tous les dessins définis. */
-['seasonSel','seasonSelZ','seasonSelM','seasonSelK','seasonSelC','seasonSelD','seasonSelS','seasonSelV','seasonSelB'].forEach(mkSeasonCtl);
+['seasonSel','seasonSelZ','seasonSelM','seasonSelK','seasonSelC','seasonSelD','seasonSelS','seasonSelV','seasonSelB','seasonSelCal','seasonSelSem'].forEach(mkSeasonCtl);
+/* Blocs 1 et 2 : une saison close se charge à part (saisons.json), puis on redessine. */
+SEASON_HOOKS.push(() => { const y = selY;
+  (y === 'cur' ? Promise.resolve() : chargePasse()).then(() => { if (selY !== y) return;
+    calY = y !== 'cur' && PASSE && PASSE[y] ? y : 'cur'; drawCal(); drawSem(); }); });
 
 const CLUB_COURT = {'Tottenham Hotspur':'Tottenham','Manchester United':'Man United','Manchester City':'Man City','West Ham United':'West Ham','Borussia Dortmund':'Dortmund','Bayer Leverkusen':'Leverkusen','Borussia Mönchengladbach':'Gladbach','Newcastle United':'Newcastle','Nottingham Forest':'Nottingham','Wolverhampton Wanderers':'Wolves','Brighton & Hove Albion':'Brighton','Real Sociedad':'R. Sociedad','Olympique Lyonnais':'Lyon','Olympique de Marseille':'Marseille','Paris Saint-Germain':'PSG','Atlético de Madrid':'Atlético','Eintracht Francfort':'Francfort','Étoile rouge de Belgrade':'Étoile rouge','Zénith Saint-Pétersbourg':'Zénith','FCSB (Steaua Bucarest)':'FCSB','Heart of Midlothian':'Hearts','Jagiellonia Białystok':'Jagiellonia','Iberia 1999 Tbilissi':'Iberia 1999',"St Patrick's Athletic":"St Patrick's",'Budućnost Podgorica':'Budućnost','İstanbul Başakşehir':'Başakşehir','DAC Dunajská Streda':'DAC','Olimpija Ljubljana':'Olimpija','Sporting Charleroi':'Charleroi','Slovan Bratislava':'Slovan','Raków Częstochowa':'Raków','Partizan Belgrade':'Partizan','Hapoël Beer-Sheva':'Beer-Sheva','Paços de Ferreira':'Paços','Vitória Guimarães':'Vitória','Sporting Portugal':'Sporting','Sheriff Tiraspol':'Sheriff','Lincoln Red Imps':'Lincoln','Žalgiris Vilnius':'Žalgiris','Partizani Tirana':'Partizani','Bohemians Dublin':'Bohemians','FH Hafnarfjörður':'FH','Maccabi Tel-Aviv':'Maccabi TA','Hapoël Tel-Aviv':'Hapoël TA','Lokomotiv Moscou':'Lokomotiv','Chakhtar Donetsk':'Chakhtar','Dinamo Tbilissi':'Dinamo Tb.','Puskás Akadémia':'Puskás','Athletic Bilbao':'Bilbao','Mladá Boleslav':'Boleslav','Zrinjski Mostar':'Zrinjski'};
 </script>
@@ -5563,26 +5583,31 @@ document.getElementById('anomaly').innerHTML = anomalous.length
   const lundi = s => { const d = new Date(s + 'T12:00:00Z'), w = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - w); return iso(d); };
   const court = n => { const f = nomClub(n); return (typeof CLUB_COURT !== 'undefined' && CLUB_COURT[f]) || f; };
   const jourL = s => new Date(s + 'T12:00:00Z').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
-  const etape = (k, j) => typeof j === 'string' ? ['1er tour de qualification', '2e tour de qualification', '3e tour de qualification', 'Barrages de qualification'][+j.slice(1)]
+  const etape = (k, j) => j === 'qp' ? 'Tour préliminaire' : typeof j === 'string' ? ['1er tour de qualification', '2e tour de qualification', '3e tour de qualification', 'Barrages de qualification'][+j.slice(1)]
     : j < 8 ? `Journée ${j + 1}` : ['Barrages à élimination directe', 'Huitièmes de finale', 'Quarts de finale', 'Demi-finales', 'Finale'][j - 8];
-  const etC = j => typeof j === 'string' ? ['1er t.', '2e t.', '3e t.', 'Barr.'][+j.slice(1)] : j < 8 ? 'J' + (j + 1) : ['Barr. KO', '8es', 'Quarts', 'Demies', 'Finale'][j - 8];
+  const etC = j => j === 'qp' ? 'Prél.' : typeof j === 'string' ? ['1er t.', '2e t.', '3e t.', 'Barr.'][+j.slice(1)] : j < 8 ? 'J' + (j + 1) : ['Barr. KO', '8es', 'Quarts', 'Demies', 'Finale'][j - 8];
   const joue = m => m[8] != null;
   const pts = (m, home) => { if (!joue(m)) return 0; const [a, b] = home ? [m[8], m[9]] : [m[9], m[8]], q = typeof m[3] === 'string';
     return a > b ? (q ? 1 : 2) : a === b ? (q ? .5 : 1) : 0; };
   const res = (m, home) => { const [a, b] = home ? [m[8], m[9]] : [m[9], m[8]]; return a > b ? 'v' : a === b ? 'n' : 'd'; };
-  const div = c => BY[c] ? divisor(BY[c]) : null;
+  /* saison close : ses propres diviseurs (clubs engagés cette saison-là, archive du site) */
+  let DIV = null, COURS = true;
+  const div = c => DIV ? (DIV[c] ?? null) : BY[c] ? divisor(BY[c]) : null;
   /* les semaines : lundi → matchs */
-  const SEMS = {}; for (const m of SEM) (SEMS[lundi(m[0])] = SEMS[lundi(m[0])] || []).push(m);
-  const CLES = Object.keys(SEMS).sort();
+  let SEMS = {}, CLES = [];
+  const prendre = L => { SEMS = {}; for (const m of L) (SEMS[lundi(m[0])] = SEMS[lundi(m[0])] || []).push(m); CLES = Object.keys(SEMS).sort(); };
+  prendre(SEM);
   /* Semaine affichée à l'ouverture : la semaine EN COURS (lundi 0 h, heure de
      Paris), dès qu'elle a des matchs, joués ou à venir. Une semaine sans match
      (trêve, fin de saison) cède la place à la dernière semaine où des matchs
      ont été joués. */
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
   const cetteSem = lundi(today);
-  const jouees = CLES.filter(k => k <= cetteSem && SEMS[k].some(joue));
-  let iSem = CLES.includes(cetteSem) ? CLES.indexOf(cetteSem)
-    : jouees.length ? CLES.indexOf(jouees[jouees.length - 1]) : 0;
+  /* à l'ouverture d'une saison close : la même semaine du calendrier, autant d'années
+     en arrière (fin octobre 2026 → fin octobre 2024), ou la dernière jouée avant */
+  const semDefaut = cible => { const jouees = CLES.filter(k => k <= cible && SEMS[k].some(joue));
+    return CLES.includes(cible) ? CLES.indexOf(cible) : jouees.length ? CLES.indexOf(jouees[jouees.length - 1]) : 0; };
+  let iSem = semDefaut(cetteSem);
   let portee = 'top';
   const libSem = k => { const L = SEMS[k].map(m => m[0]).sort(), a = L[0], b = L[L.length - 1];
     const fa = new Date(a + 'T12:00:00Z'), fb = new Date(b + 'T12:00:00Z'), mo = d => d.toLocaleDateString('fr-FR', { month: 'short', timeZone: 'UTC' });
@@ -5612,10 +5637,11 @@ document.getElementById('anomaly').innerHTML = anomalous.length
     document.getElementById('sem-lab').textContent = libSem(k);
     document.getElementById('sem-prev').disabled = iSem === 0;
     document.getElementById('sem-next').disabled = iSem >= CLES.length - 1;
-    const enCours = k === cetteSem;
+    const enCours = COURS && k === cetteSem;
     /* phase et compétitions de la semaine regardée */
     const phs = new Set(SEMS[k].map(m => typeof m[3] === 'string' ? 0 : m[3] < 8 ? 1 : 2));
-    document.getElementById('semFil').innerHTML = [['Qualifs', 'Qualifications', '--n4'], ['Ligue', 'Phase de ligue', '--fr'], ['Finale', 'Phase finale', '--n7']]
+    const grp = !COURS && pk().grp;
+    document.getElementById('semFil').innerHTML = [['Qualifs', 'Qualifications', '--n4'], grp ? ['Groupes', 'Phase de groupes', '--fr'] : ['Ligue', 'Phase de ligue', '--fr'], ['Finale', 'Phase finale', '--n7']]
       .map(([c, l, v], p) => `<span class="${phs.has(p) ? 'on' : ''}" style="--phc:var(${v})" title="${l}${phs.has(p) ? ' : cette semaine' : ''}">${c}</span>`).join('');
     document.getElementById('semKs').innerHTML = [0, 1, 2].map(kk => {
       const L = SEMS[k].filter(m => m[2] === kk), C = 'C' + [1, 3, 4][kk];
@@ -5700,6 +5726,13 @@ document.getElementById('anomaly').innerHTML = anomalous.length
   const bT = document.getElementById('sem-top'), bA = document.getElementById('sem-all');
   const sync = () => { bT.setAttribute('aria-pressed', portee === 'top'); bA.setAttribute('aria-pressed', portee === 'all'); cacher(); dessine(); };
   bT.onclick = () => { portee = 'top'; sync(); }; bA.onclick = () => { portee = 'all'; sync(); };
+  /* changement de saison (sélecteur commun, voir drawCal) */
+  drawSem = () => { const P = pk();
+    if (P === CUR_P) { DIV = null; COURS = true; prendre(SEM); iSem = semDefaut(cetteSem); }
+    else { DIV = P.div; COURS = false; prendre(P.SEM);
+      const d = new Date(today + 'T12:00:00Z'); d.setUTCFullYear(d.getUTCFullYear() - (Number(String(D.meta.season).slice(0, 4)) - Number(calY)));
+      iSem = semDefaut(lundi(iso(d))); }
+    cacher(); dessine(); };
   dessine();
 })();
 </script>

@@ -579,6 +579,8 @@ const MATCHS = (() => {
 
 const sizes = {
   'uefa/matchs.json': write('uefa/matchs.json', MATCHS),
+  /* saisons closes des blocs 1 et 2 (calendrier, affiches, semaine européenne), chargées au choix d'une saison passée */
+  'uefa/saisons.json': write('uefa/saisons.json', read('tools/uefa/archive/calendrier-saisons.json')),
   'uefa/index.html': writeStable('uefa/index.html', uefa.html, PRECEDENT),
   'tennis/index.html': write('tennis/index.html', tennis.html),
   'economie/index.html': write('economie/index.html', eco.html),
