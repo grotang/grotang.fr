@@ -488,9 +488,10 @@ section > .famille + .panel{margin-top:22px}
 .sgA > .sj{position:relative}
 .sgA > .sj + .sj::before{content:""; position:absolute; left:-12px; top:-9px; bottom:-9px; border-left:1px dashed var(--rule)}
 .hdA > span{white-space:nowrap}
-/* téléphone : chaque soir dans un cadre teinté, aligné d'une nation à l'autre ;
-   un soir sans match garde son cadre vide, l'absence se voit */
-@media (max-width:680px){
+/* téléphone et écrans intermédiaires (jusqu'à 940 px, 30/10) : chaque soir dans
+   un cadre teinté, aligné d'une nation à l'autre ; un soir sans match garde son
+   cadre vide, l'absence se voit */
+@media (max-width:940px){
   .sgA{column-gap:4px}
   .sgA > .sj + .sj::before{display:none}
   .sgA .sp{width:17px; height:17px; font-size:8px; border-radius:4px}
@@ -504,7 +505,10 @@ section > .famille + .panel{margin-top:22px}
 }
 /* ordinateur (30/10) : même allure qu'au téléphone — jours en onglets sombres,
    un cadre par soir, écriture plus fine ; une ligne par nation, bilan gardé */
-@media (min-width:681px){
+@media (min-width:941px){
+  /* la colonne des soirs ne descend jamais sous sa largeur utile : c'est la
+     barre du coefficient qui cède (jusqu'à 110 px), plus de chevauchement */
+  .semrow{grid-template-columns:26px minmax(110px,150px) minmax(max-content,1fr) minmax(110px,230px) 92px}
   .semrow .spills{display:block}
   .semrow .spills .sgA{width:max-content}
   .semrow.hd > span:nth-child(3){display:block}
@@ -560,8 +564,9 @@ section > .famille + .panel{margin-top:22px}
 .tipsem .vnd3 small{display:block; font:600 9.5px/1.4 Lato,system-ui,sans-serif; opacity:.9; letter-spacing:.03em}
 .tipsem .kl{display:grid; grid-template-columns:auto 1fr auto; gap:4px 8px; align-items:center; font-size:12px; color:var(--ink-2)}
 .tipsem .kl b{font-family:"IBM Plex Mono",monospace; color:var(--ink); text-align:right}
-@media (max-width:680px){
-  /* téléphone (28/10) : une nation = un bloc de deux lignes serrées. À gauche
+@media (max-width:940px){
+  /* téléphone (28/10), et écrans intermédiaires jusqu'à 940 px (30/10 : la mise
+     en ligne de l'ordinateur n'y tient pas) : une nation = un bloc de deux lignes serrées. À gauche
      le rang et la nation, dessous la barre et le coefficient ; à droite, sur
      la même hauteur, les soirs. Le bilan V/N/D, redit par les pastilles, est
      masqué. */
@@ -5625,7 +5630,8 @@ document.getElementById('anomaly').innerHTML = anomalous.length
     const jourL = d => new Date(d + 'T12:00:00Z').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', timeZone: 'UTC' });
     const maxJ = JOURS.map(d => Math.max(1, ...rows.map(t => t.M.filter(([m]) => m[0] === d).length)));
     /* ordinateur : une largeur unique par soir, toutes les semaines (choix de GT, 30/10) ; téléphone : au prorata */
-    const pw = MOB() ? 19 : 26, COLW = maxJ.map(n => MOB() ? `minmax(${n * pw + 4}px,${n + 1}fr)` : '136px').join(' ');
+    const M2 = window.matchMedia('(max-width:940px)').matches;   /* mise en page « téléphone » du bloc */
+    const pw = M2 ? 19 : 26, COLW = maxJ.map(n => M2 ? `minmax(${n * pw + 4}px,${n + 1}fr)` : '136px').join(' ');
     /* les soirs de la semaine en en-tête de colonne (au téléphone : une ligne à part, l'en-tête étant masqué) */
     const hdM = `<span class="sgA hdA" style="grid-template-columns:${COLW}">${JOURS.map(d => `<span>${jourL(d)}</span>`).join('')}</span>`;
     list.innerHTML = `<div class="semrow hd"><span></span><span>Nation</span><span>${hdM}</span><span>Coefficient gagné</span><span style="text-align:right">Bilan</span></div>`
@@ -5639,7 +5645,7 @@ document.getElementById('anomaly').innerHTML = anomalous.length
         /* une colonne par soir de match, alignée d'une nation à l'autre */
         const pills = `<span class="sgA" style="grid-template-columns:${COLW}">` + parJour.map(L => `<span class="sj">${L.map(([x, j]) => pill(x, j)).join('')}</span>`).join('') + '</span>';
         return `<div class="semrow${t.c === 'FRA' ? ' me' : ''}"><span class="rk">${t.v + t.n + t.d ? t.rang : '–'}</span>`
-          + `<span class="nm" data-r="${i}"><i style="background:${col}"></i><span>${nomPays(t.c)}</span>${md}</span>`
+          + `<span class="nm" data-r="${i}"><i style="background:${col}"></i><span>${(M2 && NOM_COURT[t.c]) || name(t.c)}</span>${md}</span>`
           + `<span class="spills">${pills}</span>`
           + `<span class="sgain" data-r="${i}"><span class="gb"><i style="width:${(t.g / gmax * 100).toFixed(1)}%;background:${col}"></i></span><b>${t.v + t.n + t.d ? (t.g > 0 ? '+' + nfx(t.g) : '0') : '—'}</b></span>`
           + `<span class="sbil" data-r="${i}"><span class="v">${t.v}V</span> · ${t.n}N · <span class="d">${t.d}D</span></span></div>`; }).join('')
@@ -5689,6 +5695,8 @@ document.getElementById('anomaly').innerHTML = anomalous.length
   /* commandes */
   document.getElementById('sem-prev').onclick = () => { if (iSem > 0) { iSem--; cacher(); dessine(); } };
   document.getElementById('sem-next').onclick = () => { if (iSem < CLES.length - 1) { iSem++; cacher(); dessine(); } };
+  /* passage d'une mise en page à l'autre (fenêtre redimensionnée, tablette tournée) */
+  window.matchMedia('(max-width:940px)').addEventListener('change', () => { cacher(); dessine(); });
   const bT = document.getElementById('sem-top'), bA = document.getElementById('sem-all');
   const sync = () => { bT.setAttribute('aria-pressed', portee === 'top'); bA.setAttribute('aria-pressed', portee === 'all'); cacher(); dessine(); };
   bT.onclick = () => { portee = 'top'; sync(); }; bA.onclick = () => { portee = 'all'; sync(); };
