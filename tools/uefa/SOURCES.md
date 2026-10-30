@@ -266,3 +266,29 @@ recalé sur PktNat pour l'été). Contrôle au 12/10 : 25 journées comparées, 
 - Fichier : `wiki/affiches-AAAA-AA.json`, réécrit seulement s'il change. `build.mjs` le range par journée dans `AFF` (« compétition:étape »), avec les tours de qualification tirés de `wiki/matchs-AAAA-AA.json` (« compétition:qN », manche aller ou retour ; les dates viennent de `QUAL`).
 - Ici, pas de recoupement avec le bilan officiel : c'est une liste d'affiches, pas un calcul de points. Le soir même, Wikipédia a souvent le score avant la source.
 - Phase finale : tant que la page n'existe pas, l'infobulle dit « Affiches connues après le tirage ».
+
+## Matchs reprogrammés : l'UEFA fait foi pour les dates et heures (30/10/2026)
+
+Déclencheur : Rennes–Olympiakos (C3, J4), avancé du jeudi 5 novembre 18h45 au
+mercredi 4 novembre 16h30 à la demande de la préfecture d'Ille-et-Vilaine. Les
+données de l'UEFA avaient le nouvel horaire aussitôt, Wikipédia toujours pas
+deux jours plus tard.
+
+- À chaque passage, `ligue-wiki.mjs` relit le calendrier officiel sur
+  `match.uefa.com/v5/matches` (les données qui alimentent uefa.com ; pas de
+  robots.txt sur ce domaine ; une requête par compétition et par page de 100 :
+  C1 = 1, C3 = 14, C4 = 2019 ; fenêtre de J−10 à J+240).
+- Rapprochement : numéro UEFA lu dans le lien « Report » de la boîte Wikipédia,
+  sinon les deux noms d'équipes à ±10 jours.
+- Écart de date ou d'heure : l'horaire UEFA (converti à l'heure de Paris)
+  remplace celui de Wikipédia dans `wiki/affiches-AAAA-AA.json`, avec l'horaire
+  d'origine en 11e case. Chaque reprogrammation est gardée dans
+  `wiki/reprog-AAAA-AA.json` ({clé : [date d'origine, heure d'origine, nouvelle
+  date, nouvelle heure]}) et notée « ↺ reprogrammé » dans le journal du robot.
+- La page dit « ↺ avancé » ou « ↺ reporté · initialement … » au survol des
+  blocs 1 et 2 ; le bloc 2 range le match dans le bon soir.
+- Garde-fou : plus de 15 écarts nouveaux d'un coup = décalage systématique
+  probable (fuseau, gabarit) : horaire UEFA gardé, aucune mention
+  « reprogrammé ».
+- Jamais bloquant : UEFA injoignable → on applique les corrections déjà connues.
+- Correction automatique seulement, pas d'alarme (choix de GT).

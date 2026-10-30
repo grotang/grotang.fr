@@ -145,8 +145,9 @@ function affichesFR(src) {
   const m = /^(\d{4})\/(\d{4})$/.exec(D.meta.season || ''); if (!m) return {};
   const suf = `${m[1]}-${m[2].slice(2)}`, out = {};
   const fa = path.join(ROOT, `tools/uefa/wiki/affiches-${suf}.json`);
-  if (fs.existsSync(fa)) for (const [k, j, d, h, nd, cd, ne, ce, gd, ge] of JSON.parse(fs.readFileSync(fa, 'utf8'))[m[1]] || [])
-    if (cd === 'FRA' || ce === 'FRA') (out[k + ':' + j] = out[k + ':' + j] || []).push([d, h, nd, cd, ne, ce, gd, ge]);
+  /* 9e case éventuelle : l'horaire d'origine d'un match reprogrammé (ligue-wiki.mjs, horaires UEFA) */
+  if (fs.existsSync(fa)) for (const [k, j, d, h, nd, cd, ne, ce, gd, ge, rp] of JSON.parse(fs.readFileSync(fa, 'utf8'))[m[1]] || [])
+    if (cd === 'FRA' || ce === 'FRA') (out[k + ':' + j] = out[k + ':' + j] || []).push(rp ? [d, h, nd, cd, ne, ce, gd, ge, rp] : [d, h, nd, cd, ne, ce, gd, ge]);
   const fq = path.join(ROOT, `tools/uefa/wiki/matchs-${suf}.json`);
   if (fs.existsSync(fq)) { const Q = JSON.parse(fs.readFileSync(fq, 'utf8'));
     for (const [club, L] of Object.entries((Q.c || {}).FRA || {})) { const vu = {};
@@ -167,8 +168,8 @@ function semaineEU(src) {
   const m = /^(\d{4})\/(\d{4})$/.exec(D.meta.season || ''); if (!m) return [];
   const suf = `${m[1]}-${m[2].slice(2)}`, out = [];
   const fa = path.join(ROOT, `tools/uefa/wiki/affiches-${suf}.json`);
-  if (fs.existsSync(fa)) for (const [k, j, d, h, nd, cd, ne, ce, gd, ge] of JSON.parse(fs.readFileSync(fa, 'utf8'))[m[1]] || [])
-    if (d) out.push([d, h, k, j, nd, cd, ne, ce, gd, ge]);
+  if (fs.existsSync(fa)) for (const [k, j, d, h, nd, cd, ne, ce, gd, ge, rp] of JSON.parse(fs.readFileSync(fa, 'utf8'))[m[1]] || [])
+    if (d) out.push(rp ? [d, h, k, j, nd, cd, ne, ce, gd, ge, rp] : [d, h, k, j, nd, cd, ne, ce, gd, ge]);
   const qm = /const QUAL = (\{[\s\S]*?\n\});/.exec(src), QUAL = qm ? Function(`return (${qm[1]});`)() : null;
   const fq = path.join(ROOT, `tools/uefa/wiki/matchs-${suf}.json`);
   if (QUAL && fs.existsSync(fq)) { const Q = JSON.parse(fs.readFileSync(fq, 'utf8'));

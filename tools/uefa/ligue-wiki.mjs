@@ -62,6 +62,19 @@ const proche = (a, b) => {
    Phase finale : le tour se lit dans les titres de section (j = 8 barrages, 9 huitièmes,
    10 quarts, 11 demies, 12 finale). Score après prolongation ; les tirs au but, notés à
    part, ne comptent pas (nul). */
+/* numéro UEFA du match, lu dans le lien « Report » de la boîte (direct, ou via
+   la note de bas de page qui porte l'adresse uefa.com/…/match/NNNNNNN/) */
+function idUEFA(box, doc) {
+  const lu = a => { const m = /uefa\.com\/[^"' ]*\/match\/(\d{5,})/.exec(a.getAttribute('href') || ''); return m ? m[1] : null; };
+  for (const a of box.querySelectorAll('a[href]')) { const v = lu(a); if (v) return v; }
+  for (const a of box.querySelectorAll('a[href*="cite_note"]')) {
+    const id = decodeURIComponent((a.getAttribute('href') || '').split('#')[1] || '');
+    const li = id && doc.getElementById(id);
+    if (li) for (const b of li.querySelectorAll('a[href]')) { const v = lu(b); if (v) return v; }
+  }
+  return null;
+}
+
 const TOURS_KO = { 'Knockout phase play-offs': 0, 'Knockout round play-offs': 0, 'Round of 16': 1, 'Quarter-finals': 2, 'Semi-finals': 3, 'Final': 4 };
 export function lirePage(html, ko = false) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -90,7 +103,7 @@ export function lirePage(html, ko = false) {
        page les donne en CET/CEST, l'heure locale suit entre parenthèses) */
     const d = el.querySelector('.bday, .dtstart'), t = el.querySelector('.ftime');
     const hm = t && /(\d{1,2}):(\d{2})/.exec(t.textContent);
-    affiches.push({ j, dom: equipe(h), ext: equipe(a), b: m ? [+m[1], +m[2]] : null,
+    affiches.push({ j, dom: equipe(h), ext: equipe(a), b: m ? [+m[1], +m[2]] : null, uefa: idUEFA(el, doc),
                     date: d ? d.textContent.trim().slice(0, 10) : null, heure: hm ? hm[1].padStart(2, '0') + ':' + hm[2] : null });
     if (!m) continue;                                   // pas encore joué (« v », heure…)
     out.push({ j, dom: equipe(h), ext: equipe(a), b: [+m[1], +m[2]] });
@@ -145,6 +158,81 @@ async function telecharge(titre) {
   }
 }
 
+/* ---------- horaires officiels de l'UEFA (30/10/2026) ----------
+   Rennes–Olympiakos (C3, J4) avancé du jeudi 5 novembre 18h45 au mercredi 4,
+   16h30, à la demande de la préfecture : l'UEFA l'avait aussitôt, Wikipédia non.
+   À chaque passage, on relit donc le calendrier officiel (match.uefa.com, les
+   données de uefa.com ; une requête par compétition et par page de 100) et on
+   corrige date et heure de chaque affiche qui s'en écarte. Chaque correction
+   est gardée dans wiki/reprog-AAAA-AA.json avec l'horaire d'origine, pour que
+   la page puisse dire « avancé, initialement … ». Rapprochement : numéro UEFA
+   lu dans la boîte Wikipédia, sinon les deux noms d'équipes à ±10 jours.
+   Jamais bloquant : si l'UEFA ne répond pas, on applique les corrections déjà
+   connues et on continue. */
+const COMP_UEFA = [1, 14, 2019];                       // C1, C3, C4
+const paris = iso => { const d = new Date(iso);
+  const j = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(d);
+  const h = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
+  return [j, h.replace(/\s/g, '').replace('h', ':')]; };
+async function calendrierUEFA(saison) {
+  const out = [], de = new Date(Date.now() - 10 * 864e5).toISOString().slice(0, 10), a = new Date(Date.now() + 240 * 864e5).toISOString().slice(0, 10);
+  for (let k = 0; k < 3; k++) for (let off = 0; off < 1000; off += 100) {
+    const u = `https://match.uefa.com/v5/matches?competitionId=${COMP_UEFA[k]}&seasonYear=${saison}&fromDate=${de}&toDate=${a}&limit=100&offset=${off}&order=ASC`;
+    const r = await fetch(u, { headers: { 'User-Agent': UA, Accept: 'application/json' }, signal: AbortSignal.timeout(30_000) });
+    if (!r.ok) throw new Error(`UEFA HTTP ${r.status}`);
+    const L = await r.json();
+    if (!Array.isArray(L)) throw new Error('réponse UEFA illisible');
+    for (const x of L) if (x && x.id && x.kickOffTime && x.kickOffTime.dateTime)
+      out.push({ k, id: String(x.id), t: x.kickOffTime.dateTime, dom: (x.homeTeam || {}).internationalName || '', ext: (x.awayTeam || {}).internationalName || '' });
+    if (L.length < 100) break;
+  }
+  return out;
+}
+export async function recaleUEFA({ aff, meta, an, suf, ici, log }) {
+  const f = path.join(ici, 'wiki', `reprog-${an}-${suf}.json`);
+  const avant = fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '';
+  const R = avant ? JSON.parse(avant) : {};
+  const cle = x => `${x[0]}|${x[1]}|${x[4]}|${x[6]}`;
+  let U = null;
+  try { U = await calendrierUEFA(+an + 1); log(`  UEFA : ${U.length} horaires officiels relus`); }
+  catch (e) { log(`  ⚠ calendrier UEFA indisponible (${e.message}) : corrections connues seulement`); }
+  const parId = U ? Object.fromEntries(U.map(u => [u.id, u])) : {};
+  let vus = 0, corr = 0; const neufs = [];
+  aff.forEach((x, i) => {
+    const mt = meta[i], kk = cle(x);
+    let u = null;
+    if (U) {
+      u = mt.uefa && parId[mt.uefa];
+      if (!u && x[2]) {                                  // repli : les deux noms, à ±10 jours
+        const t0 = Date.parse(x[2] + 'T12:00:00Z');
+        let best = null, sc = 0;
+        for (const v of U) { if (v.k !== x[0] || Math.abs(Date.parse(v.t) - t0) > 10 * 864e5) continue;
+          const s = Math.min(proche(mt.wd, v.dom), proche(mt.we, v.ext)); if (s > sc) { sc = s; best = v; } }
+        u = sc >= 2 ? best : null;
+      }
+    }
+    if (u) { vus++;
+      const [d, h] = paris(u.t);
+      if (!x[2] || !x[3]) { x[2] = d; x[3] = h; }         // horaire manquant sur Wikipédia : on complète, sans parler de reprogrammation
+      else if (d !== x[2] || h !== x[3]) {
+        const o = R[kk] ? [R[kk][0], R[kk][1]] : [x[2], x[3]];
+        if (!R[kk]) neufs.push(kk);
+        if (!R[kk] || R[kk][2] !== d || R[kk][3] !== h) log(`  ↺ reprogrammé : ${x[4]} – ${x[6]} : ${x[2]} ${x[3]} → ${d} ${h} (UEFA)`);
+        R[kk] = [o[0], o[1], d, h]; x[2] = d; x[3] = h; corr++;
+      }
+    } else if (R[kk]) { x[2] = R[kk][2]; x[3] = R[kk][3]; }  // UEFA muette : on garde la correction connue
+  });
+  /* Garde-fou : une vraie reprogrammation est rare. Plus de 15 écarts nouveaux
+     d'un coup, c'est un décalage systématique (fuseau, gabarit) : on garde
+     l'horaire UEFA, mais sans annoncer de reprogrammation. */
+  if (neufs.length > 15) { log(`  ⚠ ${neufs.length} écarts d'horaire nouveaux d'un coup : décalage systématique probable, pas de mention « reprogrammé »`); for (const kk of neufs) delete R[kk]; }
+  /* l'horaire d'origine suit l'affiche, pour la page */
+  for (const x of aff) { const r = R[cle(x)]; if (r && (r[0] !== x[2] || r[1] !== x[3])) x[10] = [r[0], r[1]]; }
+  if (U) log(`  UEFA : ${vus} affiches rapprochées sur ${aff.length}, ${corr} horaire(s) corrigé(s)`);
+  const txt = JSON.stringify(Object.fromEntries(Object.keys(R).sort().map(c => [c, R[c]])));
+  if (txt !== (avant || '{}') && Object.keys(R).length) fs.writeFileSync(f, txt);
+}
+
 export async function majLigue({ data, ici, log, pages = null }) {
   const m = /^(\d{4})\/(\d{4})$/.exec(data.meta.season || '');
   if (!m) throw new Error(`saison illisible : ${data.meta.season}`);
@@ -155,7 +243,7 @@ export async function majLigue({ data, ici, log, pages = null }) {
   const carte = fs.existsSync(fCarte) ? JSON.parse(fs.readFileSync(fCarte, 'utf8')) : {};
   const eff = data.eff || {};
   const nomSource = rapprocheur(eff, carte);
-  const res = {}, doutes = [], aff = [];
+  const res = {}, doutes = [], aff = [], meta = [];
   /* pour la veille du soir de match (soir.mjs) : combien de matchs de CE soir la
      page montre déjà avec leur score. Le « soir » est la date de Paris d'il y a
      six heures : à 1 h du matin, on parle encore de la veille. */
@@ -183,16 +271,21 @@ export async function majLigue({ data, ici, log, pages = null }) {
     }
     /* toutes les affiches, jouées ou à venir, avec leur date : le bloc 0 (survol,
        clubs français) et le bloc 0b (la semaine européenne, toutes nations) */
-    for (const x of affiches) if (x.date === SOIR) { soir.prevus++; if (x.b) soir.joues++; }
     for (const x of affiches) {
       const pays = e => code[ALIAS[e.pays] || e.pays] || code[ALIAS[e.drapeau] || e.drapeau];
       const cd = pays(x.dom), ce = pays(x.ext);
       if (!cd || !ce) continue;
       const nd = nomSource(x.dom.nom, cd, k) || x.dom.nom, ne = nomSource(x.ext.nom, ce, k) || x.ext.nom;
       aff.push([k, x.j, x.date, x.heure, nd, cd, ne, ce, ...(x.b || [null, null])]);
+      meta.push({ uefa: x.uefa, wd: x.dom.nom, we: x.ext.nom });
     }
     log(`  Wikipédia ${(COMPS[k] + (ko ? ', phase finale' : '')).padEnd(31)} ${matchs.length} matchs joués sur ${cases}`);
   }
+  /* dates et heures : l'UEFA fait foi (matchs avancés ou reportés, que
+     Wikipédia peut mettre des jours à reporter) */
+  try { await recaleUEFA({ aff, meta, an, suf: m[2].slice(2), ici, log }); }
+  catch (e) { log(`  ⚠ horaires UEFA non vérifiés : ${e.message}`); }
+  for (const x of aff) if (x[2] === SOIR) { soir.prevus++; if (x[8] != null) soir.joues++; }
   for (const c in res) for (const n in res[c]) res[c][n].sort((a, b) => a[0] - b[0]);
   /* recoupement avec le bilan officiel : pour information ici, la page fait le tri */
   let accord = 0, ecart = 0;

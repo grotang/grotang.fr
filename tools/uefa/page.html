@@ -320,6 +320,8 @@ section > .famille + .panel{margin-top:22px}
 .tipcal .mt u{text-decoration:none; font-size:10px; color:var(--ink-3); font-family:"IBM Plex Mono",monospace; margin:0 3px}
 .tipcal .mt .sc{text-align:center; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:700; color:var(--ink)}
 .tipcal .mt .sc.av{font-weight:500; color:var(--ink-3); font-size:11.5px}
+.tipcal .rp{font-size:11px; color:var(--c3); margin:-2px 0 4px 50px; font-weight:600}
+.tipsem .when .rp{color:var(--c3); font-weight:600}
 .tipcal .mt .q{font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-3); white-space:nowrap}
 .tipcal .mt .p{justify-self:start; width:20px; height:18px; border-radius:4px; display:grid; place-items:center; font-size:10.5px; font-weight:700; color:#fff}
 .tipcal .mt .p.v{background:var(--good)} .tipcal .mt .p.n{background:var(--ink-3)} .tipcal .mt .p.d{background:var(--bad)}
@@ -1762,6 +1764,14 @@ function drawCal(){
 /* Survol d'une journée (ou d'un tour) : les matchs des clubs français de cette
    compétition, joués avec leur score et le résultat, à venir avec le jour et
    l'heure de Paris. Au doigt, un appui fait la même chose. */
+/* Match reprogrammé (horaires UEFA, voir ligue-wiki.mjs) : « avancé » ou
+   « reporté », avec l'horaire d'origine. */
+function reprog(d, h, rp) {
+  const t = (x, y) => Date.parse(x + 'T' + (y || '12:00') + ':00');
+  const sens = t(d, h) < t(rp[0], rp[1]) ? 'avancé' : 'reporté';
+  const j = new Date(rp[0] + 'T12:00:00Z').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+  return `↺ ${sens} · initialement ${j}${rp[1] ? ', ' + rp[1].replace(':', 'h') : ''}`;
+}
 (function(){
   const cal = document.getElementById('cal'), tip = document.getElementById('tipCal');
   if (!cal || !tip) return;
@@ -1777,7 +1787,8 @@ function drawCal(){
     return `<div class="mt">${gauche}`
       + `<span class="h${fh ? ' fr' : ''}">${fh ? '' : `<u>${ch}</u>`}${nm(nh)}</span>`
       + (joue ? `<span class="sc">${gh}–${ga}</span>` : `<span class="sc av">${h || 'à fixer'}</span>`)
-      + `<span class="a${fa ? ' fr' : ''}">${nm(na)}${fa ? '' : `<u>${ca}</u>`}</span></div>`;
+      + `<span class="a${fa ? ' fr' : ''}">${nm(na)}${fa ? '' : `<u>${ca}</u>`}</span></div>`
+      + (m[8] ? `<div class="rp">${reprog(m[0], m[1], m[8])}</div>` : '');
   };
   function contenu(t){
     const [ks, js] = t.split(':'), k = +ks, L = AFF[t] || [];
@@ -5620,7 +5631,7 @@ document.getElementById('anomaly').innerHTML = anomalous.length
   function tipMatch(t, j){
     const [m, home] = t.M[j], fo = c => c === t.c, k = m[2];
     const tete = `<div class="mh"><span class="kb" style="background:var(${KVAR[k]})">C${[1, 3, 4][k]}</span>${KN[k]} · ${etape(k, m[3])}</div>`
-      + `<div class="when">${jourL(m[0])}${m[1] ? ' · ' + m[1].replace(':', 'h') : ''}</div>`;
+      + `<div class="when">${jourL(m[0])}${m[1] ? ' · ' + m[1].replace(':', 'h') : ''}${m[10] ? `<br><span class="rp">${reprog(m[0], m[1], m[10])}</span>` : ''}</div>`;
     const eq = (n, c, h) => `<div class="t${h ? ' h' : ''}${fo(c) ? ' fo' : ''}">${court(n)}<u>${name(c)}</u></div>`;
     const sc = joue(m) ? `<div class="s">${m[8]}<span style="color:var(--ink-3);margin:0 4px">–</span>${m[9]}</div>` : `<div class="s f">${m[1] ? m[1].replace(':', 'h') : 'à venir'}</div>`;
     let v = '';
