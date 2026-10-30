@@ -506,9 +506,9 @@ section > .famille + .panel{margin-top:22px}
    un cadre par soir, écriture plus fine ; une ligne par nation, bilan gardé */
 @media (min-width:681px){
   .semrow .spills{display:block}
-  .semrow .spills .sgA{width:100%; max-width:470px}
+  .semrow .spills .sgA{width:max-content}
   .semrow.hd > span:nth-child(3){display:block}
-  .semrow.hd .hdA{width:100%; max-width:470px}
+  .semrow.hd .hdA{width:max-content}
   .semrow.hd{align-items:end}
   .sgA{column-gap:8px}
   .sgA > .sj + .sj::before{display:none}
@@ -5623,7 +5623,8 @@ document.getElementById('anomaly').innerHTML = anomalous.length
     const JOURS = [...new Set(SEMS[k].map(m => m[0]))].sort();
     const jourL = d => new Date(d + 'T12:00:00Z').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', timeZone: 'UTC' });
     const maxJ = JOURS.map(d => Math.max(1, ...rows.map(t => t.M.filter(([m]) => m[0] === d).length)));
-    const pw = MOB() ? 19 : 26, COLW = maxJ.map(n => MOB() ? `minmax(${n * pw + 4}px,${n + 1}fr)` : `minmax(${n * pw + 10}px,${n + 1}fr)`).join(' ');
+    /* ordinateur : une largeur unique par soir, toutes les semaines (choix de GT, 30/10) ; téléphone : au prorata */
+    const pw = MOB() ? 19 : 26, COLW = maxJ.map(n => MOB() ? `minmax(${n * pw + 4}px,${n + 1}fr)` : '170px').join(' ');
     /* les soirs de la semaine en en-tête de colonne (au téléphone : une ligne à part, l'en-tête étant masqué) */
     const hdM = `<span class="sgA hdA" style="grid-template-columns:${COLW}">${JOURS.map(d => `<span>${jourL(d)}</span>`).join('')}</span>`;
     list.innerHTML = `<div class="semrow hd"><span></span><span>Nation</span><span>${hdM}</span><span>Coefficient gagné</span><span style="text-align:right">Bilan</span></div>`
