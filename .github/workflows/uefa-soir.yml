@@ -20,8 +20,19 @@ name: Soir de match UEFA
 # Coût : rien. Les minutes de GitHub Actions sont gratuites pour un dépôt public,
 # y compris celles où la tâche attend.
 #
+#   47 16 UTC → 18 h 47 été · 17 h 47 hiver
 #   47 17 UTC → 19 h 47 été · 18 h 47 hiver
-#   47 19 UTC → 21 h 47 été · 20 h 47 hiver   (second départ, en filet)
+#   47 19 UTC → 21 h 47 été · 20 h 47 hiver   (dernier départ, en filet)
+#
+# LE DÉPART DE 17 H 47 (depuis le 30/10/2026). Du 14 au 29/10, le départ prévu
+# à 18 h 47 (19 h 47 en été) est parti en moyenne avec 3 h de retard, jusqu'à
+# 4 h 12 : la veille démarrait vers 22 h 45 et le score du match de 18 h 45
+# n'apparaissait qu'après 23 h. Une heure plus tôt, avec le même retard, la veille
+# démarre entre 19 h 47 et 21 h 47. Parti à l'heure, il attend 20 h 35 et
+# s'arrête à 23 h 27 (5 h 40 après son départ réel) : la source, à jour vers
+# 23 h 10, est attrapée ; s'il manque un score, le départ suivant, qui attend
+# derrière lui, prend le relais. Plus tôt, un départ à l'heure s'arrêterait
+# avant la mise à jour de la source.
 #
 # SEULEMENT LES SOIRS POSSIBLES (depuis le 30/10/2026). Avant : tous les jours,
 # 730 départs par an pour environ 80 soirs de match. Le calendrier 2026/27 :
@@ -37,8 +48,8 @@ name: Soir de match UEFA
 # veille continue si c'est un soir de match.
 on:
   schedule:
-    - cron: '47 17,19 * * 2-4'   # mardi → jeudi
-    - cron: '47 17,19 * 5,6 6'   # samedi, en mai et juin (finale de C1)
+    - cron: '47 16,17,19 * * 2-4'   # mardi → jeudi
+    - cron: '47 16,17,19 * 5,6 6'   # samedi, en mai et juin (finale de C1)
   workflow_dispatch:
 
 permissions:
