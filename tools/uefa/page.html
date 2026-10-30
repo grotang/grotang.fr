@@ -512,7 +512,8 @@ section > .famille + .panel{margin-top:22px}
   .semrow.hd{align-items:end}
   .sgA{column-gap:8px}
   .sgA > .sj + .sj::before{display:none}
-  .sgA > .sj{gap:4px; align-self:stretch; min-height:32px; padding:4px 6px 7px; border-radius:6px;
+  /* 136 px : cinq pastilles tiennent sur une ligne (5 × 22 + 4 × 3 = 122 ≤ 126) */
+  .sgA > .sj{gap:4px 3px; align-self:stretch; min-height:32px; padding:4px 5px 7px; border-radius:6px;
     background:var(--surface-2); box-shadow:inset 0 0 0 1px var(--rule-soft); align-items:center}
   .semrow.me .sgA > .sj{background:color-mix(in srgb, var(--surface) 70%, transparent)}
   .sgA .sp{width:22px; height:22px; font-size:10px}
