@@ -108,6 +108,8 @@ section{margin-top:clamp(30px,4.5vw,52px)}
 .ctl + .ctl{margin-left:12px; padding-left:12px; border-left:1px solid var(--rule)}
 .ctl > .lb{flex:none; white-space:nowrap; font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700; color:var(--ink-3)}
 .ctl > .hint{font-size:12.5px; color:var(--ink-3)}
+/* légende de lecture sous le titre (6a, 6b) : elle n'est pas un filtre, elle sort de la zone des filtres */
+.lect{font-size:12.5px; color:var(--ink-3); margin:-4px 0 12px}
 .sel{position:relative; display:inline-flex; align-items:center}
 .sel select{appearance:none; font:inherit; font-size:12.5px; font-weight:600; color:var(--ink);
   background:var(--surface); border:1px solid var(--rule); border-radius:2px;
@@ -825,7 +827,7 @@ footer .legal{margin-top:3px; font-size:11px}
 
   <div class="panel" id="semPanel">
     <div class="ptitle"><span class="no">2</span><h3>La semaine européenne</h3>
-      <span class="sub"><span class="ctl"><span class="lb">Semaine</span><span class="seg semnav" role="group" aria-label="Semaine"><button type="button" id="sem-prev" aria-label="Semaine précédente">‹</button><button type="button" id="sem-lab" class="semlab" aria-pressed="true"></button><button type="button" id="sem-next" aria-label="Semaine suivante">›</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations"><button type="button" id="sem-top" aria-pressed="true">Les 8 premières</button><button type="button" id="sem-all" aria-pressed="false">Toutes</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelSem" aria-label="Saison"></select></span></span></span></div>
+      <span class="sub"><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations"><button type="button" id="sem-top" aria-pressed="true">Les 8 premières</button><button type="button" id="sem-all" aria-pressed="false">Toutes</button></span></span><span class="ctl"><span class="lb">Semaine</span><span class="seg semnav" role="group" aria-label="Semaine"><button type="button" id="sem-prev" aria-label="Semaine précédente">‹</button><button type="button" id="sem-lab" class="semlab" aria-pressed="true"></button><button type="button" id="sem-next" aria-label="Semaine suivante">›</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelSem" aria-label="Saison"></select></span></span></span></div>
     <div class="semmeta"><span class="semfil" id="semFil" aria-label="Phase"></span><span class="semks" id="semKs" aria-label="Compétitions"></span><span class="semtxt" id="semMeta"></span></div>
     <div class="semwrap" id="semBox"><div class="semlist" id="semList"></div><div class="tip tipsem" id="tipSem" hidden></div></div>
     <p class="figc" id="semNote"></p>
@@ -833,10 +835,10 @@ footer .legal{margin-top:3px; font-size:11px}
 
   <div class="panel">
     <div class="ptitle" id="classement"><span class="no">3</span><h3>Le classement</h3>
-      <span class="sub"><span class="ctl"><span class="lb">Période</span><span class="seg" role="group" aria-label="Période"><button type="button" id="p-season" aria-pressed="true">Saison en cours</button></span><span class="sel"><select id="p-win" aria-label="Fenêtre de saisons">
-        <option value="" disabled hidden>X dernières saisons</option><option value="5">5 dernières saisons</option><option value="4">Après l'été 2027</option><option value="3">Après l'été 2028</option><option value="2">Après l'été 2029</option></select></span></span><span class="ctl"><span class="lb">Saison en cours</span><span class="seg" role="group" aria-label="Saison en cours : projection ou réel">
+      <span class="sub"><span class="ctl"><span class="lb">Saison en cours</span><span class="seg" role="group" aria-label="Saison en cours : projection ou réel">
         <button type="button" id="v-proj" aria-pressed="true" title="La saison en cours comptée à sa valeur de fin de saison projetée (médiane du bloc 8)">Projection</button><button type="button" id="v-reel" aria-pressed="false" title="La saison en cours comptée pour les seuls points déjà marqués">Réel acquis</button><button type="button" id="v-sans" aria-pressed="false" title="Sans la saison en cours : le socle seul, les saisons closes de la fenêtre">Socle seul</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
-        <button type="button" id="b-top" aria-pressed="true">Les 8 premières</button><button type="button" id="b-all" aria-pressed="false">Toutes</button></span></span></span></div>
+        <button type="button" id="b-top" aria-pressed="true">Les 8 premières</button><button type="button" id="b-all" aria-pressed="false">Toutes</button></span></span><span class="ctl"><span class="lb">Période</span><span class="seg" role="group" aria-label="Période"><button type="button" id="p-season" aria-pressed="true">Saison en cours</button></span><span class="sel"><select id="p-win" aria-label="Fenêtre de saisons">
+        <option value="" disabled hidden>X dernières saisons</option><option value="5">5 dernières saisons</option><option value="4">Après l'été 2027</option><option value="3">Après l'été 2028</option><option value="2">Après l'été 2029</option></select></span></span></span></div>
     <div class="barswrap"><div class="bscroll" id="bscroll"><div class="bars" id="bars"></div></div><div class="tip" id="tipY" hidden></div></div>
     <p class="figc" id="barNote"></p>
   </div>
@@ -883,14 +885,16 @@ footer .legal{margin-top:3px; font-size:11px}
     <p>Les mêmes gains, deux dessins : en lignes et barres pour trois nations, en matrice pour les huit.</p></div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">6a</span><h3>Gain et cumul</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">lignes : cumul (axe de gauche) · barres : gain de l'étape (axe de droite)</span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelZ" aria-label="Saison"></select></span></span></span></div>
+    <div class="ptitle"><span class="no">6a</span><h3>Gain et cumul</h3><span class="sub"><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelZ" aria-label="Saison"></select></span></span></span></div>
+    <p class="lect">lignes : cumul (axe de gauche) · barres : gain de l'étape (axe de droite)</p>
     <div class="chips" id="zchips"></div>
     <figure><div class="chartbox big" id="boxZ"><svg id="chartZ" role="img" aria-label="Cumul et gain par étape, deux échelles"></svg><div class="tip" id="tipZ" hidden></div></div>
       <figcaption id="capZ"></figcaption></figure>
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">6b</span><h3>La matrice</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="hint">aire du disque = coefficient gagné · 🏆 🥈 🥉 podium de l'étape</span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations"><button type="button" id="m-top" aria-pressed="true">Les 8 premières</button><button type="button" id="m-all" aria-pressed="false">Toutes</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelM" aria-label="Saison"></select></span></span></span></div>
+    <div class="ptitle"><span class="no">6b</span><h3>La matrice</h3><span class="sub"><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations"><button type="button" id="m-top" aria-pressed="true">Les 8 premières</button><button type="button" id="m-all" aria-pressed="false">Toutes</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelM" aria-label="Saison"></select></span></span></span></div>
+    <p class="lect">aire du disque = coefficient gagné · 🏆 🥈 🥉 podium de l'étape</p>
     <div class="calwrap" id="boxM"><div class="chartbox"><svg id="mtx" role="img" aria-label="Matrice nations × étapes, aire proportionnelle au coefficient gagné"></svg></div><div class="tip" id="tipM" hidden></div></div>
     <p class="figc" id="mtxNote"></p>
   </div>
@@ -920,9 +924,9 @@ footer .legal{margin-top:3px; font-size:11px}
 
   <div class="panel">
     <div class="ptitle"><span class="no">7b</span><h3>Le bilan</h3>
-      <span class="sub"><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
-        <button type="button" id="vnc-top" aria-pressed="true">Les 8 premières</button><button type="button" id="vnc-all" aria-pressed="false">Toutes</button></span><span class="sel"><select id="vnc-nat" aria-label="Une nation"></select></span></span><span class="ctl"><span class="lb">Clubs</span><span class="seg" role="group" aria-label="Clubs">
-        <button type="button" id="vnc-ouv" aria-pressed="false">Dépliés</button><button type="button" id="vnc-fer" aria-pressed="true">Pliés</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="vnc-sea" aria-label="Saison"></select></span></span></span></div>
+      <span class="sub"><span class="ctl"><span class="lb">Clubs</span><span class="seg" role="group" aria-label="Clubs">
+        <button type="button" id="vnc-ouv" aria-pressed="false">Dépliés</button><button type="button" id="vnc-fer" aria-pressed="true">Pliés</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
+        <button type="button" id="vnc-top" aria-pressed="true">Les 8 premières</button><button type="button" id="vnc-all" aria-pressed="false">Toutes</button></span><span class="sel"><select id="vnc-nat" aria-label="Une nation"></select></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="vnc-sea" aria-label="Saison"></select></span></span></span></div>
     <div class="vnd-leg"><span><i style="background:linear-gradient(90deg,var(--df) 33%,var(--dl) 33% 66%,var(--dq) 66%)"></i>défaites</span><span><i style="background:linear-gradient(90deg,var(--nq) 33%,var(--nl) 33% 66%,var(--nf) 66%)"></i>nuls</span><span><i style="background:linear-gradient(90deg,var(--vq) 33%,var(--vl) 33% 66%,var(--vf) 66%)"></i>victoires</span><span class="k">de la teinte la plus pâle à la plus intense : qualifications · ligue · phase finale</span></div>
     <figure>
       <div class="vscroll vnd-box" id="vncBox"><div class="vnd" id="vnc"></div><div class="tip" id="vncTip" hidden></div></div>
@@ -939,9 +943,9 @@ footer .legal{margin-top:3px; font-size:11px}
 
   <div class="panel">
     <div class="ptitle"><span class="no">8a</span><h3>Qui est encore en course cette saison</h3>
-      <span class="sub"><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
-        <button type="button" id="v-top" aria-pressed="false">Les 8 premières</button><button type="button" id="v-all" aria-pressed="true">Toutes</button></span></span><span class="ctl"><span class="lb">Ordre</span><span class="seg" role="group" aria-label="Ordre">
-        <button type="button" id="v-rk" aria-pressed="true">Classement</button><button type="button" id="v-pm" aria-pressed="false">Poids mort</button></span></span></span></div>
+      <span class="sub"><span class="ctl"><span class="lb">Ordre</span><span class="seg" role="group" aria-label="Ordre">
+        <button type="button" id="v-rk" aria-pressed="true">Classement</button><button type="button" id="v-pm" aria-pressed="false">Poids mort</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
+        <button type="button" id="v-top" aria-pressed="false">Les 8 premières</button><button type="button" id="v-all" aria-pressed="true">Toutes</button></span></span></span></div>
     <div class="klegend" id="vleg"></div>
     <div class="barswrap"><div class="vscroll"><div class="vlist" id="vlist"></div></div><div class="tip" id="tipV" hidden></div></div>
     <p class="figc" id="vNote"></p>
@@ -983,9 +987,9 @@ footer .legal{margin-top:3px; font-size:11px}
   </div>
   <div class="panel">
     <div class="ptitle" id="projection"><span class="no">9</span><h3>La projection</h3>
-      <span class="sub"><span class="ctl"><span class="lb">Horizon</span><span class="seg" role="group" aria-label="Horizon">
-        <button type="button" id="h-ligue" aria-pressed="false">Fin de phase de ligue</button><button type="button" id="h-saison" aria-pressed="true">Fin de saison</button><button type="button" id="h-5ans" aria-pressed="false">À 5 ans</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
-        <button type="button" id="j-top" aria-pressed="true">Les 8 premières</button><button type="button" id="j-all" aria-pressed="false">Toutes</button></span></span></span></div>
+      <span class="sub"><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
+        <button type="button" id="j-top" aria-pressed="true">Les 8 premières</button><button type="button" id="j-all" aria-pressed="false">Toutes</button></span></span><span class="ctl"><span class="lb">Horizon</span><span class="seg" role="group" aria-label="Horizon">
+        <button type="button" id="h-ligue" aria-pressed="false">Fin de phase de ligue</button><button type="button" id="h-saison" aria-pressed="true">Fin de saison</button><button type="button" id="h-5ans" aria-pressed="false">À 5 ans</button></span></span></span></div>
     <figure>
       <div class="chartbox" id="boxPrj"><svg id="chartPrj" role="img" aria-label="Projection du coefficient de saison"></svg><div class="tip" id="tipPrj" hidden></div></div>
       <figcaption id="capPrj"></figcaption>
