@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joueurs décisifs</title>
+<style>
+/* Page /football-joueurs-decisifs/ — le joueur le plus décisif, saison par saison.
+   Jetons de couleur (--ground, --ink, --fr, --n1… --c3) : chrome.mjs, injectés par build.mjs.
+   Données : tools/joueurs/data.json, injecté entre les sentinelles DATA. */
+*{box-sizing:border-box}
+body{margin:0; background:var(--ground); color:var(--ink);
+  font-family:Calibri,"Carlito","Helvetica Neue",Arial,sans-serif; font-size:16px; line-height:1.55;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1160px; margin:0 auto; padding-inline:clamp(16px,4vw,40px); padding-block:clamp(22px,3.6vw,40px) 64px}
+h1,h2{margin:0; text-wrap:balance; letter-spacing:-.012em; font-family:"Newsreader",Georgia,"Times New Roman",serif; font-optical-sizing:auto}
+a{color:var(--fr)}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
+.kicker{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:13px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3)}
+button,input,select{font:inherit}
+:focus-visible{outline:3px solid var(--fr); outline-offset:2px}
+.jd{--fam1:var(--n1); --fam2:var(--n3); --fam3:var(--c1); --fam4:var(--n2);
+  --up:var(--c1); --up-soft:var(--fr-soft); --down:var(--c3); --down-soft:color-mix(in srgb, var(--c3) 14%, var(--surface))}
+:root[data-theme="dark"] .jd{--up:var(--fr); --down:var(--c3)}
+
+/* ---------- en-tête ---------- */
+.hero{display:flex; flex-direction:column; gap:16px; padding-bottom:24px}
+.hero h1{font-size:clamp(38px,6vw,58px); line-height:1.02; font-weight:700; max-width:900px}
+.hero h1 em{color:var(--fr)}
+.lead{margin:0; font-size:18px; color:var(--ink-2); max-width:720px}
+.pills{display:flex; flex-wrap:wrap; gap:8px}
+.pill{min-height:44px; padding:0 18px; border-radius:999px; border:1px solid var(--rule); background:var(--surface); color:var(--ink-2); cursor:pointer}
+.pill[aria-pressed="true"]{border-color:var(--ink); background:var(--ink); color:var(--surface); font-weight:700}
+.pill .sw{width:12px; height:12px; border-radius:3px; display:inline-block; margin-right:8px; vertical-align:-1px}
+.pill[aria-pressed="false"] .sw{opacity:.35}
+
+/* ---------- encarts ---------- */
+.encarts{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; margin-bottom:20px}
+.encart{border-radius:14px; padding:20px; display:flex; flex-direction:column; gap:6px; background:var(--surface); border:1px solid var(--rule-soft)}
+.encart.inv{background:var(--ink); color:var(--surface); border-color:var(--ink)}
+.encart .kicker{font-size:12px}
+.encart.inv .kicker,.encart.inv .txt{color:color-mix(in srgb, var(--surface) 72%, var(--ink))}
+.encart .nom{font-family:"Newsreader",Georgia,serif; font-size:26px; font-weight:700; line-height:1.15}
+.encart .chiffre{font-size:30px; font-weight:600}
+.encart.inv .chiffre{color:color-mix(in srgb, var(--fr) 70%, var(--surface))}
+.encart:not(.inv) .chiffre{color:var(--down)}
+.encart .txt{font-size:15px; color:var(--ink-2)}
+
+/* ---------- tableau ---------- */
+.panneau{background:var(--surface); border:1px solid var(--rule-soft); border-radius:16px; box-shadow:var(--shadow)}
+.filtres{padding:20px 24px; border-bottom:1px solid var(--rule-soft); display:flex; flex-direction:column; gap:16px}
+.champs{display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end}
+.champs label{display:flex; flex-direction:column; gap:6px; flex:1 1 200px; font-size:13px; color:var(--ink-2); font-weight:700}
+.champs input,.champs select{font-weight:400; font-size:16px; min-height:44px; padding:0 12px; border-radius:10px; border:1px solid var(--rule); background:var(--surface-2); color:var(--ink)}
+.compte-on{font-size:13px; font-weight:700; color:var(--ink-2); padding-right:4px; align-self:center}
+.row{display:grid; grid-template-columns:56px 80px minmax(0,1.3fr) 118px minmax(0,2fr) 64px;
+  grid-template-areas:"rang delta joueur bpp bar score"; gap:14px; align-items:center; padding:14px 24px; border-bottom:1px solid var(--rule-soft)}
+.row.head{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-2); border-bottom-color:var(--rule); padding-block:12px}
+.c-rang{grid-area:rang; font-family:"Newsreader",Georgia,serif; font-size:30px; font-weight:700; line-height:1}
+.row.head>span{font:inherit; font-size:12px; text-align:left}
+.row.head>.c-score{text-align:right}
+.c-delta{grid-area:delta; display:flex; flex-direction:column; gap:2px; align-items:flex-start}
+.badge{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:14px; font-weight:600; padding:3px 8px; border-radius:6px; background:var(--surface-2); color:var(--ink-2)}
+.badge.up{background:var(--up-soft); color:var(--up)}
+.badge.down{background:var(--down-soft); color:var(--down)}
+.sous{font-size:12px; color:var(--ink-3)}
+.c-joueur{grid-area:joueur; min-width:0; display:flex; flex-direction:column; gap:4px}
+.c-joueur .n{font-size:18px; font-weight:700}
+.c-joueur .club{font-size:14px; color:var(--ink-3)}
+.tags{display:flex; flex-wrap:wrap; gap:6px}
+.tag{font-size:12px; font-weight:700; padding:3px 8px; border-radius:999px; background:var(--surface-2); color:var(--ink-2)}
+.tag.up{background:var(--up-soft); color:var(--up)}
+.tag.down{background:var(--down-soft); color:var(--down)}
+.c-bpp{grid-area:bpp; font-size:15px; color:var(--ink-2)}
+.c-bar{grid-area:bar; display:flex; height:16px; border-radius:4px; overflow:hidden; background:var(--surface-2)}
+.c-bar span{height:100%}
+.c-score{grid-area:score; text-align:right; font-size:18px; font-weight:600}
+.vide,.plus{padding:28px 24px; text-align:center; color:var(--ink-2)}
+.plus button{min-height:44px; padding:0 22px; border-radius:999px; border:1px solid var(--ink); background:transparent; color:var(--ink); font-weight:700; cursor:pointer}
+.pied{padding:16px 24px; display:flex; flex-wrap:wrap; justify-content:space-between; gap:12px; font-size:14px; color:var(--ink-3); border-top:1px solid var(--rule-soft)}
+@media (max-width:760px){
+  .row{grid-template-columns:40px minmax(0,1fr) 60px; grid-template-areas:"rang joueur score" "delta bar bar" ". bpp bpp"; gap:8px 12px; padding:14px 16px}
+  .row.head{display:none}
+  .filtres{padding:16px}
+}
+
+/* ---------- méthode ---------- */
+.methode{margin-top:40px; display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px}
+.methode h2{font-size:28px; grid-column:1/-1}
+.bloc{background:var(--surface); border:1px solid var(--rule-soft); border-radius:12px; padding:20px}
+.bloc h3{margin:0 0 8px; font-size:16px}
+.bloc p,.bloc li{font-size:15px; color:var(--ink-2); margin:0}
+.bloc ul{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:4px}
+</style>
+</head>
+<body>
+<main class="wrap jd">
+  <header class="hero">
+    <div class="kicker">Football · Joueurs décisifs</div>
+    <h1>Marquer, c'est bien. <em>Marquer quand ça compte</em>, c'est mieux.</h1>
+    <p class="lead" id="lead">Chaque but et chaque passe décisive repesés selon le score au moment où ils tombent, la compétition et le tour. Le penalty ? Partagé : ¾ pour celui qui l'obtient, ¼ pour celui qui le tire. Ça fait de la peine à certains.</p>
+    <div class="pills" role="group" aria-label="Saison" id="saisons"></div>
+  </header>
+
+  <section class="encarts" aria-label="Les surprises de la saison">
+    <div class="encart inv"><div class="kicker">Le casse de la saison</div><div class="nom" id="casse-nom"></div><div class="chiffre mono" id="casse-chiffre"></div><div class="txt" id="casse-txt"></div></div>
+    <div class="encart"><div class="kicker">La douche froide</div><div class="nom" id="douche-nom"></div><div class="chiffre mono" id="douche-chiffre"></div><div class="txt" id="douche-txt"></div></div>
+  </section>
+
+  <section class="panneau" aria-label="Classement">
+    <div class="filtres">
+      <div class="champs">
+        <label>Chercher un joueur<input type="search" id="q" placeholder="Kane, Yamal, Dembélé…" autocomplete="off"></label>
+        <label>Championnat<select id="ligue"></select></label>
+        <label>Nationalité<select id="nat"></select></label>
+      </div>
+      <div class="pills" role="group" aria-label="Compétitions comptées"><span class="compte-on">Ce qu'on compte :</span><span id="familles" style="display:contents"></span></div>
+    </div>
+    <div class="row head" aria-hidden="true"><span class="c-rang">Rang</span><span class="c-delta">vs brut</span><span class="c-joueur">Joueur</span><span class="c-bpp">B (pén.) · P</span><span class="c-bar" style="background:none">D'où vient le score</span><span class="c-score">Score</span></div>
+    <div id="lignes"></div>
+    <div class="vide" id="vide" hidden>Personne. Même pas un penalty provoqué. Élargis les filtres.</div>
+    <div class="plus" id="plus" hidden><button type="button" id="voir">Voir le top 100</button></div>
+    <div class="pied"><span id="compte"></span><a href="#methode">Comment on calcule ↓</a></div>
+  </section>
+
+  <section class="methode" id="methode">
+    <h2>Comment on calcule</h2>
+    <div class="bloc"><h3>1 · L'action</h3><p>But = 1, passe décisive = 1. Penalty marqué : 0,75 pour celui qui le provoque, 0,25 pour le tireur (un penalty vaut environ 0,78 but attendu selon Opta). Penalty sifflé pour une main : rien pour personne.</p></div>
+    <div class="bloc"><h3>2 · Le score au moment de l'action</h3><p>Égaliser ou prendre l'avantage = 1 ; le but du 2-0 = 0,6 ; à +3 et plus = 0,1 ; mené de 3 = 0,2. ×1,5 si, sans ce but, le résultat final change.</p></div>
+    <div class="bloc"><h3>3 · La compétition</h3><p>Championnat du Top 5 = 100 ; Portugal, Pays-Bas = 85 ; Belgique, Turquie = 80 ; autres = 70. Ligue des champions 120, Ligue Europa 100, Conférence 80, Coupe du monde 120, Euro et Copa América 110. Coupe nationale = 80 % du championnat.</p></div>
+    <div class="bloc"><h3>4 · Le tour</h3><p>Premier tour de coupe 0,6 ; championnat et phase de groupes 1 ; huitième 1,25 ; quart 1,5 ; demie 1,75 ; finale 2.</p></div>
+    <div class="bloc"><h3>Qui est classé</h3><p>Les joueurs ayant joué au moins un match dans l'un des 14 championnats suivis (Top 5, Portugal, Pays-Bas, Belgique, Turquie, Écosse, Grèce, Danemark, Ukraine, Russie), avec toutes leurs compétitions de la saison, en club et en sélection.</p></div>
+    <div class="bloc"><h3>Ce qui manque encore</h3><ul><li>Coupe de France, Ligue des nations, qualifications et amicaux : absents de la source.</li><li>Coupes nationales et grands tournois incomplets (85 à 95 % des buts).</li><li>Temps additionnel compté comme la 90e.</li></ul><p style="margin-top:8px">Source : <a href="https://github.com/dcaribou/transfermarkt-datasets">transfermarkt-datasets</a> (données Transfermarkt).</p></div>
+  </section>
+</main>
+<script>
+/*DATA_START*/const JD = null;/*DATA_END*/
+(function(){
+  var FAM=[{k:'championnat',l:'Championnat',i:10,c:'var(--fam1)'},{k:'coupe',l:'Coupes nationales',i:11,c:'var(--fam2)'},
+           {k:'europe',l:'Europe & monde',i:12,c:'var(--fam3)'},{k:'selection',l:'Sélection',i:13,c:'var(--fam4)'}];
+  var TOUS_L='Tous les championnats', TOUS_N='Toutes nationalités';
+  var st={saison:'2025', q:'', ligue:TOUS_L, nat:TOUS_N, tout:false, fam:{championnat:1,coupe:1,europe:1,selection:1}};
+  var $=function(id){return document.getElementById(id);};
+  var fr1=function(n){return n.toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1});};
+  var nb=function(n){return n.toLocaleString('fr-FR');};
+  var rg=function(n){return n===1?'1er':n+'e';};
+  var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  var cles=Object.keys(JD.saisons).sort();
+
+  function pills(){
+    $('saisons').innerHTML=cles.map(function(k){return '<button type="button" class="pill" data-s="'+k+'" aria-pressed="'+(st.saison===k)+'">'+JD.saisons[k].label+'</button>';}).join('');
+    $('familles').innerHTML=FAM.map(function(f){return '<button type="button" class="pill" data-f="'+f.k+'" aria-pressed="'+(!!st.fam[f.k])+'"><span class="sw" style="background:'+f.c+'"></span>'+f.l+'</button>';}).join('');
+  }
+  function options(S){
+    var lig=[TOUS_L].concat(Array.from(new Set(S.rows.map(function(d){return d[5];}))).sort());
+    var nat=[TOUS_N].concat(Array.from(new Set(S.rows.map(function(d){return d[3];}))).sort(function(a,b){return a.localeCompare(b,'fr');}));
+    if(lig.indexOf(st.ligue)<0) st.ligue=TOUS_L; if(nat.indexOf(st.nat)<0) st.nat=TOUS_N;
+    $('ligue').innerHTML=lig.map(function(x){return '<option'+(x===st.ligue?' selected':'')+'>'+esc(x)+'</option>';}).join('');
+    $('nat').innerHTML=nat.map(function(x){return '<option'+(x===st.nat?' selected':'')+'>'+esc(x)+'</option>';}).join('');
+  }
+  function encarts(S){
+    var D=S.rows;
+    var c=D.filter(function(d){return d[0]<=30;}).sort(function(a,b){return (b[1]-b[0])-(a[1]-a[0]);})[0];
+    var fs=FAM.map(function(f){return {l:f.l.toLowerCase(),v:c[f.i]};}).sort(function(a,b){return b.v-a.v;});
+    $('casse-nom').textContent=c[2]; $('casse-chiffre').textContent=rg(c[1])+' → '+rg(c[0]);
+    $('casse-txt').textContent=rg(c[1])+' au comptage, '+rg(c[0])+' chez nous. Ce qui pèse : '+fs[0].l+' '+fr1(fs[0].v)+', '+fs[1].l+' '+fr1(fs[1].v)+'.';
+    var w=D.filter(function(d){return d[1]<=5;}).sort(function(a,b){return (b[0]-b[1])-(a[0]-a[1]);})[0];
+    var pp=w[14]?100*w[15]/w[14]:0, t=(w[6]+w[8])+' buts et passes, et pourtant.';
+    if(pp>=1.6*S.moyPlie) t=Math.round(pp)+' % de ses buts et passes tombent quand son équipe mène déjà de 2 buts ou plus ('+Math.round(S.moyPlie)+' % en moyenne).';
+    else if(w[7]>=5 && w[7]/w[6]>=.25) t=w[7]+' de ses '+w[6]+' buts sur penalty : ¼ de point chacun.';
+    $('douche-nom').textContent=w[2]; $('douche-chiffre').textContent=rg(w[1])+' → '+rg(w[0]); $('douche-txt').textContent=t;
+  }
+  function tags(d,rang,moy){
+    var t=[], delta=d[1]-rang, tot=d[10]+d[11]+d[12]+d[13];
+    if(delta>=8 && d[1]>=2*rang) t.push(['up','Les stats le snobent']);
+    if(delta<=-8 && rang>=2*d[1]) t.push(['down','Gonflé au comptage']);
+    if(tot>0 && d[13]>=3 && d[13]/tot>=.2) t.push(['down','Se transcende en sélection']);
+    if(tot>0 && d[12]>=5 && d[12]/tot>=.35) t.push(['up','Homme des soirs d’Europe']);
+    if(d[7]>=5 && d[7]/d[6]>=.25) t.push(['','Abonné au point de penalty']);
+    if(d[14]>=15 && 100*d[15]/d[14]>=2*moy) t.push(['','Spécialiste des matchs pliés']);
+    return t.slice(0,2);
+  }
+  function rendu(){
+    var S=JD.saisons[st.saison];
+    var all=S.rows.map(function(d){var p=FAM.map(function(f){return st.fam[f.k]?d[f.i]:0;});return {d:d,p:p,s:p.reduce(function(a,b){return a+b;},0)};})
+      .sort(function(a,b){return b.s-a.s;});
+    all.forEach(function(x,i){x.r=i+1;});
+    var max=Math.max.apply(null,all.map(function(x){return x.s;}).concat([1]));
+    var q=st.q.trim().toLowerCase(), filtre=!!q||st.ligue!==TOUS_L||st.nat!==TOUS_N;
+    var vu=all.filter(function(x){return (!q||x.d[2].toLowerCase().indexOf(q)>=0)&&(st.ligue===TOUS_L||x.d[5]===st.ligue)&&(st.nat===TOUS_N||x.d[3]===st.nat);});
+    var aff=(st.tout||filtre)?vu:vu.slice(0,25);
+    $('lignes').innerHTML=aff.map(function(x){
+      var d=x.d, dl=d[1]-x.r, cls=dl>0?'up':dl<0?'down':'';
+      var seg=FAM.map(function(f,i){return '<span title="'+f.l+' : '+fr1(x.p[i])+'" style="width:'+(x.p[i]/max*100).toFixed(2)+'%;background:'+f.c+'"></span>';}).join('');
+      var tg=tags(d,x.r,S.moyPlie).map(function(t){return '<span class="tag '+t[0]+'">'+t[1]+'</span>';}).join('');
+      return '<div class="row"><span class="c-rang">'+x.r+'</span>'
+        +'<span class="c-delta"><span class="badge '+cls+'">'+(dl>0?'▲ '+dl:dl<0?'▼ '+(-dl):'=')+'</span><span class="sous">brut '+rg(d[1])+'</span></span>'
+        +'<span class="c-joueur"><span class="n">'+esc(d[2])+'</span><span class="club">'+esc(d[4])+' · '+esc(d[3])+'</span>'+(tg?'<span class="tags">'+tg+'</span>':'')+'</span>'
+        +'<span class="c-bpp mono">'+d[6]+' ('+d[7]+') · '+d[8]+'</span>'
+        +'<span class="c-bar" role="img" aria-label="'+FAM.map(function(f,i){return f.l+' '+fr1(x.p[i]);}).join(', ')+'">'+seg+'</span>'
+        +'<span class="c-score mono">'+fr1(x.s)+'</span></div>';
+    }).join('');
+    $('vide').hidden=aff.length>0;
+    $('plus').hidden=st.tout||filtre||vu.length<=25;
+    $('compte').textContent=aff.length+' joueurs affichés sur '+nb(S.classes)+' classés · Brut = buts + passes décisives, toutes compétitions. Les étiquettes sont calculées, pas inventées.';
+  }
+  function saison(){
+    var S=JD.saisons[st.saison];
+    $('lead').textContent='On a repesé les '+nb(S.actions)+' actions décisives de la saison '+S.label+' : chaque but et chaque passe selon le score au moment où ils tombent, la compétition et le tour. Le penalty ? Partagé : ¾ pour celui qui l’obtient, ¼ pour celui qui le tire. Ça fait de la peine à certains.';
+    pills(); options(S); encarts(S); rendu();
+  }
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    if(b.dataset.s){ st.saison=b.dataset.s; st.tout=false; saison(); }
+    else if(b.dataset.f){ st.fam[b.dataset.f]=st.fam[b.dataset.f]?0:1; pills(); rendu(); }
+    else if(b.id==='voir'){ st.tout=true; rendu(); }
+  });
+  $('q').addEventListener('input',function(e){st.q=e.target.value; rendu();});
+  $('ligue').addEventListener('change',function(e){st.ligue=e.target.value; rendu();});
+  $('nat').addEventListener('change',function(e){st.nat=e.target.value; rendu();});
+  st.saison=cles[cles.length-1];
+  saison();
+})();
+</script>
+</body>
+</html>

@@ -5,6 +5,7 @@
  *             tools/tennis.src.html + tools/tennis/data.json (page tennis, relue chaque jour)
  *             tools/uefa/nations.json (chiffres des vignettes de l'accueil)
  *             tools/eco/page.html + tools/eco/data.json (page économie, relue chaque lundi)
+ *             tools/joueurs/page.html + tools/joueurs/data.json (joueurs décisifs, saisons closes)
  * Sortie    : public/  — exactement ce que Netlify publie, sans build côté Netlify.
  *
  * Le site n'a volontairement aucune étape de build distante : ce script tourne ici,
@@ -18,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { nav, navCSS, FAVICON, FAVICON_SVG, MANIFEST, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF } from './chrome.mjs';
 import { buildEco } from './eco/page.mjs';
+import { buildJoueurs } from './joueurs/page.mjs';
 import { nation } from './tennis/nations.mjs';
 import { compteParcours } from './tennis/wiki.mjs';
 import { PAGES, RELAIS, DOMAINE, url, abs, fichier } from './site.mjs';
@@ -525,6 +527,16 @@ body{margin:0;background:var(--ground);color:var(--ink);font-family:Carlito,Cali
 .av .tba i{width:8px;height:8px;border-radius:50%;background:var(--n4);animation:pl 1.6s ease-in-out infinite}
 @keyframes pl{50%{opacity:.25}}
 @media (prefers-reduced-motion:reduce){.av .tba i{animation:none}}
+.av .ap{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-top:22px}
+.av .cta{display:inline-flex;align-items:center;gap:12px;min-height:48px;padding:0 22px 0 18px;border-radius:999px;background:var(--ink);color:var(--surface);
+  text-decoration:none;font-weight:700;font-size:16px;box-shadow:var(--shadow);transition:background .15s,transform .15s}
+.av .cta .k{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  background:var(--n4);color:#0F141D;border-radius:999px;padding:3px 8px}
+.av .cta .f{transition:transform .15s}
+.av .cta:hover{background:var(--fr)}.av .cta:hover .f{transform:translateX(3px)}
+.av .cta:focus-visible{outline:3px solid var(--fr);outline-offset:3px}
+.av .ap small{font-size:14px;color:var(--ink-3)}
+@media (prefers-reduced-motion:reduce){.av .cta,.av .cta .f{transition:none}}
 </style>
 </head>
 <body>
@@ -533,7 +545,11 @@ ${nav(p.key)}
   <div class="eb">${p.rubrique.join(' · ')}</div>
   <h1>${p.aVenir.h1}</h1>
   <p>${p.aVenir.texte}</p>
-  <div class="tba"><i></i>À venir</div>
+  <div class="tba"><i></i>À venir</div>${p.aVenir.apercu ? `
+  <div class="ap">
+    <a class="cta" href="${p.aVenir.apercu}"><span class="k">WIP</span>Preview (travail en cours)<span class="f" aria-hidden="true">→</span></a>
+    <small>Le modèle tourne déjà sur trois saisons. Données encore incomplètes : les classements vont bouger.</small>
+  </div>` : ''}
 </main>
 ${THEME_JS}
 ${ANALYTICS}
@@ -576,6 +592,8 @@ const uefa = buildUefa();
 const tennis = buildTennis();
 const eco = buildEco('france');
 const b27 = buildEco('b27');
+const APERCU_JOUEURS = PAGES.find(p => p.key === 'joueurs').aVenir?.apercu;
+const joueurs = APERCU_JOUEURS ? buildJoueurs({ apercu: APERCU_JOUEURS }) : null;
 const today = new Date().toISOString().slice(0, 10);
 
 /* `lastmod` d'une page : la date du jour si son contenu a change, sinon celle
@@ -653,6 +671,7 @@ const sizes = {
   [fichier(url('tennis'))]: write(fichier(url('tennis')), tennis.html),
   [fichier(url('eco'))]: write(fichier(url('eco')), eco.html),
   [fichier(url('b27'))]: write(fichier(url('b27')), b27.html),
+  ...(joueurs ? { [fichier(APERCU_JOUEURS)]: write(fichier(APERCU_JOUEURS), joueurs.html) } : {}),
   ...Object.fromEntries(PAGES.filter(p => p.aVenir).map(p => [fichier(p.url), write(fichier(p.url), pageAVenir(p))])),
   ...Object.fromEntries(Object.entries(RELAIS).map(([de, vers]) => [fichier(de), write(fichier(de), relais(vers))])),
   '404.html': write('404.html', NOTFOUND),

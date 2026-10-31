@@ -29,12 +29,16 @@
    page d'attente (titre, deux lignes, « à venir »), marquée « bientôt » dans le
    menu, en noindex et hors du sitemap : Google ne la voit pas tant qu'elle est
    vide. Le jour où la vraie page existe, on retire `aVenir` et on la branche
-   dans tools/build.mjs. */
+   dans tools/build.mjs.
+   `aVenir.apercu` : adresse d'une préversion (travail en cours), en noindex,
+   hors menu et hors sitemap, annoncée par un bouton sur la page d'attente. Le
+   jour où la vraie page sort, l'adresse de l'aperçu part dans RELAIS. */
 export const PAGES = [
   { key: 'uefa',   url: '/football-coefficient-uefa/',   titre: 'Coefficient UEFA',         rubrique: ['Football'] },
   { key: 'joueurs', url: '/football-joueurs-decisifs/',  titre: 'Joueurs décisifs',         rubrique: ['Football'],
     aVenir: { h1: 'Les joueurs les plus décisifs',
-      texte: "Un but à la 68e qui débloque le 2-1 en finale de Ligue des champions ne vaut pas une passe décisive dans un 6-0 au premier tour d'une coupe nationale. Cette page classera les joueurs, saison par saison, selon ce que leurs actions ont réellement changé au résultat — et selon l'enjeu du match." } },
+      texte: "Un but à la 68e qui débloque le 2-1 en finale de Ligue des champions ne vaut pas une passe décisive dans un 6-0 au premier tour d'une coupe nationale. Cette page classera les joueurs, saison par saison, selon ce que leurs actions ont réellement changé au résultat — et selon l'enjeu du match.",
+      apercu: '/football-joueurs-decisifs-wip/' } },
   { key: 'nantes', url: '/football-fc-nantes-histoire/', titre: 'FC Nantes',                rubrique: ['Football'],
     aVenir: { h1: 'Le FC Nantes, saison par saison',
       texte: "Classements, coupes, parcours européens, meilleurs buteurs et passeurs, entraîneurs : toute l'histoire du club, décortiquée. Les grandes ères, les ruptures, et ce que les chiffres en disent." } },
@@ -80,6 +84,12 @@ export const fichier = u => u.replace(/^\//, '') + 'index.html';
     if (vues.has(p.url)) throw new Error(`registre : adresse en double « ${p.url} »`);
     vues.add(p.url);
     if (!p.rubrique?.length) throw new Error(`registre : « ${p.key} » sans rubrique`);
+    const ap = p.aVenir?.apercu;
+    if (ap) {
+      if (!/^\/[a-z0-9-]+\/$/.test(ap) || !ap.startsWith(p.url.slice(0, -1))) throw new Error(`registre : aperçu mal formé « ${ap} »`);
+      if (vues.has(ap)) throw new Error(`registre : adresse en double « ${ap} »`);
+      vues.add(ap);
+    }
   }
   for (const [de, vers] of Object.entries(RELAIS)) {
     if (vues.has(de)) throw new Error(`registre : « ${de} » est à la fois une page et un relais`);
