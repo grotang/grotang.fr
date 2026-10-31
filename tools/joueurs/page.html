@@ -19,9 +19,11 @@ a{color:var(--fr)}
 .kicker{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3)}
 button,input,select{font:inherit}
 :focus-visible{outline:3px solid var(--fr); outline-offset:2px}
-.jd{--fam1:var(--n1); --fam2:color-mix(in srgb, var(--n1) 42%, var(--surface)); --fam3:var(--c1); --fam4:var(--n2);
+.jd{--dom1:#2a78d6; --dom2:#8CBBF3; --c1x:#3B2A8C; --c3x:#6A57C8; --c4x:#A497E6; --uscx:#D3CCF3; --fifa:#C9A227;
+  --sel1:#eb6834; --sel2:#F29A6E; --sel3:#F6BC9E; --sel4:#FADDCD;
   --up:var(--c1); --up-soft:var(--fr-soft); --down:var(--c3); --down-soft:color-mix(in srgb, var(--c3) 14%, var(--surface))}
-:root[data-theme="dark"] .jd{--up:var(--fr); --down:var(--c3)}
+:root[data-theme="dark"] .jd{--up:var(--fr); --down:var(--c3); --dom1:#3987e5; --dom2:#4C79B0; --c1x:#8A78EE; --c3x:#6F5DD0; --c4x:#54489C; --uscx:#3F3872; --fifa:#C9A227;
+  --sel1:#d95926; --sel2:#A9502C; --sel3:#7A3F27; --sel4:#4E2C20}
 
 /* ---------- en-tête ---------- */
 .hero{display:flex; flex-direction:column; gap:12px; padding-bottom:18px}
@@ -44,8 +46,14 @@ button,input,select{font:inherit}
 .grp{display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:5px; border-radius:999px; background:var(--surface-2)}
 .grp .tete{min-height:30px; padding:0 12px; border-radius:999px; border:0; cursor:pointer; font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#fff}
 .grp .tete[aria-pressed="false"]{opacity:.45}
-.grp.club .tete{background:var(--fam1)} .grp.sel .tete{background:var(--fam4); color:#0F141D}
+.grp.dom .tete{background:var(--dom1)} .grp.uefa .tete{background:var(--c1x)} .grp.fifa .tete{background:var(--fifa); color:#0F141D} .grp.sel .tete{background:var(--sel1); color:#0F141D}
+.volume{display:flex; gap:2px; height:22px; border-radius:6px; overflow:hidden}
+.volume span{height:100%; display:flex; align-items:center; padding-left:6px; font-size:10.5px; font-weight:700; white-space:nowrap; overflow:hidden; min-width:3px; transition:opacity .15s}
+.volume span.off{opacity:.18}
+.volume-t{font-size:11.5px; color:var(--ink-3)}
 .grp .pill{min-height:30px; padding:0 12px; font-size:12.5px}
+.pill.bientot{cursor:default; border-style:dashed; background:transparent; color:var(--ink-3)}
+.pill.bientot em{font-style:normal; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10px; text-transform:uppercase; letter-spacing:.06em; margin-left:4px}
 .compte-on{font-size:12px; font-weight:700; color:var(--ink-2); padding-right:4px; align-self:center}
 .row{display:grid; grid-template-columns:36px 62px minmax(0,1.4fr) 96px minmax(0,2fr) 52px;
   grid-template-areas:"rang delta joueur bpp bar score"; gap:10px; align-items:center; padding:6px 18px; border-bottom:1px solid var(--rule-soft)}
@@ -67,7 +75,7 @@ button,input,select{font:inherit}
 .tag.up{background:var(--up-soft); color:var(--up)}
 .tag.down{background:var(--down-soft); color:var(--down)}
 .c-bpp{grid-area:bpp; font-size:12.5px; color:var(--ink-2)}
-.c-bar{grid-area:bar; display:flex; height:10px; border-radius:4px; overflow:hidden; background:var(--surface-2)}
+.c-bar{grid-area:bar; display:flex; gap:2px; height:10px; border-radius:4px; overflow:hidden; background:var(--surface-2)}
 .c-bar span{height:100%}
 .c-score{grid-area:score; text-align:right; font-size:14px; font-weight:600}
 .vide,.plus{padding:16px 18px; text-align:center; color:var(--ink-2)}
@@ -87,7 +95,7 @@ button,input,select{font:inherit}
   <header class="hero">
     <div class="kicker">Football · Joueurs décisifs</div>
     <h1>Marquer, c'est bien.<br><em>Être décisif quand ça compte</em>, c'est mieux.</h1>
-    <p class="lead" id="lead">Chaque but et chaque passe décisive repesés selon le score au moment où ils tombent, la compétition et le tour. Le penalty ? Partagé : ¾ pour celui qui l'obtient, ¼ pour celui qui le tire. Ça fait de la peine à certains.</p>
+    <p class="lead" id="lead">Chaque but et chaque passe décisive repesés selon le score au moment où ils tombent, la compétition et le tour. Le penalty ? Partagé : ¾ pour celui qui l'obtient, ¼ pour celui qui le marque. Ça fait de la peine à certains.</p>
     <div class="pills" role="group" aria-label="Saison" id="saisons"></div>
   </header>
 
@@ -98,6 +106,7 @@ button,input,select{font:inherit}
         <label>Championnat<select id="ligue"></select></label>
         <label>Nationalité<select id="nat"></select></label>
       </div>
+      <div><div class="volume-t" id="volume-t"></div><div class="volume" id="volume" role="img"></div></div>
       <div class="groupes" id="familles" aria-label="Compétitions comptées"></div>
     </div>
     <div class="row head" aria-hidden="true"><span class="c-rang">Rang</span><span class="c-delta">vs brut</span><span class="c-joueur">Joueur</span><span class="c-bpp">B (pén.) · P</span><span class="c-bar" style="background:none">D'où vient le score</span><span class="c-score">Score</span></div>
@@ -111,11 +120,20 @@ button,input,select{font:inherit}
 <script>
 /*DATA_START*/const JD = null;/*DATA_END*/
 (function(){
-  /* deux segments : CLUB (bleus) et SÉLECTION (orangés) ; chaque sous-segment a sa nuance */
-  var FAM=[{k:'championnat',g:'club',l:'Championnat',i:10,c:'var(--fam1)'},{k:'coupe',g:'club',l:'Coupes nationales',i:11,c:'var(--fam2)'},
-           {k:'europe',g:'club',l:'Europe & monde',i:12,c:'var(--fam3)'},{k:'selection',g:'sel',l:'Grands tournois',i:13,c:'var(--fam4)'}];
+  /* quatre familles : domestique (bleus), UEFA (violets), FIFA (or), sélection (orangés) ; un sous-segment = une nuance */
+  var FAM=[{k:'championnat',g:'dom',l:'Championnat',i:10,c:'var(--dom1)',t:'#fff'},{k:'coupe',g:'dom',l:'Coupe nationale',i:11,c:'var(--dom2)',t:'#0F141D'},
+           {k:'c1',g:'uefa',l:'C1',n:'Ligue des champions',i:12,c:'var(--c1x)',t:'#fff'},{k:'c3',g:'uefa',l:'C3',n:'Ligue Europa',i:13,c:'var(--c3x)',t:'#fff'},
+           {k:'c4',g:'uefa',l:'C4',n:'Conférence',i:14,c:'var(--c4x)',t:'#0F141D'},{k:'usc',g:'uefa',l:'Supercoupe',n:'Supercoupe UEFA',i:15,c:'var(--uscx)',t:'#0F141D'},
+           {k:'fifa',g:'fifa',l:'CdM des clubs & Intercontinentale',i:16,c:'var(--fifa)',t:'#0F141D'},
+           {k:'selection',g:'sel',l:'Grands tournois',i:17,c:'var(--sel1)',t:'#0F141D'},
+           /* pas encore dans les données (coef. prévus : qualifications 90, Ligue des nations 100, amicaux 50) */
+           {k:'qualif',g:'sel',l:'Qualifications',i:null,c:'var(--sel2)'},{k:'ldn',g:'sel',l:'Ligue des nations',i:null,c:'var(--sel3)'},
+           {k:'amicaux',g:'sel',l:'Amicaux',i:null,c:'var(--sel4)'}];
+  var GRP=[['dom','Domestique'],['uefa','UEFA'],['fifa','FIFA'],['sel','Sélection']];
+  var nomG=function(g){return GRP.filter(function(x){return x[0]===g;})[0][1];};
+  var DISPO=FAM.filter(function(f){return f.i!==null;});
   var TOUS_L='Tous les championnats', TOUS_N='Toutes nationalités';
-  var st={saison:'2025', q:'', ligue:TOUS_L, nat:TOUS_N, tout:false, fam:{championnat:1,coupe:1,europe:1,selection:1}};
+  var st={saison:'2025', q:'', ligue:TOUS_L, nat:TOUS_N, tout:false, fam:{championnat:1,coupe:1,c1:1,c3:1,c4:1,usc:1,fifa:1,selection:1}};
   var $=function(id){return document.getElementById(id);};
   var fr1=function(n){return n.toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1});};
   var nb=function(n){return n.toLocaleString('fr-FR');};
@@ -125,10 +143,11 @@ button,input,select{font:inherit}
 
   function pills(){
     $('saisons').innerHTML=cles.map(function(k){return '<button type="button" class="pill" data-s="'+k+'" aria-pressed="'+(st.saison===k)+'">'+JD.saisons[k].label+'</button>';}).join('');
-    $('familles').innerHTML=[['club','Club'],['sel','Sélection']].map(function(g){
-      var fs=FAM.filter(function(f){return f.g===g[0];}), tout=fs.every(function(f){return st.fam[f.k];});
+    $('familles').innerHTML=GRP.map(function(g){
+      var fs=FAM.filter(function(f){return f.g===g[0];}), tout=fs.every(function(f){return f.i===null||st.fam[f.k];});
       return '<div class="grp '+g[0]+'" role="group" aria-label="'+g[1]+'"><button type="button" class="tete" data-g="'+g[0]+'" aria-pressed="'+tout+'">'+g[1]+'</button>'
-        +fs.map(function(f){return '<button type="button" class="pill" data-f="'+f.k+'" aria-pressed="'+(!!st.fam[f.k])+'"><span class="sw" style="background:'+f.c+'"></span>'+f.l+'</button>';}).join('')+'</div>';
+        +fs.map(function(f){ if(f.i===null) return '<button type="button" class="pill bientot" disabled title="Pas encore dans les données"><span class="sw" style="background:'+f.c+'"></span>'+f.l+' <em>bientôt</em></button>';
+          return '<button type="button" class="pill" data-f="'+f.k+'" aria-pressed="'+(!!st.fam[f.k])+'"><span class="sw" style="background:'+f.c+'"></span>'+f.l+'</button>';}).join('')+'</div>';
     }).join('');
   }
   function options(S){
@@ -139,18 +158,25 @@ button,input,select{font:inherit}
     $('nat').innerHTML=nat.map(function(x){return '<option'+(x===st.nat?' selected':'')+'>'+esc(x)+'</option>';}).join('');
   }
   function tags(d,rang,moy){
-    var t=[], delta=d[1]-rang, tot=d[10]+d[11]+d[12]+d[13];
+    var t=[], delta=d[1]-rang, tot=d.slice(10,18).reduce(function(a,b){return a+b;},0), uefa=d[12]+d[13]+d[14]+d[15];
     if(delta>=8 && d[1]>=2*rang) t.push(['up','Les stats le snobent']);
     if(delta<=-8 && rang>=2*d[1]) t.push(['down','Gonflé au comptage']);
-    if(tot>0 && d[13]>=3 && d[13]/tot>=.2) t.push(['down','Se transcende en sélection']);
-    if(tot>0 && d[12]>=5 && d[12]/tot>=.35) t.push(['up','Homme des soirs d’Europe']);
+    if(tot>0 && d[17]>=3 && d[17]/tot>=.2) t.push(['down','Se transcende en sélection']);
+    if(tot>0 && uefa>=5 && uefa/tot>=.35) t.push(['up','Homme des soirs d\u2019Europe']);
     if(d[7]>=5 && d[7]/d[6]>=.25) t.push(['','Abonné au point de penalty']);
-    if(d[14]>=15 && 100*d[15]/d[14]>=2*moy) t.push(['','Spécialiste des matchs pliés']);
+    if(d[18]>=15 && 100*d[19]/d[18]>=2*moy) t.push(['','Spécialiste des matchs pliés']);
     return t.slice(0,2);
   }
+  function volume(S){
+    var t=DISPO.map(function(f){return S.rows.reduce(function(a,d){return a+d[f.i];},0);}), tot=t.reduce(function(a,b){return a+b;},0)||1;
+    $('volume-t').textContent='Poids de chaque compétition dans les points du top 100';
+    $('volume').setAttribute('aria-label',DISPO.map(function(f,i){return f.l+' '+Math.round(100*t[i]/tot)+' %';}).join(', '));
+    $('volume').innerHTML=DISPO.map(function(f,i){var pc=100*t[i]/tot; if(pc<=0) return '';
+      return '<span class="'+(st.fam[f.k]?'':'off')+'" title="'+nomG(f.g)+' · '+(f.n||f.l)+' : '+fr1(pc)+' %" style="width:'+pc.toFixed(2)+'%;background:'+f.c+';color:'+f.t+'">'+(pc>=6?f.l+' '+Math.round(pc)+' %':'')+'</span>';}).join('');
+  }
   function rendu(){
-    var S=JD.saisons[st.saison];
-    var all=S.rows.map(function(d){var p=FAM.map(function(f){return st.fam[f.k]?d[f.i]:0;});return {d:d,p:p,s:p.reduce(function(a,b){return a+b;},0)};})
+    var S=JD.saisons[st.saison]; volume(S);
+    var all=S.rows.map(function(d){var p=DISPO.map(function(f){return st.fam[f.k]?d[f.i]:0;});return {d:d,p:p,s:p.reduce(function(a,b){return a+b;},0)};})
       .sort(function(a,b){return b.s-a.s;});
     all.forEach(function(x,i){x.r=i+1;});
     var max=Math.max.apply(null,all.map(function(x){return x.s;}).concat([1]));
@@ -159,13 +185,13 @@ button,input,select{font:inherit}
     var aff=(st.tout||filtre)?vu:vu.slice(0,25);
     $('lignes').innerHTML=aff.map(function(x){
       var d=x.d, dl=d[1]-x.r, cls=dl>0?'up':dl<0?'down':'';
-      var seg=FAM.map(function(f,i){return '<span title="'+(f.g==='club'?'Club':'Sélection')+' · '+f.l+' : '+fr1(x.p[i])+'" style="width:'+(x.p[i]/max*100).toFixed(2)+'%;background:'+f.c+(f.g==='sel'&&x.p[i]>0?';box-shadow:inset 2px 0 0 var(--surface)':'')+'"></span>';}).join('');
+      var seg=DISPO.map(function(f,i){ if(!(x.p[i]>0)) return ''; return '<span title="'+nomG(f.g)+' · '+(f.n||f.l)+' : '+fr1(x.p[i])+'" style="width:'+(x.p[i]/max*100).toFixed(2)+'%;background:'+f.c+'"></span>';}).join('');
       var tg=tags(d,x.r,S.moyPlie).map(function(t){return '<span class="tag '+t[0]+'">'+t[1]+'</span>';}).join('');
       return '<div class="row"><span class="c-rang">'+x.r+'</span>'
         +'<span class="c-delta"><span class="badge '+cls+'">'+(dl>0?'▲ '+dl:dl<0?'▼ '+(-dl):'=')+'</span><span class="sous">brut '+rg(d[1])+'</span></span>'
         +'<span class="c-joueur"><span class="n">'+esc(d[2])+'</span><span class="club">'+esc(d[4])+' · '+esc(d[3])+'</span>'+(tg?'<span class="tags">'+tg+'</span>':'')+'</span>'
         +'<span class="c-bpp mono">'+d[6]+' ('+d[7]+') · '+d[8]+'</span>'
-        +'<span class="c-bar" role="img" aria-label="'+FAM.map(function(f,i){return f.l+' '+fr1(x.p[i]);}).join(', ')+'">'+seg+'</span>'
+        +'<span class="c-bar" role="img" aria-label="'+DISPO.filter(function(f,i){return x.p[i]>0;}).map(function(f){return (f.n||f.l)+' '+fr1(x.p[DISPO.indexOf(f)]);}).join(', ')+'">'+seg+'</span>'
         +'<span class="c-score mono">'+fr1(x.s)+'</span></div>';
     }).join('');
     $('vide').hidden=aff.length>0;
@@ -174,13 +200,13 @@ button,input,select{font:inherit}
   }
   function saison(){
     var S=JD.saisons[st.saison];
-    $('lead').textContent='On a repesé les '+nb(S.actions)+' actions décisives de la saison '+S.label+' : chaque but et chaque passe selon le score au moment où ils tombent, la compétition et le tour. Le penalty ? Partagé : ¾ pour celui qui l’obtient, ¼ pour celui qui le tire. Ça fait de la peine à certains.';
+    $('lead').textContent='On a repesé les '+nb(S.actions)+' actions décisives de la saison '+S.label+' : chaque but et chaque passe selon le score au moment où ils tombent, la compétition et le tour. Le penalty ? Partagé : ¾ pour celui qui l’obtient, ¼ pour celui qui le marque. Ça fait de la peine à certains.';
     pills(); options(S); rendu();
   }
   document.addEventListener('click',function(e){
     var b=e.target.closest('button'); if(!b) return;
     if(b.dataset.s){ st.saison=b.dataset.s; st.tout=false; saison(); }
-    else if(b.dataset.g){ var fs=FAM.filter(function(f){return f.g===b.dataset.g;}), tout=fs.every(function(f){return st.fam[f.k];});
+    else if(b.dataset.g){ var fs=FAM.filter(function(f){return f.g===b.dataset.g && f.i!==null;}), tout=fs.every(function(f){return st.fam[f.k];});
       fs.forEach(function(f){st.fam[f.k]=tout?0:1;}); pills(); rendu(); }
     else if(b.dataset.f){ st.fam[b.dataset.f]=st.fam[b.dataset.f]?0:1; pills(); rendu(); }
     else if(b.id==='voir'){ st.tout=true; rendu(); }
