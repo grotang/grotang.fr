@@ -88,8 +88,8 @@ ${navCSS}
   if (apercu) {
     const BANDEAU = `<div class="wip" role="note"><span class="k">Preview · travail en cours</span><span>Il manque encore la Coupe de France, la Ligue des nations, les qualifications et les amicaux, ainsi que les saisons 2025-26 et 2026-27. Les classements vont bouger.</span><a href="${abs(KEY)}">← Retour</a></div>`;
     out = out.replace('<main class="wrap jd">', () => '<main class="wrap jd">\n' + BANDEAU);
-    out = out.replace('</style>', () => `.wip{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-bottom:22px;padding:12px 16px;border:1px dashed var(--ink-3);border-radius:12px;font-size:15px;color:var(--ink-2);background:var(--surface)}
-.wip .k{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;background:var(--n4);color:#0F141D;border-radius:999px;padding:3px 9px}
+    out = out.replace('</style>', () => `.wip{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-bottom:16px;padding:8px 14px;border:1px dashed var(--ink-3);border-radius:10px;font-size:13px;color:var(--ink-2);background:var(--surface)}
+.wip .k{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;background:var(--n4);color:#0F141D;border-radius:999px;padding:2px 8px;font-size:10.5px}
 .wip a{margin-left:auto;font-weight:700}
 </style>`);
     if (!out.includes('class="wip"') || !out.includes('noindex')) throw new Error('joueurs décisifs : bandeau aperçu non injecté');
