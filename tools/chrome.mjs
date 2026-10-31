@@ -14,6 +14,8 @@
    premier texte (≈ 2,5 s perdues sur mobile selon PageSpeed). Les trois fichiers
    du premier écran sont préchargés ; les autres (latin étendu, chasse fixe) ne
    viennent que si un caractère les demande. */
+import { arbre } from './site.mjs';
+
 export const FONTS = `<link rel="preload" href="/fonts/carlito-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/carlito-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/newsreader-latin-opsz-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -104,6 +106,12 @@ export const THEME_BOOT = `<script>(function(){try{if(localStorage.getItem('grot
    l'autre. L'évènement permet aux pages qui dessinent en JS (graphiques UEFA,
    carte de chaleur tennis) de se redessiner aux nouvelles couleurs. */
 export const THEME_JS = `<script>(function(){
+  var dd=document.querySelectorAll('.gn-dd');
+  dd.forEach(function(d){d.addEventListener('toggle',function(){ if(d.open) dd.forEach(function(o){ if(o!==d) o.open=false; }); });});
+  document.addEventListener('click',function(e){ dd.forEach(function(d){ if(d.open && !d.contains(e.target)) d.open=false; }); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') dd.forEach(function(d){ d.open=false; }); });
+})();
+(function(){
   var root=document.documentElement, btn=document.getElementById('gn-theme');
   var store={get:function(){try{return localStorage.getItem('grotang-theme');}catch(e){return null;}},
              set:function(v){try{localStorage.setItem('grotang-theme',v);}catch(e){}}};
@@ -142,8 +150,24 @@ export const navCSS = `
 .gnav nav a{font-size:12.5px;font-weight:600;color:var(--ink-3);
   padding:5px 10px;border-radius:6px;line-height:1.2;white-space:nowrap}
 .gnav nav a:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 7%,transparent)}
-.gnav nav a[aria-current="page"]{color:color-mix(in srgb,var(--fr) 70%,var(--ink));
+.gnav nav a[aria-current="page"],.gn-dd summary.gn-ici{color:color-mix(in srgb,var(--fr) 70%,var(--ink));
   background:color-mix(in srgb,var(--fr) 12%,transparent)}
+/* menu déroulant d'une rubrique */
+.gn-dd{position:relative}
+.gn-dd summary{list-style:none;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--ink-3);
+  padding:5px 10px;border-radius:6px;line-height:1.2;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.gn-dd summary::-webkit-details-marker{display:none}
+.gn-dd summary::after{content:"";width:5px;height:5px;border:solid currentColor;border-width:0 1.5px 1.5px 0;
+  transform:translateY(-2px) rotate(45deg);transition:transform .15s}
+.gn-dd[open] summary::after{transform:translateY(1px) rotate(-135deg)}
+.gn-dd summary:hover,.gn-dd[open] summary{color:var(--ink);background:color-mix(in srgb,var(--ink) 7%,transparent)}
+.gn-dd summary:focus-visible{outline:2px solid var(--fr);outline-offset:2px}
+.gn-panel{position:absolute;right:0;top:calc(100% + 6px);min-width:190px;z-index:60;display:flex;flex-direction:column;gap:1px;
+  padding:6px;background:var(--surface);border:1px solid var(--rule);border-radius:9px;box-shadow:var(--shadow)}
+.gnav .gn-panel a{display:block}
+.gn-grp{display:flex;flex-direction:column;gap:1px;padding-top:4px}
+.gn-grp + .gn-grp,.gn-panel > a + .gn-grp{border-top:1px solid var(--rule-soft);margin-top:4px}
+.gn-grp-t{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:4px 10px 2px}
 .gn-theme{display:inline-flex;align-items:center;gap:7px;cursor:pointer;flex:none;
   appearance:none;border:1px solid var(--rule);background:var(--surface-2);color:var(--ink-3);
   font:inherit;font-size:12px;font-weight:600;border-radius:6px;padding:4px 10px;line-height:1.3}
@@ -158,22 +182,40 @@ export const navCSS = `
   .gnav nav{margin-left:0;width:100%;justify-content:flex-start;order:3}
   .gn-coq{margin-left:auto}
   .gn-theme{margin-left:0;min-height:34px}
-  .gnav nav a{padding:9px 12px}}
+  .gnav nav a,.gn-dd summary{padding:9px 12px}
+  /* sur téléphone, le panneau s'accroche à toute la largeur de la barre des
+     rubriques : accroché à sa rubrique, celui de droite sortait de l'écran */
+  .gnav nav{position:relative}
+  .gn-dd{position:static}
+  .gn-panel{left:0;right:0}}
 `;
 
-export const PAGES = [
-  { href: '/uefa/',   label: 'Coefficient UEFA', key: 'uefa' },
-  { href: '/tennis/', label: 'GC au tennis', key: 'tennis' },
-  { href: '/economie/', label: 'Argent public', key: 'eco' },
-];
 
 /* Le coq, dessiné pour le site (pas un logo existant) : queue dressée aux
    trois couleurs, crête rouge. Décoratif, donc caché aux lecteurs d'écran. */
 const COQ_SVG = `<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"> <path d="M27 38 C 18 34, 12 22, 16 6 C 19 18, 24 26, 31 31 Z" fill="#d63a3a"/> <path d="M27 40 C 16 38, 8 28, 7 13 C 12 24, 19 31, 30 34 Z" fill="#f4f6f9" stroke="#b9c3d0" stroke-width=".7"/> <path d="M27 42 C 15 43, 6 36, 3 24 C 9 32, 17 37, 29 37 Z" fill="#2a4fa8"/> <path d="M26 36 C 27 29, 33 27, 38 28 C 40 24, 41 18, 42 13 C 43 9, 49 8, 51 12 C 52 15, 50 18, 49 21 C 49 24, 52 28, 52 33 C 52 42, 46 49, 38 50 C 30 51, 25 45, 26 36 Z" fill="#2a4fa8"/> <path d="M41 16 C 46 18, 48 24, 48 29 C 45 27, 42 26, 39 27 C 40 23, 40 19, 41 16 Z" fill="#3d63c4"/> <path d="M29 38 C 33 33, 42 32, 47 37 C 43 38, 41 43, 35 45 C 31 44, 28 42, 29 38 Z" fill="#f4f6f9"/> <path d="M33 41 C 37 39, 41 38, 44 38" stroke="#2a4fa8" stroke-width=".8" fill="none" opacity=".5"/> <path d="M42 11 C 40 6, 44 3, 45 7 C 45 2, 50 2, 49 7 C 51 3, 56 5, 53 10 C 51 12, 46 11, 42 11 Z" fill="#d63a3a"/> <path d="M51 12.5 L 57.5 14.5 L 51 16 Z" fill="#f2b705"/> <path d="M50 17 C 52.5 18, 52.5 22.5, 50 23.5 C 48 22.5, 48 19, 50 17 Z" fill="#d63a3a"/> <circle cx="47.6" cy="12.6" r="1.3" fill="#fff"/><circle cx="47.9" cy="12.6" r=".65" fill="#111"/> <path d="M36 50 L 35.5 57 L 32 59.5 M 35.5 57 L 38.5 59.5 M43 48.5 L 44 56.5 L 41 59.5 M 44 56.5 L 47.5 58.5" stroke="#f2b705" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/> </svg>`;
 
+/* Le menu est tiré du registre (tools/site.mjs) : une rubrique d'une seule page
+   est un lien direct, une rubrique de plusieurs pages un menu déroulant. Le
+   déroulant est un <details> : il s'ouvre au clic ou au toucher, sans script ;
+   le petit script de THEME_JS ne fait que refermer les autres et fermer au clic
+   ailleurs ou sur Échap. */
+const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+const lien = (p, current, label = p.titre) =>
+  `<a href="${p.url}"${p.key === current ? ' aria-current="page"' : ''}>${esc(label)}</a>`;
+const toutes = r => r.pages.concat(...r.sous.map(toutes));
+function rubrique(r, current) {
+  const pp = toutes(r);
+  if (pp.length === 1) return lien(pp[0], current, r.nom).replace('<a ', `<a title="${esc(pp[0].titre)}" `);
+  const ici = pp.some(p => p.key === current);
+  const groupe = (s, niv) => `<div class="gn-grp"><span class="gn-grp-t">${esc(s.nom)}</span>`
+    + s.pages.map(p => lien(p, current)).join('') + s.sous.map(x => groupe(x, niv + 1)).join('') + '</div>';
+  return `<details class="gn-dd"><summary${ici ? ' class="gn-ici"' : ''}>${esc(r.nom)}</summary><div class="gn-panel">`
+    + r.pages.map(p => lien(p, current)).join('') + r.sous.map(s => groupe(s, 1)).join('') + '</div></details>';
+}
+
 export function nav(current) {
-  const links = PAGES.map(p =>
-    `<a href="${p.href}"${p.key === current ? ' aria-current="page"' : ''}>${p.label}</a>`).join('');
+  const links = arbre().map(r => rubrique(r, current)).join('');
   /* Le logo menait a une page d'accueil qui n'existe plus : le site, c'est le
      coefficient UEFA. Il y mene donc directement, sans passer par une redirection. */
   /* data-nosnippet : Google n'a pas le droit de piocher dans ce bandeau pour

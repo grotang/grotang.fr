@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { nav, navCSS, FAVICON, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF } from '../chrome.mjs';
+import { abs } from '../site.mjs';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 
@@ -24,7 +25,7 @@ export function buildEco() {
   const desc = `En ${D.der}, ${md(te)} milliards d'euros de dépenses publiques (${pc(te)} % du PIB), ${md(tr)} milliards de recettes, ${md(-b9)} milliards de déficit. `
     + `Le circuit complet de l'argent public, politique par politique, impôt par impôt, depuis 1995, et la comparaison avec l'Europe.`;
   const jsonld = JSON.stringify({
-    '@context': 'https://schema.org', '@type': 'Dataset', name: titre, description: desc, url: 'https://grotang.fr/economie/',
+    '@context': 'https://schema.org', '@type': 'Dataset', name: titre, description: desc, url: abs('eco'),
     inLanguage: 'fr', isAccessibleForFree: true, temporalCoverage: `1995/${D.der}`,
     copyrightHolder: { '@type': 'Person', name: 'Tanguy Drouin' },
     copyrightNotice: '© Tanguy Drouin — grotang.fr. Tous droits réservés.',
@@ -49,14 +50,14 @@ export function buildEco() {
     () => `<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="${desc}">
 ${VERIF}
-<link rel="canonical" href="https://grotang.fr/economie/">
+<link rel="canonical" href="${abs('eco')}">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:site_name" content="grotang.fr">
 <meta property="og:title" content="${titre}">
 <meta property="og:description" content="${desc}">
-<meta property="og:url" content="https://grotang.fr/economie/">
+<meta property="og:url" content="${abs('eco')}">
 <meta name="twitter:card" content="summary">
 <script type="application/ld+json">${jsonld}</script>
 ${FAVICON}

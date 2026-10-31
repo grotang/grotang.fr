@@ -20,6 +20,7 @@ import { nav, navCSS, FAVICON, FAVICON_SVG, MANIFEST, TOKENS, THEME_BOOT, THEME_
 import { buildEco } from './eco/page.mjs';
 import { nation } from './tennis/nations.mjs';
 import { compteParcours } from './tennis/wiki.mjs';
+import { PAGES, RELAIS, DOMAINE, url, abs, fichier } from './site.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
@@ -340,14 +341,14 @@ function buildTennis() {
     `<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Les joueurs de chaque nation tour par tour dans les Grands Chelems, simple messieurs, ère Open : France, Espagne, États-Unis, Suisse, Serbie… 1er tour, 8es, quarts, demies, finales, titres. Mis à jour chaque jour.">
 ${VERIF}
-<link rel="canonical" href="https://grotang.fr/tennis/">
+<link rel="canonical" href="${abs('tennis')}">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:site_name" content="grotang.fr">
 <meta property="og:title" content="Les Grands Chelems de tennis, nation par nation, tour par tour">
 <meta property="og:description" content="Les joueurs de chaque nation tour par tour dans les Grands Chelems, simple messieurs, ère Open : 1er tour, 8es, quarts, demies, finales, titres.">
-<meta property="og:url" content="https://grotang.fr/tennis/">
+<meta property="og:url" content="${abs('tennis')}">
 <meta name="twitter:card" content="summary">
 ${FAVICON}
 ${FONTS}
@@ -470,12 +471,30 @@ ${FAVICON}
    censé dire quand le contenu a bougé. Annoncer une modification quotidienne
    d'une page qui n'a pas bougé depuis une semaine, c'est le genre de signal
    qu'ils apprennent vite à ignorer. */
-const sitemap = (dUefa, dTennis, dEco) => `<?xml version="1.0" encoding="UTF-8"?>
+/* Le sitemap suit le registre : toutes les pages, aucune page relais. */
+const sitemap = dates => `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://grotang.fr/uefa/</loc><lastmod>${dUefa}</lastmod></url>
-  <url><loc>https://grotang.fr/tennis/</loc><lastmod>${dTennis}</lastmod></url>
-  <url><loc>https://grotang.fr/economie/</loc><lastmod>${dEco}</lastmod></url>
+${PAGES.map(p => `  <url><loc>${DOMAINE}${p.url}</loc><lastmod>${dates[p.key]}</lastmod></url>`).join('\n')}
 </urlset>
+`;
+
+/* Une page relais par ancienne adresse (RELAIS dans tools/site.mjs). Même
+   mécanique que la racine : `location.replace` avant le premier rendu (rien
+   dans l'historique), `meta refresh` à 0 s si le script ne tourne pas, lien si
+   rien ne tourne, `canonical` vers la nouvelle adresse : Google traite le tout
+   comme une redirection permanente et transfère l'ancienne adresse vers la
+   nouvelle. La fin d'adresse (#… ou ?…) suit le visiteur. */
+const relais = vers => `<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Page déplacée — grotang.fr</title>
+<link rel="canonical" href="${DOMAINE}${vers}">
+<meta http-equiv="refresh" content="0; url=${vers}">
+<script>location.replace('${vers}' + location.search + location.hash);</script>
+</head>
+<body><p>Cette page a déménagé : <a href="${vers}">${DOMAINE.replace('https://', '')}${vers}</a></p></body>
+</html>
 `;
 
 const NOTFOUND = `<!doctype html>
@@ -497,8 +516,8 @@ a{color:var(--hi);font-weight:600;margin-top:14px;display:inline-block}</style>
    quand elles n'ont pas bouge. */
 const lire = f => { try { return fs.readFileSync(path.join(OUT, f), 'utf8'); } catch { return null; } };
 const PRECEDENT = lire('uefa/index.html');
-const PREC_TENNIS = lire('tennis/index.html');
-const PREC_ECO = lire('economie/index.html');
+const PREC_TENNIS = lire(fichier(url('tennis')));
+const PREC_ECO = lire(fichier(url('eco')));
 const PREC_SITEMAP = lire('sitemap.xml');
 /* La carte de partage n'est pas fabriquee ici mais par tools/uefa/carte.mjs,
    apres la projection. Le grand menage l'effacerait a chaque construction :
@@ -547,9 +566,9 @@ const COMMUN = ['tools/build.mjs', 'tools/chrome.mjs'];
 const majUefa   = dateGit('tools/uefa/page.html', ...COMMUN)
   || dateSitemap('/uefa/',   PRECEDENT,   uefa.html,   true);
 const majTennis = dateGit('tools/tennis.src.html', 'tools/tennis/data.json', ...COMMUN)
-  || dateSitemap('/tennis/', PREC_TENNIS, tennis.html, false);
+  || dateSitemap(url('tennis'), PREC_TENNIS, tennis.html, false);
 const majEco    = dateGit('tools/eco/page.html', 'tools/eco/data.json', 'tools/eco/retraites.json', 'tools/eco/leviers.json', 'tools/eco/page.mjs', ...COMMUN)
-  || dateSitemap('/economie/', PREC_ECO, eco.html, false);
+  || dateSitemap(url('eco'), PREC_ECO, eco.html, false);
 
 /* Matchs club par club (bloc 6b, survol des gaufres) : fichier à part, chargé
    seulement quand on déplie une nation — inutile d'alourdir la page pour tous.
@@ -582,14 +601,15 @@ const sizes = {
   /* saisons closes des blocs 1 et 2 (calendrier, affiches, semaine européenne), chargées au choix d'une saison passée */
   'uefa/saisons.json': write('uefa/saisons.json', read('tools/uefa/archive/calendrier-saisons.json')),
   'uefa/index.html': writeStable('uefa/index.html', uefa.html, PRECEDENT),
-  'tennis/index.html': write('tennis/index.html', tennis.html),
-  'economie/index.html': write('economie/index.html', eco.html),
+  [fichier(url('tennis'))]: write(fichier(url('tennis')), tennis.html),
+  [fichier(url('eco'))]: write(fichier(url('eco')), eco.html),
+  ...Object.fromEntries(Object.entries(RELAIS).map(([de, vers]) => [fichier(de), write(fichier(de), relais(vers))])),
   '404.html': write('404.html', NOTFOUND),
   'index.html': write('index.html', ACCUEIL),
   'robots.txt': write('robots.txt', ROBOTS),
   'favicon.svg': write('favicon.svg', FAVICON_SVG),
   'site.webmanifest': write('site.webmanifest', MANIFEST),
-  'sitemap.xml': write('sitemap.xml', sitemap(majUefa, majTennis, majEco)),
+  'sitemap.xml': write('sitemap.xml', sitemap({ uefa: majUefa, tennis: majTennis, eco: majEco })),
 };
 
 for (const [f, n] of Object.entries(sizes)) console.log(String(n).padStart(7), f);
