@@ -9,11 +9,13 @@
    quatre levées sont vives sur fond sombre et doivent être assombries sur fond
    clair, sinon elles vibrent et deviennent illisibles. */
 :root{ --loss:#B43E12; --loss-bg:#FCE9E0; --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --sctx:#C9CFD9;
-       --ao:#0F73A8; --rg:#C1461F; --wim:#0F7040; --uso:#7B3FA0;
+       --ao:#0091D2; --rg:#D2691E; --wim:#5C2D91; --uso:#E5A000;
+       --ao-ink:#FFFFFF; --rg-ink:#FFFFFF; --wim-ink:#FFFFFF; --uso-ink:#1A1405;
        --empty:#EDF0F5; --empty-ink:#C3CAD6; --cellrule:rgba(15,20,29,.06);
        --hoverfx:brightness(.94); }
 :root[data-theme="dark"]{ --loss:#FF9B6B; --loss-bg:#3A2218; --s1:#3987e5; --s2:#d95926; --s3:#199e70; --sctx:#3A4050;
-       --ao:#4fc3f7; --rg:#ff8a65; --wim:#69f0ae; --uso:#ce93d8;
+       --ao:#1A95CC; --rg:#E07B36; --wim:#9A6AD0; --uso:#C08600;
+       --ao-ink:#FFFFFF; --rg-ink:#FFFFFF; --wim-ink:#FFFFFF; --uso-ink:#1A1405;
        --empty:#1a1a28; --empty-ink:#2d2d40; --cellrule:rgba(255,255,255,.04);
        --hoverfx:brightness(1.35); }
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -48,9 +50,15 @@ thead th {
   letter-spacing:.05em; text-transform:uppercase;
   background:var(--ground);
 }
-thead tr.cols th { box-shadow:inset 0 -3px 0 currentColor; }
-thead tr.cols th.th-y { box-shadow:none; }
-thead.colle tr.cols th { box-shadow:inset 0 -3px 0 currentColor, 0 6px 8px -6px rgba(0,0,0,.25); }
+/* en-têtes des tournois : pastilles pleines aux couleurs officielles ; une
+   étiquette, pas une couleur de case, donc jamais confondue avec la grille */
+thead tr.cols th { padding-bottom:6px; }
+.pill { display:block; margin:0 3px; padding:3px 0; border-radius:3px; letter-spacing:.04em; }
+.th-ao .pill { background:var(--ao); color:var(--ao-ink); }
+.th-rg .pill { background:var(--rg); color:var(--rg-ink); }
+.th-wim .pill { background:var(--wim); color:var(--wim-ink); }
+.th-uso .pill { background:var(--uso); color:var(--uso-ink); }
+thead.colle tr.cols th { box-shadow:0 6px 8px -6px rgba(0,0,0,.25); }
 thead tr.ctx th { font-size:.68rem; letter-spacing:0; text-transform:none; font-weight:600; color:var(--ink-2);
   padding:6px 0 4px; text-align:left; }
 .ctx-in { display:flex; align-items:center; justify-content:space-between; gap:8px; }
@@ -132,7 +140,7 @@ select option, select optgroup { background-color:var(--surface); color:var(--in
 .jr-l li.on { box-shadow:inset 3px 0 0 var(--ink); }
 .jr-l .rg { color:var(--ink-3); font-size:.62rem; text-align:right; font-variant-numeric:tabular-nums; }
 .jr-l .nm { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink); }
-.jr-l .br { display:flex; height:8px; border-radius:2px; overflow:hidden; background:var(--surface-2); }
+.jr-l .br { display:flex; gap:1.5px; height:8px; border-radius:2px; overflow:hidden; background:var(--surface-2); }
 .jr-l .br i { display:block; height:100%; }
 .jr-l .nb { text-align:right; font-weight:700; font-variant-numeric:tabular-nums; }
 /* un joueur choisi : ses cases ressortent, les autres s'effacent */
@@ -329,10 +337,10 @@ td[data-s], td.tc { cursor:default; }
   <tr class="ctx"><th colspan="6"><div class="ctx-in"><span class="ctx-t" id="ctxT"></span><a class="ctx-j" href="#jr">Joueurs ↓</a></div></th></tr>
   <tr class="cols">
     <th class="th-y"></th>
-    <th class="th-ao">AO</th>
-    <th class="th-rg">RG</th>
-    <th class="th-wim">WIM</th>
-    <th class="th-uso">USO</th>
+    <th class="th-ao"><span class="pill">AO</span></th>
+    <th class="th-rg"><span class="pill">RG</span></th>
+    <th class="th-wim"><span class="pill">WIM</span></th>
+    <th class="th-uso"><span class="pill">USO</span></th>
     <th class="th-t">Σ</th>
   </tr>
 </thead>
@@ -610,6 +618,7 @@ function choisir(t, garder, n){
    échéant, la subtilité du tableau. La colonne Σ : l'année, tournoi par tournoi. */
 const TOURNOI = {AO:"Open d'Australie", RG:'Roland-Garros', WIM:'Wimbledon', USO:'US Open'};
 const COUL = {AO:'var(--ao)', RG:'var(--rg)', WIM:'var(--wim)', USO:'var(--uso)'};
+const ENCRE = {AO:'var(--ao-ink)', RG:'var(--rg-ink)', WIM:'var(--wim-ink)', USO:'var(--uso-ink)'};
 const COURT = ['1er','2e','3e','8es','¼','½','F','🏆'];
 const MOIS_FR = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 const DATES = DT.dates || {}, JOUEURS = DT.joueurs || [], PARC = DT.parcours || {};
@@ -675,7 +684,7 @@ function htmlCase(y, s) {
     h += '<div class="parc">' + d.map((v, k) => {
       const e = ouv[k] || 'c', joue = e !== 'v';
       const a = joue && v ? .18 + .82 * Math.min(1, v / mx) : 0;
-      const st = a ? `background:color-mix(in srgb, ${COUL[s]} ${Math.round(a * 100)}%, var(--surface-2));color:${a > .55 ? '#fff' : 'var(--ink)'}` : '';
+      const st = a ? `background:color-mix(in srgb, ${COUL[s]} ${Math.round(a * 100)}%, var(--surface-2));color:${a > .55 ? ENCRE[s] : 'var(--ink)'}` : '';
       return `<span class="${k === i ? 'sel' : ''}"><b style="${st}">${joue ? v : '·'}</b>${COURT[k]}</span>`;
     }).join('') + '</div>';
   }
