@@ -349,6 +349,16 @@ svg .m{font-variant-numeric:tabular-nums}
   .bmob.on{transform:none}
   .bmob b{font-size:17px; font-variant-numeric:tabular-nums}
 }
+/* Une source, deux pages (tools/eco/page.mjs pose data-mode sur <body>) :
+   /budget-france/ (mode france) et /budget-2027/ (mode b27). */
+body[data-mode="b27"] [data-p="france"], body[data-mode="france"] [data-p="b27"]{display:none!important}
+body[data-mode="b27"] #budget-2027{margin-top:18px}
+body[data-mode="b27"] #budget-2027 > .shead{display:none}
+.b27go{display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:15px; text-decoration:none; color:var(--surface);
+  background:var(--ink); padding:11px 18px; border-radius:8px}
+.b27go:hover{background:color-mix(in srgb,var(--ink) 85%,var(--fr))}
+.b27go span{transition:transform .15s}
+.b27go:hover span{transform:translateX(3px)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -356,7 +366,15 @@ svg .m{font-variant-numeric:tabular-nums}
 
 <div class="wrap">
 
-<header class="mast">
+<header class="mast" data-p="b27">
+  <div>
+    <div class="eyebrow">Le budget de la France</div>
+    <h1>Faites votre budget 2027</h1>
+    <p class="sub">Partez du budget que le gouvernement propose pour 2027 et actionnez des leviers : niches fiscales, âge de la retraite, taxe Zucman, plafond des pensions, convergence avec nos voisins. Chaque levier est chiffré, sourcé, et dit ce qu'on ignore. Pour comprendre d'où l'on part : <a href="/budget-france/">où va l'argent public</a>.</p>
+  </div>
+</header>
+
+<header class="mast" data-p="france">
   <div>
     <div class="eyebrow">Les comptes publics de la France</div>
     <h1>Où va l'argent public ?</h1>
@@ -365,7 +383,7 @@ svg .m{font-variant-numeric:tabular-nums}
   <div class="stamp" id="stamp"></div>
 </header>
 
-<div class="filtres" role="group" aria-label="Réglages de la page">
+<div class="filtres" data-p="france" role="group" aria-label="Réglages de la page">
   <span class="ctl"><span class="lb">Année</span>
     <span class="yr"><button type="button" id="an-m" aria-label="Année précédente">‹</button><span class="sel"><select id="an" aria-label="Année"></select></span><button type="button" id="an-p" aria-label="Année suivante">›</button></span></span>
   <span class="ctl"><span class="lb">Unité</span>
@@ -375,13 +393,13 @@ svg .m{font-variant-numeric:tabular-nums}
     <span class="seg"><button type="button" id="hyp-b" aria-pressed="false" aria-expanded="false" aria-controls="hyp">Plafonner les retraites</button></span></span>
   <span class="hint" id="hint"></span>
 </div>
-<div class="hyp" id="hyp" hidden></div>
+<div class="hyp" id="hyp" data-p="france" hidden></div>
 
-<div class="tiles" id="tiles"></div>
-<div class="cent" id="cent" aria-label="Sur 100 € de dépense publique : où ils vont, qui les paie"></div>
-<p class="encore" id="encore"></p>
+<div class="tiles" id="tiles" data-p="france"></div>
+<div class="cent" id="cent" data-p="france" aria-label="Sur 100 € de dépense publique : où ils vont, qui les paie"></div>
+<p class="encore" id="encore" data-p="france"></p>
 
-<section>
+<section data-p="france">
   <div class="shead"><h2>D'où vient l'argent, où il va</h2>
     <p>Chaque euro dépensé, de la recette qui le finance jusqu'au poste qu'il paie. Survolez un noeud ou un flux pour éclairer son chemin et le chiffrer.</p></div>
   <div class="panel">
@@ -395,7 +413,13 @@ svg .m{font-variant-numeric:tabular-nums}
   </div>
 </section>
 
-<section id="budget-2027">
+<section data-p="france" class="b27t">
+  <div class="shead"><h2>Et en 2027 ? Faites votre budget</h2>
+    <p>Partez du budget que le gouvernement propose pour 2027 et actionnez des leviers : niches fiscales, âge de la retraite, taxe Zucman, plafond des pensions, convergence avec nos voisins.</p></div>
+  <a class="b27go" href="/budget-2027/">Faites votre budget 2027 <span aria-hidden="true">→</span></a>
+</section>
+
+<section id="budget-2027" data-p="b27">
   <div class="shead"><h2>Et en 2027 ? Faites votre budget</h2>
     <p>Partez du budget que le gouvernement propose pour 2027 et actionnez des leviers. Chaque levier est chiffré, sourcé, et dit ce qu'on ignore.</p></div>
   <div class="panel b27">
@@ -417,7 +441,7 @@ svg .m{font-variant-numeric:tabular-nums}
   <div class="bmob" id="b27-m" aria-hidden="true"></div>
 </section>
 
-<section>
+<section data-p="france">
   <div class="shead"><h2>Qui paie ?</h2>
     <p>Les impôts et cotisations sociales un par un, tous bénéficiaires confondus (État, Sécurité sociale, collectivités, Union européenne).</p></div>
   <div class="panel">
@@ -427,7 +451,7 @@ svg .m{font-variant-numeric:tabular-nums}
   </div>
 </section>
 
-<section>
+<section data-p="france">
   <div class="shead"><h2>Qui dépense ?</h2>
     <p>Trois étages : l'État et ses opérateurs, la Sécurité sociale, les collectivités locales. Le déficit n'est pas réparti au hasard.</p></div>
   <div class="panel">
@@ -443,7 +467,7 @@ svg .m{font-variant-numeric:tabular-nums}
   </div>
 </section>
 
-<section>
+<section data-p="france">
   <div class="shead"><h2>Trente ans de comptes</h2>
     <p>La dépense et la recette rapportées à la richesse produite chaque année. L'écart entre les deux courbes, c'est l'emprunt.</p></div>
   <div class="panel">
@@ -462,7 +486,7 @@ svg .m{font-variant-numeric:tabular-nums}
   </div>
 </section>
 
-<section>
+<section data-p="france">
   <div class="shead"><h2>La France et ses voisins</h2>
     <p>Même nomenclature, même définition, même année pour tous : où la France dépense-t-elle plus que les autres ?</p></div>
   <div class="panel">
@@ -482,7 +506,7 @@ svg .m{font-variant-numeric:tabular-nums}
   </div>
 </section>
 
-<section>
+<section data-p="france">
   <div class="shead"><h2>Comment c'est compté</h2></div>
   <div class="notes" id="notes">
     <h3>Le champ : les administrations publiques</h3>
@@ -507,6 +531,10 @@ svg .m{font-variant-numeric:tabular-nums}
 /*DATA_START*/const DE = null;/*DATA_END*/
 /*RT_START*/const RT = null;/*RT_END*/
 /*LV_START*/const LV = null;/*LV_END*/
+/*MODE_START*/const MODE = 'france';/*MODE_END*/
+/* Un ancien lien vers le simulateur (#…&bn=… sur /economie/ ou /budget-france/)
+   est renvoyé vers sa page, réglages compris. */
+if (MODE === 'france' && /(^#|&)(b[hfnazpd]|bc[rvy])=|^#budget-2027$/.test(location.hash)) location.replace('/budget-2027/' + location.hash.replace(/^#budget-2027$/, ''));
 (function () {
 'use strict';
 /* D0 : les données publiées ; D : celles qu'affiche la page — les mêmes, ou une
@@ -712,7 +740,7 @@ try { const h = new URLSearchParams(location.hash.slice(1));
 const bHash = () => (B.h === 'mat' ? '&bh=mat' : '') + (B.f !== 'centrale' ? '&bf=' + B.f : '') + (B.n.size ? '&bn=' + [...B.n].join('.') : '')
   + (B.age > 64 ? '&ba=' + B.age : '') + (B.z ? '&bz=' + B.z : '') + (B.p ? '&bp=' + B.p : '') + (B.d ? '&bd=' + B.d : '')
   + (Object.keys(B.cv).length ? '&bcv=' + Object.entries(B.cv).map(([c, v]) => c + ':' + v).join('.') + (B.cr !== 'EA20' ? '&bcr=' + B.cr : '') + (B.cy !== 5 ? '&bcy=' + B.cy : '') : '');
-const hashSync = () => { try { history.replaceState(null, '', '#an=' + S.an + '&u=' + S.u + (S.cap ? '&rp=' + S.cap + (S.capS ? '&rs=' + S.capS : '') : '') + bHash()); } catch (e) {} };
+const hashSync = () => { try { if (MODE === 'b27') { const h = bHash().slice(1); history.replaceState(null, '', h ? '#' + h : location.pathname); return; } history.replaceState(null, '', '#an=' + S.an + '&u=' + S.u + (S.cap ? '&rp=' + S.cap + (S.capS ? '&rs=' + S.capS : '') : '') + bHash()); } catch (e) {} };
 
 /* ---------- nombres ---------- */
 const nf = (x, d) => x.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -1526,7 +1554,7 @@ $('srcList').innerHTML = ds('gov_10a_main', 'recettes et dépenses par nature, s
    BUDGET 2027 : partir du PLF, actionner des leviers, voir le déficit
    ====================================================================== */
 const budget27 = (() => {
-  if (!LV) { const x = $('budget-2027'); if (x) x.hidden = true; return () => {}; }
+  if (!LV || MODE !== 'b27') { return () => {}; }
   const LB = LV.base, PIB = LB.pib_md, base = -LB.solde_pct / 100 * PIB;
   const L = id => LV.leviers.find(l => l.id === id);
   const N = L('niches'), AG = L('age'), Z = L('zucman'), PL = L('plafond'), CV = L('convergence');
@@ -1780,7 +1808,8 @@ function tout() {
   $('an-m').disabled = S.an <= D.an[0]; $('an-p').disabled = S.an >= D.der;
   document.querySelectorAll('[data-u]').forEach(b => b.setAttribute('aria-pressed', b.dataset.u === S.u));
   $('hint').textContent = uLong[S.u];
-  tete(); circuit(); recettes(); sousSecteurs(); trente(); europe(); hyp(); budget27();
+  if (MODE === 'b27') { budget27(); return; }
+  tete(); circuit(); recettes(); sousSecteurs(); trente(); europe(); hyp();
 }
 tout();
 let rz = 0, w0 = innerWidth;

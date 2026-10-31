@@ -1,5 +1,5 @@
 {
- "_lisezmoi": "Leviers du simulateur « Budget 2027 » de /economie/. Relevé à la main (le PLF ne paraît qu'une fois par an). Les chiffrages officiels sont « à comportement inchangé » ; les fourchettes basse/centrale/haute et ce qui n'est pas sourcé sont dits comme tels sur la page. Contrôlé par test-eco.mjs.",
+ "_lisezmoi": "Leviers du simulateur « Budget 2027 » (/budget-2027/). Relevé à la main (le PLF ne paraît qu'une fois par an). Les chiffrages officiels sont « à comportement inchangé » ; les fourchettes basse/centrale/haute et ce qui n'est pas sourcé sont dits comme tels sur la page. Contrôlé par test-eco.mjs.",
  "releve": "2026-10-27",
  "base": {
   "annee": 2027,
@@ -235,7 +235,7 @@
    "titre": "Plafonner toutes les retraites",
    "sens": "depense",
    "fiab": "estimation",
-   "chapo": "Toute pension de retraite au-dessus du plafond est ramenée au plafond, tous régimes confondus. Même modèle que l'hypothèse du haut de page.",
+   "chapo": "Toute pension de retraite au-dessus du plafond est ramenée au plafond, tous régimes confondus. Même modèle que l'hypothèse « Plafonner les retraites » de la page <a href=\"/budget-france/\">Budget de la France</a>.",
    "an_modele": 2025,
    "note": "Calcul sur la distribution des pensions estimée pour 2025 (Drees, voir retraites.json), économie nette de CSG et CRDS, rapportée au PIB puis appliquée au PIB de 2027. Hors pensions de réversion. Aucun effet de comportement.",
    "an1": 1.0,

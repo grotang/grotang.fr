@@ -9,6 +9,7 @@ Un site statique, en français, qui suit le classement UEFA des associations (la
 | Coefficient UEFA | [grotang.fr/uefa/](https://grotang.fr/uefa/) | relues automatiquement, plusieurs fois par jour en période de match |
 | Grand Chelem | [grotang.fr/grand-chelem/](https://grotang.fr/grand-chelem/) | les Grands Chelems nation par nation (France par défaut, les 21 nations titrées depuis 1968), tour par tour, relus sur Wikipédia trois fois par jour |
 | Budget de la France | [grotang.fr/budget-france/](https://grotang.fr/budget-france/) | comptes des administrations publiques, relus chez Eurostat chaque lundi |
+| Faites votre budget 2027 | [grotang.fr/budget-2027/](https://grotang.fr/budget-2027/) | le simulateur du budget 2027 (leviers relevés à la main dans `tools/eco/leviers.json`) ; même source que la page précédente (`tools/eco/page.html`, blocs marqués `data-p`), fabriquée en deux pages par `tools/eco/page.mjs` |
 
 **Le registre (`tools/site.mjs`)** est la seule liste des pages : adresse, titre, rubrique du menu. Le menu, le sitemap, les adresses canoniques et les pages relais en sont tirés. Règle : l'adresse décrit la page, jamais sa rubrique (`/uefa/`, pas `/football/uefa/`) ; renommer ou déplacer une rubrique ne touche aucune adresse. Une adresse abandonnée va dans `RELAIS` et reçoit une page qui renvoie vers la nouvelle (`/tennis/` → `/grand-chelem/`, `/economie/` → `/budget-france/` depuis le 31/10/2026).
 

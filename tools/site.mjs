@@ -20,6 +20,7 @@ export const PAGES = [
   { key: 'uefa',   url: '/uefa/',          titre: 'Coefficient UEFA',    rubrique: ['Football'] },
   { key: 'tennis', url: '/grand-chelem/',  titre: 'Grand Chelem',        rubrique: ['Tennis'] },
   { key: 'eco',    url: '/budget-france/', titre: 'Budget de la France', rubrique: ['Économie'] },
+  { key: 'b27',    url: '/budget-2027/',   titre: 'Faites votre budget 2027', rubrique: ['Économie'] },
 ];
 
 /* Les adresses qui ont existé et n'existent plus : chacune reçoit une page

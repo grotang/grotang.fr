@@ -518,6 +518,7 @@ const lire = f => { try { return fs.readFileSync(path.join(OUT, f), 'utf8'); } c
 const PRECEDENT = lire('uefa/index.html');
 const PREC_TENNIS = lire(fichier(url('tennis')));
 const PREC_ECO = lire(fichier(url('eco')));
+const PREC_B27 = lire(fichier(url('b27')));
 const PREC_SITEMAP = lire('sitemap.xml');
 /* La carte de partage n'est pas fabriquee ici mais par tools/uefa/carte.mjs,
    apres la projection. Le grand menage l'effacerait a chaque construction :
@@ -528,7 +529,8 @@ const CARTE = ['uefa/carte.png', 'uefa/carte.sig'].map(f => {
 fs.rmSync(OUT, { recursive: true, force: true });
 const uefa = buildUefa();
 const tennis = buildTennis();
-const eco = buildEco();
+const eco = buildEco('france');
+const b27 = buildEco('b27');
 const today = new Date().toISOString().slice(0, 10);
 
 /* `lastmod` d'une page : la date du jour si son contenu a change, sinon celle
@@ -569,6 +571,8 @@ const majTennis = dateGit('tools/tennis.src.html', 'tools/tennis/data.json', ...
   || dateSitemap(url('tennis'), PREC_TENNIS, tennis.html, false);
 const majEco    = dateGit('tools/eco/page.html', 'tools/eco/data.json', 'tools/eco/retraites.json', 'tools/eco/leviers.json', 'tools/eco/page.mjs', ...COMMUN)
   || dateSitemap(url('eco'), PREC_ECO, eco.html, false);
+const majB27    = dateGit('tools/eco/page.html', 'tools/eco/data.json', 'tools/eco/retraites.json', 'tools/eco/leviers.json', 'tools/eco/page.mjs', ...COMMUN)
+  || dateSitemap(url('b27'), PREC_B27, b27.html, false);
 
 /* Matchs club par club (bloc 6b, survol des gaufres) : fichier à part, chargé
    seulement quand on déplie une nation — inutile d'alourdir la page pour tous.
@@ -603,13 +607,14 @@ const sizes = {
   'uefa/index.html': writeStable('uefa/index.html', uefa.html, PRECEDENT),
   [fichier(url('tennis'))]: write(fichier(url('tennis')), tennis.html),
   [fichier(url('eco'))]: write(fichier(url('eco')), eco.html),
+  [fichier(url('b27'))]: write(fichier(url('b27')), b27.html),
   ...Object.fromEntries(Object.entries(RELAIS).map(([de, vers]) => [fichier(de), write(fichier(de), relais(vers))])),
   '404.html': write('404.html', NOTFOUND),
   'index.html': write('index.html', ACCUEIL),
   'robots.txt': write('robots.txt', ROBOTS),
   'favicon.svg': write('favicon.svg', FAVICON_SVG),
   'site.webmanifest': write('site.webmanifest', MANIFEST),
-  'sitemap.xml': write('sitemap.xml', sitemap({ uefa: majUefa, tennis: majTennis, eco: majEco })),
+  'sitemap.xml': write('sitemap.xml', sitemap({ uefa: majUefa, tennis: majTennis, eco: majEco, b27: majB27 })),
 };
 
 for (const [f, n] of Object.entries(sizes)) console.log(String(n).padStart(7), f);
