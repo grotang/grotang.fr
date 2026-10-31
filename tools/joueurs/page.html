@@ -34,18 +34,6 @@ button,input,select{font:inherit}
 .pill .sw{width:12px; height:12px; border-radius:3px; display:inline-block; margin-right:8px; vertical-align:-1px}
 .pill[aria-pressed="false"] .sw{opacity:.35}
 
-/* ---------- encarts ---------- */
-.encarts{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; margin-bottom:20px}
-.encart{border-radius:14px; padding:20px; display:flex; flex-direction:column; gap:6px; background:var(--surface); border:1px solid var(--rule-soft)}
-.encart.inv{background:var(--ink); color:var(--surface); border-color:var(--ink)}
-.encart .kicker{font-size:12px}
-.encart.inv .kicker,.encart.inv .txt{color:color-mix(in srgb, var(--surface) 72%, var(--ink))}
-.encart .nom{font-family:"Newsreader",Georgia,serif; font-size:26px; font-weight:700; line-height:1.15}
-.encart .chiffre{font-size:30px; font-weight:600}
-.encart.inv .chiffre{color:color-mix(in srgb, var(--fr) 70%, var(--surface))}
-.encart:not(.inv) .chiffre{color:var(--down)}
-.encart .txt{font-size:15px; color:var(--ink-2)}
-
 /* ---------- tableau ---------- */
 .panneau{background:var(--surface); border:1px solid var(--rule-soft); border-radius:16px; box-shadow:var(--shadow)}
 .filtres{padding:20px 24px; border-bottom:1px solid var(--rule-soft); display:flex; flex-direction:column; gap:16px}
@@ -102,11 +90,6 @@ button,input,select{font:inherit}
     <div class="pills" role="group" aria-label="Saison" id="saisons"></div>
   </header>
 
-  <section class="encarts" aria-label="Les surprises de la saison">
-    <div class="encart inv"><div class="kicker">Le casse de la saison</div><div class="nom" id="casse-nom"></div><div class="chiffre mono" id="casse-chiffre"></div><div class="txt" id="casse-txt"></div></div>
-    <div class="encart"><div class="kicker">La douche froide</div><div class="nom" id="douche-nom"></div><div class="chiffre mono" id="douche-chiffre"></div><div class="txt" id="douche-txt"></div></div>
-  </section>
-
   <section class="panneau" aria-label="Classement">
     <div class="filtres">
       <div class="champs">
@@ -158,18 +141,6 @@ button,input,select{font:inherit}
     $('ligue').innerHTML=lig.map(function(x){return '<option'+(x===st.ligue?' selected':'')+'>'+esc(x)+'</option>';}).join('');
     $('nat').innerHTML=nat.map(function(x){return '<option'+(x===st.nat?' selected':'')+'>'+esc(x)+'</option>';}).join('');
   }
-  function encarts(S){
-    var D=S.rows;
-    var c=D.filter(function(d){return d[0]<=30;}).sort(function(a,b){return (b[1]-b[0])-(a[1]-a[0]);})[0];
-    var fs=FAM.map(function(f){return {l:f.l.toLowerCase(),v:c[f.i]};}).sort(function(a,b){return b.v-a.v;});
-    $('casse-nom').textContent=c[2]; $('casse-chiffre').textContent=rg(c[1])+' → '+rg(c[0]);
-    $('casse-txt').textContent=rg(c[1])+' au comptage, '+rg(c[0])+' chez nous. Ce qui pèse : '+fs[0].l+' '+fr1(fs[0].v)+', '+fs[1].l+' '+fr1(fs[1].v)+'.';
-    var w=D.filter(function(d){return d[1]<=5;}).sort(function(a,b){return (b[0]-b[1])-(a[0]-a[1]);})[0];
-    var pp=w[14]?100*w[15]/w[14]:0, t=(w[6]+w[8])+' buts et passes, et pourtant.';
-    if(pp>=1.6*S.moyPlie) t=Math.round(pp)+' % de ses buts et passes tombent quand son équipe mène déjà de 2 buts ou plus ('+Math.round(S.moyPlie)+' % en moyenne).';
-    else if(w[7]>=5 && w[7]/w[6]>=.25) t=w[7]+' de ses '+w[6]+' buts sur penalty : ¼ de point chacun.';
-    $('douche-nom').textContent=w[2]; $('douche-chiffre').textContent=rg(w[1])+' → '+rg(w[0]); $('douche-txt').textContent=t;
-  }
   function tags(d,rang,moy){
     var t=[], delta=d[1]-rang, tot=d[10]+d[11]+d[12]+d[13];
     if(delta>=8 && d[1]>=2*rang) t.push(['up','Les stats le snobent']);
@@ -207,7 +178,7 @@ button,input,select{font:inherit}
   function saison(){
     var S=JD.saisons[st.saison];
     $('lead').textContent='On a repesé les '+nb(S.actions)+' actions décisives de la saison '+S.label+' : chaque but et chaque passe selon le score au moment où ils tombent, la compétition et le tour. Le penalty ? Partagé : ¾ pour celui qui l’obtient, ¼ pour celui qui le tire. Ça fait de la peine à certains.';
-    pills(); options(S); encarts(S); rendu();
+    pills(); options(S); rendu();
   }
   document.addEventListener('click',function(e){
     var b=e.target.closest('button'); if(!b) return;
