@@ -165,6 +165,8 @@ export const navCSS = `
 .gn-panel{position:absolute;right:0;top:calc(100% + 6px);min-width:190px;z-index:60;display:flex;flex-direction:column;gap:1px;
   padding:6px;background:var(--surface);border:1px solid var(--rule);border-radius:9px;box-shadow:var(--shadow)}
 .gnav .gn-panel a{display:block}
+.gn-soon{margin-left:7px;font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--ink-3);border:1px solid var(--rule);border-radius:4px;padding:1px 4px;vertical-align:1px}
 .gn-grp{display:flex;flex-direction:column;gap:1px;padding-top:4px}
 .gn-grp + .gn-grp,.gn-panel > a + .gn-grp{border-top:1px solid var(--rule-soft);margin-top:4px}
 .gn-grp-t{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:4px 10px 2px}
@@ -202,7 +204,7 @@ const COQ_SVG = `<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.
    ailleurs ou sur Échap. */
 const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 const lien = (p, current, label = p.titre) =>
-  `<a href="${p.url}"${p.key === current ? ' aria-current="page"' : ''}>${esc(label)}</a>`;
+  `<a href="${p.url}"${p.key === current ? ' aria-current="page"' : ''}>${esc(label)}${p.aVenir ? '<span class="gn-soon">bientôt</span>' : ''}</a>`;
 const toutes = r => r.pages.concat(...r.sous.map(toutes));
 function rubrique(r, current) {
   const pp = toutes(r);

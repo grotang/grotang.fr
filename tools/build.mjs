@@ -474,7 +474,7 @@ ${FAVICON}
 /* Le sitemap suit le registre : toutes les pages, aucune page relais. */
 const sitemap = dates => `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${PAGES.map(p => `  <url><loc>${DOMAINE}${p.url}</loc><lastmod>${dates[p.key]}</lastmod></url>`).join('\n')}
+${PAGES.filter(p => !p.aVenir).map(p => `  <url><loc>${DOMAINE}${p.url}</loc><lastmod>${dates[p.key]}</lastmod></url>`).join('\n')}
 </urlset>
 `;
 
@@ -494,6 +494,50 @@ const relais = vers => `<!doctype html>
 <script>location.replace('${vers}' + location.search + location.hash);</script>
 </head>
 <body><p>Cette page a déménagé : <a href="${vers}">${DOMAINE.replace('https://', '')}${vers}</a></p></body>
+</html>
+`;
+
+/* Page d'attente d'une page annoncée (`aVenir` dans le registre) : le chrome du
+   site, un titre, deux lignes. noindex : rien à montrer à Google tant qu'elle
+   est vide. */
+const pageAVenir = p => `<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${p.aVenir.h1} — à venir — grotang.fr</title>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="${DOMAINE}${p.url}">
+${VERIF}
+${FAVICON}
+${FONTS}
+${THEME_BOOT}
+<style>${TOKENS}
+${navCSS}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:Carlito,Calibri,system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}
+.av{max-width:760px;margin:0 auto;padding:clamp(48px,10vw,110px) clamp(16px,4vw,28px) 80px}
+.av .eb{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.av h1{font-family:Newsreader,Georgia,serif;font-weight:700;font-size:clamp(34px,6vw,58px);line-height:1.02;letter-spacing:-.02em;margin:10px 0 20px}
+.av p{font-size:17px;line-height:1.55;color:var(--ink-2);max-width:62ch;margin:0}
+.av .tba{display:inline-flex;align-items:center;gap:9px;margin-top:30px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12.5px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--ink);border:1px dashed var(--ink-3);border-radius:999px;padding:8px 16px}
+.av .tba i{width:8px;height:8px;border-radius:50%;background:var(--n4);animation:pl 1.6s ease-in-out infinite}
+@keyframes pl{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.av .tba i{animation:none}}
+</style>
+</head>
+<body>
+${nav(p.key)}
+<main class="av">
+  <div class="eb">${p.rubrique.join(' · ')}</div>
+  <h1>${p.aVenir.h1}</h1>
+  <p>${p.aVenir.texte}</p>
+  <div class="tba"><i></i>À venir</div>
+</main>
+${THEME_JS}
+${ANALYTICS}
+</body>
 </html>
 `;
 
@@ -609,6 +653,7 @@ const sizes = {
   [fichier(url('tennis'))]: write(fichier(url('tennis')), tennis.html),
   [fichier(url('eco'))]: write(fichier(url('eco')), eco.html),
   [fichier(url('b27'))]: write(fichier(url('b27')), b27.html),
+  ...Object.fromEntries(PAGES.filter(p => p.aVenir).map(p => [fichier(p.url), write(fichier(p.url), pageAVenir(p))])),
   ...Object.fromEntries(Object.entries(RELAIS).map(([de, vers]) => [fichier(de), write(fichier(de), relais(vers))])),
   '404.html': write('404.html', NOTFOUND),
   'index.html': write('index.html', ACCUEIL),

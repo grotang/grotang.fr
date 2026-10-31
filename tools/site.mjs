@@ -23,9 +23,18 @@
    demain si on regroupe les sports. L'ordre du menu est l'ordre de ce tableau.
    Une rubrique qui ne contient qu'une page s'affiche comme un lien direct ;
    dès la deuxième page, elle devient un menu déroulant, sans rien d'autre à
-   changer. */
+   changer.
+
+   `aVenir` : page annoncée mais pas encore construite. Le build fabrique une
+   page d'attente (titre, deux lignes, « à venir »), marquée « bientôt » dans le
+   menu, en noindex et hors du sitemap : Google ne la voit pas tant qu'elle est
+   vide. Le jour où la vraie page existe, on retire `aVenir` et on la branche
+   dans tools/build.mjs. */
 export const PAGES = [
   { key: 'uefa',   url: '/football-coefficient-uefa/',   titre: 'Coefficient UEFA',         rubrique: ['Football'] },
+  { key: 'joueurs', url: '/football-joueurs-decisifs/',  titre: 'Joueurs décisifs',         rubrique: ['Football'],
+    aVenir: { h1: 'Les joueurs les plus décisifs',
+      texte: "Un but à la 68e qui débloque le 2-1 en finale de Ligue des champions ne vaut pas une passe décisive dans un 6-0 au premier tour d'une coupe nationale. Cette page classera les joueurs, saison par saison, selon ce que leurs actions ont réellement changé au résultat — et selon l'enjeu du match." } },
   { key: 'tennis', url: '/tennis-grand-chelem-nations/', titre: 'Grand Chelem',             rubrique: ['Tennis'] },
   { key: 'eco',    url: '/france-comptes-publics/',      titre: 'Budget de la France',      rubrique: ['Économie'] },
   { key: 'b27',    url: '/france-simulateur-budget/',    titre: 'Faites votre budget 2027', rubrique: ['Économie'] },
