@@ -216,7 +216,9 @@ select option, select optgroup { background-color:var(--surface); color:var(--in
   display:flex; flex-direction:column; gap:10px; }
 .card.wide { grid-column:1 / -1; }
 .card-h { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap:8px 14px; }
-.card-h h3 { font-size:.85rem; margin:0; color:var(--ink); }
+.card-h h3 { font-size:.85rem; margin:0; color:var(--ink); display:flex; align-items:baseline; gap:8px; }
+.card-h h3 .num { flex:none; display:inline-grid; place-items:center; width:1.45em; height:1.45em; border-radius:50%;
+  background:var(--ink); color:var(--surface); font-size:.8em; font-weight:700; font-variant-numeric:tabular-nums; transform:translateY(-1px); }
 .card-h p { font-size:.68rem; color:var(--ink-3); margin:2px 0 0; max-width:60ch; line-height:1.4; }
 .card .sg { display:inline-grid; grid-auto-flow:column; gap:1px; background:var(--rule); border:1px solid var(--rule); border-radius:3px; overflow:hidden; }
 .card .sg button { appearance:none; border:0; background:var(--surface); color:var(--ink-2); font:inherit; font-size:.68rem;
@@ -374,30 +376,30 @@ td[data-s], td.tc { cursor:default; }
   </div>
   <div class="cmp-grid">
     <div class="card wide">
-      <div class="card-h"><div><h3>L'entonnoir</h3><p id="fnP"></p></div>
+      <div class="card-h"><div><h3><span class="num">1</span>L'entonnoir</h3><p id="fnP"></p></div>
         <div style="display:flex;flex-wrap:wrap;gap:6px"><div class="sg" id="fnM"><button type="button" data-m="surv" aria-pressed="true">Sur 100 au départ</button><button type="button" data-m="pass" aria-pressed="false">% passage</button><button type="button" data-m="vol" aria-pressed="false">Joueurs par édition</button></div>
         <div class="sg" id="fnZ"><button type="button" data-m="0" aria-pressed="true">Dès le 1er tour</button><button type="button" data-m="3" aria-pressed="false">Dès les 8es</button></div></div></div>
       <div class="viz" id="fnV"></div>
       <div class="card-f">Survoler (ou toucher) un tour pour lire les valeurs. Lignes grises : les autres nations titrées.</div>
     </div>
     <div class="card">
-      <div class="card-h"><div><h3>Sur 100 au départ, combien arrivent…</h3><p id="rkP"></p></div></div>
+      <div class="card-h"><div><h3><span class="num">2</span>Sur 100 au départ, combien arrivent…</h3><p id="rkP"></p></div></div>
       <div class="sg tr" id="rkT"></div>
       <div class="viz" id="rkV"></div>
     </div>
     <div class="card">
-      <div class="card-h"><div><h3>Volume ou rendement</h3><p>Joueurs envoyés au 1er tour (→) contre la part qui va loin (↑).</p></div></div>
+      <div class="card-h"><div><h3><span class="num">3</span>Volume ou rendement</h3><p>Joueurs envoyés au 1er tour (→) contre la part qui va loin (↑).</p></div></div>
       <div class="sg tr" id="scT"></div>
       <div class="viz" id="scV"></div>
     </div>
     <div class="card wide">
-      <div class="card-h"><div><h3>Décennie par décennie</h3><p>Joueurs par édition au tour choisi, en moyenne sur la décennie.</p></div>
+      <div class="card-h"><div><h3><span class="num">4</span>Décennie par décennie</h3><p>Joueurs par édition au tour choisi, en moyenne sur la décennie.</p></div>
         <div class="sg tr" id="dcT"></div></div>
       <div class="viz" id="dcV"></div>
-      <div class="card-f">1968–69 : 7 éditions seulement. 2020s : de 2020 à 2026.</div>
+      <div class="card-f">À partir de 1970 : 1968–1969 (7 éditions seulement) sont écartées. 2020s : décennie en cours, de 2020 à 2026.</div>
     </div>
     <div class="card wide">
-      <div class="card-h"><div><h3>Toutes les nations, marche par marche</h3><p>Triées par joueurs engagés au 1er tour. Cliquer un en-tête pour trier autrement.</p></div>
+      <div class="card-h"><div><h3><span class="num">5</span>Toutes les nations, marche par marche</h3><p>Triées par joueurs engagés au 1er tour. Cliquer un en-tête pour trier autrement.</p></div>
         <div class="sg" id="mxM"><button type="button" data-m="pass" aria-pressed="true">% passage</button><button type="button" data-m="loss" aria-pressed="false">% déperdition</button><button type="button" data-m="vol" aria-pressed="false">Joueurs par édition</button></div></div>
       <div class="mx-w"><table class="mx" id="mx"></table></div>
       <div class="card-f">Jusqu'en 1981, l'Open d'Australie se jouait à 48–64 joueurs : son 3e tour était déjà un 8e de finale, ce qui gonfle un peu le passage 3e tour → 8es des années 70.</div>
@@ -1063,7 +1065,7 @@ function dessinerNuage() {
 /* --- 4 · décennies --- */
 function dessinerDecennies() {
   const v = document.getElementById('dcV'), W = largeur(v), H = W < 500 ? 230 : 300, i = CMP.dc;
-  const decs = Object.keys(AG.edDec).map(Number).sort((a, b) => a - b);
+  const decs = Object.keys(AG.edDec).map(Number).filter(d => d >= 1970).sort((a, b) => a - b);
   const m = { t: 12, r: W < 500 ? 70 : 120, b: 26, l: 40 }, svg = cadre(v, W, H);
   const val = c => decs.map(d => ((AG.dec[c][d] || [])[i] || 0) / AG.edDec[d]);
   const ymax = Math.max(...NATS.map(n => Math.max(...val(n.c)))) * 1.08 || 1;
