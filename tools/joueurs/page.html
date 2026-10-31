@@ -19,7 +19,7 @@ a{color:var(--fr)}
 .kicker{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3)}
 button,input,select{font:inherit}
 :focus-visible{outline:3px solid var(--fr); outline-offset:2px}
-.jd{--fam1:var(--n1); --fam2:var(--n3); --fam3:var(--c1); --fam4:var(--n2);
+.jd{--fam1:var(--n1); --fam2:color-mix(in srgb, var(--n1) 42%, var(--surface)); --fam3:var(--c1); --fam4:var(--n2);
   --up:var(--c1); --up-soft:var(--fr-soft); --down:var(--c3); --down-soft:color-mix(in srgb, var(--c3) 14%, var(--surface))}
 :root[data-theme="dark"] .jd{--up:var(--fr); --down:var(--c3)}
 
@@ -40,6 +40,12 @@ button,input,select{font:inherit}
 .champs{display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end}
 .champs label{display:flex; flex-direction:column; gap:4px; flex:1 1 180px; font-size:12px; color:var(--ink-2); font-weight:700}
 .champs input,.champs select{font-weight:400; font-size:14px; min-height:36px; padding:0 10px; border-radius:10px; border:1px solid var(--rule); background:var(--surface-2); color:var(--ink)}
+.groupes{display:flex; flex-wrap:wrap; gap:10px 18px}
+.grp{display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:5px; border-radius:999px; background:var(--surface-2)}
+.grp .tete{min-height:30px; padding:0 12px; border-radius:999px; border:0; cursor:pointer; font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#fff}
+.grp .tete[aria-pressed="false"]{opacity:.45}
+.grp.club .tete{background:var(--fam1)} .grp.sel .tete{background:var(--fam4); color:#0F141D}
+.grp .pill{min-height:30px; padding:0 12px; font-size:12.5px}
 .compte-on{font-size:12px; font-weight:700; color:var(--ink-2); padding-right:4px; align-self:center}
 .row{display:grid; grid-template-columns:36px 62px minmax(0,1.4fr) 96px minmax(0,2fr) 52px;
   grid-template-areas:"rang delta joueur bpp bar score"; gap:10px; align-items:center; padding:6px 18px; border-bottom:1px solid var(--rule-soft)}
@@ -92,7 +98,7 @@ button,input,select{font:inherit}
         <label>Championnat<select id="ligue"></select></label>
         <label>Nationalité<select id="nat"></select></label>
       </div>
-      <div class="pills" role="group" aria-label="Compétitions comptées"><span class="compte-on">Ce qu'on compte :</span><span id="familles" style="display:contents"></span></div>
+      <div class="groupes" id="familles" aria-label="Compétitions comptées"></div>
     </div>
     <div class="row head" aria-hidden="true"><span class="c-rang">Rang</span><span class="c-delta">vs brut</span><span class="c-joueur">Joueur</span><span class="c-bpp">B (pén.) · P</span><span class="c-bar" style="background:none">D'où vient le score</span><span class="c-score">Score</span></div>
     <div id="lignes"></div>
@@ -105,8 +111,9 @@ button,input,select{font:inherit}
 <script>
 /*DATA_START*/const JD = null;/*DATA_END*/
 (function(){
-  var FAM=[{k:'championnat',l:'Championnat',i:10,c:'var(--fam1)'},{k:'coupe',l:'Coupes nationales',i:11,c:'var(--fam2)'},
-           {k:'europe',l:'Europe & monde',i:12,c:'var(--fam3)'},{k:'selection',l:'Sélection',i:13,c:'var(--fam4)'}];
+  /* deux segments : CLUB (bleus) et SÉLECTION (orangés) ; chaque sous-segment a sa nuance */
+  var FAM=[{k:'championnat',g:'club',l:'Championnat',i:10,c:'var(--fam1)'},{k:'coupe',g:'club',l:'Coupes nationales',i:11,c:'var(--fam2)'},
+           {k:'europe',g:'club',l:'Europe & monde',i:12,c:'var(--fam3)'},{k:'selection',g:'sel',l:'Grands tournois',i:13,c:'var(--fam4)'}];
   var TOUS_L='Tous les championnats', TOUS_N='Toutes nationalités';
   var st={saison:'2025', q:'', ligue:TOUS_L, nat:TOUS_N, tout:false, fam:{championnat:1,coupe:1,europe:1,selection:1}};
   var $=function(id){return document.getElementById(id);};
@@ -118,7 +125,11 @@ button,input,select{font:inherit}
 
   function pills(){
     $('saisons').innerHTML=cles.map(function(k){return '<button type="button" class="pill" data-s="'+k+'" aria-pressed="'+(st.saison===k)+'">'+JD.saisons[k].label+'</button>';}).join('');
-    $('familles').innerHTML=FAM.map(function(f){return '<button type="button" class="pill" data-f="'+f.k+'" aria-pressed="'+(!!st.fam[f.k])+'"><span class="sw" style="background:'+f.c+'"></span>'+f.l+'</button>';}).join('');
+    $('familles').innerHTML=[['club','Club'],['sel','Sélection']].map(function(g){
+      var fs=FAM.filter(function(f){return f.g===g[0];}), tout=fs.every(function(f){return st.fam[f.k];});
+      return '<div class="grp '+g[0]+'" role="group" aria-label="'+g[1]+'"><button type="button" class="tete" data-g="'+g[0]+'" aria-pressed="'+tout+'">'+g[1]+'</button>'
+        +fs.map(function(f){return '<button type="button" class="pill" data-f="'+f.k+'" aria-pressed="'+(!!st.fam[f.k])+'"><span class="sw" style="background:'+f.c+'"></span>'+f.l+'</button>';}).join('')+'</div>';
+    }).join('');
   }
   function options(S){
     var lig=[TOUS_L].concat(Array.from(new Set(S.rows.map(function(d){return d[5];}))).sort());
@@ -148,7 +159,7 @@ button,input,select{font:inherit}
     var aff=(st.tout||filtre)?vu:vu.slice(0,25);
     $('lignes').innerHTML=aff.map(function(x){
       var d=x.d, dl=d[1]-x.r, cls=dl>0?'up':dl<0?'down':'';
-      var seg=FAM.map(function(f,i){return '<span title="'+f.l+' : '+fr1(x.p[i])+'" style="width:'+(x.p[i]/max*100).toFixed(2)+'%;background:'+f.c+'"></span>';}).join('');
+      var seg=FAM.map(function(f,i){return '<span title="'+(f.g==='club'?'Club':'Sélection')+' · '+f.l+' : '+fr1(x.p[i])+'" style="width:'+(x.p[i]/max*100).toFixed(2)+'%;background:'+f.c+(f.g==='sel'&&x.p[i]>0?';box-shadow:inset 2px 0 0 var(--surface)':'')+'"></span>';}).join('');
       var tg=tags(d,x.r,S.moyPlie).map(function(t){return '<span class="tag '+t[0]+'">'+t[1]+'</span>';}).join('');
       return '<div class="row"><span class="c-rang">'+x.r+'</span>'
         +'<span class="c-delta"><span class="badge '+cls+'">'+(dl>0?'▲ '+dl:dl<0?'▼ '+(-dl):'=')+'</span><span class="sous">brut '+rg(d[1])+'</span></span>'
@@ -169,6 +180,8 @@ button,input,select{font:inherit}
   document.addEventListener('click',function(e){
     var b=e.target.closest('button'); if(!b) return;
     if(b.dataset.s){ st.saison=b.dataset.s; st.tout=false; saison(); }
+    else if(b.dataset.g){ var fs=FAM.filter(function(f){return f.g===b.dataset.g;}), tout=fs.every(function(f){return st.fam[f.k];});
+      fs.forEach(function(f){st.fam[f.k]=tout?0:1;}); pills(); rendu(); }
     else if(b.dataset.f){ st.fam[b.dataset.f]=st.fam[b.dataset.f]?0:1; pills(); rendu(); }
     else if(b.id==='voir'){ st.tout=true; rendu(); }
   });
