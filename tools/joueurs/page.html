@@ -42,16 +42,22 @@ button,input,select{font:inherit}
 .champs{display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end}
 .champs label{display:flex; flex-direction:column; gap:4px; flex:1 1 180px; font-size:12px; color:var(--ink-2); font-weight:700}
 .champs input,.champs select{font-weight:400; font-size:14px; min-height:36px; padding:0 10px; border-radius:10px; border:1px solid var(--rule); background:var(--surface-2); color:var(--ink)}
-.groupes{display:flex; flex-wrap:wrap; gap:10px 18px}
-.grp{display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:5px; border-radius:999px; background:var(--surface-2)}
-.grp .tete{min-height:30px; padding:0 12px; border-radius:999px; border:0; cursor:pointer; font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#fff}
-.grp .tete[aria-pressed="false"]{opacity:.45}
-.grp.dom .tete{background:var(--dom1)} .grp.uefa .tete{background:var(--c1x)} .grp.fifa .tete{background:var(--fifa); color:#0F141D} .grp.sel .tete{background:var(--sel1); color:#0F141D}
+.arbre{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr)); gap:12px}
+.carte{border:1px solid var(--rule-soft); border-radius:14px; padding:12px; background:var(--surface-2); display:flex; flex-direction:column; gap:8px}
+.carte .n1{align-self:flex-start; min-height:32px; padding:0 16px; border-radius:999px; border:0; cursor:pointer; background:var(--ink); color:var(--surface); font-size:12px; font-weight:900; letter-spacing:.06em; text-transform:uppercase}
+.carte .n1[aria-pressed="false"]{background:transparent; color:var(--ink-3); box-shadow:inset 0 0 0 1px var(--rule)}
+.branches{margin-left:14px; padding-left:16px; border-left:2px solid var(--rule); display:flex; flex-direction:column; gap:8px}
+.branches.plat{flex-direction:row; flex-wrap:wrap; gap:6px}
+.branche{position:relative; display:flex; flex-wrap:wrap; align-items:center; gap:6px}
+.branche::before{content:""; position:absolute; left:-16px; top:15px; width:11px; height:2px; background:var(--rule)}
+.branche .n2{width:92px; text-align:left; background:none; border:0; padding:0; cursor:pointer; font-size:11px; font-weight:900; letter-spacing:.06em; text-transform:uppercase}
+.branche .n2[aria-pressed="false"]{opacity:.4; text-decoration:line-through}
+.branche.dom .n2{color:var(--dom1)} .branche.uefa .n2{color:var(--c1x)} .branche.fifa .n2{color:color-mix(in srgb, var(--fifa) 70%, var(--ink))}
 .volume{display:flex; gap:2px; height:22px; border-radius:6px; overflow:hidden}
 .volume span{height:100%; display:flex; align-items:center; padding-left:6px; font-size:10.5px; font-weight:700; white-space:nowrap; overflow:hidden; min-width:3px; transition:opacity .15s}
 .volume span.off{opacity:.18}
 .volume-t{font-size:11.5px; color:var(--ink-3)}
-.grp .pill{min-height:30px; padding:0 12px; font-size:12.5px}
+.carte .pill{min-height:30px; padding:0 12px; font-size:12.5px}
 .pill.bientot{cursor:default; border-style:dashed; background:transparent; color:var(--ink-3)}
 .pill.bientot em{font-style:normal; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10px; text-transform:uppercase; letter-spacing:.06em; margin-left:4px}
 .compte-on{font-size:12px; font-weight:700; color:var(--ink-2); padding-right:4px; align-self:center}
@@ -63,7 +69,7 @@ button,input,select{font:inherit}
 .row.head>.c-score{text-align:right}
 .row.head>.c-bar{height:auto; background:none; overflow:visible}
 .c-delta{grid-area:delta; display:flex; flex-direction:column; gap:0; align-items:flex-start}
-.badge{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px; font-weight:600; padding:1px 6px; border-radius:5px; background:var(--surface-2); color:var(--ink-2)}
+.badge{white-space:nowrap; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px; font-weight:600; padding:1px 6px; border-radius:5px; background:var(--surface-2); color:var(--ink-2)}
 .badge.up{background:var(--up-soft); color:var(--up)}
 .badge.down{background:var(--down-soft); color:var(--down)}
 .sous{font-size:10.5px; color:var(--ink-3)}
@@ -85,6 +91,9 @@ button,input,select{font:inherit}
   .row{grid-template-columns:30px minmax(0,1fr) 48px; grid-template-areas:"rang joueur score" "delta bar bar" ". bpp bpp"; gap:4px 10px; padding:8px 14px}
   .champs input,.champs select{font-size:16px}
   .row.head{display:none}
+  .branche .n2{width:100%}
+  .branches{margin-left:8px; padding-left:12px}
+  .branche::before{left:-12px; width:8px}
   .filtres{padding:16px}
 }
 
@@ -107,7 +116,7 @@ button,input,select{font:inherit}
         <label>Nationalité<select id="nat"></select></label>
       </div>
       <div><div class="volume-t" id="volume-t"></div><div class="volume" id="volume" role="img"></div></div>
-      <div class="groupes" id="familles" aria-label="Compétitions comptées"></div>
+      <div class="arbre" id="familles" aria-label="Compétitions comptées"></div>
     </div>
     <div class="row head" aria-hidden="true"><span class="c-rang">Rang</span><span class="c-delta">vs brut</span><span class="c-joueur">Joueur</span><span class="c-bpp">B (pén.) · P</span><span class="c-bar" style="background:none">D'où vient le score</span><span class="c-score">Score</span></div>
     <div id="lignes"></div>
@@ -124,13 +133,14 @@ button,input,select{font:inherit}
   var FAM=[{k:'championnat',g:'dom',l:'Championnat',i:10,c:'var(--dom1)',t:'#fff'},{k:'coupe',g:'dom',l:'Coupe nationale',i:11,c:'var(--dom2)',t:'#0F141D'},
            {k:'c1',g:'uefa',l:'C1',n:'Ligue des champions',i:12,c:'var(--c1x)',t:'#fff'},{k:'c3',g:'uefa',l:'C3',n:'Ligue Europa',i:13,c:'var(--c3x)',t:'#fff'},
            {k:'c4',g:'uefa',l:'C4',n:'Conférence',i:14,c:'var(--c4x)',t:'#0F141D'},{k:'usc',g:'uefa',l:'Supercoupe',n:'Supercoupe UEFA',i:15,c:'var(--uscx)',t:'#0F141D'},
-           {k:'fifa',g:'fifa',l:'CdM des clubs & Intercontinentale',i:16,c:'var(--fifa)',t:'#0F141D'},
+           {k:'fifa',g:'fifa',l:'CdM des clubs',i:16,c:'var(--fifa)',t:'#0F141D'},{k:'interc',g:'fifa',l:'Coupe intercontinentale',i:null,c:'color-mix(in srgb, var(--fifa) 50%, var(--surface))'},
            {k:'selection',g:'sel',l:'Grands tournois',i:17,c:'var(--sel1)',t:'#0F141D'},
            /* pas encore dans les données (coef. prévus : qualifications 90, Ligue des nations 100, amicaux 50) */
            {k:'qualif',g:'sel',l:'Qualifications',i:null,c:'var(--sel2)'},{k:'ldn',g:'sel',l:'Ligue des nations',i:null,c:'var(--sel3)'},
            {k:'amicaux',g:'sel',l:'Amicaux',i:null,c:'var(--sel4)'}];
-  var GRP=[['dom','Domestique'],['uefa','UEFA'],['fifa','FIFA'],['sel','Sélection']];
-  var nomG=function(g){return GRP.filter(function(x){return x[0]===g;})[0][1];};
+  var GRP=[['dom','Domestique'],['uefa','UEFA'],['fifa','FIFA']];
+  var N1=function(f){return f.g==='sel'?'sel':'club';};
+  var nomG=function(g){return g==='sel'?'Sélection':'Club · '+GRP.filter(function(x){return x[0]===g;})[0][1];};
   var DISPO=FAM.filter(function(f){return f.i!==null;});
   var TOUS_L='Tous les championnats', TOUS_N='Toutes nationalités';
   var st={saison:'2025', q:'', ligue:TOUS_L, nat:TOUS_N, tout:false, fam:{championnat:1,coupe:1,c1:1,c3:1,c4:1,usc:1,fifa:1,selection:1}};
@@ -143,12 +153,16 @@ button,input,select{font:inherit}
 
   function pills(){
     $('saisons').innerHTML=cles.map(function(k){return '<button type="button" class="pill" data-s="'+k+'" aria-pressed="'+(st.saison===k)+'">'+JD.saisons[k].label+'</button>';}).join('');
-    $('familles').innerHTML=GRP.map(function(g){
-      var fs=FAM.filter(function(f){return f.g===g[0];}), tout=fs.every(function(f){return f.i===null||st.fam[f.k];});
-      return '<div class="grp '+g[0]+'" role="group" aria-label="'+g[1]+'"><button type="button" class="tete" data-g="'+g[0]+'" aria-pressed="'+tout+'">'+g[1]+'</button>'
-        +fs.map(function(f){ if(f.i===null) return '<button type="button" class="pill bientot" disabled title="Pas encore dans les données"><span class="sw" style="background:'+f.c+'"></span>'+f.l+' <em>bientôt</em></button>';
-          return '<button type="button" class="pill" data-f="'+f.k+'" aria-pressed="'+(!!st.fam[f.k])+'"><span class="sw" style="background:'+f.c+'"></span>'+f.l+'</button>';}).join('')+'</div>';
-    }).join('');
+    var chip=function(f){ if(f.i===null) return '<button type="button" class="pill bientot" disabled title="Pas encore dans les données"><span class="sw" style="background:'+f.c+'"></span>'+f.l+' <em>bientôt</em></button>';
+      return '<button type="button" class="pill" data-f="'+f.k+'" aria-pressed="'+(!!st.fam[f.k])+'"><span class="sw" style="background:'+f.c+'"></span>'+f.l+'</button>';};
+    var on=function(fs){return fs.filter(function(f){return f.i!==null;}).every(function(f){return st.fam[f.k];});};
+    var club=FAM.filter(function(f){return N1(f)==='club';}), sel=FAM.filter(function(f){return N1(f)==='sel';});
+    $('familles').innerHTML=
+      '<div class="carte" role="group" aria-label="Club"><button type="button" class="n1" data-n1="club" aria-pressed="'+on(club)+'">Club</button><div class="branches">'
+      +GRP.map(function(g){var fs=FAM.filter(function(f){return f.g===g[0];});
+        return '<div class="branche '+g[0]+'" role="group" aria-label="'+g[1]+'"><button type="button" class="n2" data-g="'+g[0]+'" aria-pressed="'+on(fs)+'">'+g[1]+'</button>'+fs.map(chip).join('')+'</div>';}).join('')
+      +'</div></div>'
+      +'<div class="carte" role="group" aria-label="Sélection"><button type="button" class="n1" data-n1="sel" aria-pressed="'+on(sel)+'">Sélection</button><div class="branches plat">'+sel.map(chip).join('')+'</div></div>';
   }
   function options(S){
     var lig=[TOUS_L].concat(Array.from(new Set(S.rows.map(function(d){return d[5];}))).sort());
@@ -206,6 +220,8 @@ button,input,select{font:inherit}
   document.addEventListener('click',function(e){
     var b=e.target.closest('button'); if(!b) return;
     if(b.dataset.s){ st.saison=b.dataset.s; st.tout=false; saison(); }
+    else if(b.dataset.n1){ var f1=FAM.filter(function(f){return N1(f)===b.dataset.n1 && f.i!==null;}), t1=f1.every(function(f){return st.fam[f.k];});
+      f1.forEach(function(f){st.fam[f.k]=t1?0:1;}); pills(); rendu(); }
     else if(b.dataset.g){ var fs=FAM.filter(function(f){return f.g===b.dataset.g && f.i!==null;}), tout=fs.every(function(f){return st.fam[f.k];});
       fs.forEach(function(f){st.fam[f.k]=tout?0:1;}); pills(); rendu(); }
     else if(b.dataset.f){ st.fam[b.dataset.f]=st.fam[b.dataset.f]?0:1; pills(); rendu(); }
