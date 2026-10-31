@@ -14,7 +14,7 @@
    premier texte (≈ 2,5 s perdues sur mobile selon PageSpeed). Les trois fichiers
    du premier écran sont préchargés ; les autres (latin étendu, chasse fixe) ne
    viennent que si un caractère les demande. */
-import { arbre } from './site.mjs';
+import { arbre, url } from './site.mjs';
 
 export const FONTS = `<link rel="preload" href="/fonts/carlito-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/carlito-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -223,7 +223,7 @@ export function nav(current) {
      « grotang » donnait « GROTANG.FR Coefficient UEFAFrançais en Grand Chelem
      Sombre » — le logo, les onglets collés et le libellé du bouton de thème. */
   const icone = FAVICON_SVG.replace('<svg ', '<svg aria-hidden="true" focusable="false" ');
-  return `<div class="gnav" data-nosnippet><a class="gn-mark" href="/uefa/">${icone}<b style="font-weight:inherit">GROTANG<span>.FR</span></b></a>`
+  return `<div class="gnav" data-nosnippet><a class="gn-mark" href="${url('uefa')}">${icone}<b style="font-weight:inherit">GROTANG<span>.FR</span></b></a>`
     + `<nav>${links}</nav>`
     + `<span class="gn-coq">${COQ_SVG}</span>`
     + `<button type="button" class="gn-theme" id="gn-theme" aria-pressed="false" title="Basculer clair / sombre">`
@@ -254,5 +254,5 @@ export const FAVICON = `<link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">`;
 export const MANIFEST = JSON.stringify({ name: "grotang.fr — l'observatoire du coefficient UEFA", short_name: 'grotang.fr',
-  start_url: '/uefa/', display: 'browser', background_color: '#FFD400', theme_color: '#FFD400',
+  start_url: url('uefa'), display: 'browser', background_color: '#FFD400', theme_color: '#FFD400',
   icons: [{ src: '/icon-192.png', sizes: '192x192', type: 'image/png' }, { src: '/icon-512.png', sizes: '512x512', type: 'image/png' }] }, null, 2);

@@ -5,7 +5,15 @@
    rubrique dans une autre : on ne touche qu'à ce fichier.
 
    LA RÈGLE : l'adresse d'une page décrit la PAGE, jamais sa rubrique.
-   `/uefa/`, pas `/football/uefa/`. La rubrique ne vit que dans le menu, elle
+   Forme : PÉRIMÈTRE-OBJET-ANGLE, en minuscules, sans accents, avec des tirets.
+   Le périmètre est le sport ou le territoire dont parle la page (football,
+   tennis, biathlon, france, europe…), TOUJOURS présent, même quand il semble
+   redondant (`football-coefficient-uefa`) : une seule règle, aucune exception,
+   et chaque adresse se comprend seule (« grand-chelem » seul, c'est aussi le
+   golf ou le rugby). Pas d'année si la page est mise à jour d'une année sur
+   l'autre. Le périmètre est une propriété du CONTENU, pas une rubrique du
+   menu : le tennis reste du tennis s'il passe sous « Sport ».
+   Exemple : `/football-coefficient-uefa/`, pas `/football/uefa/`. La rubrique ne vit que dans le menu, elle
    peut changer de nom ou de place autant de fois qu'on veut sans casser un
    seul lien ni perdre une position dans Google. Une adresse, elle, ne change
    plus une fois publiée — et si on doit vraiment la changer, l'ancienne va
@@ -17,10 +25,10 @@
    dès la deuxième page, elle devient un menu déroulant, sans rien d'autre à
    changer. */
 export const PAGES = [
-  { key: 'uefa',   url: '/uefa/',          titre: 'Coefficient UEFA',    rubrique: ['Football'] },
-  { key: 'tennis', url: '/grand-chelem/',  titre: 'Grand Chelem',        rubrique: ['Tennis'] },
-  { key: 'eco',    url: '/budget-france/', titre: 'Budget de la France', rubrique: ['Économie'] },
-  { key: 'b27',    url: '/budget-2027/',   titre: 'Faites votre budget 2027', rubrique: ['Économie'] },
+  { key: 'uefa',   url: '/football-coefficient-uefa/',   titre: 'Coefficient UEFA',         rubrique: ['Football'] },
+  { key: 'tennis', url: '/tennis-grand-chelem-nations/', titre: 'Grand Chelem',             rubrique: ['Tennis'] },
+  { key: 'eco',    url: '/france-comptes-publics/',      titre: 'Budget de la France',      rubrique: ['Économie'] },
+  { key: 'b27',    url: '/france-simulateur-budget/',    titre: 'Faites votre budget 2027', rubrique: ['Économie'] },
 ];
 
 /* Les adresses qui ont existé et n'existent plus : chacune reçoit une page
@@ -29,8 +37,12 @@ export const PAGES = [
    une redirection permanente). On n'en retire jamais : un vieux lien partagé
    doit marcher pour toujours. */
 export const RELAIS = {
-  '/tennis/':   '/grand-chelem/',     // jusqu'au 31/10/2026
-  '/economie/': '/budget-france/',    // jusqu'au 31/10/2026
+  '/uefa/':          '/football-coefficient-uefa/',     // de septembre au 31/10/2026
+  '/tennis/':        '/tennis-grand-chelem-nations/',   // jusqu'au 31/10/2026
+  '/grand-chelem/':  '/tennis-grand-chelem-nations/',   // le 31/10/2026, une heure
+  '/economie/':      '/france-comptes-publics/',        // jusqu'au 31/10/2026
+  '/budget-france/': '/france-comptes-publics/',        // le 31/10/2026, une heure
+  '/budget-2027/':   '/france-simulateur-budget/',      // le 31/10/2026, une heure
 };
 
 export const DOMAINE = 'https://grotang.fr';
@@ -42,7 +54,7 @@ export const page = key => {
 };
 export const url = key => page(key).url;
 export const abs = key => DOMAINE + url(key);
-/* chemin du fichier publié : '/grand-chelem/' → 'grand-chelem/index.html' */
+/* chemin du fichier publié : '/tennis-grand-chelem-nations/' → 'tennis-grand-chelem-nations/index.html' */
 export const fichier = u => u.replace(/^\//, '') + 'index.html';
 
 /* Contrôles au chargement : une erreur ici arrête la fabrication du site avant
@@ -51,6 +63,8 @@ export const fichier = u => u.replace(/^\//, '') + 'index.html';
   const vues = new Set();
   for (const p of PAGES) {
     if (!/^\/[a-z0-9-]+\/$/.test(p.url)) throw new Error(`registre : adresse mal formée « ${p.url} »`);
+    if (!/^\/(football|tennis|biathlon|rugby|cyclisme|france|europe|monde)-/.test(p.url))
+      throw new Error(`registre : « ${p.url} » ne commence pas par un périmètre connu (football-, tennis-, france-…) ; en ajouter un ici si besoin`);
     if (vues.has(p.url)) throw new Error(`registre : adresse en double « ${p.url} »`);
     vues.add(p.url);
     if (!p.rubrique?.length) throw new Error(`registre : « ${p.key} » sans rubrique`);

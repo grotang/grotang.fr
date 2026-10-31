@@ -234,7 +234,7 @@ function buildUefa() {
   const seo = {
     titre: `Coefficient UEFA ${saisonC} : classement et évolution`,
     desc: `Coefficient UEFA ${saisonC} : le classement des 55 associations et son évolution journée par journée, mis à jour chaque matin. D'où viennent les points, et où en est la France dans la course à la 5e place.`,
-    url: 'https://grotang.fr/uefa/',
+    url: abs('uefa'),
   };
   /* dateModified au format ISO, à partir de « 17/09/2026 - 22:56 » */
   const isoMaj = (() => { const m = /^(\d{2})\/(\d{2})\/(\d{4})/.exec(String(meta.lastUpdated).trim());
@@ -272,14 +272,14 @@ ${VERIF}
 <meta property="og:title" content="${seo.titre}">
 <meta property="og:description" content="${seo.desc}">
 <meta property="og:url" content="${seo.url}">
-<meta property="og:image" content="https://grotang.fr/uefa/carte.png">
+<meta property="og:image" content="${abs('uefa')}carte.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Où chaque nation peut finir la saison : projection du coefficient UEFA des huit premières nations">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${seo.titre}">
 <meta name="twitter:description" content="${seo.desc}">
-<meta name="twitter:image" content="https://grotang.fr/uefa/carte.png">
+<meta name="twitter:image" content="${abs('uefa')}carte.png">
 <script type="application/ld+json">${jsonld}</script>
 <script type="application/ld+json">${WEBSITE_LD}</script>
 ${FAVICON}
@@ -452,11 +452,11 @@ ${VERIF}
 ${FAVICON}
 <meta property="og:site_name" content="${SITE_NOM}">
 <script type="application/ld+json">${WEBSITE_LD}</script>
-<link rel="canonical" href="https://grotang.fr/uefa/">
-<meta http-equiv="refresh" content="0; url=/uefa/">
-<script>location.replace('/uefa/');</script>
+<link rel="canonical" href="${abs('uefa')}">
+<meta http-equiv="refresh" content="0; url=${url('uefa')}">
+<script>location.replace('${url('uefa')}');</script>
 </head>
-<body><p><a href="/uefa/">L'observatoire du coefficient UEFA</a></p></body>
+<body><p><a href="${url('uefa')}">L'observatoire du coefficient UEFA</a></p></body>
 </html>
 `;
 
@@ -508,14 +508,14 @@ background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,'Segoe
 h1{font-size:56px;margin:0;font-weight:700;letter-spacing:-.03em}
 p{margin:0;color:var(--ink3)}
 a{color:var(--hi);font-weight:600;margin-top:14px;display:inline-block}</style>
-</head><body><h1>404</h1><p>Cette page n'existe pas.</p><a href="/uefa/">Coefficient UEFA</a></body></html>`;
+</head><body><h1>404</h1><p>Cette page n'existe pas.</p><a href="${url('uefa')}">Coefficient UEFA</a></body></html>`;
 
 /* ---------- exécution ---------- */
 /* L'etat precedent, releve AVANT le grand menage : les deux pages, pour savoir
    si elles ont reellement change, et le sitemap, pour en reprendre les dates
    quand elles n'ont pas bouge. */
 const lire = f => { try { return fs.readFileSync(path.join(OUT, f), 'utf8'); } catch { return null; } };
-const PRECEDENT = lire('uefa/index.html');
+const PRECEDENT = lire(fichier(url('uefa')));
 const PREC_TENNIS = lire(fichier(url('tennis')));
 const PREC_ECO = lire(fichier(url('eco')));
 const PREC_B27 = lire(fichier(url('b27')));
@@ -524,7 +524,8 @@ const PREC_SITEMAP = lire('sitemap.xml');
    apres la projection. Le grand menage l'effacerait a chaque construction :
    on la met de cote et on la repose telle quelle, avec sa signature. C'est ce
    qui permet a carte.mjs de ne la refaire que si son contenu a change. */
-const CARTE = ['uefa/carte.png', 'uefa/carte.sig'].map(f => {
+const DU = url('uefa').slice(1);   // dossier de la page UEFA et de ses fichiers (matchs.json, saisons.json, carte)
+const CARTE = [DU + 'carte.png', DU + 'carte.sig'].map(f => {
   try { return [f, fs.readFileSync(path.join(OUT, f))]; } catch { return null; } }).filter(Boolean);
 fs.rmSync(OUT, { recursive: true, force: true });
 const uefa = buildUefa();
@@ -566,7 +567,7 @@ const dateGit = (...src) => {
 };
 const COMMUN = ['tools/build.mjs', 'tools/chrome.mjs'];
 const majUefa   = dateGit('tools/uefa/page.html', ...COMMUN)
-  || dateSitemap('/uefa/',   PRECEDENT,   uefa.html,   true);
+  || dateSitemap(url('uefa'), PRECEDENT,   uefa.html,   true);
 const majTennis = dateGit('tools/tennis.src.html', 'tools/tennis/data.json', ...COMMUN)
   || dateSitemap(url('tennis'), PREC_TENNIS, tennis.html, false);
 const majEco    = dateGit('tools/eco/page.html', 'tools/eco/data.json', 'tools/eco/retraites.json', 'tools/eco/leviers.json', 'tools/eco/page.mjs', ...COMMUN)
@@ -601,10 +602,10 @@ const MATCHS = (() => {
 })();
 
 const sizes = {
-  'uefa/matchs.json': write('uefa/matchs.json', MATCHS),
+  [DU + 'matchs.json']: write(DU + 'matchs.json', MATCHS),
   /* saisons closes des blocs 1 et 2 (calendrier, affiches, semaine européenne), chargées au choix d'une saison passée */
-  'uefa/saisons.json': write('uefa/saisons.json', read('tools/uefa/archive/calendrier-saisons.json')),
-  'uefa/index.html': writeStable('uefa/index.html', uefa.html, PRECEDENT),
+  [DU + 'saisons.json']: write(DU + 'saisons.json', read('tools/uefa/archive/calendrier-saisons.json')),
+  [fichier(url('uefa'))]: writeStable(fichier(url('uefa')), uefa.html, PRECEDENT),
   [fichier(url('tennis'))]: write(fichier(url('tennis')), tennis.html),
   [fichier(url('eco'))]: write(fichier(url('eco')), eco.html),
   [fichier(url('b27'))]: write(fichier(url('b27')), b27.html),

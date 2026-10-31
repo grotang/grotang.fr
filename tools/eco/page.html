@@ -350,7 +350,7 @@ svg .m{font-variant-numeric:tabular-nums}
   .bmob b{font-size:17px; font-variant-numeric:tabular-nums}
 }
 /* Une source, deux pages (tools/eco/page.mjs pose data-mode sur <body>) :
-   /budget-france/ (mode france) et /budget-2027/ (mode b27). */
+   /france-comptes-publics/ (mode france) et /france-simulateur-budget/ (mode b27). */
 body[data-mode="b27"] [data-p="france"], body[data-mode="france"] [data-p="b27"]{display:none!important}
 body[data-mode="b27"] #budget-2027{margin-top:18px}
 body[data-mode="b27"] #budget-2027 > .shead{display:none}
@@ -370,7 +370,7 @@ body[data-mode="b27"] #budget-2027 > .shead{display:none}
   <div>
     <div class="eyebrow">Le budget de la France</div>
     <h1>Faites votre budget 2027</h1>
-    <p class="sub">Partez du budget que le gouvernement propose pour 2027 et actionnez des leviers : niches fiscales, âge de la retraite, taxe Zucman, plafond des pensions, convergence avec nos voisins. Chaque levier est chiffré, sourcé, et dit ce qu'on ignore. Pour comprendre d'où l'on part : <a href="/budget-france/">où va l'argent public</a>.</p>
+    <p class="sub">Partez du budget que le gouvernement propose pour 2027 et actionnez des leviers : niches fiscales, âge de la retraite, taxe Zucman, plafond des pensions, convergence avec nos voisins. Chaque levier est chiffré, sourcé, et dit ce qu'on ignore. Pour comprendre d'où l'on part : <a href="/france-comptes-publics/">où va l'argent public</a>.</p>
   </div>
 </header>
 
@@ -416,7 +416,7 @@ body[data-mode="b27"] #budget-2027 > .shead{display:none}
 <section data-p="france" class="b27t">
   <div class="shead"><h2>Et en 2027 ? Faites votre budget</h2>
     <p>Partez du budget que le gouvernement propose pour 2027 et actionnez des leviers : niches fiscales, âge de la retraite, taxe Zucman, plafond des pensions, convergence avec nos voisins.</p></div>
-  <a class="b27go" href="/budget-2027/">Faites votre budget 2027 <span aria-hidden="true">→</span></a>
+  <a class="b27go" href="/france-simulateur-budget/">Faites votre budget 2027 <span aria-hidden="true">→</span></a>
 </section>
 
 <section id="budget-2027" data-p="b27">
@@ -532,9 +532,9 @@ body[data-mode="b27"] #budget-2027 > .shead{display:none}
 /*RT_START*/const RT = null;/*RT_END*/
 /*LV_START*/const LV = null;/*LV_END*/
 /*MODE_START*/const MODE = 'france';/*MODE_END*/
-/* Un ancien lien vers le simulateur (#…&bn=… sur /economie/ ou /budget-france/)
+/* Un ancien lien vers le simulateur (#…&bn=… sur une ancienne adresse de la page des comptes)
    est renvoyé vers sa page, réglages compris. */
-if (MODE === 'france' && /(^#|&)(b[hfnazpd]|bc[rvy])=|^#budget-2027$/.test(location.hash)) location.replace('/budget-2027/' + location.hash.replace(/^#budget-2027$/, ''));
+if (MODE === 'france' && /(^#|&)(b[hfnazpd]|bc[rvy])=|^#budget-2027$/.test(location.hash)) location.replace('/france-simulateur-budget/' + location.hash.replace(/^#budget-2027$/, ''));
 (function () {
 'use strict';
 /* D0 : les données publiées ; D : celles qu'affiche la page — les mêmes, ou une

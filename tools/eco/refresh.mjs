@@ -29,7 +29,7 @@ async function get(q) {
   for (let i = 0; i < 3; i++) {
     try {
       const r = await fetch(BASE + q, { headers: {
-        'User-Agent': 'grotang.fr/1.0 (robot de mise a jour de https://grotang.fr/budget-france/)',
+        'User-Agent': 'grotang.fr/1.0 (robot de mise a jour de https://grotang.fr/france-comptes-publics/)',
         Accept: 'application/json' } });
       if (r.ok) return await r.json();
       err = new Error(`HTTP ${r.status} sur ${q.slice(0, 80)}`);

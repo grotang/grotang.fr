@@ -41,7 +41,7 @@ import { lireTableau, colonnes, nomsColonnes, nationsTableau, resoudreNeutres, u
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const FICHIER = path.join(ICI, 'data.json');
 const ALARME = path.join(os.tmpdir(), 'grotang-tennis-alarme.txt');
-const UA = 'grotang.fr-robot/1.0 (https://grotang.fr/tennis/; Grands Chelems par nation, quelques pages par jour)';
+const UA = 'grotang.fr-robot/1.0 (https://grotang.fr/tennis-grand-chelem-nations/; Grands Chelems par nation, quelques pages par jour)';
 const SLAMS = { AO: 'Australian Open', RG: 'French Open', WIM: 'Wimbledon Championships', USO: 'US Open' };
 /* 1977 : deux éditions de l'Open d'Australie, janvier (AO) et décembre (AOd) */
 const titre = (an, s) => s === 'AOd' ? `${an} Australian Open (December) – Men's singles`

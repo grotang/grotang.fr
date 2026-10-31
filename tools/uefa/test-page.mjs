@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* Test de non-régression de la page publiée.
  *
- *   node tools/uefa/test-page.mjs [chemin.html]     (défaut : public/uefa/index.html)
+ *   node tools/uefa/test-page.mjs [chemin.html]     (défaut : la page UEFA du registre)
  *
  * Pourquoi ce fichier existe
  * --------------------------
@@ -28,7 +28,17 @@ import path from 'node:path';
 import { chromium } from 'playwright';
 import { servir } from './serveur.mjs';
 
-const FICHIER = path.resolve(process.argv[2] || 'public/uefa/index.html');
+/* Par défaut, la page UEFA à son adresse du registre (tools/site.mjs). Si on
+   nous donne une ancienne adresse devenue page relais (les workflows ont
+   longtemps passé public/uefa/index.html), on suit le relais : le filet teste
+   toujours la vraie page, jamais la redirection. */
+const { url: urlPage } = await import('../site.mjs');
+let FICHIER = path.resolve(process.argv[2] || path.join('public', urlPage('uefa'), 'index.html'));
+{ const t = fs.existsSync(FICHIER) && fs.readFileSync(FICHIER, 'utf8');
+  if (t && t.length < 5000 && /http-equiv="refresh"/.test(t)) {
+    const vers = /url=(\/[a-z0-9-]+\/)/.exec(t);
+    if (vers) { FICHIER = path.resolve(path.join('public', vers[1], 'index.html')); console.log('relais suivi :', vers[1]); }
+  } }
 const dur = [], mou = [];
 const bloquant = (nom, ok, detail = '') => (ok ? null : dur.push(`${nom}${detail ? ' — ' + detail : ''}`), ok);
 const signalant = (nom, ok, detail = '') => (ok ? null : mou.push(`${nom}${detail ? ' — ' + detail : ''}`), ok);

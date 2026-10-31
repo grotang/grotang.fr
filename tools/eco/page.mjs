@@ -1,6 +1,6 @@
 /* Fabrication des pages économie : tools/eco/page.html + tools/eco/data.json.
- * UNE source, DEUX pages : mode 'france' → /budget-france/ (les comptes publics),
- * mode 'b27' → /budget-2027/ (le simulateur). page.html marque chaque bloc
+ * UNE source, DEUX pages : mode 'france' → /france-comptes-publics/ (les comptes publics),
+ * mode 'b27' → /france-simulateur-budget/ (le simulateur). page.html marque chaque bloc
  * data-p="france" ou data-p="b27" ; on pose data-mode sur <body> et la page
  * n'affiche (et ne calcule) que ses blocs.
  * plus le chrome commun du site (navigation, thème, polices, mesure d'audience).
@@ -56,7 +56,7 @@ export function buildEco(mode = 'france') {
   if (!RE2.test(out)) throw new Error('économie : sentinelles RT introuvables');
   out = out.replace(RE2, () => `/*RT_START*/const RT = ${JSON.stringify(RT)};/*RT_END*/`);
   /* Leviers du simulateur « Budget 2027 » (relevés à la main dans le PLF). */
-  /* le simulateur n'existe que sur /budget-2027/ : la page des comptes ne porte pas ses données */
+  /* le simulateur n'existe que sur sa page : la page des comptes ne porte pas ses données */
   const LV = mode === 'b27' ? LV0 : null;
   const RE3 = /\/\*LV_START\*\/[^]*?\/\*LV_END\*\//;
   if (!RE3.test(out)) throw new Error('économie : sentinelles LV introuvables');

@@ -28,15 +28,16 @@ import path from 'node:path';
 import os from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright';
+import { url } from '../site.mjs';
 
 const ICI = path.dirname(new URL(import.meta.url).pathname);
 const RACINE = path.resolve(ICI, '../..');
 const PAGE = path.join(ICI, 'page.html');
-const BATI = path.join(RACINE, 'public/uefa/index.html');
+const BATI = path.join(RACINE, 'public', url('uefa'), 'index.html');   // adresse lue dans le registre (tools/site.mjs)
 const SENT = ['/*PRJ_START*/', '/*PRJ_END*/'];
 const N = Number(process.argv[2] || 100000);
 
-if (!fs.existsSync(BATI)) { console.error('public/uefa/index.html absent : lancer le build d\'abord.'); process.exit(2); }
+if (!fs.existsSync(BATI)) { console.error(BATI + ' absent : lancer le build d\'abord.'); process.exit(2); }
 
 const EXE = process.env.PW_CHROMIUM || (fs.existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : null);
 const nav = await chromium.launch(EXE ? { executablePath: EXE } : {});

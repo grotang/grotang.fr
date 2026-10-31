@@ -3,7 +3,7 @@
    jour a partir de la page publiee — memes chiffres que le bloc 8, memes
    couleurs, aucune donnee recopiee.
 
-     node tools/uefa/carte.mjs            ->  public/uefa/carte.png (sombre)
+     node tools/uefa/carte.mjs            ->  public/<page UEFA>/carte.png (sombre)
      node tools/uefa/carte.mjs clair      ->  version claire, pour comparer
 
    Anti-churn : la carte est signee par le dessin qu'elle contient (le SVG,
@@ -17,11 +17,13 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { servir } from './serveur.mjs';
+import { url } from '../site.mjs';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
-const PAGE = path.join(ICI, '../../public/uefa/index.html');
+const DOSSIER = path.join(ICI, '../../public', url('uefa'));   // adresse lue dans le registre (tools/site.mjs)
+const PAGE = path.join(DOSSIER, 'index.html');
 const THEME = process.argv[2] === 'clair' ? 'light' : 'dark';
-const SORTIE = path.join(ICI, '../../public/uefa', process.argv[3] || 'carte.png');
+const SORTIE = path.join(DOSSIER, process.argv[3] || 'carte.png');
 const SIG = SORTIE.replace(/\.png$/, '.sig');
 
 const EXE = process.env.PW_CHROMIUM || (fs.existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : null);

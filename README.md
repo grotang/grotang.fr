@@ -6,12 +6,12 @@ Un site statique, en français, qui suit le classement UEFA des associations (la
 
 | Page | Adresse | Données |
 |---|---|---|
-| Coefficient UEFA | [grotang.fr/uefa/](https://grotang.fr/uefa/) | relues automatiquement, plusieurs fois par jour en période de match |
-| Grand Chelem | [grotang.fr/grand-chelem/](https://grotang.fr/grand-chelem/) | les Grands Chelems nation par nation (France par défaut, les 21 nations titrées depuis 1968), tour par tour, relus sur Wikipédia trois fois par jour |
-| Budget de la France | [grotang.fr/budget-france/](https://grotang.fr/budget-france/) | comptes des administrations publiques, relus chez Eurostat chaque lundi |
-| Faites votre budget 2027 | [grotang.fr/budget-2027/](https://grotang.fr/budget-2027/) | le simulateur du budget 2027 (leviers relevés à la main dans `tools/eco/leviers.json`) ; même source que la page précédente (`tools/eco/page.html`, blocs marqués `data-p`), fabriquée en deux pages par `tools/eco/page.mjs` |
+| Coefficient UEFA | [grotang.fr/football-coefficient-uefa/](https://grotang.fr/football-coefficient-uefa/) | relues automatiquement, plusieurs fois par jour en période de match |
+| Grand Chelem | [grotang.fr/tennis-grand-chelem-nations/](https://grotang.fr/tennis-grand-chelem-nations/) | les Grands Chelems nation par nation (France par défaut, les 21 nations titrées depuis 1968), tour par tour, relus sur Wikipédia trois fois par jour |
+| Budget de la France | [grotang.fr/france-comptes-publics/](https://grotang.fr/france-comptes-publics/) | comptes des administrations publiques, relus chez Eurostat chaque lundi |
+| Faites votre budget 2027 | [grotang.fr/france-simulateur-budget/](https://grotang.fr/france-simulateur-budget/) | le simulateur du budget 2027 (leviers relevés à la main dans `tools/eco/leviers.json`) ; même source que la page précédente (`tools/eco/page.html`, blocs marqués `data-p`), fabriquée en deux pages par `tools/eco/page.mjs` |
 
-**Le registre (`tools/site.mjs`)** est la seule liste des pages : adresse, titre, rubrique du menu. Le menu, le sitemap, les adresses canoniques et les pages relais en sont tirés. Règle : l'adresse décrit la page, jamais sa rubrique (`/uefa/`, pas `/football/uefa/`) ; renommer ou déplacer une rubrique ne touche aucune adresse. Une adresse abandonnée va dans `RELAIS` et reçoit une page qui renvoie vers la nouvelle (`/tennis/` → `/grand-chelem/`, `/economie/` → `/budget-france/` depuis le 31/10/2026).
+**Le registre (`tools/site.mjs`)** est la seule liste des pages : adresse, titre, rubrique du menu. Le menu, le sitemap, les adresses canoniques et les pages relais en sont tirés. **Règle des adresses** : `périmètre-objet-angle` (`football-coefficient-uefa`, `tennis-grand-chelem-nations`, `france-comptes-publics`), périmètre toujours présent (sport ou territoire), jamais la rubrique du menu, pas d'année pour une page reconduite ; le build refuse une adresse qui ne respecte pas la forme. Une adresse abandonnée va dans `RELAIS` et reçoit pour toujours une page qui renvoie vers la nouvelle (`/uefa/`, `/tennis/`, `/economie/` et les adresses intermédiaires du 31/10/2026).
 
 ---
 
@@ -166,7 +166,7 @@ Les données vivent dans la page, entre sentinelles `/*NOM_START*/ … /*NOM_END
 ```
 npm ci
 npm run build                     # fabrique public/
-npm run test:page                 # teste public/uefa/index.html
+npm run test:page                 # teste la page UEFA (adresse lue dans tools/site.mjs)
 npm run refresh:dry               # relit la source sans rien écrire
 ```
 
@@ -182,4 +182,4 @@ Le dépôt est public pour être lisible, pas pour être repris. Le code, la mis
 
 Les résultats de matchs et les coefficients sont des faits, ils ne sont à personne. Chiffres non officiels : l'UEFA fait foi.
 
-Contact : voir le bloc « Une idée ? » sur [grotang.fr/uefa/](https://grotang.fr/uefa/).
+Contact : voir le bloc « Une idée ? » sur [grotang.fr/football-coefficient-uefa/](https://grotang.fr/football-coefficient-uefa/).
