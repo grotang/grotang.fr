@@ -614,7 +614,7 @@ function choisir(t, garder, n){
 }
 /* ---------- infobulles ---------- */
 /* Une case : le tournoi, ses dates, le nombre de Français au tour choisi, leurs
-   noms quand ils sont 3 ou moins, le parcours complet de l'édition et, le cas
+   noms quand ils sont 5 ou moins, le parcours complet de l'édition et, le cas
    échéant, la subtilité du tableau. La colonne Σ : l'année, tournoi par tournoi. */
 const TOURNOI = {AO:"Open d'Australie", RG:'Roland-Garros', WIM:'Wimbledon', USO:'US Open'};
 const COUL = {AO:'var(--ao)', RG:'var(--rg)', WIM:'var(--wim)', USO:'var(--uso)'};
@@ -678,7 +678,7 @@ function htmlCase(y, s) {
     const n = d[i];
     h += `<div class="big${n ? '' : ' vide'}">${tour === 'V' || !n ? '' : `<b>${n}</b>`}<span>${phrase(n, i)}${ouv[i] === 'p' ? ' · tour en cours' : ''}</span></div>`;
     const nm = nomsCase(y, s, i);
-    if (nm.length && nm.length <= 3) h += '<ul class="noms">' + nm.map(x => `<li>${tour === 'V' ? '🏆 ' : ''}${esc(x)}</li>`).join('') + '</ul>';
+    if (nm.length && nm.length <= 5) h += '<ul class="noms">' + nm.map(x => `<li>${tour === 'V' ? '🏆 ' : ''}${esc(x)}</li>`).join('') + '</ul>';
     /* le parcours de l'édition, du 1er tour au titre */
     const mx = Math.max(1, d[0]);
     h += '<div class="parc">' + d.map((v, k) => {
@@ -705,7 +705,7 @@ function htmlAnnee(y) {
     lignes.push(`<li style="display:flex;justify-content:space-between;gap:14px;font-weight:400"><span><i style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${COUL[s]};margin-right:6px"></i>${TOURNOI[s]}</span><b style="font-variant-numeric:tabular-nums">${v}</b></li>`);
   }
   h += `<ul class="noms" style="margin-top:0">${lignes.join('')}</ul>`;
-  if (noms.length && noms.length <= 3) h += '<div class="tfoot" style="color:var(--ink)">' + noms.map(([x, s]) => `${esc(x)} <span style="color:var(--ink-3)">(${s})</span>`).join('<br>') + '</div>';
+  if (noms.length && noms.length <= 5) h += '<div class="tfoot" style="color:var(--ink)">' + noms.map(([x, s]) => `${esc(x)} <span style="color:var(--ink-3)">(${s})</span>`).join('<br>') + '</div>';
   return h;
 }
 const tip = document.createElement('div');
