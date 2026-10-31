@@ -251,8 +251,24 @@ svg .m{font-variant-numeric:tabular-nums}
 .levs{display:grid; gap:10px}
 .lv{border:1px solid var(--rule); border-radius:3px; background:var(--surface); padding:12px 14px; transition:border-color .15s}
 .lv[data-on="1"]{border-color:var(--ink-3); box-shadow:inset 3px 0 0 var(--good)}
-.lv .lh{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
-.lv h4{margin:0; font-size:15px; font-weight:700; flex:1 1 220px; line-height:1.3}
+.lv .lh{display:flex; align-items:center; gap:10px 12px}
+.lv .lno{flex:none; width:24px; height:24px; border-radius:50%; background:var(--ink); color:var(--surface); font-size:12.5px; font-weight:700; display:grid; place-items:center}
+.lv[data-on="1"] .lno{background:var(--good)}
+.lv .lt{flex:1 1 auto; min-width:0}
+.lv .ls{margin:2px 0 0; font-size:12.5px; color:var(--ink-2); line-height:1.4}
+.lv .lmax{color:var(--ink-3); white-space:nowrap}
+.lv .lx{flex:none; appearance:none; border:1px solid var(--rule); background:var(--surface); color:var(--ink-2); font:inherit; font-size:12.5px; font-weight:600; border-radius:2px; padding:4px 9px; cursor:pointer; white-space:nowrap}
+.lv .lx span{display:inline-block; margin-left:5px; transition:transform .15s}
+.lv[data-open="1"] .lx span{transform:rotate(180deg)}
+.lv .lx:focus-visible{outline:2px solid var(--fr); outline-offset:1px}
+.lv[data-open="0"] .lbody{display:none}
+.lv .lbody{margin-top:10px; padding-top:10px; border-top:1px solid var(--rule)}
+.lv .ltags{display:flex; gap:6px; flex-wrap:wrap}
+.lhd h4{margin:0; font-size:17px; font-family:"Newsreader",Georgia,serif; font-weight:600}
+.lhd p{margin:3px 0 4px; font-size:13px; color:var(--ink-2); line-height:1.45}
+.lgr{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700; color:var(--ink-3); margin:8px 0 -2px}
+@media (max-width:560px){ .lv .lh{flex-wrap:wrap; gap:8px 10px} .lv .lt{order:5; flex:1 1 100%} .lv .lx{margin-left:auto} }
+.lv h4{margin:0; font-size:15px; font-weight:700; line-height:1.3}
 .lv .amt{font-size:18px; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; color:var(--ink-3)}
 .lv[data-on="1"] .amt{color:var(--good)}
 .lv .amt small{font-size:12px; font-weight:400; color:var(--ink-3); margin-left:2px}
@@ -370,7 +386,7 @@ body[data-mode="b27"] #budget-2027 > .shead{display:none}
   <div>
     <div class="eyebrow">Le budget de la France</div>
     <h1>Faites votre budget 2027</h1>
-    <p class="sub">Partez du budget que le gouvernement propose pour 2027 et actionnez des leviers : niches fiscales, âge de la retraite, taxe Zucman, plafond des pensions, convergence avec nos voisins. Chaque levier est chiffré, sourcé, et dit ce qu'on ignore. Pour comprendre d'où l'on part : <a href="/france-comptes-publics/">où va l'argent public</a>.</p>
+    <p class="sub">Partez du budget que le gouvernement propose pour 2027 et actionnez des leviers : plafond des pensions, âge de la retraite, convergence avec nos voisins, niches fiscales, taxe Zucman. Chaque levier est chiffré, sourcé, et dit ce qu'on ignore. Pour comprendre d'où l'on part : <a href="/france-comptes-publics/">où va l'argent public</a>.</p>
   </div>
 </header>
 
@@ -415,7 +431,7 @@ body[data-mode="b27"] #budget-2027 > .shead{display:none}
 
 <section data-p="france" class="b27t">
   <div class="shead"><h2>Et en 2027 ? Faites votre budget</h2>
-    <p>Partez du budget que le gouvernement propose pour 2027 et actionnez des leviers : niches fiscales, âge de la retraite, taxe Zucman, plafond des pensions, convergence avec nos voisins.</p></div>
+    <p>Partez du budget que le gouvernement propose pour 2027 et actionnez des leviers : plafond des pensions, âge de la retraite, convergence avec nos voisins, niches fiscales, taxe Zucman.</p></div>
   <a class="b27go" href="/france-simulateur-budget/">Faites votre budget 2027 <span aria-hidden="true">→</span></a>
 </section>
 
@@ -1617,33 +1633,61 @@ const budget27 = (() => {
   const SENS = { convergence: CV && CV.sens, niches: N.sens, age: AG.sens, zucman: Z.sens, plafond: PL.sens };
   const exclu = id => { const x = defi(); return !!(x && x.sauf && SENS[id] === x.sauf); };
   const coupe = () => { if (exclu('convergence')) B.cv = {}; if (exclu('niches')) B.n.clear(); if (exclu('age')) B.age = AG.ref; if (exclu('zucman')) B.z = 0; if (exclu('plafond')) B.p = 0; };
+  const ouvre = (c, o) => { c.dataset.open = o ? 1 : 0; c.querySelector('[data-lx]').setAttribute('aria-expanded', o); };
   const finDe = hz => base - calc(hz).filter(x => x.on).reduce((a, x) => a + x.md, 0);
 
   /* --- les cartes (construites une fois, mises à jour ensuite) --- */
   const src = l => `<details><summary>Comment c'est chiffré, sources</summary>`
     + [l.garde_note, l.par_an_note, l.rendement_note, l.note, l.an1_note].filter(Boolean).map(t => `<p>${t}</p>`).join('')
     + `<p>${l.sources.map(x => `<a href="${x.u}" rel="noopener">${x.t}</a>`).join('<br>')}</p></details>`;
-  const head = (l, sw) => `<div class="lh">${sw ? `<label class="sw"><input type="checkbox" data-sw="${l.id}" aria-label="${l.titre}"><span></span></label>` : ''}<h4>${l.titre}</h4>`
-    + `<span class="pill ${l.fiab}">${FIAB[l.fiab]}</span><span class="pill sens">${l.sens === 'recette' ? 'recette en plus' : 'dépense en moins'}</span><span class="amt" id="b27-a-${l.id}"></span></div><p class="ch">${l.chapo}</p>`;
+  /* Chaque levier : une ligne toujours visible (numéro, interrupteur, ce qu'il fait, jusqu'où il peut aller,
+     montant retenu, « Régler »), et un corps dépliable avec les réglages et les sources. */
+  const RES = {
+    plafond: 'Toute pension au-dessus du plafond (SMIC, 2 SMIC…) y est ramenée',
+    age: 'De 64 ans (loi actuelle) jusqu\'à 68 ans',
+    convergence: 'Dépenser comme la zone euro ou un voisin, poste par poste',
+    niches: 'Les 12 plus coûteuses au choix, ou les 459',
+    zucman: '2 % par an sur les patrimoines de plus de 100 M€, taux réglable',
+  };
+  /* jusqu'où chaque levier peut aller : chiffrage central, à maturité */
+  const MAXI = {
+    plafond: () => plafondOK ? RET.calc(1000, PL.an_modele).net / 1000 * PIB * 1000 / D0.pib[k25] : 0,
+    age: () => (AG.max - AG.ref) * AG.par_an_pct_pib.centrale / 100 * PIB,
+    convergence: () => cvOK ? CVR.reduce((a, r) => a + Math.max(0, ecartCV(r, 'EA20')), 0) : 0,
+    niches: () => N.total_md * N.garde.centrale,
+    zucman: () => Z.rendement_2pct_md.centrale * Z.max / Z.taux_ref,
+  };
+  const ORDRE = [['Baisser des dépenses', ['plafond', 'age', 'convergence']], ['Augmenter des recettes', ['niches', 'zucman']]];
+  const lev = (l, no, corps) => `<div class="lv" data-l="${l.id}" data-open="0">`
+    + `<div class="lh"><span class="lno">${no}</span><label class="sw"><input type="checkbox" data-sw="${l.id}" aria-label="${l.titre}"><span></span></label>`
+    + `<div class="lt"><h4>${l.titre}</h4><p class="ls">${RES[l.id]} · <span class="lmax">jusqu'à ≈ ${md(MAXI[l.id](), 0)} Md€ par an</span></p></div>`
+    + `<span class="amt" id="b27-a-${l.id}"></span><button type="button" class="lx" data-lx="${l.id}" aria-expanded="false">Régler<span aria-hidden="true">▾</span></button></div>`
+    + `<div class="lbody"><div class="ltags"><span class="pill ${l.fiab}">${FIAB[l.fiab]}</span><span class="pill sens">${l.sens === 'recette' ? 'recette en plus' : 'dépense en moins'}</span></div><p class="ch">${l.chapo}</p>${corps}</div></div>`;
   const cards = () => {
     $('b27-d').innerHTML = `<span class="lb">Défis</span>` + DEFIS.map(x => `<button type="button" data-bd="${x.id}" aria-pressed="false" title="${x.d}">${x.t}<span class="ok"></span></button>`).join('');
     $('b27-d').addEventListener('click', e => { const b = e.target.closest('[data-bd]'); if (!b) return; B.d = B.d === b.dataset.bd ? '' : b.dataset.bd; coupe(); maj(true); });
     const box = $('b27-l');
-    box.innerHTML = (cvOK ? `<div class="lv" data-l="convergence">${head(CV, true)}`
-      + `<div class="lc"><div class="rg" style="gap:8px 12px"><span class="ctl"><span class="lb">Référence</span><span class="sel"><select id="b27-cr" aria-label="Pays ou zone de référence">${UE.geo.filter(g => g !== 'FR').map(g => `<option value="${g}">${GEO[g] || g}</option>`).join('')}</select></span></span>`
-      + `<span class="ctl"><span class="lb">En</span><span class="sel"><select id="b27-cy" aria-label="Durée de la convergence">${Array.from({ length: CV.ans_max - CV.ans_min + 1 }, (_, i) => CV.ans_min + i).map(a => `<option value="${a}">${a} an${a > 1 ? 's' : ''}</option>`).join('')}</select></span></span></div>`
-      + `<div class="nq" style="margin-top:8px"><button type="button" data-cq="tout">Tout aligner</button><button type="button" data-cq="top3">Les 3 plus gros écarts</button><button type="button" data-cq="rien">Rien</button></div>`
-      + `<div class="cvl" id="b27-cvl">${CVR.map(r => `<div class="cr" data-cr="${r.c}"><span class="cn">${r.n}${r.d ? `<i>${r.d}</i>` : ''}</span><input type="range" min="0" max="100" step="10" value="0" data-cv="${r.c}" aria-label="Convergence : ${r.n}"><span class="cm" id="b27-cm-${r.c}"></span><span class="cf" id="b27-cf-${r.c}"></span></div>`).join('')}</div></div><div class="an1" id="b27-cv-1"></div><p class="lq" style="color:var(--ink-3)">${CV.avertissement}</p>${src(CV)}</div>` : '')
-      + `<div class="lv" data-l="niches">${head(N, true)}<div class="lc"><div class="nq"><button type="button" data-nq="top5">Les 5 plus coûteuses</button><button type="button" data-nq="tout">Toutes celles-ci</button><button type="button" data-nq="rien">Aucune</button></div>`
-      + `<div class="nl">${NI.map(x => `<label data-n="${x.id}" title="${x.def.replace(/"/g, '&quot;')}"><input type="checkbox" value="${x.id}"><span class="nm">${x.nom}<i>${x.qui}</i></span><span class="m">${md(x.m / 1000)} Md€</span></label>`).join('')}</div></div>`
-      + `<div class="lq" id="b27-q-niches"></div>${src(N)}</div>`
-      + `<div class="lv" data-l="age">${head(AG, true)}<div class="lc"><div class="rg"><input type="range" id="b27-age" min="${AG.min}" max="${AG.max}" step="${AG.pas}" aria-label="Âge légal cible"><span class="val" id="b27-age-v"></span></div></div>`
-      + `<div class="an1" id="b27-age-1"></div><div class="lq"><b>Qui paie :</b> ${bas(AG.qui)}.</div>${src(AG)}</div>`
-      + `<div class="lv" data-l="zucman">${head(Z, true)}<div class="lc"><div class="rg"><input type="range" id="b27-z" min="${Z.min}" max="${Z.max}" step="${Z.pas}" aria-label="Taux de l'impôt plancher"><span class="val" id="b27-z-v"></span></div></div>`
-      + `<div class="lq"><b>Qui paie :</b> ${bas(Z.qui)}.</div><div class="lq" id="b27-z-f"></div>${src(Z)}</div>`
-      + (plafondOK ? `<div class="lv" data-l="plafond">${head(PL, true)}<div class="lc"><div class="rg"><input type="range" id="b27-p" min="1000" max="5000" step="10" aria-label="Plafond de pension nette par mois"><span class="val" id="b27-p-v"></span></div>`
+    const CORPS = {
+      plafond: plafondOK ? `<div class="lc"><div class="rg"><input type="range" id="b27-p" min="1000" max="5000" step="10" aria-label="Plafond de pension nette par mois"><span class="val" id="b27-p-v"></span></div>`
         + `<div class="nq" style="margin-top:6px">${[[1, 'SMIC'], [1.5, '1,5 SMIC'], [2, '2 SMIC']].map(([m, t]) => `<button type="button" data-bp="${Math.round(RET.pa(PL.an_modele).smic * m)}">${t}</button>`).join('')}<button type="button" data-bp="3000">3 000 €</button></div></div>`
-        + `<div class="lq" id="b27-q-plafond"></div>${src(PL)}</div>` : '');
+        + `<div class="lq" id="b27-q-plafond"></div>${src(PL)}` : null,
+      age: `<div class="lc"><div class="rg"><input type="range" id="b27-age" min="${AG.min}" max="${AG.max}" step="${AG.pas}" aria-label="Âge légal cible"><span class="val" id="b27-age-v"></span></div></div>`
+        + `<div class="an1" id="b27-age-1"></div><div class="lq"><b>Qui paie :</b> ${bas(AG.qui)}.</div>${src(AG)}`,
+      convergence: cvOK ? `<div class="lc"><div class="rg" style="gap:8px 12px"><span class="ctl"><span class="lb">Référence</span><span class="sel"><select id="b27-cr" aria-label="Pays ou zone de référence">${UE.geo.filter(g => g !== 'FR').map(g => `<option value="${g}">${GEO[g] || g}</option>`).join('')}</select></span></span>`
+        + `<span class="ctl"><span class="lb">En</span><span class="sel"><select id="b27-cy" aria-label="Durée de la convergence">${Array.from({ length: CV.ans_max - CV.ans_min + 1 }, (_, i) => CV.ans_min + i).map(a => `<option value="${a}">${a} an${a > 1 ? 's' : ''}</option>`).join('')}</select></span></span></div>`
+        + `<div class="nq" style="margin-top:8px"><button type="button" data-cq="tout">Tout aligner</button><button type="button" data-cq="top3">Les 3 plus gros écarts</button><button type="button" data-cq="rien">Rien</button></div>`
+        + `<div class="cvl" id="b27-cvl">${CVR.map(r => `<div class="cr" data-cr="${r.c}"><span class="cn">${r.n}${r.d ? `<i>${r.d}</i>` : ''}</span><input type="range" min="0" max="100" step="10" value="0" data-cv="${r.c}" aria-label="Convergence : ${r.n}"><span class="cm" id="b27-cm-${r.c}"></span><span class="cf" id="b27-cf-${r.c}"></span></div>`).join('')}</div></div><div class="an1" id="b27-cv-1"></div><p class="lq" style="color:var(--ink-3)">${CV.avertissement}</p>${src(CV)}` : null,
+      niches: `<div class="lc"><div class="nq"><button type="button" data-nq="top5">Les 5 plus coûteuses</button><button type="button" data-nq="tout">Toutes celles-ci</button><button type="button" data-nq="rien">Aucune</button></div>`
+        + `<div class="nl">${NI.map(x => `<label data-n="${x.id}" title="${x.def.replace(/"/g, '&quot;')}"><input type="checkbox" value="${x.id}"><span class="nm">${x.nom}<i>${x.qui}</i></span><span class="m">${md(x.m / 1000)} Md€</span></label>`).join('')}</div></div>`
+        + `<div class="lq" id="b27-q-niches"></div>${src(N)}`,
+      zucman: `<div class="lc"><div class="rg"><input type="range" id="b27-z" min="${Z.min}" max="${Z.max}" step="${Z.pas}" aria-label="Taux de l'impôt plancher"><span class="val" id="b27-z-v"></span></div></div>`
+        + `<div class="lq"><b>Qui paie :</b> ${bas(Z.qui)}.</div><div class="lq" id="b27-z-f"></div>${src(Z)}`,
+    };
+    let no = 0;
+    const nb = ORDRE.reduce((a, [, ids]) => a + ids.filter(id => CORPS[id] !== null).length, 0);
+    box.innerHTML = `<div class="lhd"><h4>Vos ${nb} leviers</h4><p>Allumez un levier avec son interrupteur, ajustez-le avec « Régler ». Le déficit se recalcule à côté. Les maximums sont donnés en chiffrage central, une fois la mesure en place.</p></div>`
+      + ORDRE.map(([g, ids]) => `<div class="lgr">${g}</div>` + ids.filter(id => CORPS[id] !== null).map(id => lev(L(id), ++no, CORPS[id])).join('')).join('');
+    box.addEventListener('click', e => { const x = e.target.closest('[data-lx]'); if (!x) return; const c = x.closest('.lv'); ouvre(c, c.dataset.open !== '1'); });
     box.addEventListener('change', e => {
       const t = e.target;
       if (t.id === 'b27-cr') { B.cr = t.value; maj(true); return; }
@@ -1655,6 +1699,7 @@ const budget27 = (() => {
         if (t.dataset.sw === 'age') B.age = on ? AG.max : AG.ref;
         if (t.dataset.sw === 'zucman') B.z = on ? Z.taux_ref : 0;
         if (t.dataset.sw === 'plafond') B.p = on ? Math.round(RET.pa(PL.an_modele).smic) : 0;
+        ouvre(t.closest('.lv'), on);
       } else if (t.closest('.nl')) { if (t.checked) B.n.add(t.value); else B.n.delete(t.value); }
       else return;
       maj(true);
@@ -1716,6 +1761,8 @@ const budget27 = (() => {
     for (const x of R) {
       const c = document.querySelector(`.lv[data-l="${x.id}"]`); if (!c) continue;
       c.dataset.on = x.on ? 1 : 0; c.dataset.lock = exclu(x.id) ? 1 : 0;
+      if (x.on && c.dataset.auto !== '1') { ouvre(c, true); c.dataset.auto = '1'; } else if (!x.on) c.dataset.auto = '0';
+      if (exclu(x.id)) ouvre(c, false);
       c.querySelectorAll('input,button').forEach(i => { i.disabled = exclu(x.id); });
       const sw = c.querySelector('[data-sw]'); if (sw) sw.checked = x.on;
       const a = $('b27-a-' + x.id);

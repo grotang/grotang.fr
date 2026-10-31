@@ -31,7 +31,7 @@ export function buildEco(mode = 'france') {
     ? `Faites votre budget ${LB.annee} : les leviers pour réduire le déficit de la France`
     : `Où va l'argent public ? Dépenses et recettes publiques de la France (${D.der})`;
   const desc = mode === 'b27'
-    ? `Le gouvernement prévoit un déficit de ${(-LB.solde_pct).toLocaleString('fr-FR')} % du PIB en ${LB.annee}. Actionnez les leviers (niches fiscales, âge de la retraite, taxe Zucman, plafond des pensions, convergence avec nos voisins) et voyez où arrivent le déficit et la dette. Chaque chiffrage est sourcé.`
+    ? `Le gouvernement prévoit un déficit de ${(-LB.solde_pct).toLocaleString('fr-FR')} % du PIB en ${LB.annee}. Actionnez les leviers (plafond des pensions, âge de la retraite, convergence avec nos voisins, niches fiscales, taxe Zucman) et voyez où arrivent le déficit et la dette. Chaque chiffrage est sourcé.`
     : `En ${D.der}, ${md(te)} milliards d'euros de dépenses publiques (${pc(te)} % du PIB), ${md(tr)} milliards de recettes, ${md(-b9)} milliards de déficit. `
     + `Le circuit complet de l'argent public, politique par politique, impôt par impôt, depuis 1995, et la comparaison avec l'Europe.`;
   const jsonld = mode === 'b27' ? JSON.stringify({
