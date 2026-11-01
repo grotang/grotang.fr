@@ -470,7 +470,7 @@ button,input,select{font:inherit}
   function tags(x){
     var d=x.d, t=[], rang=x.r, rb=x.rb, delta=rb-rang, tot=d.slice(10,18).reduce(function(a,b){return a+b;},0), uefa=d[12]+d[13]+d[14]+d[15], moy=JD.saisons[st.saison].moyPlie;
     if(delta>=8 && rb>=2*rang) t.push(['up','Les stats le snobent']);
-    if(delta<=-6 && rang>=2*rb) t.push(['down','Gonflé au comptage']);
+    if(delta<=-7 && rang>=1.5*rb) t.push(['down','Gonflé au comptage']);
     if(tot>0 && uefa>=5 && uefa/tot>=.35) t.push(['up','Homme des soirs d\u2019Europe']);
     if(tot>0 && d[17]>=3 && d[17]/tot>=.2) t.push(['up','Se transcende en sélection']);
     if(d[7]>=5 && d[6] && d[7]/d[6]>=.25) t.push(['','Abonné au point de penalty']);
