@@ -181,6 +181,7 @@ button,input,select{font:inherit}
 .duel2 .dl small{font:500 10px Carlito,system-ui,sans-serif; opacity:.7}
 .duel2 .dl.up{color:color-mix(in srgb, #3FB37F 55%, var(--surface))} .duel2 .dl.dn{color:color-mix(in srgb, #E5604A 55%, var(--surface))}
 .zf{cursor:help}
+.bulle .calc{display:block; font-size:10.5px; opacity:.6; margin-top:1px}
 .tag{font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; background:color-mix(in srgb, var(--surface) 14%, transparent); color:var(--surface)}
 /* couleurs relatives au fond de la bulle (sombre en thème clair, claire en thème sombre) */
 .tag.up{background:color-mix(in srgb, #3FB37F 32%, transparent); color:color-mix(in srgb, #3FB37F 40%, var(--surface))}
@@ -535,7 +536,7 @@ button,input,select{font:inherit}
       var d=x.d, dl=x.rb-x.r, L=lig(d[5]);
       var segs=DISPO.map(function(f,i){return x.p[i]>0?'<span data-k="'+f.k+'" style="width:'+(x.p[i]/x.s*100).toFixed(1)+'%;background:'+f.c+'"></span>':'';}).join('');
       return '<div class="r'+(j%2?' z':'')+'"><span class="num"><b>'+x.r+'</b></span>'
-        +'<span class="zf" title="'+esc(d[2])+' · '+esc(d[3])+'"><span class="nom">'+esc(court(d[2]))+'</span><span class="nat">'+iso(d[3])+'</span><span class="sous">'+esc(d[4])+' · '+esc(L[0])+'</span></span>'
+        +'<span class="zf"><span class="nom">'+esc(court(d[2]))+'</span><span class="nat">'+iso(d[3])+'</span><span class="sous">'+esc(d[4])+' · '+esc(L[0])+'</span></span>'
         +'<span class="c-club mut zf">'+esc(d[4])+'</span>'
         +'<span class="c-champ mut zf"><span class="lg">'+drap(L[1],L[2])+esc(L[0])+'</span></span>'
         +'<span class="num mut c-mj zf">'+d[20]+'</span>'
@@ -590,7 +591,7 @@ button,input,select{font:inherit}
       +'<div class="bl" style="grid-template-columns:minmax(0,1fr) auto"><span>Matchs joués<sup>*</sup></span><b>'+d[20]+'</b></div>'
       +(d[22]?'<div class="bl" style="grid-template-columns:minmax(0,1fr) auto"><span>But'+(d[22]>1?'s':'')+' contre son camp</span><b>'+d[22]+' · '+sc(d[23]).replace('-','\u2212')+' pt</b></div>':'')
       +'<div class="bk">Ce que le comptage ne dit pas</div>'
-      +'<div class="bl" style="grid-template-columns:minmax(0,1fr) auto"><span>Points de notre modèle par but ou passe</span><b>'+f2(pts)+'</b></div>'
+      +'<div class="bl" style="grid-template-columns:minmax(0,1fr) auto"><span>Points du modèle par but ou passe<small class="calc">'+sc(x.s)+' points ÷ '+bp+' buts + passes</small></span><b>'+f2(pts)+'</b></div>'
       +'<div class="bl" style="grid-template-columns:minmax(0,1fr) auto;opacity:.65"><span>moyenne du top 100'+(filtreC?' (compétitions cochées)':'')+'</span><b>'+f2(moy)+'</b></div>';
     placer(cell, btn);
   }
