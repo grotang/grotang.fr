@@ -69,8 +69,8 @@ button,input,select{font:inherit}
 
 /* ---------- tableau : le duel ---------- */
 /* largeurs des colonnes Joueur / Club / Championnat : réglables à la souris (poignées dans l'en-tête) */
-.tab{--w0:30px; --wj:170px; --wc:140px; --wl:130px; --ws:48px; --wbar:1fr; --wbu:84px; --wpa:52px; --wbp:42px; --wrb:40px}
-.r{display:grid; grid-template-columns:var(--w0) var(--wj) var(--wc) var(--wl) var(--ws) minmax(30px,var(--wbar)) var(--wbu) var(--wpa) var(--wbp) var(--wrb);
+.tab{--w0:30px; --wj:170px; --wc:140px; --wl:130px; --ws:48px; --wbar:1fr; --wbu:42px; --wpn:56px; --wpa:50px; --wbp:42px; --wrb:40px}
+.r{display:grid; grid-template-columns:var(--w0) var(--wj) var(--wc) var(--wl) var(--ws) minmax(30px,var(--wbar)) var(--wbu) var(--wpn) var(--wpa) var(--wbp) var(--wrb);
   align-items:center; column-gap:10px; padding:3px 10px; border-bottom:1px solid var(--rule-soft); white-space:nowrap}
 .r>span{overflow:hidden; text-overflow:ellipsis; min-width:0}
 .r.z{background:var(--zebre)}
@@ -83,9 +83,8 @@ button,input,select{font:inherit}
 .tri[aria-sort="ascending"],.tri[aria-sort="descending"]{color:var(--ink)}
 .tri[aria-sort="ascending"]::before{content:"▲ "; font-size:8px; vertical-align:1px}
 .tri[aria-sort="descending"]::before{content:"▼ "; font-size:8px; vertical-align:1px}
-.bu{display:grid; grid-template-columns:minmax(0,1fr) 5.6em; column-gap:4px; align-items:baseline}
-.bu>b{font-weight:400; text-align:right}
-.bu>.p{text-align:left}
+.pn{color:var(--ink-3); font-size:11.5px}
+.zm,.zb{cursor:help}
 .duel-m{color:var(--up); border-bottom:2px solid var(--up); text-align:center; padding-bottom:2px}
 .duel-b{border-bottom:2px solid var(--ink-3); text-align:center; padding-bottom:2px}
 .poignee{position:absolute; top:-6px; bottom:-6px; right:-8px; width:8px; cursor:col-resize; touch-action:none}
@@ -131,8 +130,8 @@ button,input,select{font:inherit}
 @media (prefers-reduced-motion:reduce){.bulle,.bulle .bb span{transition:none}}
 
 @media (max-width:760px){
-  .r{grid-template-columns:24px minmax(0,1fr) 40px 56px 32px}
-  .c-club,.c-champ,.c-bar,.c-bp,.c-rb,.r.h2,.poignee{display:none}
+  .r{grid-template-columns:24px minmax(0,1fr) 40px 32px 32px}
+  .c-club,.c-champ,.c-bar,.c-pn,.c-bp,.c-rb,.r.h2,.poignee{display:none}
   .sous{display:block}
   .nat,.p{display:none}
   .outils input{width:100%}
@@ -164,8 +163,8 @@ button,input,select{font:inherit}
       <div class="arbre" id="familles" aria-label="Compétitions comptées"></div>
     </div>
     <div class="tab" id="tab">
-      <div class="r h h2"><span></span><span></span><span class="c-club"></span><span class="c-champ"></span><span class="duel-m" style="grid-column:span 2">Notre modèle</span><span class="duel-b c-bp" style="grid-column:span 4">Comptage brut</span></div>
-      <div class="r h" id="entete"><span class="tri num" data-k="r" role="button" tabindex="0">Pl.<i class="poignee" data-col="w0" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri " data-k="joueur" role="button" tabindex="0">Joueur<i class="poignee" data-col="wj" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri c-club" data-k="club" role="button" tabindex="0">Club<i class="poignee" data-col="wc" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri c-champ" data-k="ligue" role="button" tabindex="0">Championnat<i class="poignee" data-col="wl" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num" data-k="s" role="button" tabindex="0">Score<i class="poignee" data-col="ws" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="c-bar"><i class="poignee" data-col="wbar" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num" data-k="b" role="button" tabindex="0">Buts<i class="poignee" data-col="wbu" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num" data-k="pa" role="button" tabindex="0">Passes<i class="poignee" data-col="wpa" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num c-bp" data-k="bp" role="button" tabindex="0">B+P<i class="poignee" data-col="wbp" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num c-rb" data-k="rb" role="button" tabindex="0">Pl.<i class="poignee" data-col="wrb" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span></div>
+      <div class="r h h2"><span></span><span></span><span class="c-club"></span><span class="c-champ"></span><span class="duel-m" style="grid-column:span 2">Notre modèle</span><span class="duel-b c-bp" style="grid-column:span 5">Comptage brut</span></div>
+      <div class="r h" id="entete"><span class="tri num" data-k="r" role="button" tabindex="0">Pl.<i class="poignee" data-col="w0" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri " data-k="joueur" role="button" tabindex="0">Joueur<i class="poignee" data-col="wj" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri c-club" data-k="club" role="button" tabindex="0">Club<i class="poignee" data-col="wc" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri c-champ" data-k="ligue" role="button" tabindex="0">Championnat<i class="poignee" data-col="wl" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num" data-k="s" role="button" tabindex="0">Score<i class="poignee" data-col="ws" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="c-bar"><i class="poignee" data-col="wbar" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num" data-k="b" role="button" tabindex="0">Buts<i class="poignee" data-col="wbu" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num c-pn" data-k="pn" role="button" tabindex="0" title="Buts marqués sur penalty">dont pén.<i class="poignee" data-col="wpn" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num" data-k="pa" role="button" tabindex="0">Passes<i class="poignee" data-col="wpa" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num c-bp" data-k="bp" role="button" tabindex="0">B+P<i class="poignee" data-col="wbp" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num c-rb" data-k="rb" role="button" tabindex="0">Pl.<i class="poignee" data-col="wrb" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span></div>
       <div id="lignes"></div>
     </div>
     <div class="vide" id="vide" hidden>Personne. Même pas un penalty provoqué. Élargis les filtres.</div>
@@ -213,6 +212,20 @@ button,input,select{font:inherit}
     'Premiership (SCO)':['Premiership','SCO','Écosse'],'Super League (GRE)':['Super League','GRE','Grèce'],'Superliga (DAN)':['Superliga','DEN','Danemark'],
     'Premier Liga (UKR)':['Premier Liga','UKR','Ukraine'],'Premier Liga (RUS)':['Premier Liga','RUS','Russie']};
   var lig=function(l){return LIGUE[l]||[l,null,''];};
+  /* nom affiché : au-delà de 18 caractères, prénoms en initiales (« P.-E. Aubameyang », « C. De Ketelaere ») ; le nom complet reste au survol */
+  var PART=/^(de|da|do|dos|das|di|del|della|van|von|der|den|ter|le|la|el|al|ben|bin|mac|mc)$/i;
+  var court=function(n){ if(n.length<=18) return n; var m=n.split(' '); if(m.length<2) return n;
+    var k=m.length-1; while(k>1 && PART.test(m[k-1])) k--;
+    return m.slice(0,k).map(function(w){return w.split('-').map(function(x){return x.charAt(0)+'.';}).join('-');}).join(' ')+' '+m.slice(k).join(' '); };
+  var ISO={'Algérie':'DZA','Allemagne':'DEU','Angleterre':'ENG','Angola':'AGO','Argentine':'ARG','Autriche':'AUT','Belgique':'BEL','Bosnie-Herzégovine':'BIH',
+    'Brésil':'BRA','Burkina Faso':'BFA','Cameroun':'CMR','Canada':'CAN','Chili':'CHL','Colombie':'COL','Corée du Sud':'KOR','Croatie':'HRV',"Côte d'Ivoire":'CIV',
+    'Danemark':'DNK','Espagne':'ESP','Finlande':'FIN','France':'FRA','Gabon':'GAB','Ghana':'GHA','Grèce':'GRC','Guinée':'GIN','Géorgie':'GEO','Hongrie':'HUN',
+    'Iran':'IRN','Islande':'ISL','Italie':'ITA','Jamaïque':'JAM','Japon':'JPN','Kosovo':'XKX','Malte':'MLT','Maroc':'MAR','Mexique':'MEX','Nigeria':'NGA',
+    'Norvège':'NOR','Pays de Galles':'WAL','Pays-Bas':'NLD','Pologne':'POL','Portugal':'PRT','RD Congo':'COD','Russie':'RUS','Serbie':'SRB','Slovénie':'SVN',
+    'Suriname':'SUR','Suède':'SWE','Sénégal':'SEN','Tchéquie':'CZE','Togo':'TGO','Turquie':'TUR','Ukraine':'UKR','Uruguay':'URY','Écosse':'SCO','Égypte':'EGY',
+    'Équateur':'ECU','États-Unis':'USA','Pays de Galles ':'WAL','Irlande':'IRL','Irlande du Nord':'NIR','Suisse':'CHE','Albanie':'ALB','Slovaquie':'SVK',
+    'Roumanie':'ROU','Monténégro':'MNE','Macédoine du Nord':'MKD','Mali':'MLI','Tunisie':'TUN','Australie':'AUS','Paraguay':'PRY','Pérou':'PER','Venezuela':'VEN'};
+  var iso=function(n){return ISO[n]||String(n).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase();};
   var drap=function(c,t){return c&&DRAP[c]?'<svg viewBox="0 0 15 10" role="img" aria-label="'+t+'">'+DRAP[c]+'</svg>':'';};
 
   var TOUS_L='Tous les championnats', TOUS_N='Toutes nationalités';
@@ -228,7 +241,7 @@ button,input,select{font:inherit}
   var VUS=[];   /* lignes affichées, pour la bulle */
 
   /* ---------- largeur des colonnes, réglable et mémorisée ---------- */
-  var tab=$('tab'), COLS={w0:[22,80],wj:[90,420],wc:[50,360],wl:[50,300],ws:[36,120],wbar:[24,480],wbu:[40,160],wpa:[32,120],wbp:[30,120],wrb:[30,120]};
+  var tab=$('tab'), COLS={w0:[22,80],wj:[90,420],wc:[50,360],wl:[50,300],ws:[36,120],wbar:[24,480],wbu:[30,160],wpn:[30,120],wpa:[32,120],wbp:[30,120],wrb:[30,120]};
   try{ var mem=JSON.parse(localStorage.getItem('grotang-jd-cols')||'{}'); Object.keys(COLS).forEach(function(k){ if(mem[k]) tab.style.setProperty('--'+k, mem[k]+'px'); }); }catch(e){}
   document.querySelectorAll('.poignee').forEach(function(h){
     h.addEventListener('pointerdown',function(e){
@@ -280,7 +293,7 @@ button,input,select{font:inherit}
     var q=st.q.trim().toLowerCase(), filtre=!!q||st.ligue!==TOUS_L||st.nat!==TOUS_N;
     var vu=all.filter(function(x){return (!q||x.d[2].toLowerCase().indexOf(q)>=0)&&(st.ligue===TOUS_L||x.d[5]===st.ligue)&&(st.nat===TOUS_N||x.d[3]===st.nat);});
     var TRI={r:function(x){return x.r;}, joueur:function(x){return x.d[2];}, club:function(x){return x.d[4];}, ligue:function(x){return lig(x.d[5])[0];},
-      s:function(x){return x.s;}, b:function(x){return x.d[6];}, pa:function(x){return x.d[8];}, bp:function(x){return x.d[6]+x.d[8];}, rb:function(x){return x.d[1];}};
+      s:function(x){return x.s;}, b:function(x){return x.d[6];}, pn:function(x){return x.d[7];}, pa:function(x){return x.d[8];}, bp:function(x){return x.d[6]+x.d[8];}, rb:function(x){return x.d[1];}};
     var f=TRI[st.tri.k]||TRI.s, dir=st.tri.dir;
     vu=vu.slice().sort(function(a,b){var u=f(a), v=f(b), c=typeof u==='string'?u.localeCompare(v,'fr'):u-v; return c*dir || a.r-b.r;});
     var parDefaut=st.tri.k==='s'&&dir===-1 || st.tri.k==='r'&&dir===1;
@@ -290,22 +303,54 @@ button,input,select{font:inherit}
       var d=x.d, dl=d[1]-x.r, L=lig(d[5]);
       var segs=DISPO.map(function(f,i){return x.p[i]>0?'<span style="width:'+(x.p[i]/x.s*100).toFixed(1)+'%;background:'+f.c+'"></span>':'';}).join('');
       return '<div class="r'+(j%2?' z':'')+'"><span class="num"><b>'+x.r+'</b></span>'
-        +'<span><span class="nom">'+esc(d[2])+'</span><span class="nat">'+esc(d[3])+'</span><span class="sous">'+esc(d[4])+' · '+esc(L[0])+'</span></span>'
+        +'<span title="'+esc(d[2])+' · '+esc(d[3])+'"><span class="nom">'+esc(court(d[2]))+'</span><span class="nat">'+iso(d[3])+'</span><span class="sous">'+esc(d[4])+' · '+esc(L[0])+'</span></span>'
         +'<span class="c-club mut">'+esc(d[4])+'</span>'
         +'<span class="c-champ mut"><span class="lg">'+drap(L[1],L[2])+esc(L[0])+'</span></span>'
-        +'<button type="button" class="sc" data-j="'+j+'" aria-expanded="false" aria-label="Score '+sc(x.s)+', détail par compétition">'+sc(x.s)+'</button>'
-        +'<span class="c-bar"><span class="mbar" style="width:'+(x.s/max*100).toFixed(1)+'%">'+segs+'</span></span>'
-        +'<span class="num bu"><b>'+d[6]+'</b><span class="p">'+(d[7]?'('+d[7]+' p.)':'')+'</span></span><span class="num">'+d[8]+'</span>'
-        +'<span class="num mut c-bp">'+(d[6]+d[8])+'</span>'
-        +'<span class="num c-rb '+(dl>0?'up':dl<0?'dn':'eq')+'" title="'+(dl>0?'Gagne '+dl+' place'+(dl>1?'s':'')+' sur le comptage':dl<0?'Perd '+(-dl)+' place'+(dl<-1?'s':'')+' sur le comptage':'Même rang')+'">'+rg(d[1])+'</span></div>';
+        +'<button type="button" class="sc zm" data-j="'+j+'" aria-expanded="false" aria-label="Score '+sc(x.s)+', détail par compétition">'+sc(x.s)+'</button>'
+        +'<span class="c-bar zm"><span class="mbar" style="width:'+(x.s/max*100).toFixed(1)+'%">'+segs+'</span></span>'
+        +'<span class="num zb">'+d[6]+'</span><span class="num pn c-pn zb">'+(d[7]||'')+'</span><span class="num zb">'+d[8]+'</span>'
+        +'<span class="num mut c-bp zb">'+(d[6]+d[8])+'</span>'
+        +'<span class="num c-rb zb '+(dl>0?'up':dl<0?'dn':'eq')+'" title="'+(dl>0?'Gagne '+dl+' place'+(dl>1?'s':'')+' sur le comptage':dl<0?'Perd '+(-dl)+' place'+(dl<-1?'s':'')+' sur le comptage':'Même rang')+'">'+rg(d[1])+'</span></div>';
     }).join('');
     $('vide').hidden=VUS.length>0;
     $('plus').hidden=st.tout||filtre||!parDefaut||vu.length<=25;
-    $('compte').textContent=VUS.length+' joueurs affichés sur '+nb(S.classes)+' classés · survole un joueur pour le détail de ses points · clique sur un titre pour trier';
+    $('compte').textContent=VUS.length+' joueurs affichés sur '+nb(S.classes)+' classés · survole le score ou le comptage pour le détail · clique sur un titre pour trier';
   }
 
   /* ---------- la bulle ---------- */
   var bulle=$('bulle'), actif=null, tOuv=0;
+  function montrerBrut(cell){
+    var row=cell.closest('.r'), btn=row&&row.querySelector('.sc'); var x=btn&&VUS[+btn.dataset.j]; if(!x) return;
+    var S=JD.saisons[st.saison], d=x.d, L=lig(d[5]), bp=d[6]+d[8], dl=d[1]-x.r;
+    var moyPts=S.rows.reduce(function(a,r){return a+r.slice(10,18).reduce(function(u,v){return u+v;},0);},0)/S.rows.reduce(function(a,r){return a+r[6]+r[8];},0);
+    var pts=bp?x.s/bp:0, pl=d[18]?100*d[19]/d[18]:0;
+    var L3=[['Buts dans le jeu',d[6]-d[7],'var(--ink-2)'],['Buts sur penalty',d[7],'var(--ink-3)'],['Passes décisives',d[8],'var(--ink-2)']];
+    var mx=Math.max(1,d[6]-d[7],d[7],d[8]);
+    bulle.innerHTML='<div class="bt"><div><div class="bn">'+esc(d[2])+'</div><div style="font-size:11.5px;opacity:.7;margin-top:3px">'+esc(d[4])+' · '+esc(L[0])+'</div>'
+        +'<span class="rk">'+rg(d[1])+' au brut · '+rg(x.r)+' chez nous'+(dl>0?' · ▲'+dl:dl<0?' · ▼'+(-dl):'')+'</span></div>'
+        +'<div><div class="bs" style="color:var(--surface)">'+bp+'</div><div class="bu2">buts + passes</div></div></div>'
+      +'<div class="bk">Le comptage</div>'
+      +L3.map(function(l){return '<div class="bl"><i style="background:color-mix(in srgb, var(--surface) 60%, transparent)"></i><span>'+l[0]+'</span><span class="bb"><span data-w="'+(l[1]/mx*100).toFixed(1)+'" style="background:color-mix(in srgb, var(--surface) 70%, transparent)"></span></span><b>'+l[1]+'</b><em></em></div>';}).join('')
+      +(d[9]?'<div class="bl" style="opacity:.6"><i></i><span>Penaltys obtenus (hors comptage)</span><span></span><b>'+d[9]+'</b><em></em></div>':'')
+      +'<div class="bk">Ce que le comptage ne dit pas</div>'
+      +'<div class="bl" style="grid-template-columns:minmax(0,1fr) auto"><span>Buts et passes quand son équipe mène déjà de 2 buts ou plus</span><b>'+Math.round(pl)+' %</b></div>'
+      +'<div class="bl" style="grid-template-columns:minmax(0,1fr) auto;opacity:.65"><span>moyenne de tous les joueurs</span><b>'+Math.round(S.moyPlie)+' %</b></div>'
+      +'<div class="bl" style="grid-template-columns:minmax(0,1fr) auto"><span>Points de notre modèle par but ou passe</span><b>'+pts.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</b></div>'
+      +'<div class="bl" style="grid-template-columns:minmax(0,1fr) auto;opacity:.65"><span>moyenne du top 100</span><b>'+moyPts.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</b></div>';
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ bulle.querySelectorAll('.bb span').forEach(function(e){ e.style.width=e.dataset.w+'%'; }); }); });
+    placer(cell, btn);
+  }
+  function placer(anc, btn){
+    var p=$('lignes').closest('.panneau').getBoundingClientRect(), b=anc.getBoundingClientRect();
+    var w=bulle.offsetWidth||320, left=b.right-p.left+10;
+    if(left+w>p.width) left=Math.max(6,b.left-p.left-w-10);
+    if(window.innerWidth<=760) left=Math.max(6,(p.width-w)/2);
+    bulle.style.left=left+'px'; bulle.style.top=(b.top-p.top-8)+'px';
+    var h=bulle.offsetHeight, bas=b.top+h-8-window.innerHeight; if(bas>0) bulle.style.top=(b.top-p.top-8-bas-12)+'px';
+    if(window.innerWidth<=760) bulle.style.top=(b.bottom-p.top+6)+'px';
+    bulle.classList.add('on'); bulle.setAttribute('aria-hidden','false'); if(actif!==anc) tOuv=Date.now();
+    if(actif&&actif!==anc&&actif.setAttribute) actif.setAttribute('aria-expanded','false'); actif=anc; if(anc===btn) btn.setAttribute('aria-expanded','true');
+  }
   function montrer(btn){
     var x=VUS[+btn.dataset.j]; if(!x) return;
     var d=x.d, L=lig(d[5]);
@@ -327,20 +372,15 @@ button,input,select{font:inherit}
       +blocs
       +'<div class="bf">'+d[6]+' buts'+(d[7]?' dont '+d[7]+' sur penalty':'')+' · '+d[8]+' passes'+(d[9]?' · '+d[9]+' penalty'+(d[9]>1?'s':'')+' obtenu'+(d[9]>1?'s':''):'')+'</div>';
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ bulle.querySelectorAll('.bb span').forEach(function(e){ e.style.width=e.dataset.w+'%'; }); }); });
-    var p=$('lignes').closest('.panneau').getBoundingClientRect(), b=btn.getBoundingClientRect();
-    var w=bulle.offsetWidth||300, left=b.right-p.left+10;
-    if(left+w>p.width) left=Math.max(6,b.left-p.left-w-10);
-    if(window.innerWidth<=760) left=Math.max(6,(p.width-w)/2);
-    bulle.style.left=left+'px'; bulle.style.top=(b.top-p.top-8)+'px';
-    var h=bulle.offsetHeight, bas=b.top+h-8-window.innerHeight; if(bas>0) bulle.style.top=(b.top-p.top-8-bas-12)+'px';
-    if(window.innerWidth<=760) bulle.style.top=(b.bottom-p.top+6)+'px';
-    bulle.classList.add('on'); bulle.setAttribute('aria-hidden','false'); if(actif!==btn) tOuv=Date.now();
-    if(actif&&actif!==btn) actif.setAttribute('aria-expanded','false'); actif=btn; btn.setAttribute('aria-expanded','true');
+    placer(btn, btn);
   }
   function cacher(){ bulle.classList.remove('on'); bulle.setAttribute('aria-hidden','true'); if(actif) actif.setAttribute('aria-expanded','false'); actif=null; }
   /* souris : toute la ligne ouvre la bulle (à côté du score) ; doigt : on touche le score */
-  $('lignes').addEventListener('pointerover',function(e){ if(e.pointerType!=='mouse') return; var row=e.target.closest('.r'); if(!row) return; var b=row.querySelector('.sc'); if(b&&b!==actif) montrer(b); });
-  $('lignes').addEventListener('pointerout',function(e){ if(e.pointerType!=='mouse') return; var row=e.target.closest('.r'); if(row&&!(e.relatedTarget&&row.contains(e.relatedTarget))) cacher(); });
+  $('lignes').addEventListener('pointerover',function(e){ if(e.pointerType!=='mouse') return;
+    var z=e.target.closest('.zm,.zb'); if(!z){ cacher(); return; } var row=z.closest('.r');
+    if(z.classList.contains('zm')){ var b=row.querySelector('.sc'); if(b!==actif) montrer(b); }
+    else { var a=row.querySelector('.zb'); if(a!==actif) montrerBrut(a); } });
+  $('lignes').addEventListener('pointerleave',function(e){ if(e.pointerType==='mouse') cacher(); });
   $('lignes').addEventListener('focusin',function(e){ var b=e.target.closest('.sc'); if(b) montrer(b); });
   $('lignes').addEventListener('focusout',function(e){ if(e.target.closest('.sc')) cacher(); });
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') cacher(); var t=e.target.closest&&e.target.closest('#entete .tri'); if(t&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); t.click(); } });
