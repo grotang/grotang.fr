@@ -96,7 +96,7 @@ button,input,select{font:inherit}
 
 /* ---------- tableau : le duel ---------- */
 /* largeurs des colonnes Joueur / Club / Championnat : réglables à la souris (poignées dans l'en-tête) */
-.tab{--w0:30px; --wj:170px; --wc:140px; --wl:130px; --wmj:34px; --ws:52px; --wbar:1fr; --wbu:42px; --wpn:56px; --wpa:50px; --wbp:42px; --wrb:40px}
+.tab{--w0:30px; --wj:160px; --wc:118px; --wl:118px; --wmj:34px; --ws:52px; --wbar:1fr; --wbu:42px; --wpn:44px; --wpa:50px; --wbp:42px; --wrb:40px}
 .r{display:grid; grid-template-columns:var(--w0) var(--wj) var(--wc) var(--wl) var(--wmj) var(--ws) minmax(30px,var(--wbar)) var(--wbu) var(--wpn) var(--wpa) var(--wbp) var(--wrb);
   align-items:center; column-gap:10px; padding:3px 10px; border-bottom:1px solid var(--rule-soft); white-space:nowrap}
 .r>span{overflow:hidden; text-overflow:ellipsis; min-width:0}
@@ -168,8 +168,16 @@ button,input,select{font:inherit}
 .sc{justify-self:end; font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums; font-weight:600; color:var(--up); font-size:13px;
   background:none; border:0; padding:1px 4px; margin-right:-4px; border-radius:4px; cursor:help; border-bottom:1px dotted color-mix(in srgb, var(--up) 50%, transparent)}
 .sc:hover,.sc[aria-expanded="true"]{background:var(--up); color:var(--surface); border-bottom-color:transparent}
-.mbar{display:flex; gap:1px; height:6px; border-radius:3px; overflow:hidden}
+.mbar{display:flex; gap:1px; height:8px; border-radius:3px; overflow:hidden}
 .mbar span{height:100%; transition:opacity .15s}
+.tags{display:flex; flex-wrap:wrap; gap:4px; margin-top:8px}
+.tag{font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; background:color-mix(in srgb, var(--surface) 14%, transparent); color:var(--surface)}
+.tag.up{background:color-mix(in srgb, #3FB37F 30%, transparent); color:#BFF0D6}
+.tag.down{background:color-mix(in srgb, #E5604A 30%, transparent); color:#FFD2C8}
+.det>.tags{grid-column:1/-1; margin-top:2px; background:none; border:0; padding:0; text-align:left}
+.det .tag{background:var(--surface-2); color:var(--ink-2)}
+.det .tag.up{background:color-mix(in srgb, var(--up) 14%, var(--surface)); color:var(--up)}
+.det .tag.down{background:color-mix(in srgb, var(--down) 14%, var(--surface)); color:var(--down)}
 .tab.hl .mbar span:not(.hl){opacity:.12}
 .leg{position:relative}
 .leg .lb span{cursor:default}
@@ -416,17 +424,17 @@ button,input,select{font:inherit}
 
   /* ---------- largeur des colonnes, réglable et mémorisée ---------- */
   var tab=$('tab'), COLS={w0:[22,80],wj:[90,420],wc:[50,360],wl:[50,300],wmj:[26,90],ws:[36,120],wbar:[24,480],wbu:[30,160],wpn:[30,120],wpa:[32,120],wbp:[30,120],wrb:[30,120]};
-  try{ var mem=JSON.parse(localStorage.getItem('grotang-jd-cols')||'{}'); Object.keys(COLS).forEach(function(k){ if(mem[k]) tab.style.setProperty('--'+k, mem[k]+'px'); }); }catch(e){}
+  try{ var mem=JSON.parse(localStorage.getItem('grotang-jd-cols2')||'{}'); Object.keys(COLS).forEach(function(k){ if(mem[k]) tab.style.setProperty('--'+k, mem[k]+'px'); }); }catch(e){}
   document.querySelectorAll('.poignee').forEach(function(h){
     h.addEventListener('pointerdown',function(e){
       e.preventDefault(); e.stopPropagation(); var k=h.dataset.col, x0=e.clientX, w0=h.parentNode.getBoundingClientRect().width;
       h.classList.add('on'); h.setPointerCapture(e.pointerId);
       var mv=function(ev){ var w=Math.max(COLS[k][0],Math.min(COLS[k][1],w0+ev.clientX-x0)); tab.style.setProperty('--'+k, Math.round(w)+'px'); };
       var up=function(){ h.classList.remove('on'); h.removeEventListener('pointermove',mv); h.removeEventListener('pointerup',up);
-        try{ var o={}; Object.keys(COLS).forEach(function(c){ var v=parseInt(tab.style.getPropertyValue('--'+c)); if(v) o[c]=v; }); localStorage.setItem('grotang-jd-cols',JSON.stringify(o)); }catch(e){} };
+        try{ var o={}; Object.keys(COLS).forEach(function(c){ var v=parseInt(tab.style.getPropertyValue('--'+c)); if(v) o[c]=v; }); localStorage.setItem('grotang-jd-cols2',JSON.stringify(o)); }catch(e){} };
       h.addEventListener('pointermove',mv); h.addEventListener('pointerup',up);
     });
-    h.addEventListener('dblclick',function(){ tab.style.removeProperty('--'+h.dataset.col); try{localStorage.removeItem('grotang-jd-cols');}catch(e){} });
+    h.addEventListener('dblclick',function(){ tab.style.removeProperty('--'+h.dataset.col); try{localStorage.removeItem('grotang-jd-cols2');}catch(e){} });
   });
 
   function filtres(){ volume(JD.saisons[st.saison]); }
@@ -456,6 +464,18 @@ button,input,select{font:inherit}
     $('arbre').querySelectorAll('[data-ind]').forEach(function(x){x.indeterminate=true;});
     var n=DISPO.filter(function(f){return st.fam[f.k];}).length;
     $('fc-n').textContent=n===DISPO.length?'toutes':n+'/'+DISPO.length;
+  }
+  /* pastilles : deux traits saillants au plus, calculés sur la saison affichée */
+  function tags(x){
+    var d=x.d, t=[], rang=x.r, rb=x.rb, delta=rb-rang, tot=d.slice(10,18).reduce(function(a,b){return a+b;},0), uefa=d[12]+d[13]+d[14]+d[15], moy=JD.saisons[st.saison].moyPlie;
+    if(delta>=8 && rb>=2*rang) t.push(['up','Les stats le snobent']);
+    if(delta<=-8 && rang>=2*rb) t.push(['down','Gonflé au comptage']);
+    if(tot>0 && uefa>=5 && uefa/tot>=.35) t.push(['up','Homme des soirs d\u2019Europe']);
+    if(tot>0 && d[17]>=3 && d[17]/tot>=.2) t.push(['up','Se transcende en sélection']);
+    if(d[7]>=5 && d[6] && d[7]/d[6]>=.25) t.push(['','Abonné au point de penalty']);
+    if(d[18]>=15 && 100*d[19]/d[18]>=2*moy) t.push(['down','Spécialiste des matchs pliés']);
+    t=t.slice(0,2);
+    return t.length?'<div class="tags">'+t.map(function(g){return '<span class="tag '+g[0]+'">'+g[1]+'</span>';}).join('')+'</div>':'';
   }
   function volume(S){
     var t={}; DISPO.forEach(function(f){ t[f.k]=S.rows.reduce(function(a,d){return a+d[f.i];},0); });
@@ -523,7 +543,7 @@ button,input,select{font:inherit}
     var L3=[['Buts dans le jeu',d[6]-d[7],'var(--ink-2)'],['Buts sur penalty',d[7],'var(--ink-3)'],['Passes décisives',d[8],'var(--ink-2)']];
     var mx=Math.max(1,d[6]-d[7],d[7],d[8]);
     bulle.innerHTML='<div class="bt"><div><div class="bn">'+esc(d[2])+'</div><div style="font-size:11.5px;opacity:.7;margin-top:3px">'+esc(d[4])+' · '+esc(L[0])+'</div>'
-        +'<span class="rk">'+rg(x.rb)+' au brut · '+rg(x.r)+' chez nous'+(dl>0?' · ▲'+dl:dl<0?' · ▼'+(-dl):'')+'</span></div>'
+        +'<span class="rk">'+rg(x.rb)+' au brut · '+rg(x.r)+' chez nous'+(dl>0?' · ▲'+dl:dl<0?' · ▼'+(-dl):'')+'</span>'+tags(x)+'</div>'
         +'<div><div class="bs" style="color:var(--surface)">'+bp+'</div><div class="bu2">buts + passes</div></div></div>'
       +'<div class="bk">Le comptage</div>'
       +L3.map(function(l){return '<div class="bl"><i style="background:color-mix(in srgb, var(--surface) 60%, transparent)"></i><span>'+l[0]+'</span><span class="bb"><span data-w="'+(l[1]/mx*100).toFixed(1)+'" style="background:color-mix(in srgb, var(--surface) 70%, transparent)"></span></span><b>'+l[1]+'</b><em></em></div>';}).join('')
@@ -561,7 +581,7 @@ button,input,select{font:inherit}
         +'<span class="bb"><span data-w="'+(s.v/mx*100).toFixed(1)+'" style="background:'+s.f.c+'"></span></span><b>'+sc(s.v)+'</b><em>'+Math.round(100*s.v/x.s)+' %</em></div>';}).join('');
     }).join('');
     bulle.innerHTML='<div class="bt"><div><div class="bn">'+esc(d[2])+'</div><div style="font-size:11.5px;opacity:.7;margin-top:3px">'+esc(d[4])+' · '+esc(L[0])+'</div>'
-        +'<span class="rk">'+rg(x.r)+' chez nous · '+rg(x.rb)+' au brut'+(dl>0?' · ▲'+dl:dl<0?' · ▼'+(-dl):'')+'</span></div>'
+        +'<span class="rk">'+rg(x.r)+' chez nous · '+rg(x.rb)+' au brut'+(dl>0?' · ▲'+dl:dl<0?' · ▼'+(-dl):'')+'</span>'+tags(x)+'</div>'
         +'<div><div class="bs">'+sc(x.s)+'</div><div class="bu2">points</div></div></div>'
       +'<div class="bbar">'+lignes.map(function(s){return '<span style="width:'+(s.v/x.s*100).toFixed(1)+'%;background:'+s.f.c+'"></span>';}).join('')+'</div>'
       +'<div class="split"><span>Club '+Math.round(100*club/x.s)+' %</span><span>Sélection '+Math.round(100*sel/x.s)+' %</span></div>'
@@ -619,7 +639,7 @@ button,input,select{font:inherit}
     if(o) return;
     row.classList.add('ouv');
     row.insertAdjacentHTML('beforeend','<div class="det"><div><b>'+d[20]+'*</b><span>MJ</span></div><div><b>'+d[6]+'</b><span>Buts</span></div><div><b>'+(d[7]||'—')+'</b><span>Péno.</span></div><div><b>'+d[8]+'</b><span>Passes</span></div>'
-      +'<p>'+rg(x.rb)+' au brut, '+rg(x.r)+' chez nous'+(dl>0?' : ▲'+dl+' place'+(dl>1?'s':''):dl<0?' : ▼'+(-dl)+' place'+(dl<-1?'s':''):'')+'. Touche le score pour le détail par compétition.</p></div>');
+      +'<p>'+rg(x.rb)+' au brut, '+rg(x.r)+' chez nous'+(dl>0?' : ▲'+dl+' place'+(dl>1?'s':''):dl<0?' : ▼'+(-dl)+' place'+(dl<-1?'s':''):'')+'. Touche le score pour le détail par compétition.</p>'+tags(x)+'</div>');
   }
   document.addEventListener('click',function(e){
     if(e.target.id==='fbtn'||e.target.closest('#fbtn')){ feuille(true); return; }
