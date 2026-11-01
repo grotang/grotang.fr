@@ -45,6 +45,26 @@ button,input,select{font:inherit}
 /* ---------- compétitions comptées (repliées) ---------- */
 .compets{padding:10px; border-bottom:1px solid var(--rule-soft); display:flex; flex-direction:column; gap:10px; background:var(--surface)}
 .compets[hidden]{display:none}
+/* compétitions comptées : la barre de volume est le filtre, la légende porte la hiérarchie */
+.compets2{padding:8px 10px 7px; border-bottom:1px solid var(--rule-soft); display:flex; flex-direction:column; gap:5px; background:var(--surface)}
+.vbar{display:flex; height:6px; gap:1px; border-radius:3px; overflow:hidden; background:var(--surface-2)}
+.vbar button{height:100%; border:0; padding:0; margin:0; cursor:pointer; transition:opacity .15s; min-width:3px}
+.vbar button.off{opacity:.15}
+.vbar button:hover{filter:brightness(1.12)}
+.vleg{display:flex; flex-wrap:wrap; align-items:center; gap:2px 6px}
+.vleg .grp2{display:inline-flex; align-items:center; gap:2px; flex-wrap:wrap}
+.vleg .gl{font-size:9.5px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); background:none; border:0; padding:2px 3px; cursor:pointer; border-radius:4px}
+.vleg .gl:hover{background:var(--surface-2); color:var(--ink)}
+.vleg .gl.off{opacity:.45; text-decoration:line-through}
+.vleg .tg{background:none; border:0; padding:2px 3px; border-radius:4px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; color:var(--ink); font-size:11.5px}
+.vleg .tg:hover{background:var(--surface-2)}
+.vleg .tg i{width:8px; height:8px; border-radius:2px; display:inline-block}
+.vleg .tg em{font-style:normal; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10px; color:var(--ink-3)}
+.vleg .tg.off{color:var(--ink-3); text-decoration:line-through}
+.vleg .tg.off i{opacity:.25}
+.vleg .tg.av{cursor:default; color:var(--ink-3)}
+.vleg .tg.av i{opacity:.5}
+.vleg .sep{width:1px; height:12px; background:var(--rule); margin:0 6px}
 .volume-t{font-size:11px; color:var(--ink-3)}
 .volume{display:flex; gap:2px; height:16px; border-radius:4px; overflow:hidden}
 .volume span{height:100%; display:flex; align-items:center; padding-left:5px; font-size:10px; font-weight:700; white-space:nowrap; overflow:hidden; min-width:3px}
@@ -129,43 +149,16 @@ button,input,select{font:inherit}
 .bulle .bf{margin-top:10px; padding-top:8px; border-top:1px solid color-mix(in srgb, var(--surface) 20%, transparent); font-size:11.5px; opacity:.8}
 @media (prefers-reduced-motion:reduce){.bulle,.bulle .bb span{transition:none}}
 
-.mobctl{display:none}
 .r{background:var(--surface)} .r.z{background:var(--zebre)}
 @media (max-width:760px){
   .outils input{width:100%}
   .outils .droite{margin-left:0}
   .bulle{width:min(300px, calc(100vw - 24px))}
   .tabwrap{overflow-x:auto}
-  .mobctl{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 10px; padding:8px 10px; border-bottom:1px solid var(--rule-soft); background:var(--surface)}
-  .seg{display:inline-flex; border:1px solid var(--rule); border-radius:7px; overflow:hidden}
-  .seg button{border:0; background:var(--surface); color:var(--ink-2); font-size:12px; min-height:30px; padding:0 10px; cursor:pointer}
-  .seg button[aria-pressed="true"]{background:var(--ink); color:var(--surface); font-weight:700}
-  .seg.test button{font-size:11px; min-height:26px; padding:0 8px}
-  .seg.test{border-style:dashed}
-  .mobctl .test-t{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
-  .face{display:none}
   /* — 1 · non responsive : le tableau de bureau, réduit (zoom à deux doigts) — */
   .tabwrap.fixe{overflow:hidden}
   .tabwrap.fixe .tab{width:1060px; transform-origin:0 0}
-  /* — 2 · le tableau défile, Pl. et Joueur figés, l'essentiel d'abord — */
-  .tabwrap.defile{overflow-x:auto; -webkit-overflow-scrolling:touch; position:relative}
-  .defile .tab{width:max-content; min-width:100%}
-  .defile .r{grid-template-columns:24px 118px 40px 30px 34px 34px 30px 34px 116px 104px 70px; column-gap:8px; padding:5px 8px}
-  .defile .k0{order:1} .defile .k1{order:2} .defile .k4{order:3} .defile .k6{order:4} .defile .k8{order:5} .defile .k9{order:6}
-  .defile .k7{order:7} .defile .k10{order:8} .defile .k2{order:9} .defile .k3{order:10} .defile .k5{order:11}
-  .defile .k0,.defile .k1{position:sticky; z-index:2; background:inherit}
-  .defile .k0{left:0} .defile .k1{left:32px; box-shadow:8px 0 8px -8px rgba(15,20,29,.35)}
-  .defile .r.h2,.defile .poignee,.defile .sous{display:none}
-  .defile .r.h>span{overflow:hidden}
-  /* — 3 · bascule « Notre modèle / Comptage brut » — */
-  .mobctl.bascule .face{display:inline-flex}
-  .bascule .r{column-gap:8px; padding:5px 8px}
-  .bascule .r.h2,.bascule .poignee,.bascule .k2,.bascule .k3,.bascule .nat{display:none}
-  .bascule .sous{display:block}
-  .bascule .tab[data-face="m"] .r{grid-template-columns:24px minmax(0,1fr) 42px 34%}
-  .bascule .tab[data-face="m"] .k6,.bascule .tab[data-face="m"] .k7,.bascule .tab[data-face="m"] .k8,.bascule .tab[data-face="m"] .k9,.bascule .tab[data-face="m"] .k10{display:none}
-  .bascule .tab[data-face="b"] .r{grid-template-columns:24px minmax(0,1fr) 28px 30px 32px 32px 34px}
-  .bascule .tab[data-face="b"] .k4,.bascule .tab[data-face="b"] .k5{display:none}
+}
 }
 </style>
 </head>
@@ -183,22 +176,15 @@ button,input,select{font:inherit}
       <select id="ligue" aria-label="Championnat"></select>
       <select id="nat" aria-label="Nationalité"></select>
       <input type="search" id="q" placeholder="Joueur…" aria-label="Chercher un joueur" autocomplete="off">
-      <div class="droite">
-        <span class="mut">Compétitions : <b id="compets-etat" style="color:var(--ink)">toutes</b> <button type="button" class="lien" id="compets-btn" aria-expanded="false" aria-controls="compets">modifier</button></span>
-      </div>
     </div>
-    <div class="compets" id="compets" hidden>
-      <div><div class="volume-t">Poids de chaque compétition dans les points du top 100</div><div class="volume" id="volume" role="img"></div></div>
-      <div class="arbre" id="familles" aria-label="Compétitions comptées"></div>
-    </div>
-    <div class="mobctl" id="mobctl">
-      <span class="seg face" id="face" role="group" aria-label="Colonnes affichées"><button type="button" data-face="m" aria-pressed="true">Notre modèle</button><button type="button" data-face="b" aria-pressed="false">Comptage brut</button></span>
-      <span style="display:flex;align-items:center;gap:6px"><span class="test-t">Test mobile</span><span class="seg test" role="group" aria-label="Variante mobile"><button type="button" data-mob="fixe">Fixe</button><button type="button" data-mob="defile">Défile</button><button type="button" data-mob="bascule">Bascule</button></span></span>
+    <div class="compets2" aria-label="Compétitions comptées">
+      <div class="vbar" id="volume" role="group" aria-label="Poids de chaque compétition dans les points du top 100 — cliquer pour retirer ou remettre"></div>
+      <div class="vleg" id="familles"></div>
     </div>
     <div class="tabwrap" id="tabwrap">
     <div class="tab" id="tab">
       <div class="r h h2"><span></span><span></span><span class="c-club"></span><span class="c-champ"></span><span class="duel-m" style="grid-column:span 2">Notre modèle</span><span class="duel-b c-bp" style="grid-column:span 5">Comptage brut</span></div>
-      <div class="r h" id="entete"><span class="tri num" data-k="r" role="button" tabindex="0">Pl.<i class="poignee" data-col="w0" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri " data-k="joueur" role="button" tabindex="0">Joueur<i class="poignee" data-col="wj" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri c-club" data-k="club" role="button" tabindex="0">Club<i class="poignee" data-col="wc" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri c-champ" data-k="ligue" role="button" tabindex="0">Championnat<i class="poignee" data-col="wl" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num" data-k="s" role="button" tabindex="0">Score<i class="poignee" data-col="ws" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="c-bar"><i class="poignee" data-col="wbar" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num" data-k="b" role="button" tabindex="0">Buts<i class="poignee" data-col="wbu" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num c-pn" data-k="pn" role="button" tabindex="0" title="dont buts marqués sur penalty">Pén.<i class="poignee" data-col="wpn" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num" data-k="pa" role="button" tabindex="0">Passes<i class="poignee" data-col="wpa" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num c-bp" data-k="bp" role="button" tabindex="0">B+P<i class="poignee" data-col="wbp" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num c-rb" data-k="rb" role="button" tabindex="0">Pl.<i class="poignee" data-col="wrb" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span></div>
+      <div class="r h" id="entete"><span class="tri num" data-k="r" role="button" tabindex="0" title="Rang dans notre modèle">#<i class="poignee" data-col="w0" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri " data-k="joueur" role="button" tabindex="0">Joueur<i class="poignee" data-col="wj" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri c-club" data-k="club" role="button" tabindex="0">Club<i class="poignee" data-col="wc" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri c-champ" data-k="ligue" role="button" tabindex="0">Championnat<i class="poignee" data-col="wl" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num" data-k="s" role="button" tabindex="0">Score<i class="poignee" data-col="ws" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="c-bar"><i class="poignee" data-col="wbar" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num" data-k="b" role="button" tabindex="0">Buts<i class="poignee" data-col="wbu" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num c-pn" data-k="pn" role="button" tabindex="0" title="dont buts marqués sur penalty">Pén.<i class="poignee" data-col="wpn" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num" data-k="pa" role="button" tabindex="0">Passes<i class="poignee" data-col="wpa" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num c-bp" data-k="bp" role="button" tabindex="0">B+P<i class="poignee" data-col="wbp" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span><span class="tri num c-rb" data-k="rb" role="button" tabindex="0">Pl.<i class="poignee" data-col="wrb" title="Glisser pour régler la largeur (double-clic : par défaut)"></i></span></div>
       <div id="lignes"></div>
     </div>
     </div>
@@ -274,16 +260,12 @@ button,input,select{font:inherit}
   var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
   var cles=Object.keys(JD.saisons).sort();
   var VUS=[];   /* lignes affichées, pour la bulle */
-  /* variantes mobiles à tester (aperçu) : fixe · defile · bascule ; et la face de la bascule */
-  var mob={v:'defile', face:'m'};
-  try{ var hm=(location.hash.match(/mob=(fixe|defile|bascule)/)||[])[1]; if(hm) mob.v=hm; }catch(e){}
-  function marquer(){ document.querySelectorAll('#tab .r:not(.h2)').forEach(function(row){ Array.prototype.forEach.call(row.children,function(c,i){ c.classList.add('k'+i); }); }); }
+  /* mobile : le tableau de bureau, réduit à la largeur de l'écran (zoom à deux doigts) */
+  function marquer(){}
   function appliquerMob(){
     var w=$('tabwrap'), t=$('tab'), petit=window.matchMedia('(max-width:760px)').matches;
-    w.className='tabwrap'+(petit?' '+mob.v:''); t.setAttribute('data-face',mob.face); $('mobctl').className='mobctl'+(petit?' '+mob.v:'');
-    document.querySelectorAll('[data-mob]').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.mob===mob.v); });
-    document.querySelectorAll('#face [data-face]').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.face===mob.face); });
-    if(petit && mob.v==='fixe'){ var k=w.clientWidth/1060; t.style.transform='scale('+k+')'; w.style.height=Math.ceil(t.offsetHeight*k)+'px'; }
+    w.className='tabwrap'+(petit?' fixe':'');
+    if(petit){ var k=w.clientWidth/1060; t.style.transform='scale('+k+')'; w.style.height=Math.ceil(t.offsetHeight*k)+'px'; }
     else { t.style.transform=''; w.style.height=''; }
   }
   window.addEventListener('resize',function(){ appliquerMob(); });
@@ -303,20 +285,7 @@ button,input,select{font:inherit}
     h.addEventListener('dblclick',function(){ tab.style.removeProperty('--'+h.dataset.col); try{localStorage.removeItem('grotang-jd-cols');}catch(e){} });
   });
 
-  function filtres(){
-    var chip=function(f){ if(f.i===null) return '<button type="button" class="pill bientot" disabled title="Pas encore dans les données"><span class="sw" style="background:'+f.c+'"></span>'+f.l+' <em>bientôt</em></button>';
-      return '<button type="button" class="pill" data-f="'+f.k+'" aria-pressed="'+(!!st.fam[f.k])+'"><span class="sw" style="background:'+f.c+'"></span>'+f.l+'</button>';};
-    var on=function(fs){return fs.filter(function(f){return f.i!==null;}).every(function(f){return st.fam[f.k];});};
-    var club=FAM.filter(function(f){return N1(f)==='club';}), sel=FAM.filter(function(f){return N1(f)==='sel';});
-    $('familles').innerHTML=
-      '<div class="carte" role="group" aria-label="Club"><button type="button" class="n1" data-n1="club" aria-pressed="'+on(club)+'">Club</button><div class="branches">'
-      +GRP.map(function(g){var fs=FAM.filter(function(f){return f.g===g[0];});
-        return '<div class="branche '+g[0]+'" role="group" aria-label="'+g[1]+'"><button type="button" class="n2" data-g="'+g[0]+'" aria-pressed="'+on(fs)+'">'+g[1]+'</button>'+fs.map(chip).join('')+'</div>';}).join('')
-      +'</div></div>'
-      +'<div class="carte" role="group" aria-label="Sélection"><button type="button" class="n1" data-n1="sel" aria-pressed="'+on(sel)+'">Sélection</button><div class="branches plat">'+sel.map(chip).join('')+'</div></div>';
-    var n=DISPO.filter(function(f){return st.fam[f.k];}).length;
-    $('compets-etat').textContent= n===DISPO.length?'toutes':n+' sur '+DISPO.length;
-  }
+  function filtres(){ volume(JD.saisons[st.saison]); }
   function options(S){
     $('saison').innerHTML=cles.slice().reverse().map(function(k){return '<option value="'+k+'"'+(k===st.saison?' selected':'')+'>Saison '+JD.saisons[k].label+'</option>';}).join('');
     var ls=[TOUS_L].concat(Array.from(new Set(S.rows.map(function(d){return d[5];}))).sort());
@@ -326,10 +295,17 @@ button,input,select{font:inherit}
     $('nat').innerHTML=ns.map(function(x){return '<option'+(x===st.nat?' selected':'')+'>'+esc(x)+'</option>';}).join('');
   }
   function volume(S){
-    var t=DISPO.map(function(f){return S.rows.reduce(function(a,d){return a+d[f.i];},0);}), tot=t.reduce(function(a,b){return a+b;},0)||1;
-    $('volume').setAttribute('aria-label',DISPO.map(function(f,i){return f.l+' '+Math.round(100*t[i]/tot)+' %';}).join(', '));
-    $('volume').innerHTML=DISPO.map(function(f,i){var pc=100*t[i]/tot; if(pc<=0) return '';
-      return '<span class="'+(st.fam[f.k]?'':'off')+'" title="'+nomG(f.g)+' · '+(f.n||f.l)+' : '+Math.round(pc)+' %" style="width:'+pc.toFixed(2)+'%;background:'+f.c+';color:'+f.t+'">'+(pc>=6?f.l+' '+Math.round(pc)+' %':'')+'</span>';}).join('');
+    var t={}; DISPO.forEach(function(f){ t[f.k]=S.rows.reduce(function(a,d){return a+d[f.i];},0); });
+    var tot=DISPO.reduce(function(a,f){return a+t[f.k];},0)||1, pc=function(f){return 100*t[f.k]/tot;};
+    var fp=function(p){return p>=1?Math.round(p)+' %':(p>0?'<1 %':'0 %');};
+    $('volume').innerHTML=DISPO.map(function(f){ var p=pc(f); if(p<=0) return '';
+      return '<button type="button" data-f="'+f.k+'" class="'+(st.fam[f.k]?'':'off')+'" aria-pressed="'+(!!st.fam[f.k])+'" title="'+nomG(f.g)+' · '+(f.n||f.l)+' : '+fp(p)+'" aria-label="'+(f.n||f.l)+' '+fp(p)+'" style="width:'+p.toFixed(2)+'%;background:'+f.c+'"></button>';}).join('');
+    var item=function(f){
+      if(f.i===null) return '<span class="tg av" title="Pas encore dans les données"><i style="background:'+f.c+'"></i>'+f.l+'<em>bientôt</em></span>';
+      return '<button type="button" class="tg'+(st.fam[f.k]?'':' off')+'" data-f="'+f.k+'" aria-pressed="'+(!!st.fam[f.k])+'" title="'+(f.n||f.l)+'"><i style="background:'+f.c+'"></i>'+f.l+'<em>'+fp(pc(f))+'</em></button>';};
+    var grp=function(g,nom){ var fs=FAM.filter(function(f){return f.g===g;}), dispo=fs.filter(function(f){return f.i!==null;}), on=dispo.every(function(f){return st.fam[f.k];});
+      return '<span class="grp2"><button type="button" class="gl'+(on?'':' off')+'" data-g="'+g+'" aria-pressed="'+on+'">'+nom+'</button>'+fs.map(item).join('')+'</span>';};
+    $('familles').innerHTML=grp('dom','Domestique')+grp('uefa','UEFA')+grp('fifa','FIFA')+'<span class="sep" aria-hidden="true"></span>'+grp('sel','Sélection');
   }
   function rendu(){
     cacher();
@@ -445,10 +421,7 @@ button,input,select{font:inherit}
     var s=e.target.closest('.sc'); if(s){ if(actif===s && Date.now()-tOuv>350) cacher(); else montrer(s); return; }
     if(!e.target.closest('#bulle')) cacher();
     var b=e.target.closest('button'); if(!b) return;
-    if(b.dataset.mob){ mob.v=b.dataset.mob; try{history.replaceState(null,'','#mob='+mob.v);}catch(e){} appliquerMob(); return; }
-    if(b.dataset.face){ mob.face=b.dataset.face; appliquerMob(); return; }
-    if(b.id==='compets-btn'){ var c=$('compets'); c.hidden=!c.hidden; b.setAttribute('aria-expanded',!c.hidden); b.textContent=c.hidden?'modifier':'fermer'; }
-    else if(b.dataset.n1){ var f1=DISPO.filter(function(f){return N1(f)===b.dataset.n1;}), t1=f1.every(function(f){return st.fam[f.k];});
+    if(b.dataset.n1){ var f1=DISPO.filter(function(f){return N1(f)===b.dataset.n1;}), t1=f1.every(function(f){return st.fam[f.k];});
       f1.forEach(function(f){st.fam[f.k]=t1?0:1;}); filtres(); rendu(); }
     else if(b.dataset.g){ var fs=DISPO.filter(function(f){return f.g===b.dataset.g;}), tout=fs.every(function(f){return st.fam[f.k];});
       fs.forEach(function(f){st.fam[f.k]=tout?0:1;}); filtres(); rendu(); }
