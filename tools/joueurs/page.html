@@ -6,97 +6,106 @@
 <title>Joueurs décisifs</title>
 <style>
 /* Page /football-joueurs-decisifs/ — le joueur le plus décisif, saison par saison.
-   Jetons de couleur (--ground, --ink, --fr, --n1… --c3) : chrome.mjs, injectés par build.mjs.
-   Données : tools/joueurs/data.json, injecté entre les sentinelles DATA. */
+   Lecture 1 : un classement condensé (rang, joueur, club, championnat, score, buts, passes).
+   Lecture 2 : le détail du score par compétition, à la demande.
+   Jetons de couleur : chrome.mjs, injectés par build.mjs. Données : tools/joueurs/data.json. */
 *{box-sizing:border-box}
 body{margin:0; background:var(--ground); color:var(--ink);
-  font-family:Calibri,"Carlito","Helvetica Neue",Arial,sans-serif; font-size:14px; line-height:1.5;
+  font-family:Calibri,"Carlito","Helvetica Neue",Arial,sans-serif; font-size:13px; line-height:1.45;
   -webkit-font-smoothing:antialiased}
-.wrap{max-width:1160px; margin:0 auto; padding-inline:clamp(16px,4vw,40px); padding-block:clamp(22px,3.6vw,40px) 64px}
-h1,h2{margin:0; text-wrap:balance; letter-spacing:-.012em; font-family:"Newsreader",Georgia,"Times New Roman",serif; font-optical-sizing:auto}
+.wrap{max-width:1100px; margin:0 auto; padding-inline:clamp(12px,3vw,32px); padding-block:clamp(16px,3vw,28px) 56px}
+h1{margin:0; text-wrap:balance; letter-spacing:-.012em; font-family:"Newsreader",Georgia,"Times New Roman",serif; font-optical-sizing:auto;
+  font-size:clamp(24px,3.6vw,34px); line-height:1.08; font-weight:700}
+h1 em{color:var(--fr)}
 a{color:var(--fr)}
-.mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
-.kicker{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3)}
 button,input,select{font:inherit}
-:focus-visible{outline:3px solid var(--fr); outline-offset:2px}
+:focus-visible{outline:2px solid var(--fr); outline-offset:2px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
+.kicker{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3)}
+.mut{color:var(--ink-3)}
 .jd{--dom1:#2a78d6; --dom2:#8CBBF3; --c1x:#3B2A8C; --c3x:#6A57C8; --c4x:#A497E6; --uscx:#D3CCF3; --fifa:#C9A227;
-  --sel1:#eb6834; --sel2:#F29A6E; --sel3:#F6BC9E; --sel4:#FADDCD;
-  --up:var(--c1); --up-soft:var(--fr-soft); --down:var(--c3); --down-soft:color-mix(in srgb, var(--c3) 14%, var(--surface))}
-:root[data-theme="dark"] .jd{--up:var(--fr); --down:var(--c3); --dom1:#3987e5; --dom2:#4C79B0; --c1x:#8A78EE; --c3x:#6F5DD0; --c4x:#54489C; --uscx:#3F3872; --fifa:#C9A227;
+  --sel1:#eb6834; --sel2:#F29A6E; --sel3:#F6BC9E; --sel4:#FADDCD; --zebre:color-mix(in srgb, var(--surface-2) 70%, var(--surface));
+  --up:var(--c1); --down:var(--c3)}
+:root[data-theme="dark"] .jd{--up:var(--fr); --dom1:#3987e5; --dom2:#4C79B0; --c1x:#8A78EE; --c3x:#6F5DD0; --c4x:#54489C; --uscx:#3F3872;
   --sel1:#d95926; --sel2:#A9502C; --sel3:#7A3F27; --sel4:#4E2C20}
 
 /* ---------- en-tête ---------- */
-.hero{display:flex; flex-direction:column; gap:12px; padding-bottom:18px}
-.hero h1{font-size:clamp(28px,4.4vw,42px); line-height:1.06; font-weight:700; max-width:900px}
-.hero h1 em{color:var(--fr)}
-.lead{margin:0; font-size:15px; color:var(--ink-2); max-width:720px}
-.pills{display:flex; flex-wrap:wrap; gap:8px}
-.pill{min-height:36px; padding:0 14px; font-size:13px; border-radius:999px; border:1px solid var(--rule); background:var(--surface); color:var(--ink-2); cursor:pointer}
+.hero{display:flex; flex-direction:column; gap:8px; padding-bottom:14px}
+.lead{margin:0; font-size:14px; color:var(--ink-2); max-width:760px}
+
+/* ---------- barre d'outils ---------- */
+.panneau{background:var(--surface); border:1px solid var(--rule-soft); border-radius:10px; overflow:hidden}
+.outils{display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; padding:8px 10px; background:var(--surface-2); border-bottom:1px solid var(--rule-soft)}
+.outils select,.outils input{font-size:12.5px; min-height:30px; padding:0 8px; border:1px solid var(--rule); border-radius:6px; background:var(--surface); color:var(--ink)}
+.outils input{width:150px}
+.outils .droite{margin-left:auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.lien{background:none; border:0; padding:0; color:var(--fr); text-decoration:underline; cursor:pointer; font-size:12.5px}
+.vue{display:inline-flex; border:1px solid var(--rule); border-radius:6px; overflow:hidden}
+.vue button{border:0; background:var(--surface); color:var(--ink-2); font-size:12px; min-height:28px; padding:0 10px; cursor:pointer}
+.vue button[aria-pressed="true"]{background:var(--ink); color:var(--surface); font-weight:700}
+
+/* ---------- compétitions comptées (repliées) ---------- */
+.compets{padding:10px; border-bottom:1px solid var(--rule-soft); display:flex; flex-direction:column; gap:10px; background:var(--surface)}
+.compets[hidden]{display:none}
+.volume-t{font-size:11px; color:var(--ink-3)}
+.volume{display:flex; gap:2px; height:16px; border-radius:4px; overflow:hidden}
+.volume span{height:100%; display:flex; align-items:center; padding-left:5px; font-size:10px; font-weight:700; white-space:nowrap; overflow:hidden; min-width:3px}
+.volume span.off{opacity:.18}
+.arbre{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr)); gap:10px}
+.carte{border:1px solid var(--rule-soft); border-radius:10px; padding:10px; background:var(--surface-2); display:flex; flex-direction:column; gap:6px}
+.n1{align-self:flex-start; min-height:26px; padding:0 12px; border-radius:999px; border:0; cursor:pointer; background:var(--ink); color:var(--surface); font-size:11px; font-weight:900; letter-spacing:.06em; text-transform:uppercase}
+.n1[aria-pressed="false"]{background:transparent; color:var(--ink-3); box-shadow:inset 0 0 0 1px var(--rule)}
+.branches{margin-left:12px; padding-left:14px; border-left:2px solid var(--rule); display:flex; flex-direction:column; gap:6px}
+.branches.plat{flex-direction:row; flex-wrap:wrap; gap:5px}
+.branche{position:relative; display:flex; flex-wrap:wrap; align-items:center; gap:5px}
+.branche::before{content:""; position:absolute; left:-14px; top:12px; width:9px; height:2px; background:var(--rule)}
+.n2{width:84px; text-align:left; background:none; border:0; padding:0; cursor:pointer; font-size:10.5px; font-weight:900; letter-spacing:.06em; text-transform:uppercase}
+.n2[aria-pressed="false"]{opacity:.4; text-decoration:line-through}
+.branche.dom .n2{color:var(--dom1)} .branche.uefa .n2{color:var(--c1x)} .branche.fifa .n2{color:color-mix(in srgb, var(--fifa) 70%, var(--ink))}
+.pill{min-height:24px; padding:0 9px; border-radius:999px; border:1px solid var(--rule); background:var(--surface); color:var(--ink-2); font-size:11.5px; cursor:pointer}
 .pill[aria-pressed="true"]{border-color:var(--ink); background:var(--ink); color:var(--surface); font-weight:700}
-.pill .sw{width:10px; height:10px; border-radius:3px; display:inline-block; margin-right:8px; vertical-align:-1px}
+.pill .sw{width:9px; height:9px; border-radius:2px; display:inline-block; margin-right:6px}
 .pill[aria-pressed="false"] .sw{opacity:.35}
+.pill.bientot{cursor:default; border-style:dashed; background:transparent; color:var(--ink-3)}
+.pill.bientot em{font-style:normal; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:9px; text-transform:uppercase; letter-spacing:.06em; margin-left:4px}
 
 /* ---------- tableau ---------- */
-.panneau{background:var(--surface); border:1px solid var(--rule-soft); border-radius:16px; box-shadow:var(--shadow)}
-.filtres{padding:14px 18px; border-bottom:1px solid var(--rule-soft); display:flex; flex-direction:column; gap:10px}
-.champs{display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end}
-.champs label{display:flex; flex-direction:column; gap:4px; flex:1 1 180px; font-size:12px; color:var(--ink-2); font-weight:700}
-.champs input,.champs select{font-weight:400; font-size:14px; min-height:36px; padding:0 10px; border-radius:10px; border:1px solid var(--rule); background:var(--surface-2); color:var(--ink)}
-.arbre{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr)); gap:12px}
-.carte{border:1px solid var(--rule-soft); border-radius:14px; padding:12px; background:var(--surface-2); display:flex; flex-direction:column; gap:8px}
-.carte .n1{align-self:flex-start; min-height:32px; padding:0 16px; border-radius:999px; border:0; cursor:pointer; background:var(--ink); color:var(--surface); font-size:12px; font-weight:900; letter-spacing:.06em; text-transform:uppercase}
-.carte .n1[aria-pressed="false"]{background:transparent; color:var(--ink-3); box-shadow:inset 0 0 0 1px var(--rule)}
-.branches{margin-left:14px; padding-left:16px; border-left:2px solid var(--rule); display:flex; flex-direction:column; gap:8px}
-.branches.plat{flex-direction:row; flex-wrap:wrap; gap:6px}
-.branche{position:relative; display:flex; flex-wrap:wrap; align-items:center; gap:6px}
-.branche::before{content:""; position:absolute; left:-16px; top:15px; width:11px; height:2px; background:var(--rule)}
-.branche .n2{width:92px; text-align:left; background:none; border:0; padding:0; cursor:pointer; font-size:11px; font-weight:900; letter-spacing:.06em; text-transform:uppercase}
-.branche .n2[aria-pressed="false"]{opacity:.4; text-decoration:line-through}
-.branche.dom .n2{color:var(--dom1)} .branche.uefa .n2{color:var(--c1x)} .branche.fifa .n2{color:color-mix(in srgb, var(--fifa) 70%, var(--ink))}
-.volume{display:flex; gap:2px; height:22px; border-radius:6px; overflow:hidden}
-.volume span{height:100%; display:flex; align-items:center; padding-left:6px; font-size:10.5px; font-weight:700; white-space:nowrap; overflow:hidden; min-width:3px; transition:opacity .15s}
-.volume span.off{opacity:.18}
-.volume-t{font-size:11.5px; color:var(--ink-3)}
-.carte .pill{min-height:30px; padding:0 12px; font-size:12.5px}
-.pill.bientot{cursor:default; border-style:dashed; background:transparent; color:var(--ink-3)}
-.pill.bientot em{font-style:normal; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10px; text-transform:uppercase; letter-spacing:.06em; margin-left:4px}
-.compte-on{font-size:12px; font-weight:700; color:var(--ink-2); padding-right:4px; align-self:center}
-.row{display:grid; grid-template-columns:36px 62px minmax(0,1.4fr) 96px minmax(0,2fr) 52px;
-  grid-template-areas:"rang delta joueur bpp bar score"; gap:10px; align-items:center; padding:6px 18px; border-bottom:1px solid var(--rule-soft)}
-.row.head{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-2); border-bottom-color:var(--rule); padding-block:8px}
-.c-rang{grid-area:rang; font-family:"Newsreader",Georgia,serif; font-size:19px; font-weight:700; line-height:1}
-.row.head>span{font:inherit; font-size:10.5px; text-align:left}
-.row.head>.c-score{text-align:right}
-.row.head>.c-bar{height:auto; background:none; overflow:visible}
-.c-delta{grid-area:delta; display:flex; flex-direction:column; gap:0; align-items:flex-start}
-.badge{white-space:nowrap; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px; font-weight:600; padding:1px 6px; border-radius:5px; background:var(--surface-2); color:var(--ink-2)}
-.badge.up{background:var(--up-soft); color:var(--up)}
-.badge.down{background:var(--down-soft); color:var(--down)}
-.sous{font-size:10.5px; color:var(--ink-3)}
-.c-joueur{grid-area:joueur; min-width:0; display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px}
-.c-joueur .n{font-size:14px; font-weight:700}
-.c-joueur .club{font-size:12px; color:var(--ink-3)}
-.tags{display:flex; flex-wrap:wrap; gap:4px; flex-basis:100%}
-.tag{font-size:10.5px; font-weight:700; padding:1px 7px; border-radius:999px; background:var(--surface-2); color:var(--ink-2)}
-.tag.up{background:var(--up-soft); color:var(--up)}
-.tag.down{background:var(--down-soft); color:var(--down)}
-.c-bpp{grid-area:bpp; font-size:12.5px; color:var(--ink-2)}
-.c-bar{grid-area:bar; display:flex; gap:2px; height:10px; border-radius:4px; overflow:hidden; background:var(--surface-2)}
-.c-bar span{height:100%}
-.c-score{grid-area:score; text-align:right; font-size:14px; font-weight:600}
-.vide,.plus{padding:16px 18px; text-align:center; color:var(--ink-2)}
-.plus button{min-height:36px; padding:0 18px; font-size:13px; border-radius:999px; border:1px solid var(--ink); background:transparent; color:var(--ink); font-weight:700; cursor:pointer}
-.pied{padding:10px 18px; display:flex; flex-wrap:wrap; justify-content:space-between; gap:12px; font-size:12px; color:var(--ink-3); border-top:1px solid var(--rule-soft)}
+.r{display:grid; align-items:center; column-gap:10px; padding:4px 10px; border-bottom:1px solid var(--rule-soft); white-space:nowrap}
+.r>span{overflow:hidden; text-overflow:ellipsis; min-width:0}
+.r.z{background:var(--zebre)}
+.r.h{font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-3); border-bottom:1.5px solid var(--ink); padding-block:6px; background:var(--surface)}
+.r.h2{border-bottom:0; padding-bottom:0}
+.g1{grid-template-columns:30px minmax(140px,1.6fr) minmax(110px,1.3fr) 84px 54px 72px 52px 44px 10px}
+.g2{grid-template-columns:30px minmax(140px,1.6fr) minmax(110px,1.3fr) 84px 52px minmax(60px,110px) 32px 32px 40px 38px}
+.num{text-align:right; font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums; font-size:12.5px}
+.sc{text-align:right; font-family:"IBM Plex Mono",ui-monospace,monospace; font-weight:600; color:var(--up); font-size:13px}
+.nom{font-weight:700}
+.nat{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10px; color:var(--ink-3); margin-left:6px}
+.sous{display:none; font-size:11px; color:var(--ink-3)}
+.p{font-size:10.5px; color:var(--ink-3)}
+.up{color:var(--up)} .dn{color:var(--down)} .eq{color:var(--ink-3)}
+.dl{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11px}
+.cliq{cursor:pointer}
+.cliq:hover{background:color-mix(in srgb, var(--fr) 7%, var(--surface))}
+.mbar{display:block; height:6px; border-radius:3px; background:var(--dom1)}
+.duel-m{color:var(--up); border-bottom:2px solid var(--up); text-align:center}
+.duel-b{border-bottom:2px solid var(--ink-3); text-align:center}
+.detail{padding:6px 10px 10px 50px; border-bottom:1px solid var(--rule-soft); display:flex; flex-direction:column; gap:6px; background:var(--surface)}
+.dbar{display:flex; gap:2px; height:10px; border-radius:3px; overflow:hidden; max-width:560px}
+.dbar span{height:100%}
+.dleg{display:flex; flex-wrap:wrap; gap:4px 14px; font-size:12px}
+.dleg i{display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:5px}
+.vide,.plus{padding:14px 10px; text-align:center; color:var(--ink-2)}
+.plus button{min-height:30px; padding:0 16px; border-radius:6px; border:1px solid var(--ink); background:transparent; color:var(--ink); font-weight:700; cursor:pointer; font-size:12.5px}
+.pied{padding:8px 10px; font-size:11.5px; color:var(--ink-3)}
 @media (max-width:760px){
-  .row{grid-template-columns:30px minmax(0,1fr) 48px; grid-template-areas:"rang joueur score" "delta bar bar" ". bpp bpp"; gap:4px 10px; padding:8px 14px}
-  .champs input,.champs select{font-size:16px}
-  .row.head{display:none}
-  .branche .n2{width:100%}
-  .branches{margin-left:8px; padding-left:12px}
-  .branche::before{left:-12px; width:8px}
-  .filtres{padding:16px}
+  .g1,.g2{grid-template-columns:26px minmax(0,1fr) 50px 34px 34px}
+  .c-club,.c-champ,.c-brut,.c-fl,.c-bar,.c-bp,.c-rb,.r.h2{display:none}
+  .sous{display:block}
+  .outils input{width:100%}
+  .outils .droite{margin-left:0}
+  .detail{padding-left:36px}
 }
-
 </style>
 </head>
 <body>
@@ -104,55 +113,62 @@ button,input,select{font:inherit}
   <header class="hero">
     <div class="kicker">Football · Joueurs décisifs</div>
     <h1>Marquer, c'est bien.<br><em>Être décisif quand ça compte</em>, c'est mieux.</h1>
-    <p class="lead" id="lead">Chaque but et chaque passe décisive repesés selon le score au moment où ils tombent, la compétition et le tour. Le penalty ? Partagé : ¾ pour celui qui l'obtient, ¼ pour celui qui le marque. Ça fait de la peine à certains.</p>
-    <div class="pills" role="group" aria-label="Saison" id="saisons"></div>
+    <p class="lead" id="lead">Chaque but et chaque passe repesés selon le score au moment où ils tombent, la compétition et le tour. Le penalty ? Partagé : ¾ pour celui qui l'obtient, ¼ pour celui qui le marque. Ça fait de la peine à certains.</p>
   </header>
 
   <section class="panneau" aria-label="Classement">
-    <div class="filtres">
-      <div class="champs">
-        <label>Chercher un joueur<input type="search" id="q" placeholder="Kane, Yamal, Dembélé…" autocomplete="off"></label>
-        <label>Championnat<select id="ligue"></select></label>
-        <label>Nationalité<select id="nat"></select></label>
+    <div class="outils">
+      <select id="saison" aria-label="Saison"></select>
+      <select id="ligue" aria-label="Championnat"></select>
+      <select id="nat" aria-label="Nationalité"></select>
+      <input type="search" id="q" placeholder="Joueur…" aria-label="Chercher un joueur" autocomplete="off">
+      <div class="droite">
+        <span class="mut">Compétitions : <b id="compets-etat" style="color:var(--ink)">toutes</b> <button type="button" class="lien" id="compets-btn" aria-expanded="false" aria-controls="compets">modifier</button></span>
+        <span class="vue" role="group" aria-label="Affichage"><button type="button" data-v="1" aria-pressed="true">Classement</button><button type="button" data-v="2" aria-pressed="false">Duel</button></span>
       </div>
-      <div><div class="volume-t" id="volume-t"></div><div class="volume" id="volume" role="img"></div></div>
+    </div>
+    <div class="compets" id="compets" hidden>
+      <div><div class="volume-t">Poids de chaque compétition dans les points du top 100</div><div class="volume" id="volume" role="img"></div></div>
       <div class="arbre" id="familles" aria-label="Compétitions comptées"></div>
     </div>
-    <div class="row head" aria-hidden="true"><span class="c-rang">Rang</span><span class="c-delta">vs brut</span><span class="c-joueur">Joueur</span><span class="c-bpp">B (pén.) · P</span><span class="c-bar" style="background:none">D'où vient le score</span><span class="c-score">Score</span></div>
+    <div id="tete"></div>
     <div id="lignes"></div>
     <div class="vide" id="vide" hidden>Personne. Même pas un penalty provoqué. Élargis les filtres.</div>
     <div class="plus" id="plus" hidden><button type="button" id="voir">Voir le top 100</button></div>
-    <div class="pied"><span id="compte"></span></div>
+    <div class="pied" id="compte"></div>
   </section>
-
 </main>
 <script>
 /*DATA_START*/const JD = null;/*DATA_END*/
 (function(){
-  /* quatre familles : domestique (bleus), UEFA (violets), FIFA (or), sélection (orangés) ; un sous-segment = une nuance */
+  /* quatre familles : domestique (bleus), UEFA (violets), FIFA (or), sélection (orangés) */
   var FAM=[{k:'championnat',g:'dom',l:'Championnat',i:10,c:'var(--dom1)',t:'#fff'},{k:'coupe',g:'dom',l:'Coupe nationale',i:11,c:'var(--dom2)',t:'#0F141D'},
            {k:'c1',g:'uefa',l:'C1',n:'Ligue des champions',i:12,c:'var(--c1x)',t:'#fff'},{k:'c3',g:'uefa',l:'C3',n:'Ligue Europa',i:13,c:'var(--c3x)',t:'#fff'},
            {k:'c4',g:'uefa',l:'C4',n:'Conférence',i:14,c:'var(--c4x)',t:'#0F141D'},{k:'usc',g:'uefa',l:'Supercoupe',n:'Supercoupe UEFA',i:15,c:'var(--uscx)',t:'#0F141D'},
            {k:'fifa',g:'fifa',l:'CdM des clubs',i:16,c:'var(--fifa)',t:'#0F141D'},{k:'interc',g:'fifa',l:'Coupe intercontinentale',i:null,c:'color-mix(in srgb, var(--fifa) 50%, var(--surface))'},
            {k:'selection',g:'sel',l:'Grands tournois',i:17,c:'var(--sel1)',t:'#0F141D'},
-           /* pas encore dans les données (coef. prévus : qualifications 90, Ligue des nations 100, amicaux 50) */
            {k:'qualif',g:'sel',l:'Qualifications',i:null,c:'var(--sel2)'},{k:'ldn',g:'sel',l:'Ligue des nations',i:null,c:'var(--sel3)'},
            {k:'amicaux',g:'sel',l:'Amicaux',i:null,c:'var(--sel4)'}];
+  var DISPO=FAM.filter(function(f){return f.i!==null;});
   var GRP=[['dom','Domestique'],['uefa','UEFA'],['fifa','FIFA']];
   var N1=function(f){return f.g==='sel'?'sel':'club';};
   var nomG=function(g){return g==='sel'?'Sélection':'Club · '+GRP.filter(function(x){return x[0]===g;})[0][1];};
-  var DISPO=FAM.filter(function(f){return f.i!==null;});
+  var PAYS={'Premier League':'Angleterre','LaLiga':'Espagne','Serie A':'Italie','Bundesliga':'Allemagne','Ligue 1':'France','Liga Portugal':'Portugal',
+    'Eredivisie':'Pays-Bas','Pro League (BEL)':'Belgique','Süper Lig':'Turquie','Premiership (SCO)':'Écosse','Super League (GRE)':'Grèce',
+    'Superliga (DAN)':'Danemark','Premier Liga (UKR)':'Ukraine','Premier Liga (RUS)':'Russie'};
   var TOUS_L='Tous les championnats', TOUS_N='Toutes nationalités';
-  var st={saison:'2025', q:'', ligue:TOUS_L, nat:TOUS_N, tout:false, fam:{championnat:1,coupe:1,c1:1,c3:1,c4:1,usc:1,fifa:1,selection:1}};
+  var st={saison:'2025', q:'', ligue:TOUS_L, nat:TOUS_N, tout:false, vue:'1', ouvert:0, fam:{}};
+  DISPO.forEach(function(f){st.fam[f.k]=1;});
   var $=function(id){return document.getElementById(id);};
   var fr1=function(n){return n.toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1});};
   var nb=function(n){return n.toLocaleString('fr-FR');};
   var rg=function(n){return n===1?'1er':n+'e';};
   var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  var pays=function(l){return PAYS[l]||l;};
   var cles=Object.keys(JD.saisons).sort();
+  try{ var h=(location.hash.match(/vue=(\d)/)||[])[1]; if(h==='1'||h==='2') st.vue=h; }catch(e){}
 
-  function pills(){
-    $('saisons').innerHTML=cles.map(function(k){return '<button type="button" class="pill" data-s="'+k+'" aria-pressed="'+(st.saison===k)+'">'+JD.saisons[k].label+'</button>';}).join('');
+  function filtres(){
     var chip=function(f){ if(f.i===null) return '<button type="button" class="pill bientot" disabled title="Pas encore dans les données"><span class="sw" style="background:'+f.c+'"></span>'+f.l+' <em>bientôt</em></button>';
       return '<button type="button" class="pill" data-f="'+f.k+'" aria-pressed="'+(!!st.fam[f.k])+'"><span class="sw" style="background:'+f.c+'"></span>'+f.l+'</button>';};
     var on=function(fs){return fs.filter(function(f){return f.i!==null;}).every(function(f){return st.fam[f.k];});};
@@ -163,33 +179,32 @@ button,input,select{font:inherit}
         return '<div class="branche '+g[0]+'" role="group" aria-label="'+g[1]+'"><button type="button" class="n2" data-g="'+g[0]+'" aria-pressed="'+on(fs)+'">'+g[1]+'</button>'+fs.map(chip).join('')+'</div>';}).join('')
       +'</div></div>'
       +'<div class="carte" role="group" aria-label="Sélection"><button type="button" class="n1" data-n1="sel" aria-pressed="'+on(sel)+'">Sélection</button><div class="branches plat">'+sel.map(chip).join('')+'</div></div>';
+    var n=DISPO.filter(function(f){return st.fam[f.k];}).length;
+    $('compets-etat').textContent= n===DISPO.length?'toutes':n+' sur '+DISPO.length;
+    document.querySelectorAll('.vue button').forEach(function(b){b.setAttribute('aria-pressed', b.dataset.v===st.vue);});
   }
   function options(S){
+    $('saison').innerHTML=cles.slice().reverse().map(function(k){return '<option value="'+k+'"'+(k===st.saison?' selected':'')+'>Saison '+JD.saisons[k].label+'</option>';}).join('');
     var lig=[TOUS_L].concat(Array.from(new Set(S.rows.map(function(d){return d[5];}))).sort());
     var nat=[TOUS_N].concat(Array.from(new Set(S.rows.map(function(d){return d[3];}))).sort(function(a,b){return a.localeCompare(b,'fr');}));
     if(lig.indexOf(st.ligue)<0) st.ligue=TOUS_L; if(nat.indexOf(st.nat)<0) st.nat=TOUS_N;
-    $('ligue').innerHTML=lig.map(function(x){return '<option'+(x===st.ligue?' selected':'')+'>'+esc(x)+'</option>';}).join('');
+    $('ligue').innerHTML=lig.map(function(x){return '<option value="'+esc(x)+'"'+(x===st.ligue?' selected':'')+'>'+esc(x===TOUS_L?x:pays(x)+' · '+x)+'</option>';}).join('');
     $('nat').innerHTML=nat.map(function(x){return '<option'+(x===st.nat?' selected':'')+'>'+esc(x)+'</option>';}).join('');
-  }
-  function tags(d,rang,moy){
-    var t=[], delta=d[1]-rang, tot=d.slice(10,18).reduce(function(a,b){return a+b;},0), uefa=d[12]+d[13]+d[14]+d[15];
-    if(delta>=8 && d[1]>=2*rang) t.push(['up','Les stats le snobent']);
-    if(delta<=-8 && rang>=2*d[1]) t.push(['down','Gonflé au comptage']);
-    if(tot>0 && d[17]>=3 && d[17]/tot>=.2) t.push(['down','Se transcende en sélection']);
-    if(tot>0 && uefa>=5 && uefa/tot>=.35) t.push(['up','Homme des soirs d\u2019Europe']);
-    if(d[7]>=5 && d[7]/d[6]>=.25) t.push(['','Abonné au point de penalty']);
-    if(d[18]>=15 && 100*d[19]/d[18]>=2*moy) t.push(['','Spécialiste des matchs pliés']);
-    return t.slice(0,2);
   }
   function volume(S){
     var t=DISPO.map(function(f){return S.rows.reduce(function(a,d){return a+d[f.i];},0);}), tot=t.reduce(function(a,b){return a+b;},0)||1;
-    $('volume-t').textContent='Poids de chaque compétition dans les points du top 100';
     $('volume').setAttribute('aria-label',DISPO.map(function(f,i){return f.l+' '+Math.round(100*t[i]/tot)+' %';}).join(', '));
     $('volume').innerHTML=DISPO.map(function(f,i){var pc=100*t[i]/tot; if(pc<=0) return '';
       return '<span class="'+(st.fam[f.k]?'':'off')+'" title="'+nomG(f.g)+' · '+(f.n||f.l)+' : '+fr1(pc)+' %" style="width:'+pc.toFixed(2)+'%;background:'+f.c+';color:'+f.t+'">'+(pc>=6?f.l+' '+Math.round(pc)+' %':'')+'</span>';}).join('');
   }
+  function entete(){
+    $('tete').innerHTML= st.vue==='1'
+      ? '<div class="r h g1"><span class="num">Pl.</span><span>Joueur</span><span class="c-club">Club</span><span class="c-champ">Champ.</span><span class="num">Score</span><span class="num">Buts</span><span class="num">Passes</span><span class="num c-brut" title="Écart avec le rang au comptage buts + passes">Brut</span><span class="c-fl"></span></div>'
+      : '<div class="r h h2 g2"><span></span><span></span><span class="c-club"></span><span class="c-champ"></span><span class="duel-m" style="grid-column:span 2">Notre modèle</span><span class="duel-b c-bp" style="grid-column:span 4">Comptage brut</span></div>'
+       +'<div class="r h g2"><span class="num">Pl.</span><span>Joueur</span><span class="c-club">Club</span><span class="c-champ">Champ.</span><span class="num">Score</span><span class="c-bar"></span><span class="num">B</span><span class="num">P</span><span class="num c-bp">B+P</span><span class="num c-rb">Pl.</span></div>';
+  }
   function rendu(){
-    var S=JD.saisons[st.saison]; volume(S);
+    var S=JD.saisons[st.saison]; volume(S); entete();
     var all=S.rows.map(function(d){var p=DISPO.map(function(f){return st.fam[f.k]?d[f.i]:0;});return {d:d,p:p,s:p.reduce(function(a,b){return a+b;},0)};})
       .sort(function(a,b){return b.s-a.s;});
     all.forEach(function(x,i){x.r=i+1;});
@@ -197,36 +212,47 @@ button,input,select{font:inherit}
     var q=st.q.trim().toLowerCase(), filtre=!!q||st.ligue!==TOUS_L||st.nat!==TOUS_N;
     var vu=all.filter(function(x){return (!q||x.d[2].toLowerCase().indexOf(q)>=0)&&(st.ligue===TOUS_L||x.d[5]===st.ligue)&&(st.nat===TOUS_N||x.d[3]===st.nat);});
     var aff=(st.tout||filtre)?vu:vu.slice(0,25);
-    $('lignes').innerHTML=aff.map(function(x){
-      var d=x.d, dl=d[1]-x.r, cls=dl>0?'up':dl<0?'down':'';
-      var seg=DISPO.map(function(f,i){ if(!(x.p[i]>0)) return ''; return '<span title="'+nomG(f.g)+' · '+(f.n||f.l)+' : '+fr1(x.p[i])+'" style="width:'+(x.p[i]/max*100).toFixed(2)+'%;background:'+f.c+'"></span>';}).join('');
-      var tg=tags(d,x.r,S.moyPlie).map(function(t){return '<span class="tag '+t[0]+'">'+t[1]+'</span>';}).join('');
-      return '<div class="row"><span class="c-rang">'+x.r+'</span>'
-        +'<span class="c-delta"><span class="badge '+cls+'">'+(dl>0?'▲ '+dl:dl<0?'▼ '+(-dl):'=')+'</span><span class="sous">brut '+rg(d[1])+'</span></span>'
-        +'<span class="c-joueur"><span class="n">'+esc(d[2])+'</span><span class="club">'+esc(d[4])+' · '+esc(d[3])+'</span>'+(tg?'<span class="tags">'+tg+'</span>':'')+'</span>'
-        +'<span class="c-bpp mono">'+d[6]+' ('+d[7]+') · '+d[8]+'</span>'
-        +'<span class="c-bar" role="img" aria-label="'+DISPO.filter(function(f,i){return x.p[i]>0;}).map(function(f){return (f.n||f.l)+' '+fr1(x.p[DISPO.indexOf(f)]);}).join(', ')+'">'+seg+'</span>'
-        +'<span class="c-score mono">'+fr1(x.s)+'</span></div>';
+    $('lignes').innerHTML=aff.map(function(x,j){
+      var d=x.d, dl=d[1]-x.r, z=j%2?' z':'';
+      var nom='<span><span class="nom">'+esc(d[2])+'</span><span class="nat">'+esc(d[3])+'</span><span class="sous">'+esc(d[4])+' · '+esc(pays(d[5]))+'</span></span>';
+      var club='<span class="c-club mut">'+esc(d[4])+'</span><span class="c-champ mut">'+esc(pays(d[5]))+'</span>';
+      if(st.vue==='2'){
+        return '<div class="r g2'+z+'"><span class="num"><b>'+x.r+'</b></span>'+nom+club
+          +'<span class="sc">'+fr1(x.s)+'</span><span class="c-bar"><span class="mbar" style="width:'+(x.s/max*100).toFixed(1)+'%"></span></span>'
+          +'<span class="num">'+d[6]+'</span><span class="num">'+d[8]+'</span><span class="num mut c-bp">'+(d[6]+d[8])+'</span>'
+          +'<span class="num c-rb '+(dl>0?'up':dl<0?'dn':'eq')+'">'+rg(d[1])+'</span></div>';
+      }
+      var ouvert=st.ouvert===d[2];
+      var ligne='<div class="r g1 cliq'+z+'" data-o="'+esc(d[2])+'" role="button" tabindex="0" aria-expanded="'+ouvert+'"><span class="num">'+x.r+'</span>'+nom+club
+        +'<span class="sc">'+fr1(x.s)+'</span><span class="num">'+d[6]+(d[7]?' <span class="p">('+d[7]+' p.)</span>':'')+'</span><span class="num">'+d[8]+'</span>'
+        +'<span class="num c-brut dl '+(dl>0?'up':dl<0?'dn':'eq')+'">'+(dl>0?'▲'+dl:dl<0?'▼'+(-dl):'=')+'</span><span class="c-fl mut">'+(ouvert?'▾':'▸')+'</span></div>';
+      if(!ouvert) return ligne;
+      var segs=DISPO.map(function(f,i){return {f:f,v:x.p[i]};}).filter(function(s){return s.v>0;});
+      return ligne+'<div class="detail"><div class="dbar">'+segs.map(function(s){return '<span title="'+nomG(s.f.g)+' · '+(s.f.n||s.f.l)+'" style="width:'+(s.v/max*100).toFixed(1)+'%;background:'+s.f.c+'"></span>';}).join('')+'</div>'
+        +'<div class="dleg">'+segs.map(function(s){return '<span><i style="background:'+s.f.c+'"></i>'+(s.f.n||s.f.l)+' <b class="mono">'+fr1(s.v)+'</b></span>';}).join('')
+        +'<span class="mut">· '+rg(d[1])+' au comptage buts + passes ('+(d[6]+d[8])+')</span></div></div>';
     }).join('');
     $('vide').hidden=aff.length>0;
     $('plus').hidden=st.tout||filtre||vu.length<=25;
-    $('compte').textContent=aff.length+' joueurs affichés sur '+nb(S.classes)+' classés';
+    $('compte').textContent=aff.length+' joueurs affichés sur '+nb(S.classes)+' classés'+(st.vue==='1'?' · clique sur un joueur pour le détail par compétition':'');
   }
-  function saison(){
-    var S=JD.saisons[st.saison];
-    $('lead').textContent='On a repesé les '+nb(S.actions)+' actions décisives de la saison '+S.label+' : chaque but et chaque passe selon le score au moment où ils tombent, la compétition et le tour. Le penalty ? Partagé : ¾ pour celui qui l’obtient, ¼ pour celui qui le marque. Ça fait de la peine à certains.';
-    pills(); options(S); rendu();
-  }
+  function saison(){ var S=JD.saisons[st.saison];
+    $('lead').textContent='On a repesé les '+nb(S.actions)+' actions décisives de la saison '+S.label+' : chaque but et chaque passe selon le score au moment où ils tombent, la compétition et le tour. Le penalty ? Partagé : ¾ pour celui qui l\u2019obtient, ¼ pour celui qui le marque. Ça fait de la peine à certains.';
+    options(S); filtres(); rendu(); }
   document.addEventListener('click',function(e){
+    var o=e.target.closest('[data-o]'); if(o){ st.ouvert=st.ouvert===o.dataset.o?0:o.dataset.o; rendu(); return; }
     var b=e.target.closest('button'); if(!b) return;
-    if(b.dataset.s){ st.saison=b.dataset.s; st.tout=false; saison(); }
-    else if(b.dataset.n1){ var f1=FAM.filter(function(f){return N1(f)===b.dataset.n1 && f.i!==null;}), t1=f1.every(function(f){return st.fam[f.k];});
-      f1.forEach(function(f){st.fam[f.k]=t1?0:1;}); pills(); rendu(); }
-    else if(b.dataset.g){ var fs=FAM.filter(function(f){return f.g===b.dataset.g && f.i!==null;}), tout=fs.every(function(f){return st.fam[f.k];});
-      fs.forEach(function(f){st.fam[f.k]=tout?0:1;}); pills(); rendu(); }
-    else if(b.dataset.f){ st.fam[b.dataset.f]=st.fam[b.dataset.f]?0:1; pills(); rendu(); }
+    if(b.dataset.v){ st.vue=b.dataset.v; try{history.replaceState(null,'','#vue='+st.vue);}catch(e){} filtres(); rendu(); }
+    else if(b.id==='compets-btn'){ var c=$('compets'); c.hidden=!c.hidden; b.setAttribute('aria-expanded',!c.hidden); b.textContent=c.hidden?'modifier':'fermer'; }
+    else if(b.dataset.n1){ var f1=DISPO.filter(function(f){return N1(f)===b.dataset.n1;}), t1=f1.every(function(f){return st.fam[f.k];});
+      f1.forEach(function(f){st.fam[f.k]=t1?0:1;}); filtres(); rendu(); }
+    else if(b.dataset.g){ var fs=DISPO.filter(function(f){return f.g===b.dataset.g;}), tout=fs.every(function(f){return st.fam[f.k];});
+      fs.forEach(function(f){st.fam[f.k]=tout?0:1;}); filtres(); rendu(); }
+    else if(b.dataset.f){ st.fam[b.dataset.f]=st.fam[b.dataset.f]?0:1; filtres(); rendu(); }
     else if(b.id==='voir'){ st.tout=true; rendu(); }
   });
+  document.addEventListener('keydown',function(e){ var o=e.target.closest&&e.target.closest('[data-o]'); if(o&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); o.click(); } });
+  $('saison').addEventListener('change',function(e){st.saison=e.target.value; st.tout=false; st.ouvert=0; saison();});
   $('q').addEventListener('input',function(e){st.q=e.target.value; rendu();});
   $('ligue').addEventListener('change',function(e){st.ligue=e.target.value; rendu();});
   $('nat').addEventListener('change',function(e){st.nat=e.target.value; rendu();});
