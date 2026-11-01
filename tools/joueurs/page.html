@@ -111,6 +111,42 @@ button,input,select{font:inherit}
 .mesure .sg{display:inline-flex; border:1px solid var(--rule); border-radius:6px; overflow:hidden}
 .mesure button{border:0; background:var(--surface); color:var(--ink-2); font-size:12px; min-height:28px; padding:0 10px; cursor:pointer}
 .mesure button[aria-pressed="true"]{background:var(--ink); color:var(--surface); font-weight:700}
+.mesure button.wipm{color:var(--ink-3); opacity:.55; cursor:not-allowed; background:repeating-linear-gradient(135deg, transparent 0 5px, color-mix(in srgb, var(--ink) 5%, transparent) 5px 6px)}
+.mesure .wipt{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:9.5px; font-weight:700; letter-spacing:.06em; padding:2px 5px; border-radius:4px; border:1px dashed var(--rule); color:var(--ink-3); cursor:help}
+/* filtre : arbre déroulant ; légende : barre de répartition, non cliquable */
+.fc{position:relative}
+.fc>summary{list-style:none; cursor:pointer; min-height:34px; display:inline-flex; align-items:center; gap:6px; padding:0 10px; border:1px solid var(--rule); border-radius:6px; background:var(--surface); font-size:13px; color:var(--ink)}
+.fc>summary::-webkit-details-marker{display:none}
+.fc>summary::after{content:""; width:6px; height:6px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(45deg) translateY(-2px); margin-left:2px}
+.fc>summary b{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11px; font-weight:700; color:var(--ink-3)}
+.fc[open]>summary{border-color:var(--ink)}
+.fc .pop{position:absolute; z-index:30; top:calc(100% + 6px); left:0; width:300px; max-width:calc(100vw - 32px); background:var(--surface); border:1px solid var(--rule); border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,.14); padding:10px 12px 8px}
+.arb,.arb ul{list-style:none; margin:0; padding:0}
+.arb ul{margin-left:9px; padding-left:12px; border-left:1px solid var(--rule-soft)}
+.arb li{margin:1px 0}
+.arb label{display:flex; align-items:center; gap:7px; min-height:27px; font-size:13px; color:var(--ink); cursor:pointer; border-radius:5px; padding:0 4px}
+.arb label:hover{background:var(--surface-2)}
+.arb input{appearance:auto; -webkit-appearance:checkbox; accent-color:var(--ink); width:15px; height:15px; min-height:0; margin:0; padding:0; flex:none}
+@media (max-width:760px){.fc .pop{position:fixed; left:16px; right:16px; top:auto; width:auto; max-height:70vh; overflow:auto}}
+.arb .a1>label{font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:.07em}
+.arb .a2>label{font-weight:700}
+.arb .av label{color:var(--ink-3); cursor:default}
+.arb .av em{margin-left:auto; font-style:normal; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10px}
+.arb details>summary{list-style:none; cursor:pointer; display:flex; align-items:center; gap:7px; min-height:27px; padding:0 4px; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:.07em; color:var(--ink-3)}
+.arb details>summary::-webkit-details-marker{display:none}
+.arb details>summary::before{content:"▸"; font-size:10px}
+.arb details[open]>summary::before{content:"▾"}
+.pop .pied{display:flex; justify-content:space-between; margin-top:6px; padding-top:6px; border-top:1px solid var(--rule-soft)}
+.pop .pied button{background:none; border:0; color:var(--fr); font-size:12px; cursor:pointer; padding:4px 2px}
+.leg{padding:8px 10px 8px; border-bottom:1px solid var(--rule-soft); background:var(--surface)}
+.leg .lt{font-size:10.5px; color:var(--ink-3); margin-bottom:4px}
+.leg .lb{display:flex; height:8px; gap:1px; border-radius:3px; overflow:hidden; background:var(--surface-2)}
+.leg .lb span{height:100%; min-width:2px; transition:opacity .15s}
+.leg .lb span.off,.leg .li span.off{opacity:.2}
+.leg .li{display:flex; flex-wrap:wrap; gap:2px 12px; margin-top:5px; font-size:11px; color:var(--ink-2)}
+.leg .li span{display:inline-flex; align-items:center; gap:5px}
+.leg .li i{width:8px; height:8px; border-radius:2px}
+.leg .li em{font-style:normal; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10px; color:var(--ink-3)}
 .zm,.zb{cursor:help}
 .duel-m{color:var(--up); border-bottom:2px solid var(--up); text-align:center; padding-bottom:2px}
 .duel-b{border-bottom:2px solid var(--ink-3); text-align:center; padding-bottom:2px}
@@ -182,13 +218,11 @@ button,input,select{font:inherit}
       <select id="saison" aria-label="Saison"></select>
       <select id="ligue" aria-label="Championnat"></select>
       <select id="nat" aria-label="Nationalité"></select>
+      <details class="fc" id="fc"><summary>Compétitions <b id="fc-n"></b></summary><div class="pop" id="arbre"></div></details>
       <input type="search" id="q" placeholder="Joueur…" aria-label="Chercher un joueur" autocomplete="off">
-      <span class="mesure">Mesure <span class="sg" role="group" aria-label="Mesure"><button type="button" data-m="tot" aria-pressed="true">Total</button><button type="button" data-m="match" aria-pressed="false">Par match</button><button type="button" data-m="min" aria-pressed="false">Toutes les X min</button></span></span>
+      <span class="mesure">Mesure <span class="sg" role="group" aria-label="Mesure"><button type="button" data-m="tot" aria-pressed="true">Total</button><button type="button" data-m="match" aria-pressed="false" aria-disabled="true" class="wipm" aria-describedby="wip-m">Par match</button><button type="button" data-m="min" aria-pressed="false" aria-disabled="true" class="wipm" aria-describedby="wip-m">Toutes les X min</button></span><span class="wipt" id="wip-m" title="Les compositions manquent pour la C4, une partie de la C3 et les play-offs belges : matchs et minutes seraient sous-comptés.">WIP</span></span>
     </div>
-    <div class="compets2" aria-label="Compétitions comptées">
-      <div class="vbar" id="volume" role="group" aria-label="Poids de chaque compétition dans les points du top 100 — cliquer pour retirer ou remettre"></div>
-      <div class="vleg" id="familles"></div>
-    </div>
+    <div class="leg" id="legende" aria-label="Légende des couleurs"></div>
     <div class="tabwrap" id="tabwrap">
     <div class="tab" id="tab">
       <div class="r h h2"><span></span><span></span><span class="c-club"></span><span class="c-champ"></span><span class="c-mj"></span><span class="duel-m" style="grid-column:span 2">Notre modèle</span><span class="duel-b c-bp" style="grid-column:span 5">Comptage brut</span></div>
@@ -310,18 +344,34 @@ button,input,select{font:inherit}
     $('ligue').innerHTML=ls.map(function(x){var L=lig(x); return '<option value="'+esc(x)+'"'+(x===st.ligue?' selected':'')+'>'+esc(x===TOUS_L?x:L[0]+' ('+L[2]+')')+'</option>';}).join('');
     $('nat').innerHTML=ns.map(function(x){return '<option'+(x===st.nat?' selected':'')+'>'+esc(x)+'</option>';}).join('');
   }
+  var ARB=[{k:'club',l:'Club',c:[{k:'dom',l:'Domestique',c:['championnat','coupe']},{k:'uefa',l:'UEFA',c:['c1','c3','c4','usc']},{k:'fifa',l:'FIFA',c:['fifa','interc']}]}];
+  var fam=function(k){return FAM.filter(function(f){return f.k===k;})[0];};
+  var feuilles=function(n){ if(typeof n==='string') return fam(n).i===null?[]:[n]; return n.c.reduce(function(a,x){return a.concat(feuilles(x));},[]); };
+  var SEL={k:'sel',l:'Toutes les sélections',c:['selection','qualif','ldn','amicaux']};
+  function arbre(){
+    var li=function(n,niv){
+      if(typeof n==='string'){ var f=fam(n);
+        if(f.i===null) return '<li class="av"><label><input type="checkbox" disabled>'+(f.n||f.l)+'<em>bientôt</em></label></li>';
+        return '<li><label><input type="checkbox" data-f="'+f.k+'"'+(st.fam[f.k]?' checked':'')+'>'+(f.k==='usc'?f.n:f.n?f.l+' · '+f.n:f.l)+'</label></li>'; }
+      var fs=feuilles(n), on=fs.filter(function(k){return st.fam[k];}).length;
+      return '<li class="a'+niv+'"><label><input type="checkbox" data-nd="'+fs.join(',')+'"'+(on===fs.length?' checked':'')+(on&&on<fs.length?' data-ind="1"':'')+'>'+n.l+'</label><ul>'+n.c.map(function(x){return li(x,niv+1);}).join('')+'</ul></li>'; };
+    var fsS=feuilles(SEL), onS=fsS.every(function(k){return st.fam[k];});
+    $('arbre').innerHTML='<ul class="arb">'+ARB.map(function(n){return li(n,1);}).join('')
+      +'<li><details><summary>Sélection</summary><ul>'+li(SEL,2)+'</ul></details></li></ul>'
+      +'<div class="pied"><button type="button" id="fc-tout">Tout cocher</button><button type="button" id="fc-ok">Fermer</button></div>';
+    $('arbre').querySelectorAll('[data-ind]').forEach(function(x){x.indeterminate=true;});
+    var n=DISPO.filter(function(f){return st.fam[f.k];}).length;
+    $('fc-n').textContent=n===DISPO.length?'toutes':n+'/'+DISPO.length;
+  }
   function volume(S){
     var t={}; DISPO.forEach(function(f){ t[f.k]=S.rows.reduce(function(a,d){return a+d[f.i];},0); });
     var tot=DISPO.reduce(function(a,f){return a+t[f.k];},0)||1, pc=function(f){return 100*t[f.k]/tot;};
     var fp=function(p){return p>=1?Math.round(p)+' %':(p>0?'<1 %':'0 %');};
-    $('volume').innerHTML=DISPO.map(function(f){ var p=pc(f); if(p<=0) return '';
-      return '<button type="button" data-f="'+f.k+'" class="'+(st.fam[f.k]?'':'off')+'" aria-pressed="'+(!!st.fam[f.k])+'" title="'+nomG(f.g)+' · '+(f.n||f.l)+' : '+fp(p)+'" aria-label="'+(f.n||f.l)+' '+fp(p)+'" style="width:'+p.toFixed(2)+'%;background:'+f.c+'"></button>';}).join('');
-    var item=function(f){
-      if(f.i===null) return '<span class="tg av" title="Pas encore dans les données"><i style="background:'+f.c+'"></i>'+f.l+'<em>bientôt</em></span>';
-      return '<button type="button" class="tg'+(st.fam[f.k]?'':' off')+'" data-f="'+f.k+'" aria-pressed="'+(!!st.fam[f.k])+'" title="'+(f.n||f.l)+'"><i style="background:'+f.c+'"></i>'+f.l+'<em>'+fp(pc(f))+'</em></button>';};
-    var grp=function(g,nom){ var fs=FAM.filter(function(f){return f.g===g;}), dispo=fs.filter(function(f){return f.i!==null;}), on=dispo.every(function(f){return st.fam[f.k];});
-      return '<span class="grp2"><button type="button" class="gl'+(on?'':' off')+'" data-g="'+g+'" aria-pressed="'+on+'">'+nom+'</button>'+fs.map(item).join('')+'</span>';};
-    $('familles').innerHTML=grp('dom','Domestique')+grp('uefa','UEFA')+grp('fifa','FIFA')+'<span class="sep" aria-hidden="true"></span>'+grp('sel','Sélection');
+    var vis=DISPO.filter(function(f){return pc(f)>0;});
+    $('legende').innerHTML='<div class="lt">D\u2019où viennent les points du top 100 · chaque couleur = une compétition</div>'
+      +'<div class="lb" aria-hidden="true">'+vis.map(function(f){return '<span class="'+(st.fam[f.k]?'':'off')+'" title="'+(f.n||f.l)+' : '+fp(pc(f))+'" style="width:'+pc(f).toFixed(2)+'%;background:'+f.c+'"></span>';}).join('')+'</div>'
+      +'<div class="li">'+vis.map(function(f){return '<span class="'+(st.fam[f.k]?'':'off')+'"><i style="background:'+f.c+'"></i>'+f.l+' <em>'+fp(pc(f))+'</em></span>';}).join('')+'</div>';
+    arbre();
   }
   function rendu(){
     cacher();
@@ -434,20 +484,27 @@ button,input,select{font:inherit}
   $('lignes').addEventListener('pointerleave',function(e){ if(e.pointerType==='mouse') cacher(); });
   $('lignes').addEventListener('focusin',function(e){ var b=e.target.closest('.sc'); if(b) montrer(b); });
   $('lignes').addEventListener('focusout',function(e){ if(e.target.closest('.sc')) cacher(); });
-  document.addEventListener('keydown',function(e){ if(e.key==='Escape') cacher(); var t=e.target.closest&&e.target.closest('#entete .tri'); if(t&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); t.click(); } });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ cacher(); $('fc').open=false; } var t=e.target.closest&&e.target.closest('#entete .tri'); if(t&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); t.click(); } });
 
 
   function saison(){ var S=JD.saisons[st.saison];
     $('lead').textContent='On a repesé les '+nb(S.actions)+' actions décisives de la saison '+S.label+' : chaque but et chaque passe selon le score au moment où ils tombent, la compétition et le tour. Le penalty ? Partagé : ¾ pour celui qui l’obtient, ¼ pour celui qui le marque. Ça fait de la peine à certains.';
     options(S); filtres(); rendu(); }
+  $('arbre').addEventListener('change',function(e){ var c=e.target; if(c.dataset.f) st.fam[c.dataset.f]=c.checked?1:0;
+    else if(c.dataset.nd) c.dataset.nd.split(',').forEach(function(k){st.fam[k]=c.checked?1:0;});
+    if(!DISPO.some(function(f){return st.fam[f.k];})) DISPO.forEach(function(f){st.fam[f.k]=1;});
+    var o=$('arbre').querySelector('details')&&$('arbre').querySelector('details').open; filtres(); if(o) $('arbre').querySelector('details').open=true; rendu(); });
   document.addEventListener('click',function(e){
+    if(e.target.id==='fc-tout'){ DISPO.forEach(function(f){st.fam[f.k]=1;}); filtres(); rendu(); return; }
+    if(e.target.id==='fc-ok'){ $('fc').open=false; return; }
+    if($('fc').open && !e.target.closest('#fc')) $('fc').open=false;
     var t=e.target.closest('#entete .tri'); if(t && !e.target.closest('.poignee')){ var k=t.dataset.k;
       if(st.tri.k===k) st.tri.dir=-st.tri.dir; else st.tri={k:k, dir:(k==='joueur'||k==='club'||k==='ligue'||k==='r'||k==='rb')?1:-1};
       rendu(); return; }
     var s=e.target.closest('.sc'); if(s){ if(actif===s && Date.now()-tOuv>350) cacher(); else montrer(s); return; }
     if(!e.target.closest('#bulle')) cacher();
     var b=e.target.closest('button'); if(!b) return;
-    if(b.dataset.m){ st.m=b.dataset.m; st.tri={k:'s',dir:st.m==='min'?1:-1}; rendu(); return; }
+    if(b.dataset.m){ if(b.getAttribute('aria-disabled')==='true') return; st.m=b.dataset.m; st.tri={k:'s',dir:st.m==='min'?1:-1}; rendu(); return; }
     if(b.dataset.n1){ var f1=DISPO.filter(function(f){return N1(f)===b.dataset.n1;}), t1=f1.every(function(f){return st.fam[f.k];});
       f1.forEach(function(f){st.fam[f.k]=t1?0:1;}); filtres(); rendu(); }
     else if(b.dataset.g){ var fs=DISPO.filter(function(f){return f.g===b.dataset.g;}), tout=fs.every(function(f){return st.fam[f.k];});
