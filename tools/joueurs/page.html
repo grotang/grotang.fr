@@ -218,6 +218,67 @@ button,input,select{font:inherit}
 @media (prefers-reduced-motion:reduce){.bulle,.bulle .bb span{transition:none}}
 
 .r{background:var(--surface)} .r.z{background:var(--zebre)}
+.fm{display:contents} .fm-h,.fm-l,.fm-ok,.fbtn,.rbm,.det{display:none}
+/* ===== téléphone : vraie version, une seule échelle de texte (13 / 11 / 16 px) ===== */
+@media (max-width:760px){
+  .saisons{flex-wrap:nowrap; overflow-x:auto; margin-bottom:8px; scrollbar-width:none}
+  .saisons .sh{display:none}
+  .saisons button{flex:none; font-size:13px}
+  .outils{position:sticky; top:var(--stk,0px); z-index:6; flex-wrap:nowrap; padding:8px 10px}
+  .outils input[type=search]{flex:1; width:auto; min-height:38px; font-size:13px}
+  .outils .mesure{display:none}
+  .fbtn{display:inline-flex; align-items:center; gap:6px; min-height:38px; padding:0 12px; border-radius:8px; border:1px solid var(--ink); background:var(--surface); color:var(--ink); font-size:13px; font-weight:600; cursor:pointer; flex:none}
+  .fbtn i{font-style:normal; background:var(--ink); color:var(--surface); border-radius:999px; font-size:11px; padding:0 6px; line-height:18px}
+  .fbtn i.z{background:var(--rule); color:var(--ink-3)}
+  .fm{display:flex; flex-direction:column; gap:4px; position:fixed; left:0; right:0; bottom:0; z-index:60; background:var(--surface); border-radius:18px 18px 0 0; padding:14px 16px calc(16px + env(safe-area-inset-bottom)); max-height:85vh; overflow:auto; box-shadow:0 -10px 30px rgba(0,0,0,.2); transform:translateY(105%); transition:transform .22s ease; visibility:hidden}
+  .fm.open{transform:none; visibility:visible}
+  .fm-h{display:flex; justify-content:space-between; align-items:center; margin-bottom:4px}
+  .fm-h b{font-size:16px} .fm-h button{background:none; border:0; color:var(--fr); font-size:13px; cursor:pointer; padding:6px 0}
+  .fm-l{display:block; font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-3); margin-top:8px}
+  .fm select{max-width:none; width:100%; min-height:42px; font-size:14px}
+  .fm .fc>summary{display:none}
+  .fm .fc .pop{position:static; width:100%; max-width:none; border:0; box-shadow:none; padding:0}
+  .fm .arb label,.fm .arb details>summary{min-height:38px; font-size:14px}
+  .fm .arb .a1>label{font-size:12px}
+  .fm #fc-ok{display:none}
+  .fm-ok{display:flex; align-items:center; justify-content:center; margin-top:12px; min-height:46px; border:0; border-radius:10px; background:var(--ink); color:var(--surface); font-size:14px; font-weight:700; cursor:pointer}
+  .voile:not([hidden]){display:block; position:fixed; inset:0; z-index:55; background:rgba(0,0,0,.38)}
+  .leg{padding:8px 10px}
+  .leg .lt{font-size:11px}
+  .leg .lb{height:20px}
+  .bleg{width:calc(100% - 12px)}
+  /* tableau : 4 colonnes — #, joueur (club · championnat dessous), score + barre, Tot. (rang au brut dessous) */
+  .r.h2,.poignee{display:none}
+  .r{grid-template-columns:22px minmax(0,1fr) 60px 62px !important; grid-template-rows:auto auto; column-gap:8px; row-gap:3px; padding:8px 10px; align-items:center}
+  .r>*{grid-row:1}
+  .r>:nth-child(1){grid-column:1; grid-row:1/3; font-size:12px}
+  .r>:nth-child(2){grid-column:2; grid-row:1/3; min-width:0}
+  .r>:nth-child(6){grid-column:3}
+  .r>:nth-child(7){grid-column:3; grid-row:2}
+  .r>:nth-child(11){grid-column:4; grid-row:1/3}
+  .r>:nth-child(3),.r>:nth-child(4),.r>:nth-child(5),.r>:nth-child(8),.r>:nth-child(9),.r>:nth-child(10),.r>:nth-child(12){display:none}
+  .r.h>:nth-child(7){display:none}
+  .r.h>:nth-child(6){grid-row:1/3}
+  .r.h{font-size:11px}
+  .nom{font-size:13.5px}
+  .nat{font-size:10.5px}
+  .sous{display:block; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px}
+  .sc{font-size:16px}
+  .c-bar .mbar{height:4px; margin-left:auto}
+  .tot{flex-direction:column; align-items:flex-end; justify-content:center; margin-block:-8px; padding:4px 6px; font-size:13px; border-radius:6px}
+  .r.h .tot{margin-block:0}
+  .rbm{display:block; font-family:Carlito,system-ui,sans-serif; font-size:11px; font-weight:500; white-space:nowrap}
+  .r:not(.h){cursor:pointer}
+  .r.ouv{background:var(--surface-2)}
+  .det{display:grid; grid-column:1/-1; grid-row:3; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; margin-top:6px}
+  .det>div{background:var(--surface); border:1px solid var(--rule-soft); border-radius:8px; padding:6px 4px; text-align:center}
+  .det b{display:block; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:14px}
+  .det span{font-size:11px; color:var(--ink-3)}
+  .det p{grid-column:1/-1; margin:2px 0 0; font-size:11.5px; color:var(--ink-2); white-space:normal}
+  .jd{overflow-x:clip}
+  .bulle{width:min(320px, calc(100vw - 24px))}
+  .pied{font-size:11px}
+}
 /* mobile : tout le bloc (saisons, filtres, légende, tableau, bulles) = la version bureau, réduite d'un seul facteur.
    Une seule échelle de texte ; on zoome à deux doigts pour lire. */
 .zoomw.fixe{overflow:hidden}
@@ -237,9 +298,16 @@ button,input,select{font:inherit}
   <div class="saisons" role="group" aria-label="Saisons (plusieurs possibles : les points s'additionnent)"><span class="st">Saison</span><span id="saisons"></span><span class="sh">plusieurs possibles, les points s'additionnent</span></div>
   <section class="panneau" aria-label="Classement">
     <div class="outils">
-      <select id="ligue" aria-label="Championnat"></select>
-      <select id="nat" aria-label="Nationalité"></select>
+      <div class="voile" id="voile" hidden></div>
+      <div class="fm" id="fm" role="group" aria-label="Filtres">
+      <div class="fm-h"><b>Filtres</b><button type="button" id="fm-raz">Tout réinitialiser</button></div>
+      <span class="fm-l">Championnat</span><select id="ligue" aria-label="Championnat"></select>
+      <span class="fm-l">Nationalité</span><select id="nat" aria-label="Nationalité"></select>
+      <span class="fm-l">Compétitions</span>
       <details class="fc" id="fc"><summary>Compétitions <b id="fc-n"></b></summary><div class="pop" id="arbre"></div></details>
+      <button type="button" class="fm-ok" id="fm-ok">Voir le classement</button>
+      </div>
+      <button type="button" class="fbtn" id="fbtn" aria-controls="fm" aria-expanded="false">Filtres <i id="fbn">0</i></button>
       <input type="search" id="q" placeholder="Joueur…" aria-label="Chercher un joueur" autocomplete="off">
       <span class="mesure">Mesure <span class="sg" role="group" aria-label="Mesure"><button type="button" data-m="tot" aria-pressed="true">Total</button><button type="button" data-m="match" aria-pressed="false" aria-disabled="true" class="wipm" title="Bientôt : il manque encore des compositions (C4, une partie de la C3, play-offs belges)">Par match</button><button type="button" data-m="min" aria-pressed="false" aria-disabled="true" class="wipm" title="Bientôt : il manque encore des compositions (C4, une partie de la C3, play-offs belges)">Toutes les X min</button></span></span>
     </div>
@@ -335,9 +403,11 @@ button,input,select{font:inherit}
   /* mobile : le tableau de bureau, réduit à la largeur de l'écran (zoom à deux doigts) */
   function marquer(){}
   var ZK=1;
+  var MOB=function(){return window.matchMedia('(max-width:760px)').matches;};
   function appliquerMob(){
-    var w=$('zoomw'), t=$('zoom'), petit=w.clientWidth<1036;
-    w.className='zoomw'+(petit?' fixe':'');
+    var g=document.querySelector('.gnav'); document.documentElement.style.setProperty('--stk',(g&&getComputedStyle(g).position==='sticky'?g.offsetHeight:0)+'px');
+    var w=$('zoomw'), t=$('zoom'), petit=false;
+    w.className='zoomw';
     if(petit){ ZK=w.clientWidth/1036; t.style.transform='scale('+ZK+')'; w.style.height=Math.ceil(t.offsetHeight*ZK)+'px'; }
     else { ZK=1; t.style.transform=''; w.style.height=''; }
   }
@@ -392,7 +462,7 @@ button,input,select{font:inherit}
     var tot=DISPO.reduce(function(a,f){return a+t[f.k];},0)||1, pc=function(f){return 100*t[f.k]/tot;};
     var fp=function(p){return p>=1?Math.round(p)+' %':(p>0?'<1 %':'0 %');};
     var vis=DISPO.filter(function(f){return pc(f)>0;});
-    $('legende').innerHTML='<div class="lt">D\u2019où viennent les points du top 100 · survole une couleur pour le détail</div><div class="bleg" id="bleg" aria-hidden="true"></div>'
+    $('legende').innerHTML='<div class="lt">D\u2019où viennent les points du top 100 · '+(MOB()?'touche':'survole')+' une couleur pour le détail</div><div class="bleg" id="bleg" aria-hidden="true"></div>'
       +'<div class="lb" role="img" aria-label="'+vis.map(function(f){return (f.n||f.l)+' '+fp(pc(f));}).join(', ')+'">'+vis.map(function(f){ var p=pc(f), q=fp(p).replace(' ',''), lab=(p>=12||(p>=3.5&&f.l.length<=3))?esc(f.l)+' <em>'+q+'</em>':p>=3?'<em>'+q+'</em>':'';
         return '<span data-k="'+f.k+'" class="'+(st.fam[f.k]?'':'off')+'" style="width:'+p.toFixed(2)+'%;background:'+f.c+';color:'+(f.t||'#0F141D')+'">'+lab+'</span>';}).join('')+'</div>';
     arbre();
@@ -432,12 +502,14 @@ button,input,select{font:inherit}
         +'<button type="button" class="sc zm" data-j="'+j+'" aria-expanded="false" aria-label="'+MES[st.m].ts+' '+fV(x.v)+', détail par compétition">'+fV(x.v)+'</button>'
         +'<span class="c-bar zm"><span class="mbar" style="width:'+(barre(x)/max*100).toFixed(1)+'%">'+segs+'</span></span>'
         +'<span class="num zb">'+d[6]+'</span><span class="num pn c-pn zb">'+(d[7]||'')+'</span><span class="num zb">'+d[8]+'</span>'
-        +'<span class="num c-bp tot zb">'+fB(x.vb)+'</span>'
+        +'<span class="num c-bp tot zb">'+fB(x.vb)+'<small class="rbm '+(dl>0?'up':dl<0?'dn':'eq')+'">'+rg(x.rb)+' brut</small></span>'
         +'<span class="num c-rb zb '+(dl>0?'up':dl<0?'dn':'eq')+'" title="'+(dl>0?'Gagne '+dl+' place'+(dl>1?'s':'')+' sur le comptage':dl<0?'Perd '+(-dl)+' place'+(dl<-1?'s':'')+' sur le comptage':'Même rang')+'">'+rg(x.rb)+'</span></div>';
     }).join('');
     marquer(); appliquerMob();
     $('vide').hidden=VUS.length>0;
     $('plus').hidden=st.tout||filtre||!parDefaut||vu.length<=25;
+    var nf=(st.ligue!==TOUS_L)+(st.nat!==TOUS_N)+(DISPO.some(function(f){return !st.fam[f.k];})?1:0);
+    $('fbn').textContent=nf; $('fbn').className=nf?'':'z';
     $('compte').innerHTML=VUS.length+' joueurs affichés sur '+(st.m==='tot'?nb(S.classes)+' classés':nb(all.length)+' classés (900 minutes jouées minimum)')+' · survole le score ou le total pour le détail · clique sur un titre pour trier<br><sup>*</sup> MJ : matchs où l\u2019on a la composition. Sous-estimé pour les joueurs de C4, d\u2019une partie de la C3 et des play-offs belges.';
   }
 
@@ -470,6 +542,7 @@ button,input,select{font:inherit}
     var Z=ZK, w=bulle.offsetWidth||320, left=(b.right-p.left)/Z+10, top=(b.top-p.top)/Z-8;
     if(left+w>p.width/Z) left=Math.max(6,(b.left-p.left)/Z-w-10);
     var h=bulle.offsetHeight, bas=b.top+(h-8)*Z-window.innerHeight; if(bas>0) top-=bas/Z+12;
+    if(MOB()){ left=Math.max(6,(p.width-w)/2); top=b.bottom-p.top+6; }
     bulle.style.left=left+'px'; bulle.style.top=top+'px';
     bulle.classList.add('on'); bulle.setAttribute('aria-hidden','false'); if(actif!==anc) tOuv=Date.now();
     if(actif&&actif!==anc&&actif.setAttribute) actif.setAttribute('aria-expanded','false'); actif=anc; if(anc===btn) btn.setAttribute('aria-expanded','true');
@@ -506,7 +579,7 @@ button,input,select{font:inherit}
   $('lignes').addEventListener('pointerleave',function(e){ if(e.pointerType==='mouse') cacher(); });
   $('lignes').addEventListener('focusin',function(e){ var b=e.target.closest('.sc'); if(b) montrer(b); });
   $('lignes').addEventListener('focusout',function(e){ if(e.target.closest('.sc')) cacher(); });
-  document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ cacher(); $('fc').open=false; } var t=e.target.closest&&e.target.closest('#entete .tri'); if(t&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); t.click(); } });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ cacher(); if(MOB()) feuille(false); else $('fc').open=false; } var t=e.target.closest&&e.target.closest('#entete .tri'); if(t&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); t.click(); } });
 
 
   function saison(){ var S=JD.saisons[st.saison];
@@ -539,11 +612,24 @@ button,input,select{font:inherit}
   $('legende').addEventListener('mouseover',function(e){ var g=e.target.closest('.lb span'); if(g) legOn(g); });
   $('legende').addEventListener('mouseleave',legOff);
   $('legende').addEventListener('click',function(e){ var g=e.target.closest('.lb span'); if(g){ e.stopPropagation(); if(g.classList.contains('on')) legOff(); else legOn(g); } });
+  function feuille(o){ $('fm').classList.toggle('open',o); $('voile').hidden=!o; $('fbtn').setAttribute('aria-expanded',o); if(o) $('fc').open=true; document.body.style.overflow=o?'hidden':''; }
+  function detail(row){
+    var j=+row.querySelector('.sc').dataset.j, x=VUS[j], d=x.d, dl=x.rb-x.r, o=row.classList.contains('ouv');
+    document.querySelectorAll('#lignes .r.ouv').forEach(function(r){ r.classList.remove('ouv'); var k=r.querySelector('.det'); if(k) k.remove(); });
+    if(o) return;
+    row.classList.add('ouv');
+    row.insertAdjacentHTML('beforeend','<div class="det"><div><b>'+d[20]+'*</b><span>MJ</span></div><div><b>'+d[6]+'</b><span>Buts</span></div><div><b>'+(d[7]||'—')+'</b><span>Péno.</span></div><div><b>'+d[8]+'</b><span>Passes</span></div>'
+      +'<p>'+rg(x.rb)+' au brut, '+rg(x.r)+' chez nous'+(dl>0?' : ▲'+dl+' place'+(dl>1?'s':''):dl<0?' : ▼'+(-dl)+' place'+(dl<-1?'s':''):'')+'. Touche le score pour le détail par compétition.</p></div>');
+  }
   document.addEventListener('click',function(e){
+    if(e.target.id==='fbtn'||e.target.closest('#fbtn')){ feuille(true); return; }
+    if(e.target.id==='fm-ok'||e.target.id==='voile'){ feuille(false); return; }
+    if(e.target.id==='fm-raz'){ st.ligue=TOUS_L; st.nat=TOUS_N; DISPO.forEach(function(f){st.fam[f.k]=1;}); options(JD.saisons[st.saison]); filtres(); $('fc').open=true; rendu(); return; }
+    if(MOB() && !e.target.closest('.sc') && e.target.closest('#lignes .r')){ cacher(); detail(e.target.closest('#lignes .r')); return; }
     if(!e.target.closest('#legende')) legOff();
     if(e.target.id==='fc-tout'){ DISPO.forEach(function(f){st.fam[f.k]=1;}); filtres(); rendu(); return; }
     if(e.target.id==='fc-ok'){ $('fc').open=false; return; }
-    if($('fc').open && !e.target.closest('#fc')) $('fc').open=false;
+    if(!MOB() && $('fc').open && !e.target.closest('#fc')) $('fc').open=false;
     var t=e.target.closest('#entete .tri'); if(t && !e.target.closest('.poignee')){ var k=t.dataset.k;
       if(st.tri.k===k) st.tri.dir=-st.tri.dir; else st.tri={k:k, dir:(k==='joueur'||k==='club'||k==='ligue'||k==='r'||k==='rb')?1:-1};
       rendu(); return; }
