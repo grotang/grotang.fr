@@ -24,10 +24,10 @@ function controle(D) {
     if (!(S.classes > 1000) || !(S.actions > 10000) || !(S.moyPlie > 0 && S.moyPlie < 50)) err(`saison ${S.label} : totaux invraisemblables`);
     let prec = Infinity;
     S.rows.forEach((d, i) => {
-      if (d.length !== 20) err(`saison ${S.label}, ligne ${i + 1} : ${d.length} colonnes`);
+      if (d.length !== 22) err(`saison ${S.label}, ligne ${i + 1} : ${d.length} colonnes`);
       if (d[0] !== i + 1) err(`saison ${S.label} : rang ${d[0]} à la position ${i + 1}`);
       if (!d[2] || !d[4] || !d[5]) err(`saison ${S.label}, rang ${d[0]} : nom, club ou championnat manquant`);
-      for (const j of [1, 6, 7, 8, 9, 18, 19]) if (!Number.isInteger(d[j]) || d[j] < 0) err(`saison ${S.label}, ${d[2]} : compteur ${j} invalide`);
+      for (const j of [1, 6, 7, 8, 9, 18, 19, 20, 21]) if (!Number.isInteger(d[j]) || d[j] < 0) err(`saison ${S.label}, ${d[2]} : compteur ${j} invalide`);
       if (d[7] > d[6]) err(`saison ${S.label}, ${d[2]} : plus de penalties que de buts`);
       if (d[19] > d[18]) err(`saison ${S.label}, ${d[2]} : n_menant_2 > n_buts_passes`);
       const s = d.slice(10, 18).reduce((a, b) => a + b, 0);
