@@ -171,6 +171,16 @@ button,input,select{font:inherit}
 .mbar{display:flex; gap:1px; height:8px; border-radius:3px; overflow:hidden}
 .mbar span{height:100%; transition:opacity .15s}
 .tags{display:flex; flex-wrap:wrap; gap:4px; margin-top:8px}
+.duel2{display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:center; margin:10px 0 8px; padding:8px 10px; border-radius:9px; background:color-mix(in srgb, var(--surface) 8%, transparent)}
+.duel2>div:not(.dl){display:flex; flex-direction:column; gap:1px}
+.duel2>div:last-child{text-align:right}
+.duel2 span{font-size:10px; letter-spacing:.08em; text-transform:uppercase; opacity:.6}
+.duel2 b{font:700 22px/1.1 "IBM Plex Mono",ui-monospace,monospace}
+.duel2 em{font-style:normal; font-size:11px; opacity:.75}
+.duel2 .dl{font:700 15px "IBM Plex Mono",ui-monospace,monospace; text-align:center; display:flex; flex-direction:column; align-items:center}
+.duel2 .dl small{font:500 10px Carlito,system-ui,sans-serif; opacity:.7}
+.duel2 .dl.up{color:color-mix(in srgb, #3FB37F 55%, var(--surface))} .duel2 .dl.dn{color:color-mix(in srgb, #E5604A 55%, var(--surface))}
+.zf{cursor:help}
 .tag{font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; background:color-mix(in srgb, var(--surface) 14%, transparent); color:var(--surface)}
 /* couleurs relatives au fond de la bulle (sombre en thème clair, claire en thème sombre) */
 .tag.up{background:color-mix(in srgb, #3FB37F 32%, transparent); color:color-mix(in srgb, #3FB37F 40%, var(--surface))}
@@ -408,7 +418,7 @@ button,input,select{font:inherit}
   var rg=function(n){return n===1?'1er':n+'e';};
   var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
   var cles=Object.keys(JD.saisons).filter(function(k){return k.indexOf('+')<0;}).sort();
-  var VUS=[];   /* lignes affichées, pour la bulle */
+  var VUS=[], TOUS=[];   /* lignes affichées (bulles) ; les 100 classées (moyennes) */
   /* mobile : le tableau de bureau, réduit à la largeur de l'écran (zoom à deux doigts) */
   function marquer(){}
   var ZK=1;
@@ -516,16 +526,16 @@ button,input,select{font:inherit}
     var f=TRI[st.tri.k]||TRI.s, dir=st.tri.dir;
     vu=vu.slice().sort(function(a,b){var u=f(a), v=f(b), c=typeof u==='string'?u.localeCompare(v,'fr'):u-v; return c*dir || a.r-b.r;});
     var parDefaut=st.tri.k==='s'&&dir===(asc?1:-1) || st.tri.k==='r'&&dir===1;
-    VUS=(st.tout||filtre||!parDefaut)?vu:vu.slice(0,25);
+    VUS=(st.tout||filtre||!parDefaut)?vu:vu.slice(0,25); TOUS=all;
     document.querySelectorAll('#entete .tri').forEach(function(t){ t.setAttribute('aria-sort', t.dataset.k===st.tri.k?(dir>0?'ascending':'descending'):'none'); });
     $('lignes').innerHTML=VUS.map(function(x,j){
       var d=x.d, dl=x.rb-x.r, L=lig(d[5]);
       var segs=DISPO.map(function(f,i){return x.p[i]>0?'<span data-k="'+f.k+'" style="width:'+(x.p[i]/x.s*100).toFixed(1)+'%;background:'+f.c+'"></span>':'';}).join('');
       return '<div class="r'+(j%2?' z':'')+'"><span class="num"><b>'+x.r+'</b></span>'
-        +'<span title="'+esc(d[2])+' · '+esc(d[3])+'"><span class="nom">'+esc(court(d[2]))+'</span><span class="nat">'+iso(d[3])+'</span><span class="sous">'+esc(d[4])+' · '+esc(L[0])+'</span></span>'
-        +'<span class="c-club mut">'+esc(d[4])+'</span>'
-        +'<span class="c-champ mut"><span class="lg">'+drap(L[1],L[2])+esc(L[0])+'</span></span>'
-        +'<span class="num mut c-mj">'+d[20]+'</span>'
+        +'<span class="zf" title="'+esc(d[2])+' · '+esc(d[3])+'"><span class="nom">'+esc(court(d[2]))+'</span><span class="nat">'+iso(d[3])+'</span><span class="sous">'+esc(d[4])+' · '+esc(L[0])+'</span></span>'
+        +'<span class="c-club mut zf">'+esc(d[4])+'</span>'
+        +'<span class="c-champ mut zf"><span class="lg">'+drap(L[1],L[2])+esc(L[0])+'</span></span>'
+        +'<span class="num mut c-mj zf">'+d[20]+'</span>'
         +'<button type="button" class="sc zm" data-j="'+j+'" aria-expanded="false" aria-label="'+MES[st.m].ts+' '+fV(x.v)+', détail par compétition">'+fV(x.v)+'</button>'
         +'<span class="c-bar zm"><span class="mbar" style="width:'+(barre(x)/max*100).toFixed(1)+'%">'+segs+'</span></span>'
         +'<span class="num zb">'+d[6]+'</span><span class="num pn c-pn zb">'+(d[7]||'')+'</span><span class="num zb">'+d[8]+'</span>'
@@ -537,7 +547,7 @@ button,input,select{font:inherit}
     $('plus').hidden=st.tout||filtre||!parDefaut||vu.length<=25;
     var nf=(st.ligue!==TOUS_L)+(st.nat!==TOUS_N)+(DISPO.some(function(f){return !st.fam[f.k];})?1:0);
     $('fbn').textContent=nf; $('fbn').className=nf?'':'z';
-    $('compte').innerHTML=VUS.length+' joueurs affichés sur '+(st.m==='tot'?nb(S.classes)+' classés':nb(all.length)+' classés (900 minutes jouées minimum)')+' · survole le score ou le total pour le détail · clique sur un titre pour trier<br><sup>*</sup> MJ : matchs où l\u2019on a la composition. Sous-estimé pour les joueurs de C4, d\u2019une partie de la C3 et des play-offs belges.';
+    $('compte').innerHTML=VUS.length+' joueurs affichés sur '+(st.m==='tot'?nb(S.classes)+' classés':nb(all.length)+' classés (900 minutes jouées minimum)')+' · survole le nom, le score ou le total pour le détail · clique sur un titre pour trier<br><sup>*</sup> MJ : matchs où l\u2019on a la composition. Sous-estimé pour les joueurs de C4, d\u2019une partie de la C3 et des play-offs belges.';
   }
 
   /* ---------- la bulle ---------- */
@@ -550,7 +560,7 @@ button,input,select{font:inherit}
     var L3=[['Buts dans le jeu',d[6]-d[7],'var(--ink-2)'],['Buts sur penalty',d[7],'var(--ink-3)'],['Passes décisives',d[8],'var(--ink-2)']];
     var mx=Math.max(1,d[6]-d[7],d[7],d[8]);
     bulle.innerHTML='<div class="bt"><div><div class="bn">'+esc(d[2])+'</div><div style="font-size:11.5px;opacity:.7;margin-top:3px">'+esc(d[4])+' · '+esc(L[0])+'</div>'
-        +'<span class="rk">'+rg(x.rb)+' au brut · '+rg(x.r)+' chez nous'+(dl>0?' · ▲'+dl:dl<0?' · ▼'+(-dl):'')+'</span>'+tags(x)+'</div>'
+        +'</div>'
         +'<div><div class="bs" style="color:var(--surface)">'+bp+'</div><div class="bu2">buts + passes</div></div></div>'
       +'<div class="bk">Le comptage</div>'
       +L3.map(function(l){return '<div class="bl"><i style="background:color-mix(in srgb, var(--surface) 60%, transparent)"></i><span>'+l[0]+'</span><span class="bb"><span data-w="'+(l[1]/mx*100).toFixed(1)+'" style="background:color-mix(in srgb, var(--surface) 70%, transparent)"></span></span><b>'+l[1]+'</b><em></em></div>';}).join('')
@@ -559,9 +569,26 @@ button,input,select{font:inherit}
       +'<div class="bk">Ce que le comptage ne dit pas</div>'
       +'<div class="bl" style="grid-template-columns:minmax(0,1fr) auto"><span>Buts et passes quand son équipe mène déjà de 2 buts ou plus</span><b>'+Math.round(pl)+' %</b></div>'
       +'<div class="bl" style="grid-template-columns:minmax(0,1fr) auto;opacity:.65"><span>moyenne de tous les joueurs</span><b>'+Math.round(S.moyPlie)+' %</b></div>'
-      +'<div class="bl" style="grid-template-columns:minmax(0,1fr) auto"><span>Points de notre modèle par but ou passe</span><b>'+pts.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</b></div>'
-      +'<div class="bl" style="grid-template-columns:minmax(0,1fr) auto;opacity:.65"><span>moyenne du top 100</span><b>'+moyPts.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</b></div>';
+;
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ bulle.querySelectorAll('.bb span').forEach(function(e){ e.style.width=e.dataset.w+'%'; }); }); });
+    placer(cell, btn);
+  }
+  /* fiche joueur (survol ou toucher du nom) : la synthèse modèle vs comptage */
+  function montrerFiche(cell){
+    var row=cell.closest('.r'), btn=row&&row.querySelector('.sc'); var x=btn&&VUS[+btn.dataset.j]; if(!x) return;
+    var d=x.d, L=lig(d[5]), bp=d[6]+d[8], dl=x.rb-x.r, f2=function(v){return v.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});};
+    var sS=TOUS.reduce(function(a,y){return a+y.s;},0), sB=TOUS.reduce(function(a,y){return a+y.d[6]+y.d[8];},0), moy=sB?sS/sB:0, pts=bp?x.s/bp:0;
+    var filtreC=DISPO.some(function(f){return !st.fam[f.k];});
+    bulle.innerHTML='<div class="bt"><div><div class="bn">'+esc(d[2])+'</div><div style="font-size:11.5px;opacity:.7;margin-top:3px">'+esc(d[4])+' · '+esc(L[0])+' · '+esc(d[3])+'</div>'+tags(x)+'</div></div>'
+      +'<div class="duel2"><div><span>Notre modèle</span><b>'+sc(x.s)+'</b><em>points · '+rg(x.r)+'</em></div>'
+      +'<div class="dl '+(dl>0?'up':dl<0?'dn':'eq')+'">'+(dl>0?'▲ '+dl:dl<0?'▼ '+(-dl):'=')+'<small>'+(dl>0?'place'+(dl>1?'s':'')+' gagnée'+(dl>1?'s':''):dl<0?'place'+(dl<-1?'s':'')+' perdue'+(dl<-1?'s':''):'même rang')+'</small></div>'
+      +'<div><span>Comptage brut</span><b>'+bp+'</b><em>buts + passes · '+rg(x.rb)+'</em></div></div>'
+      +'<div class="bl" style="grid-template-columns:minmax(0,1fr) auto"><span>Buts'+(d[7]?' (dont '+d[7]+' sur penalty)':'')+' · passes décisives</span><b>'+d[6]+' · '+d[8]+'</b></div>'
+      +'<div class="bl" style="grid-template-columns:minmax(0,1fr) auto"><span>Matchs joués<sup>*</sup></span><b>'+d[20]+'</b></div>'
+      +(d[22]?'<div class="bl" style="grid-template-columns:minmax(0,1fr) auto"><span>But'+(d[22]>1?'s':'')+' contre son camp</span><b>'+d[22]+' · '+sc(d[23]).replace('-','\u2212')+' pt</b></div>':'')
+      +'<div class="bk">Ce que le comptage ne dit pas</div>'
+      +'<div class="bl" style="grid-template-columns:minmax(0,1fr) auto"><span>Points de notre modèle par but ou passe</span><b>'+f2(pts)+'</b></div>'
+      +'<div class="bl" style="grid-template-columns:minmax(0,1fr) auto;opacity:.65"><span>moyenne du top 100'+(filtreC?' (compétitions cochées)':'')+'</span><b>'+f2(moy)+'</b></div>';
     placer(cell, btn);
   }
   function placer(anc, btn){
@@ -588,7 +615,7 @@ button,input,select{font:inherit}
         +'<span class="bb"><span data-w="'+(s.v/mx*100).toFixed(1)+'" style="background:'+s.f.c+'"></span></span><b>'+sc(s.v)+'</b><em>'+Math.round(100*s.v/x.s)+' %</em></div>';}).join('');
     }).join('');
     bulle.innerHTML='<div class="bt"><div><div class="bn">'+esc(d[2])+'</div><div style="font-size:11.5px;opacity:.7;margin-top:3px">'+esc(d[4])+' · '+esc(L[0])+'</div>'
-        +'<span class="rk">'+rg(x.r)+' chez nous · '+rg(x.rb)+' au brut'+(dl>0?' · ▲'+dl:dl<0?' · ▼'+(-dl):'')+'</span>'+tags(x)+'</div>'
+        +'</div>'
         +'<div><div class="bs">'+sc(x.s)+'</div><div class="bu2">points</div></div></div>'
       +'<div class="bbar">'+lignes.map(function(s){return '<span style="width:'+(s.v/x.s*100).toFixed(1)+'%;background:'+s.f.c+'"></span>';}).join('')+'</div>'
       +'<div class="split"><span>Club '+Math.round(100*club/x.s)+' %</span><span>Sélection '+Math.round(100*sel/x.s)+' %</span></div>'
@@ -599,11 +626,17 @@ button,input,select{font:inherit}
   }
   function cacher(){ bulle.classList.remove('on'); bulle.setAttribute('aria-hidden','true'); if(actif) actif.setAttribute('aria-expanded','false'); actif=null; }
   /* souris : toute la ligne ouvre la bulle (à côté du score) ; doigt : on touche le score */
-  $('lignes').addEventListener('pointerover',function(e){ if(e.pointerType!=='mouse') return;
-    var z=e.target.closest('.zm,.zb'); if(!z){ cacher(); return; } var row=z.closest('.r');
+  /* trois zones par ligne : fiche (nom, club, championnat, MJ), modèle (score, barre), comptage (buts → rang brut) */
+  var tz=null;
+  function ouvrir(z){ var row=z.closest('.r'); if(!row||row.classList.contains('h')) return;
     if(z.classList.contains('zm')){ var b=row.querySelector('.sc'); if(b!==actif) montrer(b); }
-    else { var a=row.querySelector('.zb'); if(a!==actif) montrerBrut(a); } });
-  $('lignes').addEventListener('pointerleave',function(e){ if(e.pointerType==='mouse') cacher(); });
+    else if(z.classList.contains('zf')){ var f=row.querySelector('.zf'); if(f!==actif) montrerFiche(f); }
+    else { var a=row.querySelector('.zb'); if(a!==actif) montrerBrut(a); } }
+  $('lignes').addEventListener('pointerover',function(e){ if(e.pointerType!=='mouse') return;
+    var z=e.target.closest('.zm,.zb,.zf'); clearTimeout(tz);
+    if(!z){ tz=setTimeout(cacher,120); return; }
+    tz=setTimeout(function(){ ouvrir(z); }, actif?120:60); });
+  $('lignes').addEventListener('pointerleave',function(e){ if(e.pointerType==='mouse'){ clearTimeout(tz); cacher(); } });
   $('lignes').addEventListener('focusin',function(e){ var b=e.target.closest('.sc'); if(b) montrer(b); });
   $('lignes').addEventListener('focusout',function(e){ if(e.target.closest('.sc')) cacher(); });
   document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ cacher(); if(MOB()) feuille(false); else $('fc').open=false; } var t=e.target.closest&&e.target.closest('#entete .tri'); if(t&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); t.click(); } });
@@ -652,7 +685,9 @@ button,input,select{font:inherit}
     if(e.target.id==='fbtn'||e.target.closest('#fbtn')){ feuille(true); return; }
     if(e.target.id==='fm-ok'||e.target.id==='voile'){ feuille(false); return; }
     if(e.target.id==='fm-raz'){ st.ligue=TOUS_L; st.nat=TOUS_N; DISPO.forEach(function(f){st.fam[f.k]=1;}); options(JD.saisons[st.saison]); filtres(); $('fc').open=true; rendu(); return; }
-    if(MOB() && !e.target.closest('.sc') && e.target.closest('#lignes .r')){ cacher(); detail(e.target.closest('#lignes .r')); return; }
+    if(MOB() && !e.target.closest('.sc') && e.target.closest('#lignes .r:not(.h)')){ var rw=e.target.closest('#lignes .r'), zz=e.target.closest('.zb')?rw.querySelector('.zb'):rw.querySelector('.zf');
+      if(actif===zz && Date.now()-tOuv>350){ cacher(); return; }
+      if(zz.classList.contains('zb')) montrerBrut(zz); else montrerFiche(zz); return; }
     if(!e.target.closest('#legende')) legOff();
     if(e.target.id==='fc-tout'){ DISPO.forEach(function(f){st.fam[f.k]=1;}); filtres(); rendu(); return; }
     if(e.target.id==='fc-ok'){ $('fc').open=false; return; }
