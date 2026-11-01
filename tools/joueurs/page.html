@@ -134,7 +134,7 @@ button,input,select{font:inherit}
 .arb label{display:flex; align-items:center; gap:7px; min-height:27px; font-size:13px; color:var(--ink); cursor:pointer; border-radius:5px; padding:0 4px}
 .arb label:hover{background:var(--surface-2)}
 .arb input{appearance:auto; -webkit-appearance:checkbox; accent-color:var(--ink); width:15px; height:15px; min-height:0; margin:0; padding:0; flex:none}
-@media (max-width:760px){.fc[open]{flex-basis:100%} .fc .pop{position:static; width:100%; max-width:none; margin-top:6px; box-shadow:none}}
+
 .arb .a1>label{font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:.07em}
 .arb .a2>label{font-weight:700}
 .arb .av label{color:var(--ink-3); cursor:default}
@@ -218,15 +218,10 @@ button,input,select{font:inherit}
 @media (prefers-reduced-motion:reduce){.bulle,.bulle .bb span{transition:none}}
 
 .r{background:var(--surface)} .r.z{background:var(--zebre)}
-@media (max-width:760px){
-  .outils input[type=search]{width:100%}
-  .outils .droite{margin-left:0}
-  .bulle{width:min(300px, calc(100vw - 24px))}
-  .tabwrap{overflow-x:auto}
-  /* — 1 · non responsive : le tableau de bureau, réduit (zoom à deux doigts) — */
-  .tabwrap.fixe{overflow:hidden}
-  .tabwrap.fixe .tab{width:1100px; transform-origin:0 0}
-}
+/* mobile : tout le bloc (saisons, filtres, légende, tableau, bulles) = la version bureau, réduite d'un seul facteur.
+   Une seule échelle de texte ; on zoome à deux doigts pour lire. */
+.zoomw.fixe{overflow:hidden}
+.zoomw.fixe .zoom{width:1036px; transform-origin:0 0}
 }
 </style>
 </head>
@@ -238,6 +233,7 @@ button,input,select{font:inherit}
     <p class="lead" id="lead">Chaque but et chaque passe repesés selon le score au moment où ils tombent, la compétition et le tour. Le penalty ? Partagé : ¾ pour celui qui l'obtient, ¼ pour celui qui le marque. Ça fait de la peine à certains.</p>
   </header>
 
+  <div class="zoomw" id="zoomw"><div class="zoom" id="zoom">
   <div class="saisons" role="group" aria-label="Saisons (plusieurs possibles : les points s'additionnent)"><span class="st">Saison</span><span id="saisons"></span><span class="sh">plusieurs possibles, les points s'additionnent</span></div>
   <section class="panneau" aria-label="Classement">
     <div class="outils">
@@ -260,6 +256,7 @@ button,input,select{font:inherit}
     <div class="pied" id="compte"></div>
     <div class="bulle" id="bulle" role="tooltip" aria-hidden="true"></div>
   </section>
+  </div></div>
 </main>
 <script>
 /*DATA_START*/const JD = null;/*DATA_END*/
@@ -337,12 +334,14 @@ button,input,select{font:inherit}
   var VUS=[];   /* lignes affichées, pour la bulle */
   /* mobile : le tableau de bureau, réduit à la largeur de l'écran (zoom à deux doigts) */
   function marquer(){}
+  var ZK=1;
   function appliquerMob(){
-    var w=$('tabwrap'), t=$('tab'), petit=window.matchMedia('(max-width:760px)').matches;
-    w.className='tabwrap'+(petit?' fixe':'');
-    if(petit){ var k=w.clientWidth/1100; t.style.transform='scale('+k+')'; w.style.height=Math.ceil(t.offsetHeight*k)+'px'; }
-    else { t.style.transform=''; w.style.height=''; }
+    var w=$('zoomw'), t=$('zoom'), petit=w.clientWidth<1036;
+    w.className='zoomw'+(petit?' fixe':'');
+    if(petit){ ZK=w.clientWidth/1036; t.style.transform='scale('+ZK+')'; w.style.height=Math.ceil(t.offsetHeight*ZK)+'px'; }
+    else { ZK=1; t.style.transform=''; w.style.height=''; }
   }
+  if(window.ResizeObserver) new ResizeObserver(function(){ if(ZK<1) $('zoomw').style.height=Math.ceil($('zoom').offsetHeight*ZK)+'px'; }).observe($('zoom'));
   window.addEventListener('resize',function(){ appliquerMob(); });
 
   /* ---------- largeur des colonnes, réglable et mémorisée ---------- */
@@ -468,12 +467,10 @@ button,input,select{font:inherit}
   }
   function placer(anc, btn){
     var p=$('lignes').closest('.panneau').getBoundingClientRect(), b=anc.getBoundingClientRect();
-    var w=bulle.offsetWidth||320, left=b.right-p.left+10;
-    if(left+w>p.width) left=Math.max(6,b.left-p.left-w-10);
-    if(window.innerWidth<=760) left=Math.max(6,(p.width-w)/2);
-    bulle.style.left=left+'px'; bulle.style.top=(b.top-p.top-8)+'px';
-    var h=bulle.offsetHeight, bas=b.top+h-8-window.innerHeight; if(bas>0) bulle.style.top=(b.top-p.top-8-bas-12)+'px';
-    if(window.innerWidth<=760) bulle.style.top=(b.bottom-p.top+6)+'px';
+    var Z=ZK, w=bulle.offsetWidth||320, left=(b.right-p.left)/Z+10, top=(b.top-p.top)/Z-8;
+    if(left+w>p.width/Z) left=Math.max(6,(b.left-p.left)/Z-w-10);
+    var h=bulle.offsetHeight, bas=b.top+(h-8)*Z-window.innerHeight; if(bas>0) top-=bas/Z+12;
+    bulle.style.left=left+'px'; bulle.style.top=top+'px';
     bulle.classList.add('on'); bulle.setAttribute('aria-hidden','false'); if(actif!==anc) tOuv=Date.now();
     if(actif&&actif!==anc&&actif.setAttribute) actif.setAttribute('aria-expanded','false'); actif=anc; if(anc===btn) btn.setAttribute('aria-expanded','true');
   }
@@ -532,8 +529,8 @@ button,input,select{font:inherit}
       +(v.length?'<div class="k">Ceux qui en tirent le plus</div>'+v.slice(0,5).map(function(x){return '<div class="t"><span>'+esc(court(x.d[2]))+'</span><u style="width:'+(x.v/mx*100).toFixed(0)+'%;background:'+f.c+'"></u><b>'+sc(x.v)+'</b></div>';}).join(''):'')
       +'<div class="f">'+(st.fam[k]?'Dans le tableau, seule cette couleur reste allumée.':'Cette compétition est décochée dans le filtre.')+'</div>';
     lb.classList.add('hov'); lb.querySelectorAll('span').forEach(function(x){x.classList.toggle('on',x===seg);});
-    var L=$('legende').getBoundingClientRect(), R=seg.getBoundingClientRect(), w=bl.offsetWidth||300;
-    bl.style.left=Math.max(6,Math.min(L.width-w-6,R.left-L.left+R.width/2-w/2))+'px'; bl.style.top=(R.bottom-L.top+8)+'px';
+    var Z=ZK, L=$('legende').getBoundingClientRect(), R=seg.getBoundingClientRect(), w=bl.offsetWidth||300;
+    bl.style.left=Math.max(6,Math.min(L.width/Z-w-6,(R.left-L.left+R.width/2)/Z-w/2))+'px'; bl.style.top=((R.bottom-L.top)/Z+8)+'px';
     bl.classList.add('on');
     tab.classList.add('hl'); tab.querySelectorAll('.mbar span').forEach(function(x){x.classList.toggle('hl',x.dataset.k===k);});
   }
