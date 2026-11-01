@@ -328,7 +328,8 @@ button,input,select{font:inherit}
     var S=JD.saisons[st.saison]; volume(S);
     var all=S.rows.map(function(d){var p=DISPO.map(function(f){return st.fam[f.k]?d[f.i]:0;});return {d:d,p:p,s:p.reduce(function(a,b){return a+b;},0)};})
       ;
-    var asc=st.m==='min';
+    var asc=st.m==='min', MINI=900;
+    if(st.m!=='tot') all=all.filter(function(x){return x.d[21]>=MINI;});
     all.forEach(function(x){ x.v=vM(x); x.vb=vB(x); });
     all.sort(function(a,b){return asc?a.v-b.v:b.v-a.v;}); all.forEach(function(x,i){x.r=i+1;});
     if(st.m==='tot') all.forEach(function(x){x.rb=x.d[1];});
@@ -363,7 +364,7 @@ button,input,select{font:inherit}
     marquer(); appliquerMob();
     $('vide').hidden=VUS.length>0;
     $('plus').hidden=st.tout||filtre||!parDefaut||vu.length<=25;
-    $('compte').textContent=VUS.length+' joueurs affichés sur '+nb(S.classes)+' classés · survole le score ou le total pour le détail · clique sur un titre pour trier';
+    $('compte').textContent=VUS.length+' joueurs affichés sur '+(st.m==='tot'?nb(S.classes)+' classés':nb(all.length)+' classés (900 minutes jouées minimum)')+' · survole le score ou le total pour le détail · clique sur un titre pour trier';
   }
 
   /* ---------- la bulle ---------- */
