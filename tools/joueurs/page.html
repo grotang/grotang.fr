@@ -473,7 +473,7 @@ button,input,select{font:inherit}
     if(delta<=-6 && rang>=1.8*rb) t.push(['down','Gonflé au comptage']);
     if(tot>0 && uefa>=5 && uefa/tot>=.35) t.push(['up','Homme des soirs d\u2019Europe']);
     if(tot>0 && d[17]>=3 && d[17]/tot>=.2) t.push(['up','Se transcende en sélection']);
-    if(d[7]>=5 && d[6] && d[7]/d[6]>=.25) t.push(['','Abonné au point de penalty']);
+    if(d[7]>=5 && d[6] && d[7]/d[6]>=.25) t.push(['down','Abonné au point de penalty']);
     if(d[18]>=15 && 100*d[19]/d[18]>=2*moy) t.push(['down','Spécialiste des matchs pliés']);
     t=t.slice(0,2);
     return t.length?'<div class="tags">'+t.map(function(g){return '<span class="tag '+g[0]+'">'+g[1]+'</span>';}).join('')+'</div>':'';
