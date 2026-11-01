@@ -491,7 +491,13 @@ button,input,select{font:inherit}
   function rendu(){
     cacher();
     var S=JD.saisons[st.saison]; volume(S);
-    var all=S.rows.map(function(d){var p=DISPO.map(function(f){return st.fam[f.k]?d[f.i]:0;});return {d:d,p:p,s:p.reduce(function(a,b){return a+b;},0)};})
+    /* comptage brut filtré lui aussi : buts, dont penalty, passes, penaltys obtenus par famille (d[24]) */
+    var filtreC=DISPO.some(function(f){return !st.fam[f.k];});
+    var all=S.rows.map(function(o){var p=DISPO.map(function(f){return st.fam[f.k]?o[f.i]:0;}), d=o;
+        if(filtreC){ d=o.slice(); [6,7,8,9].forEach(function(c,j){ d[c]=DISPO.reduce(function(a,f){return a+(st.fam[f.k]?o[24][(f.i-10)*4+j]:0);},0); }); }
+        return {d:d,p:p,s:p.reduce(function(a,b){return a+b;},0)};});
+    if(filtreC){ var tb=all.map(function(x){return x.d[6]+x.d[8];}); all.forEach(function(x,i){ x.d[1]=1+tb.filter(function(v){return v>tb[i];}).length; }); }
+    all=all
       ;
     var asc=st.m==='min', MINI=900;
     if(st.m!=='tot') all=all.filter(function(x){return x.d[21]>=MINI;});
