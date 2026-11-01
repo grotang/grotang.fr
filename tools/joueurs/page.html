@@ -586,7 +586,7 @@ button,input,select{font:inherit}
       +'<div class="bbar">'+lignes.map(function(s){return '<span style="width:'+(s.v/x.s*100).toFixed(1)+'%;background:'+s.f.c+'"></span>';}).join('')+'</div>'
       +'<div class="split"><span>Club '+Math.round(100*club/x.s)+' %</span><span>Sélection '+Math.round(100*sel/x.s)+' %</span></div>'
       +blocs
-      +'<div class="bf">'+d[6]+' buts'+(d[7]?' dont '+d[7]+' sur penalty':'')+' · '+d[8]+' passes'+(d[9]?' · '+d[9]+' penalty'+(d[9]>1?'s':'')+' obtenu'+(d[9]>1?'s':''):'')+'<br>'+d[20]+' matchs joués<sup>*</sup></div>';
+      +'<div class="bf">'+d[6]+' buts'+(d[7]?' dont '+d[7]+' sur penalty':'')+' · '+d[8]+' passes'+(d[9]?' · '+d[9]+' penalty'+(d[9]>1?'s':'')+' obtenu'+(d[9]>1?'s':''):'')+(d[22]?'<br>'+d[22]+' but'+(d[22]>1?'s':'')+' contre son camp : '+sc(d[23]).replace('-','\u2212')+' point'+(d[23]<=-2?'s':''):'')+'<br>'+d[20]+' matchs joués<sup>*</sup></div>';
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ bulle.querySelectorAll('.bb span').forEach(function(e){ e.style.width=e.dataset.w+'%'; }); }); });
     placer(btn, btn);
   }
