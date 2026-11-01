@@ -37,8 +37,15 @@ button,input,select{font:inherit}
 /* ---------- barre d'outils ---------- */
 .panneau{background:var(--surface); border:1px solid var(--rule-soft); border-radius:10px; overflow:visible; position:relative}
 .outils{display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; padding:8px 10px; background:var(--surface-2); border-bottom:1px solid var(--rule-soft); border-radius:10px 10px 0 0}
-.outils select,.outils input{font-size:12.5px; min-height:30px; padding:0 8px; border:1px solid var(--rule); border-radius:6px; background:var(--surface); color:var(--ink)}
-.outils input{width:150px}
+.outils select,.outils input[type=search]{font-size:12.5px; min-height:30px; padding:0 8px; border:1px solid var(--rule); border-radius:6px; background:var(--surface); color:var(--ink)}
+.outils input[type=search]{width:130px}
+.outils select{max-width:150px; text-overflow:ellipsis}
+.saisons{display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin:0 0 10px}
+.saisons .st{font-size:11px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3)}
+.saisons #saisons{display:inline-flex; gap:4px; flex-wrap:wrap}
+.saisons button{min-height:32px; padding:0 14px; border-radius:999px; border:1px solid var(--rule); background:var(--surface); color:var(--ink-2); font-size:13px; font-weight:600; cursor:pointer}
+.saisons button[aria-pressed="true"]{background:var(--ink); border-color:var(--ink); color:var(--surface)}
+.saisons .sh{font-size:11.5px; color:var(--ink-3)}
 .outils .droite{margin-left:auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap}
 .lien{background:none; border:0; padding:0; color:var(--fr); text-decoration:underline; cursor:pointer; font-size:12.5px}
 
@@ -127,7 +134,7 @@ button,input,select{font:inherit}
 .arb label{display:flex; align-items:center; gap:7px; min-height:27px; font-size:13px; color:var(--ink); cursor:pointer; border-radius:5px; padding:0 4px}
 .arb label:hover{background:var(--surface-2)}
 .arb input{appearance:auto; -webkit-appearance:checkbox; accent-color:var(--ink); width:15px; height:15px; min-height:0; margin:0; padding:0; flex:none}
-@media (max-width:760px){.fc .pop{position:fixed; left:16px; right:16px; top:auto; width:auto; max-height:70vh; overflow:auto}}
+@media (max-width:760px){.fc[open]{flex-basis:100%} .fc .pop{position:static; width:100%; max-width:none; margin-top:6px; box-shadow:none}}
 .arb .a1>label{font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:.07em}
 .arb .a2>label{font-weight:700}
 .arb .av label{color:var(--ink-3); cursor:default}
@@ -138,15 +145,12 @@ button,input,select{font:inherit}
 .arb details[open]>summary::before{content:"▾"}
 .pop .pied{display:flex; justify-content:space-between; margin-top:6px; padding-top:6px; border-top:1px solid var(--rule-soft)}
 .pop .pied button{background:none; border:0; color:var(--fr); font-size:12px; cursor:pointer; padding:4px 2px}
-.leg{padding:8px 10px 8px; border-bottom:1px solid var(--rule-soft); background:var(--surface)}
+.leg{padding:8px 10px; border-bottom:1px solid var(--rule-soft); background:var(--surface)}
 .leg .lt{font-size:10.5px; color:var(--ink-3); margin-bottom:4px}
-.leg .lb{display:flex; height:8px; gap:1px; border-radius:3px; overflow:hidden; background:var(--surface-2)}
-.leg .lb span{height:100%; min-width:2px; transition:opacity .15s}
-.leg .lb span.off,.leg .li span.off{opacity:.2}
-.leg .li{display:flex; flex-wrap:wrap; gap:2px 12px; margin-top:5px; font-size:11px; color:var(--ink-2)}
-.leg .li span{display:inline-flex; align-items:center; gap:5px}
-.leg .li i{width:8px; height:8px; border-radius:2px}
-.leg .li em{font-style:normal; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10px; color:var(--ink-3)}
+.leg .lb{display:flex; height:22px; gap:2px; border-radius:5px; overflow:hidden; background:var(--surface-2)}
+.leg .lb span{height:100%; min-width:3px; display:flex; align-items:center; gap:4px; padding:0 6px; overflow:hidden; white-space:nowrap; font-size:11px; font-weight:700; transition:opacity .15s}
+.leg .lb span em{font-style:normal; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10px; font-weight:500; opacity:.85}
+.leg .lb span.off{opacity:.2}
 .zm,.zb{cursor:help}
 .duel-m{color:var(--up); border-bottom:2px solid var(--up); text-align:center; padding-bottom:2px}
 .duel-b{border-bottom:2px solid var(--ink-3); text-align:center; padding-bottom:2px}
@@ -194,7 +198,7 @@ button,input,select{font:inherit}
 
 .r{background:var(--surface)} .r.z{background:var(--zebre)}
 @media (max-width:760px){
-  .outils input{width:100%}
+  .outils input[type=search]{width:100%}
   .outils .droite{margin-left:0}
   .bulle{width:min(300px, calc(100vw - 24px))}
   .tabwrap{overflow-x:auto}
@@ -213,14 +217,14 @@ button,input,select{font:inherit}
     <p class="lead" id="lead">Chaque but et chaque passe repesés selon le score au moment où ils tombent, la compétition et le tour. Le penalty ? Partagé : ¾ pour celui qui l'obtient, ¼ pour celui qui le marque. Ça fait de la peine à certains.</p>
   </header>
 
+  <div class="saisons" role="group" aria-label="Saisons (plusieurs possibles : les points s'additionnent)"><span class="st">Saison</span><span id="saisons"></span><span class="sh">plusieurs possibles, les points s'additionnent</span></div>
   <section class="panneau" aria-label="Classement">
     <div class="outils">
-      <select id="saison" aria-label="Saison"></select>
       <select id="ligue" aria-label="Championnat"></select>
       <select id="nat" aria-label="Nationalité"></select>
       <details class="fc" id="fc"><summary>Compétitions <b id="fc-n"></b></summary><div class="pop" id="arbre"></div></details>
       <input type="search" id="q" placeholder="Joueur…" aria-label="Chercher un joueur" autocomplete="off">
-      <span class="mesure">Mesure <span class="sg" role="group" aria-label="Mesure"><button type="button" data-m="tot" aria-pressed="true">Total</button><button type="button" data-m="match" aria-pressed="false" aria-disabled="true" class="wipm" aria-describedby="wip-m">Par match</button><button type="button" data-m="min" aria-pressed="false" aria-disabled="true" class="wipm" aria-describedby="wip-m">Toutes les X min</button></span><span class="wipt" id="wip-m" title="Les compositions manquent pour la C4, une partie de la C3 et les play-offs belges : matchs et minutes seraient sous-comptés.">WIP</span></span>
+      <span class="mesure">Mesure <span class="sg" role="group" aria-label="Mesure"><button type="button" data-m="tot" aria-pressed="true">Total</button><button type="button" data-m="match" aria-pressed="false" aria-disabled="true" class="wipm" title="Bientôt : il manque encore des compositions (C4, une partie de la C3, play-offs belges)">Par match</button><button type="button" data-m="min" aria-pressed="false" aria-disabled="true" class="wipm" title="Bientôt : il manque encore des compositions (C4, une partie de la C3, play-offs belges)">Toutes les X min</button></span></span>
     </div>
     <div class="leg" id="legende" aria-label="Légende des couleurs"></div>
     <div class="tabwrap" id="tabwrap">
@@ -291,7 +295,7 @@ button,input,select{font:inherit}
   var iso=function(n){return ISO[n]||String(n).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase();};
   var drap=function(c,t){return c&&DRAP[c]?'<svg viewBox="0 0 15 10" role="img" aria-label="'+t+'">'+DRAP[c]+'</svg>':'';};
 
-  var TOUS_L='Tous les championnats', TOUS_N='Toutes nationalités';
+  var TOUS_L='Championnats', TOUS_N='Nationalités';
   var st={saison:'2025', q:'', ligue:TOUS_L, nat:TOUS_N, tout:false, fam:{}, tri:{k:'s',dir:-1}, m:'tot'};
   /* mesure : total, par match, ou « toutes les X minutes » (plus petit = mieux) */
   var MES={tot:{s:'Score',b:'Tot.',ts:'Score de notre modèle',tb:'Total : buts + passes décisives'},
@@ -308,7 +312,7 @@ button,input,select{font:inherit}
   var nb=function(n){return n.toLocaleString('fr-FR');};
   var rg=function(n){return n===1?'1er':n+'e';};
   var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
-  var cles=Object.keys(JD.saisons).sort();
+  var cles=Object.keys(JD.saisons).filter(function(k){return k.indexOf('+')<0;}).sort();
   var VUS=[];   /* lignes affichées, pour la bulle */
   /* mobile : le tableau de bureau, réduit à la largeur de l'écran (zoom à deux doigts) */
   function marquer(){}
@@ -337,7 +341,7 @@ button,input,select{font:inherit}
 
   function filtres(){ volume(JD.saisons[st.saison]); }
   function options(S){
-    $('saison').innerHTML=cles.slice().reverse().map(function(k){return '<option value="'+k+'"'+(k===st.saison?' selected':'')+'>Saison '+JD.saisons[k].label+'</option>';}).join('');
+    $('saisons').innerHTML=cles.map(function(k){return '<button type="button" data-sa="'+k+'" aria-pressed="'+(st.sel.indexOf(k)>=0)+'">'+JD.saisons[k].label+'</button>';}).join('');
     var ls=[TOUS_L].concat(Array.from(new Set(S.rows.map(function(d){return d[5];}))).sort());
     var ns=[TOUS_N].concat(Array.from(new Set(S.rows.map(function(d){return d[3];}))).sort(function(a,b){return a.localeCompare(b,'fr');}));
     if(ls.indexOf(st.ligue)<0) st.ligue=TOUS_L; if(ns.indexOf(st.nat)<0) st.nat=TOUS_N;
@@ -368,9 +372,9 @@ button,input,select{font:inherit}
     var tot=DISPO.reduce(function(a,f){return a+t[f.k];},0)||1, pc=function(f){return 100*t[f.k]/tot;};
     var fp=function(p){return p>=1?Math.round(p)+' %':(p>0?'<1 %':'0 %');};
     var vis=DISPO.filter(function(f){return pc(f)>0;});
-    $('legende').innerHTML='<div class="lt">D\u2019où viennent les points du top 100 · chaque couleur = une compétition</div>'
-      +'<div class="lb" aria-hidden="true">'+vis.map(function(f){return '<span class="'+(st.fam[f.k]?'':'off')+'" title="'+(f.n||f.l)+' : '+fp(pc(f))+'" style="width:'+pc(f).toFixed(2)+'%;background:'+f.c+'"></span>';}).join('')+'</div>'
-      +'<div class="li">'+vis.map(function(f){return '<span class="'+(st.fam[f.k]?'':'off')+'"><i style="background:'+f.c+'"></i>'+f.l+' <em>'+fp(pc(f))+'</em></span>';}).join('')+'</div>';
+    $('legende').innerHTML='<div class="lt">D\u2019où viennent les points du top 100 · survole une couleur pour le détail</div>'
+      +'<div class="lb" role="img" aria-label="'+vis.map(function(f){return (f.n||f.l)+' '+fp(pc(f));}).join(', ')+'">'+vis.map(function(f){ var p=pc(f), lab=(p>=12||(p>=3.5&&f.l.length<=3))?esc(f.l)+' <em>'+fp(p)+'</em>':p>=3?'<em>'+fp(p)+'</em>':'';
+        return '<span class="'+(st.fam[f.k]?'':'off')+'" title="'+(f.n||f.l)+' : '+fp(p)+'" style="width:'+p.toFixed(2)+'%;background:'+f.c+';color:'+(f.t||'#0F141D')+'">'+lab+'</span>';}).join('')+'</div>';
     arbre();
   }
   function rendu(){
@@ -488,7 +492,8 @@ button,input,select{font:inherit}
 
 
   function saison(){ var S=JD.saisons[st.saison];
-    $('lead').textContent='On a repesé les '+nb(S.actions)+' actions décisives de la saison '+S.label+' : chaque but et chaque passe selon le score au moment où ils tombent, la compétition et le tour. Le penalty ? Partagé : ¾ pour celui qui l’obtient, ¼ pour celui qui le marque. Ça fait de la peine à certains.';
+    var ls=st.sel.map(function(k){return JD.saisons[k].label;}), txt=ls.length===1?'de la saison '+ls[0]:'des saisons '+ls.slice(0,-1).join(', ')+' et '+ls[ls.length-1];
+    $('lead').textContent='On a repesé les '+nb(S.actions)+' actions décisives '+txt+' : chaque but et chaque passe selon le score au moment où ils tombent, la compétition et le tour. Le penalty ? Partagé : ¾ pour celui qui l’obtient, ¼ pour celui qui le marque. Ça fait de la peine à certains.';
     options(S); filtres(); rendu(); }
   $('arbre').addEventListener('change',function(e){ var c=e.target; if(c.dataset.f) st.fam[c.dataset.f]=c.checked?1:0;
     else if(c.dataset.nd) c.dataset.nd.split(',').forEach(function(k){st.fam[k]=c.checked?1:0;});
@@ -504,6 +509,8 @@ button,input,select{font:inherit}
     var s=e.target.closest('.sc'); if(s){ if(actif===s && Date.now()-tOuv>350) cacher(); else montrer(s); return; }
     if(!e.target.closest('#bulle')) cacher();
     var b=e.target.closest('button'); if(!b) return;
+    if(b.dataset.sa){ var k=b.dataset.sa, i=st.sel.indexOf(k); if(i>=0){ if(st.sel.length>1) st.sel.splice(i,1); } else st.sel.push(k);
+      st.sel.sort(); st.saison=st.sel.join('+'); st.tout=false; saison(); return; }
     if(b.dataset.m){ if(b.getAttribute('aria-disabled')==='true') return; st.m=b.dataset.m; st.tri={k:'s',dir:st.m==='min'?1:-1}; rendu(); return; }
     if(b.dataset.n1){ var f1=DISPO.filter(function(f){return N1(f)===b.dataset.n1;}), t1=f1.every(function(f){return st.fam[f.k];});
       f1.forEach(function(f){st.fam[f.k]=t1?0:1;}); filtres(); rendu(); }
@@ -512,11 +519,10 @@ button,input,select{font:inherit}
     else if(b.dataset.f){ st.fam[b.dataset.f]=st.fam[b.dataset.f]?0:1; filtres(); rendu(); }
     else if(b.id==='voir'){ st.tout=true; rendu(); }
   });
-  $('saison').addEventListener('change',function(e){st.saison=e.target.value; st.tout=false; saison();});
   $('q').addEventListener('input',function(e){st.q=e.target.value; rendu();});
   $('ligue').addEventListener('change',function(e){st.ligue=e.target.value; rendu();});
   $('nat').addEventListener('change',function(e){st.nat=e.target.value; rendu();});
-  st.saison=cles[cles.length-1];
+  st.saison=cles[cles.length-1]; st.sel=[st.saison];
   saison();
 })();
 </script>

@@ -16,10 +16,12 @@ const KEY = 'joueurs';
 function controle(D) {
   const err = m => { throw new Error('joueurs décisifs : ' + m); };
   const cles = Object.keys(D.saisons || {});
-  if (cles.length < 3) err('moins de 3 saisons (' + cles.join(' ') + ')');
+  const simples = cles.filter(k => !k.includes('+'));
+  if (simples.length < 3) err('moins de 3 saisons (' + cles.join(' ') + ')');
   for (const k of cles) {
     const S = D.saisons[k];
-    if (!/^\d{4}$/.test(k) || S.label !== `${+k - 1}-${k.slice(2)}`) err(`libellé de saison incohérent (${k} / ${S.label})`);
+    const lab = k.split('+').map(c => `${+c - 1}-${c.slice(2)}`).join(' + ');
+    if (!/^\d{4}(\+\d{4}){0,2}$/.test(k) || S.label !== lab || k.split('+').some(c => !simples.includes(c))) err(`libellé de saison incohérent (${k} / ${S.label})`);
     if (!Array.isArray(S.rows) || S.rows.length !== 100) err(`saison ${S.label} : ${S.rows?.length} lignes au lieu de 100`);
     if (!(S.classes > 1000) || !(S.actions > 10000) || !(S.moyPlie > 0 && S.moyPlie < 50)) err(`saison ${S.label} : totaux invraisemblables`);
     let prec = Infinity;
@@ -47,7 +49,7 @@ export function buildJoueurs({ apercu = null } = {}) {
   const RE = /\/\*DATA_START\*\/[^]*?\/\*DATA_END\*\//;
   if (!RE.test(brut)) throw new Error('joueurs décisifs : sentinelles DATA introuvables');
 
-  const cles = Object.keys(D.saisons).sort(), der = D.saisons[cles[cles.length - 1]];
+  const cles = Object.keys(D.saisons).filter(k => !k.includes('+')).sort(), der = D.saisons[cles[cles.length - 1]];
   const n1 = der.rows[0][2];
   const titre = `Les joueurs les plus décisifs du football, saison par saison`;
   const desc = `Qui a vraiment fait gagner son équipe ? Chaque but et chaque passe décisive repesés selon le score du moment, la compétition et le tour, club et sélection confondus. En ${der.label}, n° 1 : ${n1}. Comparé au simple comptage buts + passes.`;
