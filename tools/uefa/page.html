@@ -518,11 +518,13 @@ section > .famille + .panel{margin-top:22px}
   .semrow.hd{align-items:end}
   .sgA{column-gap:8px}
   .sgA > .sj + .sj::before{display:none}
-  /* 136 px : cinq pastilles tiennent sur une ligne (5 × 22 + 4 × 3 = 122 ≤ 126) */
-  .sgA > .sj{gap:4px 3px; align-self:stretch; min-height:32px; padding:4px 5px 7px; border-radius:6px;
+  /* 152 px : cinq pastilles tiennent sur une ligne (5 × 26 + 4 × 3 = 142 ≤ 142) ;
+     pastilles passées de 22 à 26 px le 02/11 (« un peu trop petites », GT) */
+  .sgA > .sj{gap:4px 3px; align-self:stretch; min-height:36px; padding:4px 5px 7px; border-radius:6px;
     background:var(--surface-2); box-shadow:inset 0 0 0 1px var(--rule-soft); align-items:center}
   .semrow.me .sgA > .sj{background:color-mix(in srgb, var(--surface) 70%, transparent)}
-  .sgA .sp{width:22px; height:22px; font-size:10px}
+  .sgA .sp{width:26px; height:26px; font-size:12px; border-radius:6px}
+  .sgA .sp.f{font-size:10.5px}
   .semrow.hd .hdA > span{padding:5px 0 4px; text-align:center; border-radius:5px; background:var(--ink); color:var(--surface); font-size:10.5px; letter-spacing:.06em}
   .semrow .nm, .semrow .rk{font-weight:600}
   .sgain .gb{height:6px}
@@ -5678,9 +5680,9 @@ document.getElementById('anomaly').innerHTML = anomalous.length
     const JOURS = [...new Set(SEMS[k].map(m => m[0]))].sort();
     const jourL = d => new Date(d + 'T12:00:00Z').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', timeZone: 'UTC' });
     const maxJ = JOURS.map(d => Math.max(1, ...rows.map(t => t.M.filter(([m]) => m[0] === d).length)));
-    /* ordinateur : une largeur unique par soir, toutes les semaines (choix de GT, 30/10) ; téléphone : au prorata */
+    /* ordinateur : une largeur unique par soir, toutes les semaines (choix de GT, 30/10 ; 152 px depuis le 02/11) ; téléphone : au prorata */
     const M2 = window.matchMedia('(max-width:940px)').matches;   /* mise en page « téléphone » du bloc */
-    const pw = M2 ? 19 : 26, COLW = maxJ.map(n => M2 ? `minmax(${n * pw + 4}px,${n + 1}fr)` : '136px').join(' ');
+    const pw = M2 ? 19 : 26, COLW = maxJ.map(n => M2 ? `minmax(${n * pw + 4}px,${n + 1}fr)` : '152px').join(' ');
     /* les soirs de la semaine en en-tête de colonne (au téléphone : une ligne à part, l'en-tête étant masqué) */
     const hdM = `<span class="sgA hdA" style="grid-template-columns:${COLW}">${JOURS.map(d => `<span>${jourL(d)}</span>`).join('')}</span>`;
     list.innerHTML = `<div class="semrow hd"><span></span><span>Nation</span><span>${hdM}</span><span>Coefficient gagné</span><span style="text-align:right">Bilan</span></div>`
