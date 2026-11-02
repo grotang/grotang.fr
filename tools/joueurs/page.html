@@ -248,7 +248,11 @@ button,input,select{font:inherit}
 .fm{display:contents} .fm-h,.fm-l,.fm-ok,.fbtn,.rbm,.det{display:none}
 /* bouton de bascule, visible seulement sur téléphone (dans les deux modes) */
 .vtog{display:none}
+/* même indice que la page UEFA (bloc 1), seulement en version complète sur téléphone */
+.glisse-indice{display:none}
 @media (max-width:760px){
+  html.full .glisse-indice{display:block; font-size:12px; color:var(--ink-3); margin:6px 10px 4px; text-align:right; transition:opacity .3s}
+  html.full .glisse-indice.vu{opacity:0}
   .saisons .vtog.vtog{display:inline-flex; flex:none; margin-left:auto; align-items:center; gap:6px; min-height:34px; padding:0 12px; border-radius:999px; cursor:pointer; white-space:nowrap;
     border:2px solid #0F141D; background:#D8FF3C; color:#0F141D; font-size:13px; box-shadow:3px 3px 0 #0F141D; transform:rotate(-1.2deg); transition:transform .12s, box-shadow .12s}
   .saisons .vtog.vtog span{font-size:15px; line-height:1}
@@ -369,6 +373,7 @@ html.full .r.h{position:relative}
       <span class="mesure">Mesure <span class="sg" role="group" aria-label="Mesure"><button type="button" data-m="tot" aria-pressed="true">Total</button><button type="button" data-m="match" aria-pressed="false" aria-disabled="true" class="wipm" title="Bientôt : il manque encore des compositions (C4, une partie de la C3, play-offs belges)">Par match</button><button type="button" data-m="min" aria-pressed="false" aria-disabled="true" class="wipm" title="Bientôt : il manque encore des compositions (C4, une partie de la C3, play-offs belges)">Toutes les X min</button></span></span>
     </div>
     <div class="leg" id="legende" aria-label="Légende des couleurs"></div>
+    <div class="glisse-indice" id="glisse" aria-hidden="true">Faites glisser pour voir la suite →</div>
     <div class="tabwrap" id="tabwrap">
     <div class="tab" id="tab">
       <div class="r h h2"><span></span><span></span><span class="c-club"></span><span class="c-champ"></span><span class="c-mj"></span><span class="duel-m" style="grid-column:span 2">Notre modèle</span><span class="duel-b c-bp" style="grid-column:span 5">Comptage brut</span></div>
@@ -470,7 +475,7 @@ html.full .r.h{position:relative}
   function modeComplet(on){ FULL=on; try{ localStorage.setItem('grotang-jd-full', on?'1':'0'); }catch(e){}
     document.documentElement.classList.toggle('full',on); $('css-mob-tab').media=on?'not all':'(max-width:760px)';
     $('vtog').querySelector('b').textContent=on?'Version simple':'Version complète'; $('vtog').setAttribute('aria-pressed',on);
-    if(typeof cacher==='function') cacher();
+    if(typeof cacher==='function') cacher(); $('glisse').classList.remove('vu'); $('tabwrap').scrollLeft=0;
     if(JD) { filtres(); rendu(); } }
   function appliquerMob(){
     var g=document.querySelector('.gnav'); document.documentElement.style.setProperty('--stk',(g&&getComputedStyle(g).position==='sticky'?g.offsetHeight:0)+'px');
@@ -704,6 +709,7 @@ html.full .r.h{position:relative}
     var ls=st.sel.map(function(k){return JD.saisons[k].label;}), txt=ls.length===1?'de la saison '+ls[0]:'des saisons '+ls.slice(0,-1).join(', ')+' et '+ls[ls.length-1];
     $('lead').textContent='On a repesé les '+nb(S.actions)+' actions décisives '+txt+' : chaque but et chaque passe selon le score au moment où ils tombent, la compétition et le tour. Le penalty ? Partagé : ¾ pour celui qui l’obtient, ¼ pour celui qui le marque. Ça fait de la peine à certains.';
     options(S); filtres(); rendu(); }
+  $('tabwrap').addEventListener('scroll',function(){ if(this.scrollLeft>24) $('glisse').classList.add('vu'); },{passive:true});
   $('arbre').addEventListener('click',function(e){ var t=e.target.closest('[data-tg]'); if(!t) return; e.preventDefault(); e.stopPropagation();
     var k=t.dataset.tg; OUV[k]=!OUV[k]; var l=t.closest('li'); l.classList.toggle('ouv',OUV[k]); l.querySelector('ul').hidden=!OUV[k];
     t.setAttribute('aria-expanded',OUV[k]); t.setAttribute('aria-label',(OUV[k]?'Replier ':'Déplier ')+l.querySelector('label').textContent); });
