@@ -158,6 +158,7 @@ button,input,select{font:inherit}
 .leg .lb span{height:100%; min-width:3px; display:flex; align-items:center; gap:5px; padding:0 6px; line-height:1; overflow:hidden; white-space:nowrap; font-size:11px; font-weight:700; transition:opacity .15s}
 .leg .lb span em{font-style:normal; font-family:inherit; font-variant-numeric:tabular-nums; font-size:11px; font-weight:700; line-height:1; color:inherit}
 .leg .lb span.off{opacity:.2}
+.leg .lb span b{font-weight:700}
 .zm,.zb{cursor:help}
 .duel-m{color:var(--up); border-bottom:2px solid var(--up); text-align:center; padding-bottom:2px}
 .duel-b{border-bottom:2px solid var(--ink-3); text-align:center; padding-bottom:2px}
@@ -485,7 +486,7 @@ html.full .r.h{position:relative}
     else { ZK=1; t.style.transform=''; w.style.height=''; }
   }
   if(window.ResizeObserver) new ResizeObserver(function(){ if(ZK<1) $('zoomw').style.height=Math.ceil($('zoom').offsetHeight*ZK)+'px'; }).observe($('zoom'));
-  window.addEventListener('resize',function(){ appliquerMob(); });
+  var tRs=null; window.addEventListener('resize',function(){ appliquerMob(); clearTimeout(tRs); tRs=setTimeout(function(){ if(JD) volume(JD.saisons[st.saison]); },150); });
 
   /* ---------- largeur des colonnes, réglable et mémorisée ---------- */
   var tab=$('tab'), COLS={w0:[22,80],wj:[90,420],wc:[50,360],wl:[50,300],wmj:[26,90],ws:[36,120],wbar:[24,480],wbu:[30,160],wpn:[30,120],wpa:[32,120],wbp:[30,120],wrb:[30,120]};
@@ -547,17 +548,28 @@ html.full .r.h{position:relative}
     t=t.slice(0,2);
     return t.length?'<div class="tags">'+t.map(function(g){return '<span class="tag '+g[0]+'">'+g[1]+'</span>';}).join('')+'</div>':'';
   }
+  /* noms courts pour la barre commune */
+  var COURT={championnat:'Championnat',coupe:'Coupe',c1:'C1',c3:'C3',c4:'C4',usc:'SC UEFA',fifa:'CdM',selection:'Sélection'};
+  var MINI={championnat:'Ch.',coupe:'CN',c1:'C1',c3:'C3',c4:'C4',usc:'SC',fifa:'CdM',selection:'Sél'};
   function volume(S){
     var t={}; DISPO.forEach(function(f){ t[f.k]=S.rows.reduce(function(a,d){return a+d[f.i];},0); });
     var tot=DISPO.reduce(function(a,f){return a+t[f.k];},0)||1, pc=function(f){return 100*t[f.k]/tot;};
     var fp=function(p){return p>=1?Math.round(p)+' %':(p>0?'<1 %':'0 %');};
     var vis=DISPO.filter(function(f){return pc(f)>0;});
     $('legende').innerHTML='<div class="lt">D\u2019où viennent les points du top 100 · '+(PHONE()?'touche':'survole')+' une couleur pour le détail</div><div class="bleg" id="bleg" aria-hidden="true"></div>'
-      +'<div class="lb" role="img" aria-label="'+vis.map(function(f){return (f.n||f.l)+' '+fp(pc(f));}).join(', ')+'">'+vis.map(function(f){ var p=pc(f), q=fp(p).replace(' ',''), lab=(p>=12||(p>=3.5&&f.l.length<=3))?esc(f.l)+'<em>'+q+'</em>':p>=3?'<em>'+q+'</em>':'';
+      +'<div class="lb" role="img" aria-label="'+vis.map(function(f){return (f.n||f.l)+' '+fp(pc(f));}).join(', ')+'">'+vis.map(function(f){ var p=pc(f), q=fp(p).replace(' ',''), lab='<b data-mini="'+(MINI[f.k]||'')+'">'+esc(COURT[f.k]||f.l)+'</b><em>'+q+'</em>';
         return '<span data-k="'+f.k+'" class="'+(st.fam[f.k]?'':'off')+'" style="width:'+p.toFixed(2)+'%;background:'+f.c+';color:'+(f.t||'#0F141D')+'">'+lab+'</span>';}).join('')+'</div>';
     /* texte des segments : blanc ou encre selon la luminance réelle du fond (thème clair comme sombre) */
     $('legende').querySelectorAll('.lb span').forEach(function(e){ var m=getComputedStyle(e).backgroundColor.match(/[\d.]+/g); if(!m) return;
       var l=(0.2126*m[0]+0.7152*m[1]+0.0722*m[2])/255; e.style.color=l>0.6?'#0F141D':'#FFFFFF'; });
+    /* nom puis % ; si ça ne tient pas : le nom seul ; sinon rien (détail au survol) */
+    requestAnimationFrame(function(){ $('legende').querySelectorAll('.lb span').forEach(function(e){
+      var em=e.querySelector('em'), b=e.querySelector('b'); if(!b) return;
+      var trop=function(){return e.scrollWidth>e.clientWidth+1;};
+      if(trop() && em) em.remove();                                   /* 1. le nom seul */
+      if(trop()){ e.style.paddingInline='3px'; }                       /* 2. marges réduites */
+      if(trop() && b.dataset.mini){ b.textContent=b.dataset.mini; }    /* 3. abréviation */
+      if(trop()) b.remove(); }); });                                   /* 4. rien : détail au survol */
     arbre();
   }
   function rendu(){
