@@ -247,10 +247,22 @@ button,input,select{font:inherit}
 .r{background:var(--surface)} .r.z{background:var(--zebre)}
 .fm{display:contents} .fm-h,.fm-l,.fm-ok,.fbtn,.rbm,.det{display:none}
 /* bouton de bascule, visible seulement sur téléphone (dans les deux modes) */
-.vtog{display:none}
+.vtog,.vtogw{display:none}
 @media (max-width:760px){
   html.full .outils .mesure{display:none}
-  .vtog{display:inline-flex; align-items:center; min-height:38px; padding:0 10px; border-radius:8px; border:1px solid var(--rule); background:var(--surface); color:var(--ink-2); font-size:12.5px; cursor:pointer; flex:none; white-space:nowrap}
+  .vtogw{display:flex; justify-content:flex-end; margin:-2px 0 10px}
+  .vtog{display:inline-flex; align-items:center; gap:7px; min-height:36px; padding:0 14px; border-radius:999px; cursor:pointer; white-space:nowrap;
+    border:2px solid #0F141D; background:#D8FF3C; color:#0F141D; font-size:13px; box-shadow:3px 3px 0 #0F141D; transform:rotate(-1.2deg); transition:transform .12s, box-shadow .12s}
+  .vtog span{font-size:15px; line-height:1}
+  .vtog:active{transform:translate(2px,2px) rotate(-1.2deg); box-shadow:1px 1px 0 #0F141D}
+  html.full .vtog{background:#FF5CB8; color:#fff; border-color:#0F141D; transform:rotate(1.2deg)}
+  /* version complète : colonnes figées serrées, noms abrégés */
+  html.full .tab{--w0:20px; --wj:112px}
+  html.full .r{column-gap:8px}
+  html.full .r>:nth-child(1){font-size:11.5px}
+  html.full .r>:nth-child(2){left:calc(var(--w0) + 8px); margin-left:-8px; padding-left:8px}
+  html.full .r>:nth-child(1){margin-left:-10px; padding-left:10px}
+  html.full .nat{margin-left:4px; font-size:9.5px}
 }
 /* version complète sur téléphone : la mise en page ordinateur, texte normal, défilement horizontal */
 html.full .tabwrap{overflow-x:auto; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain}
@@ -339,6 +351,7 @@ html.full .r.h{position:relative}
 
   <div class="zoomw" id="zoomw"><div class="zoom" id="zoom">
   <div class="saisons" role="group" aria-label="Saisons (plusieurs possibles : les points s'additionnent)"><span class="st">Saison</span><span id="saisons"></span><span class="sh">plusieurs possibles, les points s'additionnent</span></div>
+  <div class="vtogw"><button type="button" class="vtog" id="vtog" aria-pressed="false"><span aria-hidden="true">⇄</span> <b>Version complète</b></button></div>
   <section class="panneau" aria-label="Classement">
     <div class="outils">
       <div class="voile" id="voile" hidden></div>
@@ -351,7 +364,6 @@ html.full .r.h{position:relative}
       <button type="button" class="fm-ok" id="fm-ok">Voir le classement</button>
       </div>
       <button type="button" class="fbtn" id="fbtn" aria-controls="fm" aria-expanded="false">Filtres <i id="fbn">0</i></button>
-      <button type="button" class="vtog" id="vtog" aria-pressed="false">Version complète</button>
       <input type="search" id="q" placeholder="Joueur…" aria-label="Chercher un joueur" autocomplete="off">
       <span class="mesure">Mesure <span class="sg" role="group" aria-label="Mesure"><button type="button" data-m="tot" aria-pressed="true">Total</button><button type="button" data-m="match" aria-pressed="false" aria-disabled="true" class="wipm" title="Bientôt : il manque encore des compositions (C4, une partie de la C3, play-offs belges)">Par match</button><button type="button" data-m="min" aria-pressed="false" aria-disabled="true" class="wipm" title="Bientôt : il manque encore des compositions (C4, une partie de la C3, play-offs belges)">Toutes les X min</button></span></span>
     </div>
@@ -411,6 +423,9 @@ html.full .r.h{position:relative}
   var lig=function(l){return LIGUE[l]||[l,null,''];};
   /* nom affiché : au-delà de 18 caractères, prénoms en initiales (« P.-E. Aubameyang », « C. De Ketelaere ») ; le nom complet reste au survol */
   var PART=/^(de|da|do|dos|das|di|del|della|van|von|der|den|ter|le|la|el|al|ben|bin|mac|mc)$/i;
+  /* nom abrégé (version complète sur téléphone) : 12 caractères au plus — « K. Mbappé », sinon le nom seul, sinon coupé */
+  var abr=function(n){ var m=n.split(' '), x=m.length<2?n:m[0].charAt(0)+'. '+m.slice(1).join(' ');
+    if(x.length>12 && m.length>1) x=m.slice(1).join(' '); return x.length>12?x.slice(0,11)+'\u2026':x; };
   var court=function(n){ if(n.length<=18) return n; var m=n.split(' '); if(m.length<2) return n;
     var k=m.length-1; while(k>1 && PART.test(m[k-1])) k--;
     return m.slice(0,k).map(function(w){return w.split('-').map(function(x){return x.charAt(0)+'.';}).join('-');}).join(' ')+' '+m.slice(k).join(' '); };
@@ -452,7 +467,7 @@ html.full .r.h{position:relative}
   var TACTILE=function(){return MOB() || (FULL && window.matchMedia('(max-width:760px)').matches);};
   function modeComplet(on){ FULL=on; try{ localStorage.setItem('grotang-jd-full', on?'1':'0'); }catch(e){}
     document.documentElement.classList.toggle('full',on); $('css-mob').media=on?'not all':'(max-width:760px)';
-    $('vtog').textContent=on?'Version mobile':'Version complète'; $('vtog').setAttribute('aria-pressed',on);
+    $('vtog').querySelector('b').textContent=on?'Version mobile':'Version complète'; $('vtog').setAttribute('aria-pressed',on);
     if(typeof cacher==='function') cacher(); if(on){ $('fm').classList.remove('open'); $('voile').hidden=true; document.body.style.overflow=''; }
     if(JD) { filtres(); rendu(); } }
   function appliquerMob(){
@@ -571,7 +586,7 @@ html.full .r.h{position:relative}
       var d=x.d, dl=x.rb-x.r, L=lig(d[5]);
       var segs=DISPO.map(function(f,i){return x.p[i]>0?'<span data-k="'+f.k+'" style="width:'+(x.p[i]/x.s*100).toFixed(1)+'%;background:'+f.c+'"></span>':'';}).join('');
       return '<div class="r'+(j%2?' z':'')+'"><span class="num"><b>'+x.r+'</b></span>'
-        +'<span class="zf"><span class="nom">'+esc(court(d[2]))+'</span><span class="nat">'+iso(d[3])+'</span><span class="sous">'+esc(d[4])+' · '+esc(L[0])+'</span></span>'
+        +'<span class="zf"><span class="nom">'+esc((FULL&&window.matchMedia('(max-width:760px)').matches)?abr(d[2]):court(d[2]))+'</span><span class="nat">'+iso(d[3])+'</span><span class="sous">'+esc(d[4])+' · '+esc(L[0])+'</span></span>'
         +'<span class="c-club mut zf">'+esc(d[4])+'</span>'
         +'<span class="c-champ mut zf"><span class="lg">'+drap(L[1],L[2])+esc(L[0])+'</span></span>'
         +'<span class="num mut c-mj zf">'+d[20]+'</span>'
@@ -729,7 +744,7 @@ html.full .r.h{position:relative}
     if(e.target.id==='fbtn'||e.target.closest('#fbtn')){ feuille(true); return; }
     if(e.target.id==='fm-ok'||e.target.id==='voile'){ feuille(false); return; }
     if(e.target.id==='fm-raz'){ st.ligue=TOUS_L; st.nat=TOUS_N; DISPO.forEach(function(f){st.fam[f.k]=1;}); options(JD.saisons[st.saison]); filtres(); $('fc').open=true; rendu(); return; }
-    if(e.target.id==='vtog'){ modeComplet(!FULL); return; }
+    if(e.target.closest('#vtog')){ modeComplet(!FULL); return; }
     if(TACTILE() && !e.target.closest('.sc') && e.target.closest('#lignes .r:not(.h)')){ var rw=e.target.closest('#lignes .r'), zz=e.target.closest('.zb')?rw.querySelector('.zb'):rw.querySelector('.zf');
       if(actif===zz && Date.now()-tOuv>350){ cacher(); return; }
       if(zz.classList.contains('zb')) montrerBrut(zz); else montrerFiche(zz); return; }
@@ -757,7 +772,7 @@ html.full .r.h{position:relative}
   $('ligue').addEventListener('change',function(e){st.ligue=e.target.value; rendu();});
   $('nat').addEventListener('change',function(e){st.nat=e.target.value; rendu();});
   st.saison=cles[cles.length-1]; st.sel=[st.saison];
-  if(FULL){ document.documentElement.classList.add('full'); $('css-mob').media='not all'; $('vtog').textContent='Version mobile'; $('vtog').setAttribute('aria-pressed','true'); }
+  if(FULL){ document.documentElement.classList.add('full'); $('css-mob').media='not all'; $('vtog').querySelector('b').textContent='Version mobile'; $('vtog').setAttribute('aria-pressed','true'); }
   saison();
 })();
 </script>
