@@ -135,8 +135,15 @@ button,input,select{font:inherit}
 .arb label:hover{background:var(--surface-2)}
 .arb input{appearance:auto; -webkit-appearance:checkbox; accent-color:var(--ink); width:15px; height:15px; min-height:0; margin:0; padding:0; flex:none}
 
-.arb .a1>label{font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:.07em}
-.arb .a2>label{font-weight:700}
+.arb .a1>.ln>label{font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:.07em}
+.arb .a2>.ln>label,.arb>li:last-child>ul>li>label{font-weight:700}
+.arb .ln{display:flex; align-items:center; gap:2px}
+.arb .ln>label{flex:1}
+.arb .tg2{flex:none; width:28px; min-height:27px; border:0; background:none; border-radius:5px; cursor:pointer; color:var(--ink-3); display:flex; align-items:center; justify-content:center}
+.arb .tg2::before{content:""; width:6px; height:6px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(-45deg); transition:transform .15s}
+.arb .ouv>.ln .tg2::before{transform:rotate(45deg)}
+.arb .tg2:hover{background:var(--surface-2); color:var(--ink)}
+.arb .a1+.a1{margin-top:6px}
 .arb .av label{color:var(--ink-3); cursor:default}
 .arb .av em{margin-left:auto; font-style:normal; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10px}
 .arb details>summary{list-style:none; cursor:pointer; display:flex; align-items:center; gap:7px; min-height:27px; padding:0 4px; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:.07em; color:var(--ink-3)}
@@ -272,8 +279,9 @@ html.full .r.h{position:relative}
   .fm select{max-width:none; width:100%; min-height:42px; font-size:14px}
   .fm .fc>summary{display:none}
   .fm .fc .pop{position:static; width:100%; max-width:none; border:0; box-shadow:none; padding:0}
-  .fm .arb label,.fm .arb details>summary{min-height:38px; font-size:14px}
-  .fm .arb .a1>label{font-size:12px}
+  .fm .arb label,.fm .arb .tg2{min-height:38px; font-size:14px}
+  .fm .arb .tg2{width:40px}
+  .fm .arb .a1>.ln>label{font-size:12px}
   .fm #fc-ok{display:none}
   .fm-ok{display:flex; align-items:center; justify-content:center; margin-top:12px; min-height:46px; border:0; border-radius:10px; background:var(--ink); color:var(--surface); font-size:14px; font-weight:700; cursor:pointer}
   .voile:not([hidden]){display:block; position:fixed; inset:0; z-index:55; background:rgba(0,0,0,.38)}
@@ -484,17 +492,19 @@ html.full .r.h{position:relative}
   var ARB=[{k:'club',l:'Club',c:[{k:'dom',l:'Domestique',c:['championnat','coupe']},{k:'uefa',l:'UEFA',c:['c1','c3','c4','usc']},{k:'fifa',l:'FIFA',c:['fifa','interc']}]}];
   var fam=function(k){return FAM.filter(function(f){return f.k===k;})[0];};
   var feuilles=function(n){ if(typeof n==='string') return fam(n).i===null?[]:[n]; return n.c.reduce(function(a,x){return a.concat(feuilles(x));},[]); };
-  var SEL={k:'sel',l:'Toutes les sélections',c:['selection','qualif','ldn','amicaux']};
+  var SEL={k:'sel',l:'Sélection',c:['selection','qualif','ldn','amicaux']};
+  var OUV={dom:false,uefa:false,fifa:false};   /* détail des familles club : replié par défaut */
   function arbre(){
     var li=function(n,niv){
       if(typeof n==='string'){ var f=fam(n);
         if(f.i===null) return '<li class="av"><label><input type="checkbox" disabled>'+(f.n||f.l)+'<em>bientôt</em></label></li>';
         return '<li><label><input type="checkbox" data-f="'+f.k+'"'+(st.fam[f.k]?' checked':'')+'>'+(f.k==='usc'?f.n:f.n?f.l+' · '+f.n:f.l)+'</label></li>'; }
       var fs=feuilles(n), on=fs.filter(function(k){return st.fam[k];}).length;
-      return '<li class="a'+niv+'"><label><input type="checkbox" data-nd="'+fs.join(',')+'"'+(on===fs.length?' checked':'')+(on&&on<fs.length?' data-ind="1"':'')+'>'+n.l+'</label><ul>'+n.c.map(function(x){return li(x,niv+1);}).join('')+'</ul></li>'; };
-    var fsS=feuilles(SEL), onS=fsS.every(function(k){return st.fam[k];});
-    $('arbre').innerHTML='<ul class="arb">'+ARB.map(function(n){return li(n,1);}).join('')
-      +'<li><details><summary>Sélection</summary><ul>'+li(SEL,2)+'</ul></details></li></ul>'
+      var pli=niv===2, ouv=!pli||OUV[n.k];
+      return '<li class="a'+niv+(pli?' pli':'')+(ouv?' ouv':'')+'"><div class="ln"><label><input type="checkbox" data-nd="'+fs.join(',')+'"'+(on===fs.length?' checked':'')+(on&&on<fs.length?' data-ind="1"':'')+'>'+n.l+'</label>'
+        +(pli?'<button type="button" class="tg2" data-tg="'+n.k+'" aria-expanded="'+ouv+'" aria-label="'+(ouv?'Replier':'Déplier')+' '+n.l+'"></button>':'')+'</div>'
+        +'<ul'+(ouv?'':' hidden')+'>'+n.c.map(function(x){return li(x,niv+1);}).join('')+'</ul></li>'; };
+    $('arbre').innerHTML='<ul class="arb">'+ARB.concat([SEL]).map(function(n){return li(n,1);}).join('')+'</ul>'
       +'<div class="pied"><button type="button" id="fc-tout">Tout cocher</button><button type="button" id="fc-ok">Fermer</button></div>';
     $('arbre').querySelectorAll('[data-ind]').forEach(function(x){x.indeterminate=true;});
     var n=DISPO.filter(function(f){return st.fam[f.k];}).length;
@@ -676,6 +686,9 @@ html.full .r.h{position:relative}
     var ls=st.sel.map(function(k){return JD.saisons[k].label;}), txt=ls.length===1?'de la saison '+ls[0]:'des saisons '+ls.slice(0,-1).join(', ')+' et '+ls[ls.length-1];
     $('lead').textContent='On a repesé les '+nb(S.actions)+' actions décisives '+txt+' : chaque but et chaque passe selon le score au moment où ils tombent, la compétition et le tour. Le penalty ? Partagé : ¾ pour celui qui l’obtient, ¼ pour celui qui le marque. Ça fait de la peine à certains.';
     options(S); filtres(); rendu(); }
+  $('arbre').addEventListener('click',function(e){ var t=e.target.closest('[data-tg]'); if(!t) return; e.preventDefault(); e.stopPropagation();
+    var k=t.dataset.tg; OUV[k]=!OUV[k]; var l=t.closest('li'); l.classList.toggle('ouv',OUV[k]); l.querySelector('ul').hidden=!OUV[k];
+    t.setAttribute('aria-expanded',OUV[k]); t.setAttribute('aria-label',(OUV[k]?'Replier ':'Déplier ')+l.querySelector('label').textContent); });
   $('arbre').addEventListener('change',function(e){ var c=e.target; if(c.dataset.f) st.fam[c.dataset.f]=c.checked?1:0;
     else if(c.dataset.nd) c.dataset.nd.split(',').forEach(function(k){st.fam[k]=c.checked?1:0;});
     if(!DISPO.some(function(f){return st.fam[f.k];})) DISPO.forEach(function(f){st.fam[f.k]=1;});
