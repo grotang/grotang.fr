@@ -239,8 +239,22 @@ button,input,select{font:inherit}
 
 .r{background:var(--surface)} .r.z{background:var(--zebre)}
 .fm{display:contents} .fm-h,.fm-l,.fm-ok,.fbtn,.rbm,.det{display:none}
-/* ===== téléphone : vraie version, une seule échelle de texte (13 / 11 / 16 px) ===== */
+/* bouton de bascule, visible seulement sur téléphone (dans les deux modes) */
+.vtog{display:none}
 @media (max-width:760px){
+  html.full .outils .mesure{display:none}
+  .vtog{display:inline-flex; align-items:center; min-height:38px; padding:0 10px; border-radius:8px; border:1px solid var(--rule); background:var(--surface); color:var(--ink-2); font-size:12.5px; cursor:pointer; flex:none; white-space:nowrap}
+}
+/* version complète sur téléphone : la mise en page ordinateur, texte normal, défilement horizontal */
+html.full .tabwrap{overflow-x:auto; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain}
+html.full .tab{min-width:1036px}
+html.full .r>:nth-child(1),html.full .r>:nth-child(2){position:sticky; z-index:2; background:inherit}
+html.full .r>:nth-child(1){left:0; margin-left:-10px; padding-left:10px}
+html.full .r>:nth-child(2){left:calc(var(--w0) + 10px); margin-left:-10px; padding-left:10px; box-shadow:6px 0 6px -6px rgba(0,0,0,.25)}
+html.full .r.h{position:relative}
+</style>
+<style id="css-mob" media="(max-width:760px)">
+/* ===== téléphone : vraie version, une seule échelle de texte (13 / 11 / 16 px) ===== */
   .saisons{flex-wrap:nowrap; overflow-x:auto; margin-bottom:8px; scrollbar-width:none}
   .saisons .sh{display:none}
   .saisons button{flex:none; font-size:13px}
@@ -298,7 +312,8 @@ button,input,select{font:inherit}
   .jd{overflow-x:clip}
   .bulle{width:min(320px, calc(100vw - 24px))}
   .pied{font-size:11px}
-}
+</style>
+<style>
 /* mobile : tout le bloc (saisons, filtres, légende, tableau, bulles) = la version bureau, réduite d'un seul facteur.
    Une seule échelle de texte ; on zoome à deux doigts pour lire. */
 .zoomw.fixe{overflow:hidden}
@@ -328,6 +343,7 @@ button,input,select{font:inherit}
       <button type="button" class="fm-ok" id="fm-ok">Voir le classement</button>
       </div>
       <button type="button" class="fbtn" id="fbtn" aria-controls="fm" aria-expanded="false">Filtres <i id="fbn">0</i></button>
+      <button type="button" class="vtog" id="vtog" aria-pressed="false">Version complète</button>
       <input type="search" id="q" placeholder="Joueur…" aria-label="Chercher un joueur" autocomplete="off">
       <span class="mesure">Mesure <span class="sg" role="group" aria-label="Mesure"><button type="button" data-m="tot" aria-pressed="true">Total</button><button type="button" data-m="match" aria-pressed="false" aria-disabled="true" class="wipm" title="Bientôt : il manque encore des compositions (C4, une partie de la C3, play-offs belges)">Par match</button><button type="button" data-m="min" aria-pressed="false" aria-disabled="true" class="wipm" title="Bientôt : il manque encore des compositions (C4, une partie de la C3, play-offs belges)">Toutes les X min</button></span></span>
     </div>
@@ -423,7 +439,14 @@ button,input,select{font:inherit}
   /* mobile : le tableau de bureau, réduit à la largeur de l'écran (zoom à deux doigts) */
   function marquer(){}
   var ZK=1;
-  var MOB=function(){return window.matchMedia('(max-width:760px)').matches;};
+  var FULL=false; try{ FULL=localStorage.getItem('grotang-jd-full')==='1'; }catch(e){}
+  var MOB=function(){return !FULL && window.matchMedia('(max-width:760px)').matches;};
+  var TACTILE=function(){return MOB() || (FULL && window.matchMedia('(max-width:760px)').matches);};
+  function modeComplet(on){ FULL=on; try{ localStorage.setItem('grotang-jd-full', on?'1':'0'); }catch(e){}
+    document.documentElement.classList.toggle('full',on); $('css-mob').media=on?'not all':'(max-width:760px)';
+    $('vtog').textContent=on?'Version mobile':'Version complète'; $('vtog').setAttribute('aria-pressed',on);
+    if(typeof cacher==='function') cacher(); if(on){ $('fm').classList.remove('open'); $('voile').hidden=true; document.body.style.overflow=''; }
+    if(JD) { filtres(); rendu(); } }
   function appliquerMob(){
     var g=document.querySelector('.gnav'); document.documentElement.style.setProperty('--stk',(g&&getComputedStyle(g).position==='sticky'?g.offsetHeight:0)+'px');
     var w=$('zoomw'), t=$('zoom'), petit=false;
@@ -602,7 +625,8 @@ button,input,select{font:inherit}
     var Z=ZK, w=bulle.offsetWidth||320, left=(b.right-p.left)/Z+10, top=(b.top-p.top)/Z-8;
     if(left+w>p.width/Z) left=Math.max(6,(b.left-p.left)/Z-w-10);
     var h=bulle.offsetHeight, bas=b.top+(h-8)*Z-window.innerHeight; if(bas>0) top-=bas/Z+12;
-    if(MOB()){ left=Math.max(6,(p.width-w)/2); top=b.bottom-p.top+6; }
+    left=Math.max(6,Math.min(left,p.width/Z-w-6));
+    if(TACTILE()){ left=Math.max(6,(p.width/Z-w)/2); top=(b.bottom-p.top)/Z+6; }
     bulle.style.left=left+'px'; bulle.style.top=top+'px';
     bulle.classList.add('on'); bulle.setAttribute('aria-hidden','false'); if(actif!==anc) tOuv=Date.now();
     if(actif&&actif!==anc&&actif.setAttribute) actif.setAttribute('aria-expanded','false'); actif=anc; if(anc===btn) btn.setAttribute('aria-expanded','true');
@@ -692,7 +716,8 @@ button,input,select{font:inherit}
     if(e.target.id==='fbtn'||e.target.closest('#fbtn')){ feuille(true); return; }
     if(e.target.id==='fm-ok'||e.target.id==='voile'){ feuille(false); return; }
     if(e.target.id==='fm-raz'){ st.ligue=TOUS_L; st.nat=TOUS_N; DISPO.forEach(function(f){st.fam[f.k]=1;}); options(JD.saisons[st.saison]); filtres(); $('fc').open=true; rendu(); return; }
-    if(MOB() && !e.target.closest('.sc') && e.target.closest('#lignes .r:not(.h)')){ var rw=e.target.closest('#lignes .r'), zz=e.target.closest('.zb')?rw.querySelector('.zb'):rw.querySelector('.zf');
+    if(e.target.id==='vtog'){ modeComplet(!FULL); return; }
+    if(TACTILE() && !e.target.closest('.sc') && e.target.closest('#lignes .r:not(.h)')){ var rw=e.target.closest('#lignes .r'), zz=e.target.closest('.zb')?rw.querySelector('.zb'):rw.querySelector('.zf');
       if(actif===zz && Date.now()-tOuv>350){ cacher(); return; }
       if(zz.classList.contains('zb')) montrerBrut(zz); else montrerFiche(zz); return; }
     if(!e.target.closest('#legende')) legOff();
@@ -719,6 +744,7 @@ button,input,select{font:inherit}
   $('ligue').addEventListener('change',function(e){st.ligue=e.target.value; rendu();});
   $('nat').addEventListener('change',function(e){st.nat=e.target.value; rendu();});
   st.saison=cles[cles.length-1]; st.sel=[st.saison];
+  if(FULL){ document.documentElement.classList.add('full'); $('css-mob').media='not all'; $('vtog').textContent='Version mobile'; $('vtog').setAttribute('aria-pressed','true'); }
   saison();
 })();
 </script>
