@@ -247,15 +247,13 @@ button,input,select{font:inherit}
 .r{background:var(--surface)} .r.z{background:var(--zebre)}
 .fm{display:contents} .fm-h,.fm-l,.fm-ok,.fbtn,.rbm,.det{display:none}
 /* bouton de bascule, visible seulement sur téléphone (dans les deux modes) */
-.vtog,.vtogw{display:none}
+.vtog{display:none}
 @media (max-width:760px){
-  html.full .outils .mesure{display:none}
-  .vtogw{display:flex; justify-content:flex-end; margin:-2px 0 10px}
-  .vtog{display:inline-flex; align-items:center; gap:7px; min-height:36px; padding:0 14px; border-radius:999px; cursor:pointer; white-space:nowrap;
+  .saisons .vtog.vtog{display:inline-flex; flex:none; margin-left:auto; align-items:center; gap:6px; min-height:34px; padding:0 12px; border-radius:999px; cursor:pointer; white-space:nowrap;
     border:2px solid #0F141D; background:#D8FF3C; color:#0F141D; font-size:13px; box-shadow:3px 3px 0 #0F141D; transform:rotate(-1.2deg); transition:transform .12s, box-shadow .12s}
-  .vtog span{font-size:15px; line-height:1}
-  .vtog:active{transform:translate(2px,2px) rotate(-1.2deg); box-shadow:1px 1px 0 #0F141D}
-  html.full .vtog{background:#FF5CB8; color:#fff; border-color:#0F141D; transform:rotate(1.2deg)}
+  .saisons .vtog.vtog span{font-size:15px; line-height:1}
+  .saisons .vtog.vtog:active{transform:translate(2px,2px) rotate(-1.2deg); box-shadow:1px 1px 0 #0F141D}
+  html.full .saisons .vtog.vtog{background:#FF5CB8; color:#fff; border-color:#0F141D; transform:rotate(1.2deg)}
   /* version complète : colonnes figées serrées, noms abrégés */
   html.full .tab{--w0:20px; --wj:112px}
   html.full .r{column-gap:8px}
@@ -274,7 +272,9 @@ html.full .r.h{position:relative}
 </style>
 <style id="css-mob" media="(max-width:760px)">
 /* ===== téléphone : vraie version, une seule échelle de texte (13 / 11 / 16 px) ===== */
-  .saisons{flex-wrap:nowrap; overflow-x:auto; margin-bottom:8px; scrollbar-width:none}
+  .saisons{flex-wrap:nowrap; margin-bottom:8px; padding:3px 4px 5px 0}
+  .saisons #saisons{flex:1; min-width:0; flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; padding:2px 0}
+  .saisons .st{display:none}
   .saisons .sh{display:none}
   .saisons button{flex:none; font-size:13px}
   .outils{position:sticky; top:var(--stk,0px); z-index:6; flex-wrap:nowrap; padding:8px 10px}
@@ -301,6 +301,11 @@ html.full .r.h{position:relative}
   .leg .lt{font-size:11px}
   .leg .lb{height:20px}
   .bleg{width:calc(100% - 12px)}
+  .jd{overflow-x:clip}
+  .bulle{width:min(320px, calc(100vw - 24px))}
+  .pied{font-size:11px}
+</style>
+<style id="css-mob-tab" media="(max-width:760px)">
   /* tableau : 4 colonnes — #, joueur (club · championnat dessous), score + barre, Tot. (rang au brut dessous) */
   .r.h2,.poignee{display:none}
   .r{grid-template-columns:22px minmax(0,1fr) 60px 62px !important; grid-template-rows:auto auto; column-gap:8px; row-gap:3px; padding:8px 10px; align-items:center}
@@ -329,9 +334,6 @@ html.full .r.h{position:relative}
   .det b{display:block; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:14px}
   .det span{font-size:11px; color:var(--ink-3)}
   .det p{grid-column:1/-1; margin:2px 0 0; font-size:11.5px; color:var(--ink-2); white-space:normal}
-  .jd{overflow-x:clip}
-  .bulle{width:min(320px, calc(100vw - 24px))}
-  .pied{font-size:11px}
 </style>
 <style>
 /* mobile : tout le bloc (saisons, filtres, légende, tableau, bulles) = la version bureau, réduite d'un seul facteur.
@@ -350,8 +352,7 @@ html.full .r.h{position:relative}
   </header>
 
   <div class="zoomw" id="zoomw"><div class="zoom" id="zoom">
-  <div class="saisons" role="group" aria-label="Saisons (plusieurs possibles : les points s'additionnent)"><span class="st">Saison</span><span id="saisons"></span><span class="sh">plusieurs possibles, les points s'additionnent</span></div>
-  <div class="vtogw"><button type="button" class="vtog" id="vtog" aria-pressed="false"><span aria-hidden="true">⇄</span> <b>Version complète</b></button></div>
+  <div class="saisons" role="group" aria-label="Saisons (plusieurs possibles : les points s'additionnent)"><span class="st">Saison</span><span id="saisons"></span><button type="button" class="vtog" id="vtog" aria-pressed="false"><span aria-hidden="true">⇄</span> <b>Version complète</b></button><span class="sh">plusieurs possibles, les points s'additionnent</span></div>
   <section class="panneau" aria-label="Classement">
     <div class="outils">
       <div class="voile" id="voile" hidden></div>
@@ -464,11 +465,12 @@ html.full .r.h{position:relative}
   var ZK=1;
   var FULL=false; try{ FULL=localStorage.getItem('grotang-jd-full')==='1'; }catch(e){}
   var MOB=function(){return !FULL && window.matchMedia('(max-width:760px)').matches;};
+  var PHONE=function(){return window.matchMedia('(max-width:760px)').matches;};
   var TACTILE=function(){return MOB() || (FULL && window.matchMedia('(max-width:760px)').matches);};
   function modeComplet(on){ FULL=on; try{ localStorage.setItem('grotang-jd-full', on?'1':'0'); }catch(e){}
-    document.documentElement.classList.toggle('full',on); $('css-mob').media=on?'not all':'(max-width:760px)';
-    $('vtog').querySelector('b').textContent=on?'Version mobile':'Version complète'; $('vtog').setAttribute('aria-pressed',on);
-    if(typeof cacher==='function') cacher(); if(on){ $('fm').classList.remove('open'); $('voile').hidden=true; document.body.style.overflow=''; }
+    document.documentElement.classList.toggle('full',on); $('css-mob-tab').media=on?'not all':'(max-width:760px)';
+    $('vtog').querySelector('b').textContent=on?'Version simple':'Version complète'; $('vtog').setAttribute('aria-pressed',on);
+    if(typeof cacher==='function') cacher();
     if(JD) { filtres(); rendu(); } }
   function appliquerMob(){
     var g=document.querySelector('.gnav'); document.documentElement.style.setProperty('--stk',(g&&getComputedStyle(g).position==='sticky'?g.offsetHeight:0)+'px');
@@ -498,6 +500,7 @@ html.full .r.h{position:relative}
   function filtres(){ volume(JD.saisons[st.saison]); }
   function options(S){
     $('saisons').innerHTML=cles.map(function(k){return '<button type="button" data-sa="'+k+'" aria-pressed="'+(st.sel.indexOf(k)>=0)+'">'+JD.saisons[k].label+'</button>';}).join('');
+    $('saisons').scrollLeft=$('saisons').scrollWidth;   /* téléphone : la saison la plus récente visible */
     var ls=[TOUS_L].concat(Array.from(new Set(S.rows.map(function(d){return d[5];}))).sort());
     var ns=[TOUS_N].concat(Array.from(new Set(S.rows.map(function(d){return d[3];}))).sort(function(a,b){return a.localeCompare(b,'fr');}));
     if(ls.indexOf(st.ligue)<0) st.ligue=TOUS_L; if(ns.indexOf(st.nat)<0) st.nat=TOUS_N;
@@ -544,7 +547,7 @@ html.full .r.h{position:relative}
     var tot=DISPO.reduce(function(a,f){return a+t[f.k];},0)||1, pc=function(f){return 100*t[f.k]/tot;};
     var fp=function(p){return p>=1?Math.round(p)+' %':(p>0?'<1 %':'0 %');};
     var vis=DISPO.filter(function(f){return pc(f)>0;});
-    $('legende').innerHTML='<div class="lt">D\u2019où viennent les points du top 100 · '+(MOB()?'touche':'survole')+' une couleur pour le détail</div><div class="bleg" id="bleg" aria-hidden="true"></div>'
+    $('legende').innerHTML='<div class="lt">D\u2019où viennent les points du top 100 · '+(PHONE()?'touche':'survole')+' une couleur pour le détail</div><div class="bleg" id="bleg" aria-hidden="true"></div>'
       +'<div class="lb" role="img" aria-label="'+vis.map(function(f){return (f.n||f.l)+' '+fp(pc(f));}).join(', ')+'">'+vis.map(function(f){ var p=pc(f), q=fp(p).replace(' ',''), lab=(p>=12||(p>=3.5&&f.l.length<=3))?esc(f.l)+'<em>'+q+'</em>':p>=3?'<em>'+q+'</em>':'';
         return '<span data-k="'+f.k+'" class="'+(st.fam[f.k]?'':'off')+'" style="width:'+p.toFixed(2)+'%;background:'+f.c+';color:'+(f.t||'#0F141D')+'">'+lab+'</span>';}).join('')+'</div>';
     /* texte des segments : blanc ou encre selon la luminance réelle du fond (thème clair comme sombre) */
@@ -694,7 +697,7 @@ html.full .r.h{position:relative}
   $('lignes').addEventListener('pointerleave',function(e){ if(e.pointerType==='mouse'){ clearTimeout(tz); cacher(); } });
   $('lignes').addEventListener('focusin',function(e){ var b=e.target.closest('.sc'); if(b) montrer(b); });
   $('lignes').addEventListener('focusout',function(e){ if(e.target.closest('.sc')) cacher(); });
-  document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ cacher(); if(MOB()) feuille(false); else $('fc').open=false; } var t=e.target.closest&&e.target.closest('#entete .tri'); if(t&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); t.click(); } });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ cacher(); if(PHONE()) feuille(false); else $('fc').open=false; } var t=e.target.closest&&e.target.closest('#entete .tri'); if(t&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); t.click(); } });
 
 
   function saison(){ var S=JD.saisons[st.saison];
@@ -751,7 +754,7 @@ html.full .r.h{position:relative}
     if(!e.target.closest('#legende')) legOff();
     if(e.target.id==='fc-tout'){ DISPO.forEach(function(f){st.fam[f.k]=1;}); filtres(); rendu(); return; }
     if(e.target.id==='fc-ok'){ $('fc').open=false; return; }
-    if(!MOB() && $('fc').open && !e.target.closest('#fc')) $('fc').open=false;
+    if(!PHONE() && $('fc').open && !e.target.closest('#fc')) $('fc').open=false;
     var t=e.target.closest('#entete .tri'); if(t && !e.target.closest('.poignee')){ var k=t.dataset.k;
       if(st.tri.k===k) st.tri.dir=-st.tri.dir; else st.tri={k:k, dir:(k==='joueur'||k==='club'||k==='ligue'||k==='r'||k==='rb')?1:-1};
       rendu(); return; }
@@ -772,7 +775,7 @@ html.full .r.h{position:relative}
   $('ligue').addEventListener('change',function(e){st.ligue=e.target.value; rendu();});
   $('nat').addEventListener('change',function(e){st.nat=e.target.value; rendu();});
   st.saison=cles[cles.length-1]; st.sel=[st.saison];
-  if(FULL){ document.documentElement.classList.add('full'); $('css-mob').media='not all'; $('vtog').querySelector('b').textContent='Version mobile'; $('vtog').setAttribute('aria-pressed','true'); }
+  if(FULL){ document.documentElement.classList.add('full'); $('css-mob-tab').media='not all'; $('vtog').querySelector('b').textContent='Version simple'; $('vtog').setAttribute('aria-pressed','true'); }
   saison();
 })();
 </script>
