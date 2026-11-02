@@ -128,11 +128,25 @@ export const THEME_JS = `<script>(function(){
   apply(store.get()==='dark'?'dark':'light', false);
   if(btn) btn.addEventListener('click', function(){
     apply(root.getAttribute('data-theme')==='dark'?'light':'dark', true); });
+})();
+/* Ancres (#projection, #jr…, 02/11) : la barre colle en haut et sa hauteur varie
+   avec la largeur (46 px, 94 ou 131 au téléphone) ; on la mesure pour que la
+   cible tombe juste dessous, avec 12 px d'air. Les pages se dessinent après le
+   premier saut vers l'ancre et se décalent : on revise une fois tout chargé. */
+(function(){
+  var nav=document.querySelector('.gnav'), html=document.documentElement;
+  function ajuste(){ if(nav) html.style.scrollPaddingTop=(nav.getBoundingClientRect().height+12)+'px'; }
+  ajuste(); window.addEventListener('resize', ajuste);
+  function vise(){ var t=location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+    if(t) t.scrollIntoView({block:'start'}); }
+  if(document.readyState==='complete') vise(); else window.addEventListener('load', vise);
 })();</script>`;
 
 /* La barre lit les jetons partagés — plus de variante « sombre » à passer à la
    main, plus de palette parallèle qui dérive de celle des pages. */
 export const navCSS = `
+html{scroll-padding-top:58px}
+@media (max-width:560px){html{scroll-padding-top:106px}}
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
   padding:0 clamp(14px,3vw,28px);height:46px;background:var(--surface);
   border-bottom:1px solid var(--rule);

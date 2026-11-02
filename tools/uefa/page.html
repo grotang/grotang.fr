@@ -94,6 +94,10 @@ section{margin-top:clamp(30px,4.5vw,52px)}
 
 /* ---------- charts ---------- */
 .panel{background:var(--surface); border:1px solid var(--rule); border-radius:3px; padding:clamp(14px,2.2vw,22px)}
+/* ancres (#classement, #projection, 02/11) : la barre collante est gérée pour tout
+   le site (chrome.mjs) ; une ancre posée sur le TITRE recule en plus de la marge
+   intérieure du bloc, pour qu'on arrive sur le haut du bloc. */
+.ptitle[id]{scroll-margin-top:calc(clamp(14px,2.2vw,22px) + 1px)}
 .ctl{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:14px}
 .seg{display:inline-flex; flex-wrap:wrap; border:1px solid var(--rule); border-radius:2px; overflow:hidden}
 .seg button{appearance:none; border:0; background:var(--surface); color:var(--ink-2); font:inherit; font-size:12.5px;

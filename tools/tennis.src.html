@@ -152,7 +152,7 @@ select option, select optgroup { background-color:var(--surface); color:var(--in
 @media (max-width:720px){
   .duo { flex-direction:column; align-items:center; gap:18px; }
   .duo .wrap { width:100%; max-width:420px; }
-  .jr { position:static; width:100%; max-width:420px; max-height:70vh; scroll-margin-top:calc(var(--navh, 0px) + 8px); }
+  .jr { position:static; width:100%; max-width:420px; max-height:70vh; } /* l'arrivée sous la barre collante est gérée pour tout le site (chrome.mjs, 02/11) */
   .ctx-j { display:inline-block; }
 }
 /* Téléphone : tableau pleine largeur, cases plus hautes (on les touche du
