@@ -260,7 +260,7 @@ button,input,select{font:inherit}
   .saisons .vtog.vtog:active{transform:translate(2px,2px) rotate(-1.2deg); box-shadow:1px 1px 0 #0F141D}
   html.full .saisons .vtog.vtog{background:#FF5CB8; color:#fff; border-color:#0F141D; transform:rotate(1.2deg)}
   /* version complète : colonnes figées serrées, noms abrégés */
-  html.full .tab{--w0:20px; --wj:112px}
+  html.full .tab{--w0:20px; --wj:112px; --wc:96px}
   html.full .r{column-gap:8px}
   html.full .r>:nth-child(1){font-size:11.5px}
   html.full .r>:nth-child(2){left:calc(var(--w0) + 8px); margin-left:-8px; padding-left:8px}
@@ -431,6 +431,8 @@ html.full .r.h{position:relative}
   /* nom affiché : au-delà de 18 caractères, prénoms en initiales (« P.-E. Aubameyang », « C. De Ketelaere ») ; le nom complet reste au survol */
   var PART=/^(de|da|do|dos|das|di|del|della|van|von|der|den|ter|le|la|el|al|ben|bin|mac|mc)$/i;
   /* nom abrégé (version complète sur téléphone) : 12 caractères au plus — « K. Mbappé », sinon le nom seul, sinon coupé */
+  /* noms de clubs courts (version complète sur téléphone) */
+  var CLUBC={"Olympiakos":"Olympiakos","Lokomotiv Moscou":"Lokomotiv","1. FC Heidenheim":"Heidenheim","Lazio Rome":"Lazio","Zénith Saint-Pétersbourg":"Zénith","AS Roma":"AS Roma","Bologne":"Bologne","Beşiktaş":"Beşiktaş","Borussia Mönchengladbach":"Gladbach","Wolverhampton Wanderers":"Wolves","RCD Espanyol Barcelona":"Espanyol","Brighton & Hove Albion":"Brighton","Heart of Midlothian FC":"Hearts","Union Saint-Gilloise":"Union SG","Paris Saint-Germain":"PSG","Eintracht Frankfurt":"Francfort","Salernitana":"Salernitana","Bayer 04 Leverkusen":"Leverkusen","Feyenoord Rotterdam":"Feyenoord","Olympique Marseille":"OM","Real Betis Balompié":"Betis","Atlético de Madrid":"Atlético","FC Twente Enschede":"Twente","Tottenham Hotspur":"Tottenham","Manchester United":"Man United","FK Spartak Moskva":"Spartak","1.FC Union Berlin":"Union Berlin","Borussia Dortmund":"Dortmund","SV Werder Bremen":"Werder","Fatih Karagümrük":"Karagümrük","Stade Rennais FC":"Rennes","FK Dinamo Moskva":"Dinamo Moscou","Newcastle United":"Newcastle","Manchester City":"Man City","West Ham United":"West Ham","PFK CSKA Moskva":"CSKA Moscou","Athletic Bilbao":"Bilbao","Montpellier HSC":"Montpellier","AFC Bournemouth":"Bournemouth","Go Ahead Eagles":"Go Ahead","Olympique Lyon":"OL","Ajax Amsterdam":"Ajax","ACF Fiorentina":"Fiorentina","RSC Anderlecht":"Anderlecht","Crystal Palace":"Palace","Bayern Munich":"Bayern","PSV Eindhoven":"PSV","Villarreal CF":"Villarreal","Real Sociedad":"Sociedad","VfB Stuttgart":"Stuttgart","VfL Wolfsburg":"Wolfsburg","Cercle Brugge":"Cercle","Basaksehir FK":"Başakşehir","Liverpool FC":"Liverpool","FC Barcelona":"Barça","FK Krasnodar":"Krasnodar","Brentford FC":"Brentford"};
   var abr=function(n){ var m=n.split(' '), x=m.length<2?n:m[0].charAt(0)+'. '+m.slice(1).join(' ');
     if(x.length>12 && m.length>1) x=m.slice(1).join(' '); return x.length>12?x.slice(0,11)+'\u2026':x; };
   var court=function(n){ if(n.length<=18) return n; var m=n.split(' '); if(m.length<2) return n;
@@ -578,7 +580,8 @@ html.full .r.h{position:relative}
     /* comptage brut filtré lui aussi : buts, dont penalty, passes, penaltys obtenus par famille (d[24]) */
     var filtreC=DISPO.some(function(f){return !st.fam[f.k];});
     var all=S.rows.map(function(o){var p=DISPO.map(function(f){return st.fam[f.k]?o[f.i]:0;}), d=o;
-        if(filtreC){ d=o.slice(); [6,7,8,9].forEach(function(c,j){ d[c]=DISPO.reduce(function(a,f){return a+(st.fam[f.k]?o[24][(f.i-10)*4+j]:0);},0); }); }
+        if(filtreC){ d=o.slice(); [6,7,8,9].forEach(function(c,j){ d[c]=DISPO.reduce(function(a,f){return a+(st.fam[f.k]?o[24][(f.i-10)*4+j]:0);},0); });
+          d[20]=DISPO.reduce(function(a,f){return a+(st.fam[f.k]?o[25][f.i-10]:0);},0); }
         return {d:d,p:p,s:p.reduce(function(a,b){return a+b;},0)};});
     if(filtreC){ var tb=all.map(function(x){return x.d[6]+x.d[8];}); all.forEach(function(x,i){ x.d[1]=1+tb.filter(function(v){return v>tb[i];}).length; }); }
     all=all
@@ -607,7 +610,7 @@ html.full .r.h{position:relative}
       var segs=DISPO.map(function(f,i){return x.p[i]>0?'<span data-k="'+f.k+'" style="width:'+(x.p[i]/x.s*100).toFixed(1)+'%;background:'+f.c+'"></span>':'';}).join('');
       return '<div class="r'+(j%2?' z':'')+'"><span class="num"><b>'+x.r+'</b></span>'
         +'<span class="zf"><span class="nom">'+esc((FULL&&window.matchMedia('(max-width:760px)').matches)?abr(d[2]):court(d[2]))+'</span><span class="nat">'+iso(d[3])+'</span><span class="sous">'+esc(d[4])+' · '+esc(L[0])+'</span></span>'
-        +'<span class="c-club mut zf">'+esc(d[4])+'</span>'
+        +'<span class="c-club mut zf">'+esc((FULL&&window.matchMedia('(max-width:760px)').matches)?(CLUBC[d[4]]||d[4]):d[4])+'</span>'
         +'<span class="c-champ mut zf"><span class="lg">'+drap(L[1],L[2])+esc(L[0])+'</span></span>'
         +'<span class="num mut c-mj zf">'+d[20]+'</span>'
         +'<button type="button" class="sc zm" data-j="'+j+'" aria-expanded="false" aria-label="'+MES[st.m].ts+' '+fV(x.v)+', détail par compétition">'+fV(x.v)+'</button>'
