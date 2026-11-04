@@ -61,6 +61,13 @@ export const RELAIS = {
   '/budget-2027/':   '/france-simulateur-budget/',      // le 31/10/2026, une heure
 };
 
+/* Rubriques annoncées, sans aucune page encore : elles apparaissent dans le menu
+   (après les rubriques existantes, dans cet ordre) avec le macaron « bientôt »,
+   sans lien. Aucune adresse n'est réservée tant que le contenu n'est pas défini.
+   Le jour où la première page existe, on la met dans PAGES avec cette rubrique
+   et on retire le nom d'ici. */
+export const RUBRIQUES_A_VENIR = ['Énergie'];
+
 export const DOMAINE = 'https://grotang.fr';
 
 export const page = key => {

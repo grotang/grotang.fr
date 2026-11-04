@@ -14,7 +14,7 @@
    premier texte (≈ 2,5 s perdues sur mobile selon PageSpeed). Les trois fichiers
    du premier écran sont préchargés ; les autres (latin étendu, chasse fixe) ne
    viennent que si un caractère les demande. */
-import { arbre, url } from './site.mjs';
+import { arbre, url, RUBRIQUES_A_VENIR } from './site.mjs';
 
 export const FONTS = `<link rel="preload" href="/fonts/carlito-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/carlito-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -179,6 +179,7 @@ html{scroll-padding-top:58px}
 .gn-panel{position:absolute;right:0;top:calc(100% + 6px);min-width:190px;z-index:60;display:flex;flex-direction:column;gap:1px;
   padding:6px;background:var(--surface);border:1px solid var(--rule);border-radius:9px;box-shadow:var(--shadow)}
 .gnav .gn-panel a{display:block}
+.gn-avenir{font-size:12.5px;font-weight:600;color:var(--ink-3);padding:5px 10px;line-height:1.2;white-space:nowrap;cursor:default;opacity:.8}
 .gn-soon{margin-left:7px;font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
   color:var(--ink-3);border:1px solid var(--rule);border-radius:4px;padding:1px 4px;vertical-align:1px}
 .gn-grp{display:flex;flex-direction:column;gap:1px;padding-top:4px}
@@ -198,7 +199,7 @@ html{scroll-padding-top:58px}
   .gnav nav{margin-left:0;width:100%;justify-content:flex-start;order:3}
   .gn-coq{margin-left:auto}
   .gn-theme{margin-left:0;min-height:34px}
-  .gnav nav a,.gn-dd summary{padding:9px 12px}
+  .gnav nav a,.gn-dd summary,.gn-avenir{padding:9px 12px}
   /* sur téléphone, le panneau s'accroche à toute la largeur de la barre des
      rubriques : accroché à sa rubrique, celui de droite sortait de l'écran */
   .gnav nav{position:relative}
@@ -231,7 +232,8 @@ function rubrique(r, current) {
 }
 
 export function nav(current) {
-  const links = arbre().map(r => rubrique(r, current)).join('');
+  const links = arbre().map(r => rubrique(r, current)).join('')
+    + RUBRIQUES_A_VENIR.map(n => `<span class="gn-avenir" title="${esc(n)} : bientôt">${esc(n)}<span class="gn-soon">bientôt</span></span>`).join('');
   /* Le logo menait a une page d'accueil qui n'existe plus : le site, c'est le
      coefficient UEFA. Il y mene donc directement, sans passer par une redirection. */
   /* data-nosnippet : Google n'a pas le droit de piocher dans ce bandeau pour
