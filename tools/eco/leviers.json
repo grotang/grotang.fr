@@ -172,12 +172,12 @@
   },
   {
    "id": "age",
-   "titre": "Reculer l'âge légal de départ à la retraite",
+   "titre": "Changer l'âge légal de départ à la retraite",
    "sens": "depense",
    "fiab": "estimation",
-   "chapo": "L'âge légal converge vers 64 ans (réforme de 2023, suspendue jusqu'en 2028 : 62 ans et 9 mois à 63 ans pour les générations 1964-1965). Choisissez l'âge cible.",
+   "chapo": "La loi mène l'âge légal à 64 ans (réforme de 2023). Elle est suspendue jusqu'en 2028 : aujourd'hui, 62 ans et 9 mois pour la génération 1964, 63 ans pour la plupart des 1965. Choisissez l'âge cible : en dessous de 64 ans, la mesure coûte ; au-dessus, elle rapporte.",
    "ref": 64,
-   "min": 64,
+   "min": 60,
    "max": 68,
    "pas": 0.5,
    "par_an_pct_pib": {
@@ -188,7 +188,7 @@
    "par_an_note": "Économie par année de recul, une fois la mesure montée en charge. Bas : Cour des comptes, 64 → 65 ans rapporte « jusqu'à 8,4 Md€ » en 2035, rapportés au PIB de 2035 (estimé à 3 880 Md€ avec une croissance nominale de 2,7 % par an), soit 0,22 % du PIB. Haut : COR, juin 2026, le seul recul de l'âge (3 ans de plus, de 64,6 à 67,6 ans d'âge moyen de départ) comble un déficit de 2,4 % du PIB en 2070, soit 0,8 % du PIB par année. Central : milieu de la fourchette. Les années au-delà de 65 ans sont supposées rapporter autant que la première (hypothèse).",
    "an1": 0.0,
    "an1_note": "En 2027 : quasi nul. Un recul de l'âge ne touche que les générations qui arrivent à l'âge de départ, trimestre par trimestre ; la première année, l'économie se compte en centaines de millions. Le rendement plein se lit sur l'horizon « à maturité ».",
-   "qui": "Les générations nées à partir de 1965, qui partent plus tard",
+   "qui": "Avancer : tous les contribuables et cotisants. Reculer : les générations nées à partir de 1965, qui partent plus tard",
    "sources": [
     {
      "t": "Cour des comptes, Situation financière et perspectives du système de retraites, février 2025",
@@ -197,8 +197,18 @@
     {
      "t": "COR, rapport annuel, juin 2026 (via Previssima)",
      "u": "https://www.previssima.fr/actualite/retraite-a-68-ans-deficit-qui-explose-le-nouveau-rapport-alerte-sur-letat-des-retraites-francaises.html"
+    },
+    {
+     "t": "MoneyVox, abroger la réforme des retraites : combien ça coûte (Cnav, étude d'impact, Institut Montaigne, M. Zemmour)",
+     "u": "https://www.moneyvox.fr/retraite/actualites/98707/abroger-la-reforme-des-retraites-et-le-depart-a-64-ans-combien-ca-coute"
+    },
+    {
+     "t": "MoneyVox, l'abrogation coûterait 3,4 Md€ en 2025 (Cnav)",
+     "u": "https://www.moneyvox.fr/votre-argent/actualites/100169/abrogation-de-la-reforme-des-retraites-couterait-3,4-mds-euros-en-2025"
     }
-   ]
+   ],
+   "cout_an1_md_par_an": 1.7,
+   "cout_note": "Avancer l'âge coûte dès la première année, car les générations proches de la retraite partent plus tôt. Cnav (citée par Les Echos, octobre 2024) : revenir à 62 ans coûte 3,4 Md€ la première année et près de 16 Md€ en 2032, soit environ 1,7 Md€ par année d'âge la première année. À maturité, la page applique la même fourchette par année qu'au recul, à l'envers : un coût de 0,22 % à 0,8 % du PIB par année avancée. Recoupements : 16 Md€ en 2032 pour 2 ans (Cnav), 14,1 Md€ en 2030 (étude d'impact de 2023), environ 58 Md€ pour la retraite à 60 ans avec 40 annuités (Institut Montaigne), dans la fourchette. Les chiffrages « prudents » prennent le coût le plus élevé."
   },
   {
    "id": "zucman",
@@ -244,6 +254,56 @@
     {
      "t": "Drees, Les retraités et les retraites, édition 2025",
      "u": "https://drees.solidarites-sante.gouv.fr/publications-communique-de-presse-documents-de-reference/250731_PANORAMAS-retraites"
+    }
+   ]
+  },
+  {
+   "id": "aides",
+   "titre": "Réduire les aides aux entreprises",
+   "sens": "mixte",
+   "fiab": "controverse",
+   "chapo": "Le chiffre qui circule, 211 Md€ (Sénat, 2023), mélange des choses qu'on ne peut pas toutes « supprimer » : des baisses de cotisations, des niches fiscales, des prêts remboursables. Ici, on ne garde que ce qui pèse vraiment sur le budget, en deux curseurs séparés, sans compter deux fois les niches.",
+   "allegements": {
+    "md": 80,
+    "garde": {
+     "prudente": 0.5,
+     "centrale": 0.7,
+     "favorable": 1.0
+    },
+    "nom": "Allègements généraux de cotisations patronales",
+    "def": "La réduction automatique des cotisations patronales sur les salaires jusqu'à environ 2,5 à 3 SMIC, la plus forte au SMIC. La supprimer, c'est une hausse du coût du travail : une recette en plus.",
+    "garde_note": "80 Md€ : estimation du ministre de l'Économie devant la commission d'enquête du Sénat (2025) ; le Sénat retient 75 Md€ pour 2023, le Haut-commissariat au Plan environ 68 Md€. Le supprimer renchérit surtout le travail au SMIC : des emplois disparaissent, ce qui réduit les cotisations encaissées et augmente le chômage indemnisé. Part du montant récupérée : 50 % (prudent), 70 % (central), 100 % (favorable). Ces trois taux sont une hypothèse de grotang.fr, pas un chiffrage officiel.",
+    "qui": "Les entreprises de main-d'œuvre payée près du SMIC (commerce, hôtellerie-restauration, nettoyage, services à la personne, industrie de main-d'œuvre), et leurs salariés si des emplois disparaissent"
+   },
+   "budget": {
+    "md": 30,
+    "nom": "Aides budgétaires directes",
+    "def": "Subventions, aides des ministères et des opérateurs (apprentissage, industrie, agriculture, énergie…). Les couper, c'est une dépense en moins.",
+    "note": "30 Md€ : estimation du ministre de l'Économie devant la commission d'enquête du Sénat (2025). Chiffrage mécanique, sans effet de comportement.",
+    "qui": "Les entreprises aidées et les apprentis qu'elles embauchent"
+   },
+   "hors": [
+    {
+     "nom": "Niches fiscales des entreprises",
+     "md": 40,
+     "ou": "déjà dans le levier « Supprimer des niches fiscales » (crédit d'impôt recherche, gazole, TVA réduite…) : pas comptées deux fois"
+    },
+    {
+     "nom": "Prêts et garanties de Bpifrance",
+     "md": 41,
+     "ou": "des prêts remboursés et des garanties : pas une dépense annuelle, rien à supprimer au budget"
+    }
+   ],
+   "perimetres": "Selon ce qu'on compte, les aides aux entreprises font 82 Md€ (Haut-commissariat au Plan, aides directes et ciblées, 2023), 150 Md€ (ministre de l'Économie : 80 d'allègements, 40 de niches, 30 de dépenses budgétaires), 187 Md€ (Plan, en ajoutant allègements et TVA réduites) ou 211 Md€ (Sénat, en ajoutant les prêts de Bpifrance).",
+   "an1": 1.0,
+   "sources": [
+    {
+     "t": "Public Sénat, sur quoi repose le calcul des 211 Md€ (et l'estimation du ministre)",
+     "u": "https://www.publicsenat.fr/actualites/economie/211-milliards-deuros-daides-publiques-aux-entreprises-sur-quoi-repose-le-calcul-de-la-commission-denquete-du-senat"
+    },
+    {
+     "t": "Maire-info, le Haut-commissariat au Plan évalue les aides entre 82 et 187 Md€ (juillet 2026)",
+     "u": "https://www.maire-info.com/d%C3%A3%C2%A9veloppement-%C3%A3%C2%A9conomique/sans-veritablement-trancher-le-haut-commissariat-au-plan-evalue-les-aides-versees-aux-entreprises-entre-82-et-187-milliards-d'euros-article-31004"
     }
    ]
   }

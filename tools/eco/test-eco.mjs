@@ -95,5 +95,10 @@ console.log('\ndata.json : tout est cohérent.');
   t(new Set(N.items.map(x => x.id)).size === N.items.length, 'niches : identifiants uniques');
   const asc = o => o.prudente <= o.centrale && o.centrale <= o.favorable;
   for (const l of L.leviers) for (const k of ['garde', 'par_an_pct_pib', 'rendement_2pct_md']) if (l[k]) t(asc(l[k]), `${l.id} : fourchette ${k} croissante`);
+  const AI = L.leviers.find(l => l.id === 'aides');
+  if (AI) { t(asc(AI.allegements.garde), 'aides : fourchette des allègements croissante');
+    t(AI.allegements.md + AI.budget.md + AI.hors[0].md === 150, `aides : allègements + budgétaires + niches = ${AI.allegements.md + AI.budget.md + AI.hors[0].md} Md€ = 150 Md€ du ministre`); }
+  const AG = L.leviers.find(l => l.id === 'age');
+  t(AG.min < AG.ref && AG.ref < AG.max && AG.cout_an1_md_par_an > 0, `âge : de ${AG.min} à ${AG.max} ans autour de ${AG.ref}, coût la première année si on avance`);
   t(L.leviers.every(l => l.sources && l.sources.length && l.sources.every(s => /^https:\/\//.test(s.u))), 'leviers : chaque levier est sourcé');
 }
