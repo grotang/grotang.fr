@@ -459,13 +459,12 @@
     "t01_m": 6.62,
     "p01": 0.001,
     "n_heritiers": 800000,
-    "tau": 0.1,
     "garde": {
      "prudente": 0.5,
      "centrale": 0.8,
      "favorable": 1.0
     },
-    "note": "Modèle : la part des héritages au-delà de 2 M€ suit une loi de Pareto calée sur le CAE (le 1 % qui hérite le plus reçoit 4,2 M€ en moyenne, le 0,1 % 13 M€), pour environ 800 000 héritiers par génération (le flux annuel de 300 Md€ correspond à ce qu'une génération reçoit dans sa vie). L'État prend ce qui dépasse le plafond, moins les 10 % qu'il prélève déjà sur ces montants. Recoupement : à 12 M€, la page trouve environ 240 héritiers par an et 2,7 Md€ au-dessus du plafond (2,5 Md€ une fois retirés les 10 % déjà prélevés), avant réactions ; la Fondation iFRAP chiffre le plafond de 12 M€ à 2,8 Md€ pour 216 successions. L'Institut Montaigne chiffre l'ensemble du projet de J.-L. Mélenchon (plafond et héritage sur toute la vie) à 7 à 11 Md€ et retient 20 % de recettes perdues par l'exil dans son scénario bas. Part récupérée ici : 50 % (prudent, hypothèse grotang : un prélèvement de 100 % pousse au départ), 80 % (central, Institut Montaigne), 100 % (favorable).",
+    "note": "Modèle : la part des héritages au-delà de 2 M€ suit une loi de Pareto calée sur le CAE (le 1 % qui hérite le plus reçoit 4,2 M€ en moyenne, le 0,1 % 13 M€), pour environ 800 000 héritiers par génération (le flux annuel de 300 Md€ correspond à ce qu'une génération reçoit dans sa vie). L'État prend ce qui dépasse le plafond, moins ce qu'il y prélève déjà (voir ci-dessous). Recoupement : à 12 M€, la page trouve environ 240 héritiers par an et 2,7 Md€ au-dessus du plafond (2,5 Md€ une fois retirés les 10 % déjà prélevés), avant réactions ; la Fondation iFRAP chiffre le plafond de 12 M€ à 2,8 Md€ pour 216 successions. L'Institut Montaigne chiffre l'ensemble du projet de J.-L. Mélenchon (plafond et héritage sur toute la vie) à 7 à 11 Md€ et retient 20 % de recettes perdues par l'exil dans son scénario bas. Part récupérée ici : 50 % (prudent, hypothèse grotang : un prélèvement de 100 % pousse au départ), 80 % (central, Institut Montaigne), 100 % (favorable).",
     "juridique": "L'Institut Montaigne juge très élevé le risque de censure par le Conseil constitutionnel : un prélèvement de 100 % est confiscatoire.",
     "src": [
      {
@@ -476,7 +475,20 @@
       "t": "Fondation iFRAP, droits de succession : les chiffrages des candidats (2022)",
       "u": "https://www.ifrap.org/budget-et-fiscalite/droits-de-succession-44-milliards-dimpots-en-moins-ou-14-milliards-de-taxes-en"
      }
-    ]
+    ],
+    "tau_pos": {
+     "zero": 0,
+     "direct0": 0,
+     "": 0.1,
+     "neutre": 0.45,
+     "vie200": 0.45,
+     "vie": 0.45
+    },
+    "tau_carte": {
+     "base": 0.1,
+     "max": 0.45
+    },
+    "tau_note": "Au-dessus du plafond, l'État ne gagne que ce qu'il ne prélevait pas déjà. Aujourd'hui, le 0,1 % qui hérite le plus paie environ 10 % (CAE) : la page retient 10 %. Si les exceptions sont supprimées (refonte, ou toutes les exceptions bouchées), ces montants paieraient le taux marginal de 45 % : la page retient 45 %, et entre les deux au prorata des exceptions bouchées. Sans droits de succession (ou sans droits en ligne directe, où se trouvent presque tous ces héritages), 0 %."
    }
   },
   {
