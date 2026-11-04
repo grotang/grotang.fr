@@ -46,11 +46,35 @@ name: Soir de match UEFA
 #
 # Lancée à la main (bouton « Run workflow ») : un tour tout de suite, puis la
 # veille continue si c'est un soir de match.
+#
+# LE RÉVEIL EXTERNE (depuis le 04/11/2026). Mesuré du 14/10 au 04/11 : les
+# départs planifiés partent avec 2 à 5 h de retard le soir (jusqu'à 10 h pour
+# d'autres robots), et depuis le 30/10 GitHub en saute purement et simplement
+# (le 03/11 : un seul des trois départs prévus, à 23 h 04). Un lancement par
+# l'API, lui, part dans la seconde. cron-job.org appelle donc ce robot chaque
+# jour à 20 h 40 et 22 h 50 (Paris), avec auto = true : le test « y a-t-il
+# match ? » s'applique, un soir sans match coûte quelques secondes. Le jeton
+# utilisé ne sait que lancer les robots de ce dépôt. Les départs planifiés
+# ci-dessous restent en filet.
+#
+# Une ligne par heure (04/11) : avant le 30/10, une ligne par heure et aucun
+# départ sauté sur 32 ; depuis le passage à « 16,17,19 » sur une seule ligne,
+# 3 créneaux sur 5 sautés. Pas prouvé que ce soit la cause : on revient à ce qui
+# marchait.
 on:
   schedule:
-    - cron: '47 16,17,19 * * 2-4'   # mardi → jeudi
-    - cron: '47 16,17,19 * 5,6 6'   # samedi, en mai et juin (finale de C1)
+    - cron: '47 16 * * 2-4'   # mardi → jeudi
+    - cron: '47 17 * * 2-4'
+    - cron: '47 19 * * 2-4'
+    - cron: '47 16 * 5,6 6'   # samedi, en mai et juin (finale de C1)
+    - cron: '47 17 * 5,6 6'
+    - cron: '47 19 * 5,6 6'
   workflow_dispatch:
+    inputs:
+      auto:
+        description: 'Appel du réveil externe : ne travaille que les soirs de match'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -73,8 +97,9 @@ jobs:
       - name: Ce soir, y a-t-il match ?
         id: match
         run: |
-          # lancée à la main : on y va dans tous les cas (au moins un tour tout de suite)
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || node tools/uefa/soir.mjs match; then echo "oui=true" >> "$GITHUB_OUTPUT"; else echo "oui=false" >> "$GITHUB_OUTPUT"; fi
+          # lancée à la main : on y va dans tous les cas (au moins un tour tout de suite) ;
+          # appelée par le réveil externe (auto) : seulement un soir de match
+          if { [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.auto }}" != "true" ]; } || node tools/uefa/soir.mjs match; then echo "oui=true" >> "$GITHUB_OUTPUT"; else echo "oui=false" >> "$GITHUB_OUTPUT"; fi
 
       - uses: actions/setup-node@v4
         if: steps.match.outputs.oui == 'true'
