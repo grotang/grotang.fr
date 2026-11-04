@@ -102,7 +102,11 @@ console.log('\ndata.json : tout est cohérent.');
   if (HE) { for (const o of HE.options) t(asc(o.m), `héritage : fourchette « ${o.nom} » croissante`);
     const a1 = ['av', 'dutreil', 'demembr'].reduce((s, id) => s + HE.options.find(o => o.id === id).m.centrale, 0);
     t(Math.abs(a1 - 9) <= 1, `héritage : assurance-vie + Dutreil + démembrement = ${a1} Md€ ≈ les 9 Md€ du CAE (« assiette 1 »)`);
-    t(HE.contexte.recettes_succ_md + HE.contexte.recettes_don_md === HE.contexte.recettes_md, 'héritage : successions + donations = recettes'); }
+    t(HE.contexte.recettes_succ_md + HE.contexte.recettes_don_md === HE.contexte.recettes_md, 'héritage : successions + donations = recettes');
+    t(-HE.baisses[0].m.centrale === HE.contexte.recettes_md, 'héritage : « plus aucun droit » coûte toute la recette');
+    const P_ = HE.plafond, pr = P_.p01 * Math.pow(P_.t01_m / 12, P_.a), n12 = P_.n_heritiers * pr, m12 = n12 * 12 / (P_.a - 1) / 1000;
+    t(n12 > 150 && n12 < 350 && m12 > 2 && m12 < 3.5, `héritage : plafond à 12 M€ = ${n12.toFixed(0)} héritiers, ${m12.toFixed(2)} Md€ (iFRAP : 216 successions, 2,8 Md€)`);
+    t(Math.abs(P_.t01_m * P_.a / (P_.a - 1) - HE.contexte.top01_m) < 0.3, `héritage : Pareto redonne ${(P_.t01_m * P_.a / (P_.a - 1)).toFixed(1)} M€ pour le 0,1 % (CAE : ${HE.contexte.top01_m})`); }
   const FO = L.leviers.find(l => l.id === 'fonction');
   if (FO) { t(FO.options[0].pct.favorable <= FO.options[0].pct.centrale && FO.options[0].pct.centrale <= FO.options[0].pct.prudente, 'fonctionnaires : le coût du calcul « privé » va du favorable au prudent');
     t(FO.base_md > 50 && FO.base_md < 90, `fonctionnaires : pensions de l'État ${FO.base_md} Md€`); }

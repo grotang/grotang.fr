@@ -279,7 +279,23 @@ svg .m{font-variant-numeric:tabular-nums}
 .hr .nm i, .nl .nm i + i{display:block; font-style:normal; font-weight:400; font-size:11.5px; color:var(--ink-3); margin-top:2px}
 .hr .m{font-variant-numeric:tabular-nums; color:var(--ink-2); white-space:nowrap}
 .hr label.on .m{color:var(--good); font-weight:700}
-#b27-he-c{margin-top:8px}
+#b27-he-c{margin:0 0 4px 26px}
+.echl{margin-top:10px; border-left:3px solid; border-image:linear-gradient(to bottom,var(--bad),var(--rule) 30%,var(--good)) 1; padding-left:8px}
+.echl .eg{display:none}
+.ech{display:grid; grid-template-columns:18px minmax(0,1fr) auto; gap:2px 8px; align-items:baseline; padding:6px 4px; border-radius:2px; cursor:pointer; font-size:13px; border-top:1px solid var(--rule)}
+.ech:first-of-type{border-top:0}
+.ech:hover{background:var(--surface-2)}
+.ech input{margin:0; accent-color:var(--good); transform:translateY(2px)}
+.ech .nm{font-weight:600}
+.ech .nm i{display:block; font-style:normal; font-weight:400; font-size:11.5px; color:var(--ink-3); margin-top:2px}
+.ech .m{font-variant-numeric:tabular-nums; color:var(--ink-2); white-space:nowrap; text-align:right}
+.ech.on{background:var(--surface-2)}
+.ech.on .m{color:var(--good); font-weight:700}
+.ech.neg.on .m{color:var(--bad)}
+@media (max-width:560px){ .ech{grid-template-columns:18px minmax(0,1fr)} .ech .m{grid-column:2; text-align:left} #b27-he-c{margin-left:8px} }
+.hcap{margin-top:10px; padding:10px; border:1px dashed var(--ink-3); border-radius:3px}
+.hcap .hcl{font-size:13px; cursor:pointer}
+.hcap .rg{margin-top:6px}
 #b27-he-c[hidden], #b27-he-r[hidden]{display:none}
 #b27-he-c .m{text-align:right; font-size:12.5px}
 .hctx .lq{margin-top:6px}
@@ -759,13 +775,14 @@ try { const h = new URLSearchParams(location.hash.slice(1));
 } catch (e) {}
 /* Budget 2027 : horizon (a1 = effet la première année, mat = à maturité),
    fourchette, niches supprimées, âge légal, taux Zucman, plafond des retraites. */
-const B = { h: 'a1', f: 'centrale', n: new Set(), age: 64, z: 0, p: 0, d: '', cr: 'EA20', cv: {}, cy: 5, aa: 0, ab: 0, hm: '', ho: new Set(), fo: new Set() };
+const B = { h: 'a1', f: 'centrale', n: new Set(), age: 64, z: 0, p: 0, d: '', cr: 'EA20', cv: {}, cy: 5, aa: 0, ab: 0, hm: '', ho: new Set(), fo: new Set(), hc: 0 };
 try { const h = new URLSearchParams(location.hash.slice(1));
   if (h.get('bh') === 'mat') B.h = 'mat';
   if (['prudente', 'favorable'].includes(h.get('bf'))) B.f = h.get('bf');
   if (LV && h.get('bn')) { const ok = new Set([...LV.leviers.find(l => l.id === 'niches').items.map(x => x.id), 'autres']); h.get('bn').split('.').filter(x => ok.has(x)).forEach(x => B.n.add(x)); }
   if (+h.get('ba') >= 60 && +h.get('ba') <= 68) B.age = Math.round(+h.get('ba') * 2) / 2;
-  if (['carte', 'neutre', 'vie200', 'vie'].includes(h.get('bhm'))) B.hm = h.get('bhm');
+  if (['zero', 'direct0', 'carte', 'neutre', 'vie200', 'vie'].includes(h.get('bhm'))) B.hm = h.get('bhm');
+  if (+h.get('bhc') >= 2 && +h.get('bhc') <= 50) B.hc = Math.round(+h.get('bhc'));
   (h.get('bho') || '').split('.').filter(x => ['av', 'dutreil', 'demembr', 'purge'].includes(x)).forEach(x => B.ho.add(x));
   (h.get('bfo') || '').split('.').filter(x => ['calcul', 'actifs'].includes(x)).forEach(x => B.fo.add(x));
   for (const k of ['aa', 'ab']) if (+h.get('b' + k) > 0 && +h.get('b' + k) <= 100) B[k] = Math.round(+h.get('b' + k) / 10) * 10;
@@ -777,7 +794,7 @@ try { const h = new URLSearchParams(location.hash.slice(1));
   (h.get('bcv') || '').split('.').forEach(t => { const [c, v] = t.split(':'); if (/^GF[0-9R]{2,4}$/.test(c) && +v > 0 && +v <= 100) B.cv[c] = Math.round(+v / 10) * 10; });
 } catch (e) {}
 const bHash = () => (B.h === 'mat' ? '&bh=mat' : '') + (B.f !== 'centrale' ? '&bf=' + B.f : '') + (B.n.size ? '&bn=' + [...B.n].join('.') : '')
-  + (B.age !== 64 ? '&ba=' + B.age : '') + (B.hm ? '&bhm=' + B.hm + (B.hm === 'carte' && B.ho.size ? '&bho=' + [...B.ho].join('.') : '') : '') + (B.fo.size ? '&bfo=' + [...B.fo].join('.') : '') + (B.aa ? '&baa=' + B.aa : '') + (B.ab ? '&bab=' + B.ab : '') + (B.z ? '&bz=' + B.z : '') + (B.p ? '&bp=' + B.p : '') + (B.d ? '&bd=' + B.d : '')
+  + (B.age !== 64 ? '&ba=' + B.age : '') + (B.hm ? '&bhm=' + B.hm + (B.hm === 'carte' && B.ho.size ? '&bho=' + [...B.ho].join('.') : '') : '') + (B.hc ? '&bhc=' + B.hc : '') + (B.fo.size ? '&bfo=' + [...B.fo].join('.') : '') + (B.aa ? '&baa=' + B.aa : '') + (B.ab ? '&bab=' + B.ab : '') + (B.z ? '&bz=' + B.z : '') + (B.p ? '&bp=' + B.p : '') + (B.d ? '&bd=' + B.d : '')
   + (Object.keys(B.cv).length ? '&bcv=' + Object.entries(B.cv).map(([c, v]) => c + ':' + v).join('.') + (B.cr !== 'EA20' ? '&bcr=' + B.cr : '') + (B.cy !== 5 ? '&bcy=' + B.cy : '') : '');
 const hashSync = () => { try { if (MODE === 'b27') { const h = bHash().slice(1); history.replaceState(null, '', h ? '#' + h : location.pathname); return; } history.replaceState(null, '', '#an=' + S.an + '&u=' + S.u + (S.cap ? '&rp=' + S.cap + (S.capS ? '&rs=' + S.capS : '') : '') + bHash()); } catch (e) {} };
 
@@ -1623,6 +1640,10 @@ const budget27 = (() => {
   const k25 = D0.an.indexOf(PL.an_modele);
   const plafondOK = !!(RET && RET.pa(PL.an_modele) && k25 >= 0);
 
+  /* Héritage au-delà d'un plafond c (M€) : queue de Pareto calée sur le CAE. Renvoie les Md€ pris
+     (moins le taux tau déjà prélevé) et le nombre d'héritiers concernés par an. */
+  const capHe = (c, tau) => { const P_ = HE.plafond, pr = P_.p01 * Math.pow(P_.t01_m / c, P_.a);
+    return { n: P_.n_heritiers * pr, md: P_.n_heritiers * pr * c / (P_.a - 1) / 1000 * (1 - tau) }; };
   /* chaque levier : montant en Md€ dans l'horizon et la fourchette choisis */
   const calc = (hz = B.h) => {
     const f = B.f, a1 = hz === 'a1', out = [];
@@ -1641,11 +1662,14 @@ const budget27 = (() => {
     if (FO) { const parts = FO.options.filter(o => B.fo.has(o.id)).map(o => ({ o, m: o.sens === 'cout' ? -o.pct[f] / 100 * FO.base_md : o.md }));
       const tm = parts.reduce((a, x) => a + x.m, 0), v = a1 ? tm * FO.an1 : tm;
       out.push({ id: 'fonction', on: parts.length > 0, md: v, rec: 0, dep: v, mat: tm, parts, qui: ['les agents des métiers « actifs »'] }); }
-    if (HE) { const carte = B.hm === 'carte', R_ = HE.reformes.find(x => x.id === B.hm);
+    if (HE) { const carte = B.hm === 'carte', R_ = HE.reformes.find(x => x.id === B.hm), Bx = HE.baisses.find(x => x.id === B.hm);
       const opts = carte ? HE.options.filter(o => B.ho.has(o.id) && !(o.niche && B.n.has(o.niche))) : [];
-      const tm = carte ? opts.reduce((a, o) => a + o.m[f], 0) : R_ ? R_.m : 0, v = a1 ? tm * HE.an1[carte ? 'carte' : 'reforme'] : tm;
-      out.push({ id: 'heritage', on: carte ? opts.length > 0 : !!R_, md: v, rec: v, dep: 0, mat: tm,
-        qui: [carte ? (opts.length ? 'les héritiers concernés (' + opts.map(o => bas(o.nom.split(' :')[0])).slice(0, 2).join(', ') + ')' : '') : 'les gros héritages'] }); }
+      const pos = carte ? opts.reduce((a, o) => a + o.m[f], 0) : R_ ? R_.m : Bx ? Bx.m[f] : 0;
+      const cap = B.hc ? capHe(B.hc, Bx ? 0 : HE.plafond.tau) : { md: 0, n: 0 }, cv_ = cap.md * HE.plafond.garde[f];
+      const lent = !!R_ && R_.m > 0, tm = pos + cv_;
+      const v = a1 ? pos * (lent ? HE.an1.reforme : HE.an1.carte) + cv_ * HE.an1.carte : tm;
+      out.push({ id: 'heritage', on: !!B.hm || B.hc > 0, md: v, rec: v, dep: 0, mat: tm, pos, cap: cv_, capN: cap.n,
+        qui: [B.hc ? `les ${nf(Math.round(cap.n / 10) * 10, 0)} héritiers par an qui reçoivent plus de ${B.hc} M€` : carte ? (opts.length ? 'les héritiers concernés (' + opts.map(o => bas(o.nom.split(' :')[0])).slice(0, 2).join(', ') + ')' : '') : 'les gros héritages'] }); }
     if (AI) { const al = AI.allegements.md * B.aa / 100 * AI.allegements.garde[f], bu = AI.budget.md * B.ab / 100;
       out.push({ id: 'aides', on: B.aa > 0 || B.ab > 0, md: al + bu, rec: al, dep: bu, al, bu,
         qui: [B.aa >= B.ab * AI.budget.md / AI.allegements.md ? 'les entreprises de main-d\'œuvre payée près du SMIC' : 'les entreprises aidées'] }); }
@@ -1667,9 +1691,9 @@ const budget27 = (() => {
     { id: 'equilibre', t: 'Zéro déficit', obj: 0, objT: 'l\'équilibre', sauf: '', d: 'Un budget à l\'équilibre : la France n\'en a plus voté depuis 1974.' },
   ];
   const defi = () => DEFIS.find(x => x.id === B.d);
-  const SENS = { fonction: 'depense', heritage: 'recette', aides: 'mixte', convergence: CV && CV.sens, niches: N.sens, age: AG.sens, zucman: Z.sens, plafond: PL.sens };
+  const SENS = { fonction: 'depense', heritage: 'mixte', aides: 'mixte', convergence: CV && CV.sens, niches: N.sens, age: AG.sens, zucman: Z.sens, plafond: PL.sens };
   const exclu = id => { const x = defi(); return !!(x && x.sauf && SENS[id] === x.sauf); };
-  const coupe = () => { const d_ = defi(); if (exclu('heritage')) { B.hm = ''; B.ho.clear(); } if (exclu('fonction')) B.fo.clear(); if (d_ && d_.sauf === 'recette') B.aa = 0; if (d_ && d_.sauf === 'depense') { B.ab = 0; if (B.age < AG.ref) B.age = AG.ref; } if (exclu('convergence')) B.cv = {}; if (exclu('niches')) B.n.clear(); if (exclu('age')) B.age = AG.ref; if (exclu('zucman')) B.z = 0; if (exclu('plafond')) B.p = 0; };
+  const coupe = () => { const d_ = defi(); if (d_ && d_.sauf === 'recette') { if (B.hm && !['zero', 'direct0'].includes(B.hm)) { B.hm = ''; B.ho.clear(); } B.hc = 0; } if (exclu('fonction')) B.fo.clear(); if (d_ && d_.sauf === 'recette') B.aa = 0; if (d_ && d_.sauf === 'depense') { B.ab = 0; if (B.age < AG.ref) B.age = AG.ref; } if (exclu('convergence')) B.cv = {}; if (exclu('niches')) B.n.clear(); if (exclu('age')) B.age = AG.ref; if (exclu('zucman')) B.z = 0; if (exclu('plafond')) B.p = 0; };
   const ouvre = (c, o) => { c.dataset.open = o ? 1 : 0; c.querySelector('[data-lx]').setAttribute('aria-expanded', o); };
   const finDe = hz => base - calc(hz).filter(x => x.on).reduce((a, x) => a + x.md, 0);
 
@@ -1683,7 +1707,7 @@ const budget27 = (() => {
     plafond: 'Toute pension au-dessus du plafond (SMIC, 2 SMIC…) y est ramenée',
     age: 'De 60 à 68 ans ; 64 ans : la loi actuelle, à terme',
     fonction: 'Les 25 meilleures années au lieu des 6 derniers mois, la fin des départs anticipés',
-    heritage: 'Boucher les exceptions (assurance-vie, Dutreil…) ou refondre l\'impôt sur toute la vie',
+    heritage: 'De zéro droit de succession à « au-delà de X M€, l\'État prend tout »',
     aides: 'Allègements de cotisations et aides budgétaires, sans compter deux fois les niches',
     convergence: 'Dépenser comme la zone euro ou un voisin, poste par poste',
     niches: 'Les 12 plus coûteuses au choix, ou les 459',
@@ -1694,7 +1718,7 @@ const budget27 = (() => {
     plafond: () => plafondOK ? RET.calc(1000, PL.an_modele).net / 1000 * PIB * 1000 / D0.pib[k25] : 0,
     age: () => (AG.max - AG.ref) * AG.par_an_pct_pib.centrale / 100 * PIB,
     fonction: () => FO ? FO.options.filter(o => o.sens !== 'cout').reduce((a, o) => a + o.md, 0) : 0,
-    heritage: () => HE ? Math.max(...HE.reformes.map(x => x.m), HE.options.reduce((a, o) => a + o.m.centrale, 0)) : 0,
+    heritage: () => HE ? Math.max(...HE.reformes.map(x => x.m)) + capHe(HE.plafond.min_m, HE.plafond.tau).md * HE.plafond.garde.centrale : 0,
     aides: () => AI ? AI.allegements.md * AI.allegements.garde.centrale + AI.budget.md : 0,
     convergence: () => cvOK ? CVR.reduce((a, r) => a + Math.max(0, ecartCV(r, 'EA20')), 0) : 0,
     niches: () => N.total_md * N.garde.centrale,
@@ -1703,9 +1727,9 @@ const budget27 = (() => {
   const ORDRE = [['Jouer sur les dépenses', ['plafond', 'age', 'fonction', 'convergence', 'aides']], ['Jouer sur les recettes', ['heritage', 'niches', 'zucman']]];
   const lev = (l, no, corps) => `<div class="lv" data-l="${l.id}" data-open="0">`
     + `<div class="lh"><span class="lno">${no}</span><label class="sw"><input type="checkbox" data-sw="${l.id}" aria-label="${l.titre}"><span></span></label>`
-    + `<div class="lt"><h4>${l.titre}</h4><p class="ls">${RES[l.id]} · <span class="lmax">${l.id === 'fonction' ? `de +${md(FO.options[0].pct.prudente / 100 * FO.base_md)} Md€ de coût à −${md(MAXI.fonction())} Md€` : l.id === 'age' ? `de +${md((AG.ref - AG.min) * AG.par_an_pct_pib.centrale / 100 * PIB, 0)} Md€ de coût à 60 ans à −${md(MAXI.age(), 0)} Md€ à 68 ans` : `jusqu'à ≈ ${md(MAXI[l.id](), 0)} Md€ par an`}</span></p></div>`
+    + `<div class="lt"><h4>${l.titre}</h4><p class="ls">${RES[l.id]} · <span class="lmax">${l.id === 'heritage' ? `de −${md(-HE.baisses[0].m.centrale)} Md€ (plus aucun droit) à +${md(MAXI.heritage(), 0)} Md€` : l.id === 'fonction' ? `de +${md(FO.options[0].pct.prudente / 100 * FO.base_md)} Md€ de coût à −${md(MAXI.fonction())} Md€` : l.id === 'age' ? `de +${md((AG.ref - AG.min) * AG.par_an_pct_pib.centrale / 100 * PIB, 0)} Md€ de coût à 60 ans à −${md(MAXI.age(), 0)} Md€ à 68 ans` : `jusqu'à ≈ ${md(MAXI[l.id](), 0)} Md€ par an`}</span></p></div>`
     + `<span class="amt" id="b27-a-${l.id}"></span><button type="button" class="lx" data-lx="${l.id}" aria-expanded="false">Régler<span aria-hidden="true">▾</span></button></div>`
-    + `<div class="lbody"><div class="ltags"><span class="pill ${l.fiab}">${FIAB[l.fiab]}</span><span class="pill sens">${l.sens === 'recette' ? 'recette en plus' : l.sens === 'mixte' ? 'recette et dépense' : l.id === 'age' || l.id === 'fonction' ? 'dépense en moins ou en plus' : 'dépense en moins'}</span></div><p class="ch">${l.chapo}</p>${corps}</div></div>`;
+    + `<div class="lbody"><div class="ltags"><span class="pill ${l.fiab}">${FIAB[l.fiab]}</span><span class="pill sens">${l.id === 'heritage' ? 'recette en plus ou en moins' : l.sens === 'recette' ? 'recette en plus' : l.sens === 'mixte' ? 'recette et dépense' : l.id === 'age' || l.id === 'fonction' ? 'dépense en moins ou en plus' : 'dépense en moins'}</span></div><p class="ch">${l.chapo}</p>${corps}</div></div>`;
   const cards = () => {
     $('b27-d').innerHTML = `<span class="lb">Défis</span>` + DEFIS.map(x => `<button type="button" data-bd="${x.id}" aria-pressed="false" title="${x.d}">${x.t}<span class="ok"></span></button>`).join('');
     $('b27-d').addEventListener('click', e => { const b = e.target.closest('[data-bd]'); if (!b) return; B.d = B.d === b.dataset.bd ? '' : b.dataset.bd; coupe(); maj(true); });
@@ -1725,15 +1749,22 @@ const budget27 = (() => {
         + `<div class="lq" id="b27-q-niches"></div>${src(N)}`,
       fonction: FO ? `<div class="lc"><p class="lq warn" style="margin-top:0">${FO.contexte}</p><div class="nl" id="b27-fo">${FO.options.map(o => `<label data-fo="${o.id}"><input type="checkbox" value="${o.id}" data-foi="1"><span class="nm">${o.nom}<i>${o.def}</i><i><b>Qui paie :</b> ${bas(o.qui)}. ${o.src}</i></span><span class="m" id="b27-fo-${o.id}"></span></label>`).join('')}</div></div>`
         + `<div class="an1" id="b27-fo-1"></div><details><summary>Comment c'est chiffré, sources</summary><p>${FO.note}</p><p>${FO.an1_note}</p><p>${FO.sources.map(x => `<a href="${x.u}" rel="noopener">${x.t}</a>`).join('<br>')}</p></details>` : null,
-      heritage: HE ? (() => { const C = HE.contexte;
+      heritage: HE ? (() => { const C = HE.contexte, P_ = HE.plafond;
+        const ligne = (id, nom, def, m, qui, src) => `<label class="ech" data-he="${id}"><input type="radio" name="b27-he" value="${id}"><span class="nm">${nom}<i>${def}</i>${qui ? `<i><b>Qui paie :</b> ${bas(qui)}.</i>` : ''}</span><span class="m">${m}</span></label>`;
+        const sg = x => x > 0 ? '+' + md(x, x % 1 ? 1 : 0) : x < 0 ? '−' + md(-x, 1) : '0';
         return `<div class="lc"><div class="hctx"><div class="aib"><i style="flex:${C.recettes_md};background:var(--n2)"></i><i style="flex:${C.flux_md - C.recettes_md};background:var(--rule)"></i></div>`
         + `<div class="ail"><span><i style="background:var(--n2)"></i>Prélevé par l'État <b>${md(C.recettes_md)} Md€</b> (${C.recettes_annee})</span><span><i style="background:var(--rule)"></i>Transmis chaque année <b>≈ ${md(C.flux_md, 0)} Md€</b></span></div>`
-        + `<p class="lq">La moitié des Français héritent de moins de ${C.mediane_k} 000 €, le 1 % qui hérite le plus reçoit ${nf(C.top1_m, 1)} M€ en moyenne, le 0,1 % ${C.top01_m} M€. Le taux affiché monte à ${C.taux_affiche} %, le taux réellement payé par le 0,1 % est d'environ ${C.top01_taux} %.</p></div>`
-        + `<div class="rg" style="margin-top:8px"><span class="seg" role="group" aria-label="Façon de faire"><button type="button" data-hm="carte">Boucher les exceptions</button><button type="button" data-hm="ref">Refondre l'impôt (CAE)</button></span></div>`
+        + `<p class="lq">La moitié des Français héritent de moins de ${C.mediane_k} 000 €, le 1 % qui hérite le plus reçoit ${nf(C.top1_m, 1)} M€ en moyenne, le 0,1 % ${C.top01_m} M€.</p></div>`
+        + `<div class="echl"><div class="eg"><span>moins d'impôt</span><span>plus d'impôt</span></div>`
+        + HE.baisses.map(x => ligne(x.id, x.nom, x.def, (x.m.prudente === x.m.favorable ? sg(x.m.centrale) : '−' + md(-x.m.favorable, 1) + ' à −' + md(-x.m.prudente, 1)) + ' Md€', x.qui, x.src)).join('')
+        + ligne('', 'Les règles d\'aujourd\'hui', `Abattement de ${C.abattement_k} 000 € par parent et par enfant tous les 15 ans, puis 5 % à 45 % ; assurance-vie, Dutreil et démembrement à part.`, '0', '', '')
+        + ligne('carte', 'Boucher les exceptions, au choix', 'Assurance-vie, Pacte Dutreil, démembrement, plus-values effacées au décès : cochez celles que vous supprimez.', '<span id="b27-he-cm">+0 à +10 Md€</span>', '', '')
         + `<div class="nl" id="b27-he-c">${HE.options.map(o => `<label data-ho="${o.id}" title="${o.src.replace(/"/g, '&quot;')}"><input type="checkbox" value="${o.id}" data-hoi="1"><span class="nm">${o.nom}<i>${o.def}</i><i><b>Qui paie :</b> ${bas(o.qui)}. ${o.src}.</i></span><span class="m" id="b27-ho-${o.id}"></span></label>`).join('')}</div>`
-        + `<div class="hr" id="b27-he-r">${HE.reformes.map(x => `<label data-hr="${x.id}"><input type="radio" name="b27-hr" value="${x.id}"><span class="nm">${x.nom}<i>${x.def}</i><i><b>Qui paie :</b> ${bas(x.qui)}.</i></span><span class="m">${x.m ? '+' + md(x.m, 0) + ' Md€' : '0 Md€'}</span></label>`).join('')}</div></div>`
+        + HE.reformes.map(x => ligne(x.id, x.nom + ' (CAE)', x.def, sg(x.m) + ' Md€', x.qui, '')).join('')
+        + `</div><div class="hcap"><label class="hcl"><input type="checkbox" id="b27-hcx"> <b>Et un héritage maximal :</b> au-delà du plafond, l'État prend tout</label>`
+        + `<div class="rg"><input type="range" id="b27-hc" min="${P_.min_m}" max="${P_.max_m}" step="1" aria-label="Plafond d'héritage en millions d'euros"><span class="val" id="b27-hc-v"></span></div><p class="lq" id="b27-hc-q"></p><p class="lq" style="color:var(--ink-3)">${P_.juridique}</p></div></div>`
         + `<div class="an1" id="b27-he-1"></div>`
-        + `<details><summary>Comment c'est chiffré, sources</summary><p>${HE.garde_note}</p><p>${HE.an1_note}</p><p>${HE.sources.map(x => `<a href="${x.u}" rel="noopener">${x.t}</a>`).join('<br>')}</p></details>`; })() : null,
+        + `<details><summary>Comment c'est chiffré, sources</summary><p>${HE.baisses.map(x => x.nom + ' : ' + x.src + '.').join(' ')}</p><p>${HE.garde_note}</p><p>${P_.note}</p><p>${HE.an1_note}</p><p>${HE.sources.map(x => `<a href="${x.u}" rel="noopener">${x.t}</a>`).join('<br>')}</p></details>`; })() : null,
       aides: AI ? `<div class="lc"><div class="ai" id="b27-ai-bar"></div>`
         + [['aa', AI.allegements, 'recette en plus'], ['ab', AI.budget, 'dépense en moins']].map(([k, o, t]) => `<div class="cr ai2" data-ai="${k}"><span class="cn">${o.nom} · ${md(o.md, 0)} Md€<i>${o.def}</i></span><input type="range" min="0" max="100" step="10" value="0" data-aid="${k}" aria-label="${o.nom} : part supprimée"><span class="cm" id="b27-ai-${k}"></span><span class="cf">${t} · <b>Qui paie :</b> ${bas(o.qui)}.</span></div>`).join('')
         + `<p class="lq">${AI.hors.map(h => `<b>${h.nom} (${md(h.md, 0)} Md€)</b> : ${h.ou}.`).join(' ')}</p></div>`
@@ -1756,29 +1787,28 @@ const budget27 = (() => {
         if (t.dataset.sw === 'niches') { B.n.clear(); if (on) N.items.forEach(x => B.n.add(x.id)); }
         if (t.dataset.sw === 'age') B.age = on ? AG.max : AG.ref;
         if (t.dataset.sw === 'fonction') { B.fo.clear(); if (on) FO.options.forEach(o => B.fo.add(o.id)); }
-        if (t.dataset.sw === 'heritage') { B.hm = on ? 'vie200' : ''; B.ho.clear(); }
+        if (t.dataset.sw === 'heritage') { B.hm = on ? 'vie200' : ''; B.ho.clear(); if (!on) B.hc = 0; }
         if (t.dataset.sw === 'aides') { const d_ = defi(); B.aa = on && !(d_ && d_.sauf === 'recette') ? 50 : 0; B.ab = on && !(d_ && d_.sauf === 'depense') ? 50 : 0; }
         if (t.dataset.sw === 'zucman') B.z = on ? Z.taux_ref : 0;
         if (t.dataset.sw === 'plafond') B.p = on ? Math.round(RET.pa(PL.an_modele).smic) : 0;
         ouvre(t.closest('.lv'), on);
       } else if (t.dataset.foi) { if (t.checked) B.fo.add(t.value); else B.fo.delete(t.value); }
       else if (t.dataset.hoi) { B.hm = 'carte'; if (t.checked) B.ho.add(t.value); else B.ho.delete(t.value); }
-      else if (t.name === 'b27-hr') { B.hm = t.value; }
+      else if (t.name === 'b27-he') { B.hm = t.value; if (t.value === 'carte' && !B.ho.size) HE.options.forEach(o => { if (!(o.niche && B.n.has(o.niche))) B.ho.add(o.id); }); }
+      else if (t.id === 'b27-hcx') { B.hc = t.checked ? HE.plafond.defaut_m : 0; }
       else if (t.closest('.nl')) { if (t.checked) B.n.add(t.value); else B.n.delete(t.value); }
       else return;
       maj(true);
     });
     box.addEventListener('input', e => {
       const t = e.target;
-      if (t.dataset.aid) { B[t.dataset.aid] = +t.value; }
+      if (t.id === 'b27-hc') { B.hc = +t.value; }
+      else if (t.dataset.aid) { B[t.dataset.aid] = +t.value; }
       else if (t.dataset.cv) { if (+t.value) B.cv[t.dataset.cv] = +t.value; else delete B.cv[t.dataset.cv]; }
       else if (t.id === 'b27-age') B.age = +t.value; else if (t.id === 'b27-z') B.z = +t.value; else if (t.id === 'b27-p') B.p = +t.value; else return;
       maj(true);
     });
     box.addEventListener('click', e => {
-      const hmb = e.target.closest('[data-hm]');
-      if (hmb) { if (hmb.dataset.hm === 'carte') { if (B.hm !== 'carte') { B.hm = 'carte'; B.ho = new Set(HE.options.filter(o => !(o.niche && B.n.has(o.niche))).map(o => o.id)); } }
-        else if (B.hm === 'carte' || !B.hm) B.hm = 'vie200'; maj(true); return; }
       const cq = e.target.closest('[data-cq]');
       if (cq) { B.cv = {}; const pos = CVR.filter(r => ecartCV(r, B.cr) > 0).sort((a, b) => ecartCV(b, B.cr) - ecartCV(a, B.cr));
         (cq.dataset.cq === 'tout' ? pos : cq.dataset.cq === 'top3' ? pos.slice(0, 3) : []).forEach(r => { B.cv[r.c] = 100; }); maj(true); return; }
@@ -1868,16 +1898,23 @@ const budget27 = (() => {
       $('b27-fo-1').innerHTML = !X.on ? 'Cochez une ou deux mesures.' : `${B.h === 'a1' ? `<b>En 2027 : ${Math.abs(X.md) < 0.05 ? '≈ 0' : (X.md >= 0 ? '−' : '+') + md(Math.abs(X.md)) + ' Md€'}</b> (seuls les nouveaux retraités sont concernés). ` : ''}<b>À maturité : ${X.mat >= 0 ? '−' : '+'}${md(Math.abs(X.mat))} Md€ par an.</b>`
         + (B.fo.has('calcul') ? ' Le calcul « comme le privé » ne fait pas économiser : il coûte légèrement.' : '');
     }
-    if (HE) { const carte = B.hm === 'carte', X = RI('heritage');
-      document.querySelectorAll('[data-hm]').forEach(b => b.setAttribute('aria-pressed', (b.dataset.hm === 'carte') === carte && !!B.hm));
-      $('b27-he-c').hidden = !carte; $('b27-he-r').hidden = carte || !B.hm;
+    if (HE) { const carte = B.hm === 'carte', X = RI('heritage'), d_ = defi(), sansImp = !!(d_ && d_.sauf === 'recette');
+      document.querySelectorAll('[data-he]').forEach(l => { const id = l.dataset.he, on = id === B.hm, bloque = sansImp && !['', 'zero', 'direct0'].includes(id);
+        l.classList.toggle('on', on); l.querySelector('input').checked = on; l.querySelector('input').disabled = bloque; l.style.opacity = bloque ? .45 : '';
+        l.classList.toggle('neg', id === 'zero' || id === 'direct0'); });
+      $('b27-he-c').hidden = !carte;
       for (const o of HE.options) { const l = document.querySelector(`[data-ho="${o.id}"]`), dj = !!(o.niche && B.n.has(o.niche)), on = B.ho.has(o.id) && !dj;
-        l.querySelector('input').checked = on; l.querySelector('input').disabled = dj || exclu('heritage'); l.classList.toggle('on', on); l.style.opacity = dj ? .5 : '';
+        l.querySelector('input').checked = on; l.querySelector('input').disabled = dj; l.classList.toggle('on', on); l.style.opacity = dj ? .5 : '';
         $('b27-ho-' + o.id).innerHTML = dj ? 'déjà supprimé<br>(levier Niches)' : (o.m.prudente === o.m.favorable ? '+' + md(o.m.centrale) : '+' + md(o.m.prudente, 0) + ' à ' + md(o.m.favorable, 0)) + ' Md€'; }
-      document.querySelectorAll('[data-hr]').forEach(l => { const on = l.dataset.hr === B.hm; l.classList.toggle('on', on); l.querySelector('input').checked = on; });
-      $('b27-he-1').innerHTML = !X.on ? `Choisissez une façon de faire : boucher les exceptions une par une, ou refondre l'impôt comme le propose le Conseil d'analyse économique.`
-        : `${B.h === 'a1' ? `<b>En 2027 : +${md(X.md)} Md€</b> (${carte ? 'la moitié de l\'effet : droits payés dans les six mois du décès' : 'un dixième : transition de 10 à 18 ans'}). ` : ''}<b>À maturité : +${md(X.mat)} Md€ par an.</b>`
-          + (!carte && B.n.has('dutreil') ? ` <span style="color:var(--n2)">Le Pacte Dutreil est aussi supprimé dans le levier Niches : il est compté deux fois.</span>` : '');
+      if (carte) $('b27-he-cm').textContent = '+' + md(X.pos) + ' Md€';
+      const hx = $('b27-hcx'), hr = $('b27-hc'); hx.checked = B.hc > 0; hx.disabled = sansImp; hr.disabled = sansImp; if (+hr.value !== (B.hc || HE.plafond.defaut_m)) hr.value = B.hc || HE.plafond.defaut_m;
+      const cc = capHe(B.hc || HE.plafond.defaut_m, ['zero', 'direct0'].includes(B.hm) ? 0 : HE.plafond.tau);
+      $('b27-hc-v').innerHTML = `${B.hc || HE.plafond.defaut_m} M€<small> reçus dans sa vie${B.hc ? '' : ' · désactivé'}</small>`;
+      $('b27-hc-q').innerHTML = `Environ <b>${nf(Math.max(10, Math.round(cc.n / 10) * 10), 0)} héritiers par an</b> reçoivent plus de ${B.hc || HE.plafond.defaut_m} M€. L'État prendrait <b>${md(cc.md * HE.plafond.garde.prudente)} à ${md(cc.md * HE.plafond.garde.favorable)} Md€ par an</b> selon les départs à l'étranger et les montages.`;
+      $('b27-he-1').innerHTML = !X.on ? `Choisissez une position sur l'échelle, et si vous le voulez un héritage maximal.`
+        : `${B.h === 'a1' ? `<b>En 2027 : ${X.md >= 0 ? '+' : '−'}${md(Math.abs(X.md))} Md€</b> de recettes (droits payés dans les six mois du décès${B.hm && HE.reformes.find(x => x.id === B.hm && x.m > 0) ? ' ; refonte sur toute la vie comptée au dixième' : ''}). ` : ''}<b>À maturité : ${X.mat >= 0 ? '+' : '−'}${md(Math.abs(X.mat))} Md€ de recettes par an.</b>`
+          + (HE.reformes.find(x => x.id === B.hm && x.m > 0) && B.n.has('dutreil') ? ` <span style="color:var(--n2)">Le Pacte Dutreil est aussi supprimé dans le levier Niches : il est compté deux fois.</span>` : '')
+          + (B.hc && B.hm === 'vie' ? ' Le plafond s\'ajoute à la refonte sans retirer ce qu\'elle prélève déjà sur ces montants : léger double compte.' : '');
     }
     if (AI) { const d_ = defi(), X = RI('aides');
       for (const [k, o, lock] of [['aa', AI.allegements, d_ && d_.sauf === 'recette'], ['ab', AI.budget, d_ && d_.sauf === 'depense']]) {
@@ -1930,7 +1967,7 @@ const budget27 = (() => {
     const seuil = fin < 0 ? '' : fin <= 0.03 * PIB ? ' Sous les 3 % des règles européennes.' : fin <= -LB.solde_stabilisant_pct / 100 * PIB ? ' La dette cesse de monter en % du PIB.' : '';
     const de = t => /^le /.test(t) ? 'du ' + t.slice(3) : /^les /.test(t) ? 'des ' + t.slice(4) : 'de ' + t;
     const pcx = x => Math.abs(tot) / PIB * 100 < 0.1 ? nf(x / PIB * 100, 2) + ' %' : pc(x);
-    const cher = on.filter(x => x.md < -0.05).map(x => ({ age: 'l\'âge légal à ' + nf(B.age, B.age % 1 ? 1 : 0) + ' ans', convergence: 'la convergence', fonction: 'le calcul des pensions des fonctionnaires' }[x.id] || x.id));
+    const cher = on.filter(x => x.md < -0.05).map(x => ({ heritage: 'la baisse des droits de succession', age: 'l\'âge légal à ' + nf(B.age, B.age % 1 ? 1 : 0) + ' ans', convergence: 'la convergence', fonction: 'le calcul des pensions des fonctionnaires' }[x.id] || x.id));
     $('b27-ph').innerHTML = tot < -0.05
       ? `<b>Mon budget ${LB.annee}</b> : déficit porté de ${pcx(base)} à <b>${pcx(fin)}</b> du PIB, ${md(-tot)} Md€ de plus${B.h === 'mat' ? ' (mesures à maturité)' : ''}, à cause ${cher.map(de).join(' et ')}.${qui.length ? ` Les économies retenues pèsent surtout sur ${qui.join(' et ')}.` : ''}`
       : tot > 0.05
@@ -1949,7 +1986,7 @@ const budget27 = (() => {
   cards(); coupe();
   document.querySelectorAll('[data-bh]').forEach(b => b.addEventListener('click', () => { B.h = b.dataset.bh; maj(true); }));
   document.querySelectorAll('[data-bf]').forEach(b => b.addEventListener('click', () => { B.f = b.dataset.bf; maj(true); }));
-  $('b27-zr').addEventListener('click', () => { B.n.clear(); B.age = AG.ref; B.z = 0; B.p = 0; B.d = ''; B.cv = {}; B.aa = 0; B.ab = 0; B.hm = ''; B.ho.clear(); B.fo.clear(); maj(true); });
+  $('b27-zr').addEventListener('click', () => { B.n.clear(); B.age = AG.ref; B.z = 0; B.p = 0; B.d = ''; B.cv = {}; B.aa = 0; B.ab = 0; B.hm = ''; B.ho.clear(); B.fo.clear(); B.hc = 0; maj(true); });
   /* téléphone : le déficit reste visible en bas d'écran tant qu'on joue avec les leviers */
   try { new IntersectionObserver(es => es.forEach(e => $('b27-m').classList.toggle('on', e.isIntersecting)), { rootMargin: '-35% 0px -35% 0px' }).observe($('b27-l')); } catch (e) {}
   return maj;

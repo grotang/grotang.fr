@@ -309,10 +309,10 @@
   },
   {
    "id": "heritage",
-   "titre": "Taxer davantage les héritages",
+   "titre": "Héritage",
    "sens": "recette",
    "fiab": "estimation",
-   "chapo": "Chaque année, environ 300 Md€ se transmettent (successions et donations), et l'État en prélève 20,7 Md€. La France affiche des taux élevés (jusqu'à 45 % en ligne directe), mais des régimes d'exception font que les plus gros héritages paient peu : le 0,1 % qui hérite le plus paie à peine 10 %. Deux façons de faire : boucher les exceptions une par une, ou refondre l'impôt.",
+   "chapo": "Chaque année, environ 300 Md€ se transmettent (successions et donations), et l'État en prélève 20,7 Md€. Les taux affichés montent jusqu'à 45 % en ligne directe, mais des régimes d'exception font que les plus gros héritages paient peu : le 0,1 % qui hérite le plus paie à peine 10 %. Placez-vous sur l'échelle, de « plus aucun impôt » à « au-delà d'un plafond, l'État prend tout ».",
    "contexte": {
     "flux_md": 300,
     "recettes_md": 20.7,
@@ -404,7 +404,7 @@
     "carte": 0.5,
     "reforme": 0.1
    },
-   "an1_note": "Les droits de succession se paient dans les six mois du décès : la page compte la moitié de l'effet des mesures « à la carte » en 2027 (hypothèse). Une refonte sur toute la vie demande une transition de 10 à 18 ans selon le CAE : la page en compte un dixième en 2027 (hypothèse).",
+   "an1_note": "Les droits de succession se paient dans les six mois du décès : la page compte la moitié de l'effet des mesures immédiates en 2027 (suppressions, exceptions, plafond ; hypothèse). Une refonte sur toute la vie demande une transition de 10 à 18 ans selon le CAE : la page en compte un dixième en 2027 (hypothèse).",
    "garde_note": "Chiffrages du Conseil d'analyse économique (note n° 69, décembre 2021), à comportement donné. Le CAE estime que les plus riches réagissent peu à la fiscalité de l'héritage par l'exil (une étude suédoise ne trouve aucun effet de la suppression des droits de succession sur les départs). Les montages des plus grandes fortunes (holdings à l'étranger) ne sont pas chiffrés. Les chiffrages « prudents » et « favorables » ne bougent que là où le CAE donne une fourchette.",
    "qui": "Les héritiers, selon la mesure",
    "sources": [
@@ -415,8 +415,69 @@
     {
      "t": "Légifiscal, droits de succession et de donation : 20,7 Md€ en 2025 et réformes envisagées",
      "u": "https://www.legifiscal.fr/actualites-fiscales/4636-future-reforme-droits-succession-donation.html"
+    },
+    {
+     "t": "Institut Montaigne, chiffrage de l'héritage maximal de 12 M€ (2022)",
+     "u": "https://www.institutmontaigne.org/presidentielle-2022/jean-luc-melenchon/augmenter-les-droits-de-succession-sur-les-plus-hauts-patrimoines-et-creer-un-heritage-maximal-de-12-me"
+    },
+    {
+     "t": "Fondation iFRAP, droits de succession : les chiffrages des candidats (2022)",
+     "u": "https://www.ifrap.org/budget-et-fiscalite/droits-de-succession-44-milliards-dimpots-en-moins-ou-14-milliards-de-taxes-en"
     }
-   ]
+   ],
+   "baisses": [
+    {
+     "id": "zero",
+     "nom": "Plus aucun droit de succession ni de donation",
+     "def": "On supprime l'impôt sur les transmissions, pour tout le monde, comme la Suède l'a fait en 2005.",
+     "m": {
+      "prudente": -20.7,
+      "centrale": -20.7,
+      "favorable": -20.7
+     },
+     "qui": "Personne ne paie plus : l'État perd toute la recette",
+     "src": "Recettes 2025 : 16,2 Md€ de droits de succession et 4,5 Md€ de droits de donation (Légifiscal)"
+    },
+    {
+     "id": "direct0",
+     "nom": "Plus de droits entre parents et enfants",
+     "def": "La ligne directe (parents, grands-parents vers enfants et petits-enfants) ne paie plus rien. Frères et sœurs, neveux et non-parents continuent de payer.",
+     "m": {
+      "prudente": -10.4,
+      "centrale": -9.3,
+      "favorable": -8.3
+     },
+     "qui": "Les autres contribuables : l'État perd la recette de la ligne directe",
+     "src": "Le CAE indique que les transmissions hors ligne directe pèsent moins de 10 % du capital transmis mais plus de 50 % des droits : la ligne directe rapporte donc moins de la moitié des 20,7 Md€. La page retient 40 à 50 % (hypothèse)."
+    }
+   ],
+   "plafond": {
+    "min_m": 2,
+    "max_m": 50,
+    "defaut_m": 12,
+    "a": 2.04,
+    "t01_m": 6.62,
+    "p01": 0.001,
+    "n_heritiers": 800000,
+    "tau": 0.1,
+    "garde": {
+     "prudente": 0.5,
+     "centrale": 0.8,
+     "favorable": 1.0
+    },
+    "note": "Modèle : la part des héritages au-delà de 2 M€ suit une loi de Pareto calée sur le CAE (le 1 % qui hérite le plus reçoit 4,2 M€ en moyenne, le 0,1 % 13 M€), pour environ 800 000 héritiers par génération (le flux annuel de 300 Md€ correspond à ce qu'une génération reçoit dans sa vie). L'État prend ce qui dépasse le plafond, moins les 10 % qu'il prélève déjà sur ces montants. Recoupement : à 12 M€, la page trouve environ 240 héritiers par an et 2,7 Md€ au-dessus du plafond (2,5 Md€ une fois retirés les 10 % déjà prélevés), avant réactions ; la Fondation iFRAP chiffre le plafond de 12 M€ à 2,8 Md€ pour 216 successions. L'Institut Montaigne chiffre l'ensemble du projet de J.-L. Mélenchon (plafond et héritage sur toute la vie) à 7 à 11 Md€ et retient 20 % de recettes perdues par l'exil dans son scénario bas. Part récupérée ici : 50 % (prudent, hypothèse grotang : un prélèvement de 100 % pousse au départ), 80 % (central, Institut Montaigne), 100 % (favorable).",
+    "juridique": "L'Institut Montaigne juge très élevé le risque de censure par le Conseil constitutionnel : un prélèvement de 100 % est confiscatoire.",
+    "src": [
+     {
+      "t": "Institut Montaigne, chiffrage de l'héritage maximal de 12 M€ (2022)",
+      "u": "https://www.institutmontaigne.org/presidentielle-2022/jean-luc-melenchon/augmenter-les-droits-de-succession-sur-les-plus-hauts-patrimoines-et-creer-un-heritage-maximal-de-12-me"
+     },
+     {
+      "t": "Fondation iFRAP, droits de succession : les chiffrages des candidats (2022)",
+      "u": "https://www.ifrap.org/budget-et-fiscalite/droits-de-succession-44-milliards-dimpots-en-moins-ou-14-milliards-de-taxes-en"
+     }
+    ]
+   }
   },
   {
    "id": "fonction",
