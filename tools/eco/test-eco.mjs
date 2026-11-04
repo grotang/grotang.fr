@@ -103,6 +103,9 @@ console.log('\ndata.json : tout est cohérent.');
     const a1 = ['av', 'dutreil', 'demembr'].reduce((s, id) => s + HE.options.find(o => o.id === id).m.centrale, 0);
     t(Math.abs(a1 - 9) <= 1, `héritage : assurance-vie + Dutreil + démembrement = ${a1} Md€ ≈ les 9 Md€ du CAE (« assiette 1 »)`);
     t(HE.contexte.recettes_succ_md + HE.contexte.recettes_don_md === HE.contexte.recettes_md, 'héritage : successions + donations = recettes'); }
+  const FO = L.leviers.find(l => l.id === 'fonction');
+  if (FO) { t(FO.options[0].pct.favorable <= FO.options[0].pct.centrale && FO.options[0].pct.centrale <= FO.options[0].pct.prudente, 'fonctionnaires : le coût du calcul « privé » va du favorable au prudent');
+    t(FO.base_md > 50 && FO.base_md < 90, `fonctionnaires : pensions de l'État ${FO.base_md} Md€`); }
   const AG = L.leviers.find(l => l.id === 'age');
   t(AG.min < AG.ref && AG.ref < AG.max && AG.cout_an1_md_par_an > 0, `âge : de ${AG.min} à ${AG.max} ans autour de ${AG.ref}, coût la première année si on avance`);
   t(L.leviers.every(l => l.sources && l.sources.length && l.sources.every(s => /^https:\/\//.test(s.u))), 'leviers : chaque levier est sourcé');

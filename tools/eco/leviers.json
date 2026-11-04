@@ -262,7 +262,7 @@
    "titre": "Réduire les aides aux entreprises",
    "sens": "mixte",
    "fiab": "controverse",
-   "chapo": "Le chiffre qui circule, 211 Md€ (Sénat, 2023), mélange des choses qu'on ne peut pas toutes « supprimer » : des baisses de cotisations, des niches fiscales, des prêts remboursables. Ici, on ne garde que ce qui pèse vraiment sur le budget, en deux curseurs séparés, sans compter deux fois les niches.",
+   "chapo": "Le chiffre qui circule, 211 Md€ (Sénat, 2023), mélange des choses qu'on ne peut pas toutes « supprimer » : des baisses de cotisations, des niches fiscales, des prêts remboursables. Ici, on ne garde que ce qui pèse vraiment sur le budget, en deux curseurs séparés, sans compter deux fois les niches. Attention à la comptabilité : une aide budgétaire est une dépense, mais un allègement de cotisations est compté comme une recette en moins. Le supprimer fait donc rentrer des cotisations : il apparaît en « impôts et cotisations en plus ».",
    "allegements": {
     "md": 80,
     "garde": {
@@ -415,6 +415,57 @@
     {
      "t": "Légifiscal, droits de succession et de donation : 20,7 Md€ en 2025 et réformes envisagées",
      "u": "https://www.legifiscal.fr/actualites-fiscales/4636-future-reforme-droits-succession-donation.html"
+    }
+   ]
+  },
+  {
+   "id": "fonction",
+   "titre": "Aligner les retraites des fonctionnaires sur le privé",
+   "sens": "depense",
+   "fiab": "officiel",
+   "chapo": "La pension d'un fonctionnaire de l'État vaut jusqu'à 75 % de son traitement des 6 derniers mois, primes exclues. Dans le privé, on retient les 25 meilleures années, primes comprises. La règle des 6 mois paraît généreuse, mais les primes, qui ont fortement augmenté, n'entrent pas dans le calcul : les deux s'annulent à peu près.",
+   "base_md": 65.1,
+   "options": [
+    {
+     "id": "calcul",
+     "nom": "Calcul sur les 25 meilleures années, primes comprises",
+     "def": "Les règles du privé appliquées aux fonctionnaires, à carrière, salaire et âge de départ inchangés.",
+     "pct": {
+      "prudente": 1.5,
+      "centrale": 0.75,
+      "favorable": 0
+     },
+     "sens": "cout",
+     "src": "Drees (2023), citée par la Cour des comptes (septembre 2026) : avec les règles du privé, la pension moyenne serait d'environ 1,5 % plus élevée, régime additionnel compris ; pour les sédentaires récemment partis, « guère différente ». Bas : 0 %, haut : +1,5 % des 65,1 Md€ de pensions, central : milieu.",
+     "qui": "Personne n'y perd en moyenne : certains agents à fortes primes y gagnent, ceux à promotion tardive y perdent"
+    },
+    {
+     "id": "actifs",
+     "nom": "Fin des départs anticipés des métiers « actifs »",
+     "def": "Policiers, surveillants pénitentiaires, contrôleurs aériens, douaniers de terrain… partent aujourd'hui 2 à 5 ans plus tôt. Ici, ils partent à l'âge légal commun.",
+     "md": 0.85,
+     "sens": "economie",
+     "src": "Cour des comptes (septembre 2026) : surcoût des départs anticipés des catégories « actives » et « super-actives » de l'État, environ 850 M€ en 2025.",
+     "qui": "Les agents des métiers « actifs » (police, prisons, contrôle aérien…), qui partiraient plus tard"
+    }
+   ],
+   "contexte": "Ce qui pèse vraiment : le régime des fonctionnaires de l'État verse 65,1 Md€ de pensions (2025) avec à peine un cotisant par retraité (1,9 million pour 2 millions). Le déséquilibre démographique coûte 22,1 Md€ par an, payés par le budget de l'État, donc par l'impôt. Ce n'est pas un avantage qu'on peut supprimer : c'est la conséquence des embauches massives d'hier.",
+   "an1": 0.05,
+   "an1_note": "Une nouvelle règle de calcul ou d'âge ne s'applique qu'aux nouveaux retraités : la page en compte 5 % en 2027 (une génération de départs sur une vingtaine de pensionnés, hypothèse) et l'effet entier à maturité.",
+   "note": "Champ : fonctionnaires de l'État (Service des retraites de l'État). Les fonctionnaires territoriaux et hospitaliers (CNRACL) suivent des règles proches et ne sont pas comptés ici. Pour les fonctionnaires, le calcul sur les 25 meilleures années n'est donc pas une source d'économie : ce qui coûte, c'est la démographie du régime et les départs anticipés.",
+   "qui": "Les agents publics, selon la mesure",
+   "sources": [
+    {
+     "t": "Senioractu, la Cour des comptes recalcule la retraite des fonctionnaires sur les 25 meilleures années (septembre 2026)",
+     "u": "https://www.senioractu.com/On-pensait-la-retraite-des-fonctionnaires-plus-genereuse-que-celle-du-prive-la-Cour-des-comptes-l-a-recalculee-sur-vos_a28107.html"
+    },
+    {
+     "t": "Acteurs publics, malgré des règles différentes, les pensions du public et du privé restent proches",
+     "u": "https://acteurspublics.fr/articles/malgre-des-regles-differentes-le-montant-des-pensions-de-retraite-du-public-et-du-prive-restent-proches/"
+    },
+    {
+     "t": "JeChange, 1 cotisant pour 1 retraité, 22 Md€ par an (Cour des comptes)",
+     "u": "https://www.jechange.fr/credit/news/retraites-fonctionnaires-1-cotisant-1-retraite-22-milliards-cour-des-comptes"
     }
    ]
   }
