@@ -1440,9 +1440,21 @@ const ISO_TODAY = isoOf(TODAY);
    `passe()` ici, sinon la bannière disparaîtrait à 18 h 45, pile au moment où les
    matchs commencent. Ailleurs dans la page, c'est bien le coup d'envoi qui fait
    foi — une journée disputée doit compter dès qu'elle est jouée. */
-const matchesToday = AGENDA.filter(m => m.iso === ISO_TODAY);   // plusieurs compétitions le même soir (jeudi : C3 et C4)
+/* Les vrais matchs du jour, avec leur vraie heure (SEM : Wikipédia, recalé sur
+   les horaires UEFA) plutôt que le calendrier type à 18 h 45 : le 04/11, Rennes
+   avancé au mercredi 16 h 30 en C3 n'apparaissait pas (« 18h45 · C1 »). Repli
+   sur le calendrier type quand SEM n'a rien pour ce jour. */
+const SEMJ = SEM.filter(m => m[0] === ISO_TODAY && m[1]);
+const etJ = j => typeof j === 'string' ? 'qualifications' : j < 8 ? 'J' + (j + 1) : KOLAB[['PO', '8es', '1/4', '1/2', 'F'][j - 8]];
+const matchesToday = SEMJ.length
+  ? [0,1,2].filter(k => SEMJ.some(m => m[2] === k)).map(k => { const L = SEMJ.filter(m => m[2] === k);
+      return { iso: ISO_TODAY, k, h: L.map(m => m[1]).sort()[0].replace(':', 'h'), quoi: [...new Set(L.map(m => etJ(m[3])))].join(', ') }; })
+  : AGENDA.filter(m => m.iso === ISO_TODAY);   // plusieurs compétitions le même soir (jeudi : C3 et C4)
 const matchToday = matchesToday[0] || null;
-const nextMatch  = AGENDA.find(m => !passe(m.iso) && m.iso !== ISO_TODAY) || null;
+/* prochain soir : d'abord les vrais matchs datés (un match avancé ou reporté y est à sa vraie date), sinon le calendrier type */
+const semN = SEM.find(m => m[0] > ISO_TODAY && m[1]);
+const nextMatch  = (semN && { iso: semN[0], k: semN[2], h: semN[1].replace(':', 'h'), quoi: etJ(semN[3]) })
+  || AGENDA.find(m => !passe(m.iso) && m.iso !== ISO_TODAY) || null;
 const joursAvant = iso => Math.round((dOf(iso) - dOf(ISO_TODAY)) / 86400000);
 document.getElementById('stamp').innerHTML =
     /* Jour ET heure en clair. L'heure est celle à laquelle la source a arrêté son
@@ -1663,11 +1675,16 @@ function drawCal(){
      une poignée de jours vides à gauche ; ça vaut mieux qu'une date fausse. */
   const debut = dOf(calQual ? q0 : all[0]);
   const t0 = new Date(debut.getFullYear(), debut.getMonth(), 1).getTime();
-  const t1 = Math.max(...[0,1,2].map(k => dOf(KO[k][KO[k].length-1][1]).getTime()));
+  /* Un jour se dessine en son MILIEU (midi) : les pastilles étaient posées à minuit,
+     au bord gauche de leur jour, et le trait « aujourd'hui » au jour présent paraissait
+     en avance d'environ un jour le soir (remarque de GT, 04/11). Pastilles et trait
+     sont maintenant tous deux à midi ; les mois restent sur leur vrai bord (le 1er, 0 h). */
+  const MIDI = 432e5;
+  const t1 = Math.max(...[0,1,2].map(k => dOf(KO[k][KO[k].length-1][1]).getTime())) + MIDI;
   const tLeague = dOf(all[all.length-1]).getTime();
   const W = 1000, mL = 46, mR = 30, mT = 62, LANE = 36, H = mT + 3*LANE + 44;
   const span = (t1 - t0) || 1;
-  const X = iso => mL + (W - mL - mR) * (dOf(iso).getTime() - t0) / span;
+  const X = iso => mL + (W - mL - mR) * (dOf(iso).getTime() + MIDI - t0) / span;
 
   /* repères de mois : le lecteur situe une journée sans lire une date */
   const months = [];
@@ -1684,7 +1701,7 @@ function drawCal(){
       +  `<text x="${(x+5).toFixed(1)}" y="${mT-28}" font-size="11.5" font-weight="600" fill="var(--ink-2)">${MN[d.getMonth()]}</text>`; });
 
   /* la ligne d'aujourd'hui : la seule information vraiment datée du bloc */
-  const now = TODAY.getTime();
+  const now = dOf(isoOf(TODAY)).getTime() + MIDI;   /* aujourd'hui, au milieu de sa journée, comme les pastilles */
   if (now >= t0 && now <= t1) { const x = mL + (W-mL-mR)*(now-t0)/span;
     s += `<line x1="${x.toFixed(1)}" y1="${mT-22}" x2="${x.toFixed(1)}" y2="${mT+3*LANE-2}" stroke="var(--fr)" stroke-width="1.5" stroke-dasharray="4 3"/>`
       +  `<text x="${(x).toFixed(1)}" y="${mT+3*LANE+16}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--fr)">aujourd'hui</text>`; }
