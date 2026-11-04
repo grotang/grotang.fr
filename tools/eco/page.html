@@ -289,6 +289,7 @@ svg .m{font-variant-numeric:tabular-nums}
 .ech .nm{font-weight:600}
 .ech .nm i{display:block; font-style:normal; font-weight:400; font-size:11.5px; color:var(--ink-3); margin-top:2px}
 .ech .m{font-variant-numeric:tabular-nums; color:var(--ink-2); white-space:nowrap; text-align:right}
+.ech .m small{font-size:11px; font-weight:400; color:var(--ink-3)}
 .ech.on{background:var(--surface-2)}
 .ech.on .m{color:var(--good); font-weight:700}
 .ech.neg.on .m{color:var(--bad)}
@@ -1760,7 +1761,7 @@ const budget27 = (() => {
         return `<div class="lc"><div class="hctx"><div class="aib"><i style="flex:${C.recettes_md};background:var(--n2)"></i><i style="flex:${C.flux_md - C.recettes_md};background:var(--rule)"></i></div>`
         + `<div class="ail"><span><i style="background:var(--n2)"></i>Prélevé par l'État <b>${md(C.recettes_md)} Md€</b> (${C.recettes_annee})</span><span><i style="background:var(--rule)"></i>Transmis chaque année <b>≈ ${md(C.flux_md, 0)} Md€</b></span></div>`
         + `<p class="lq">La moitié des Français héritent de moins de ${C.mediane_k} 000 €, le 1 % qui hérite le plus reçoit ${nf(C.top1_m, 1)} M€ en moyenne, le 0,1 % ${C.top01_m} M€.</p></div>`
-        + `<div class="echl"><div class="eh"><span>Votre position</span><span>Recettes par an, à maturité</span></div>`
+        + `<div class="echl"><div class="eh"><span>Votre position</span><span id="b27-he-eh">Recettes par an</span></div>`
         + HE.baisses.map(x => ligne(x.id, x.nom, x.def, (x.m.prudente === x.m.favorable ? sg(x.m.centrale) : '−' + md(-x.m.favorable, 1) + ' à −' + md(-x.m.prudente, 1)) + ' Md€', x.qui, x.src)).join('')
         + ligne('', 'Les règles d\'aujourd\'hui', `Abattement de ${C.abattement_k} 000 € par parent et par enfant tous les 15 ans, puis 5 % à 45 % ; assurance-vie, Dutreil et démembrement à part.`, '0', '', '')
         + ligne('carte', 'Boucher les exceptions, au choix', 'Assurance-vie, Pacte Dutreil, démembrement, plus-values effacées au décès : cochez celles que vous supprimez.', '<span id="b27-he-cm"></span>', '', '')
@@ -1911,7 +1912,18 @@ const budget27 = (() => {
       for (const o of HE.options) { const l = document.querySelector(`[data-ho="${o.id}"]`), dj = !!(o.niche && B.n.has(o.niche)), on = B.ho.has(o.id) && !dj;
         l.querySelector('input').checked = on; l.querySelector('input').disabled = dj; l.classList.toggle('on', on); l.style.opacity = dj ? .5 : '';
         $('b27-ho-' + o.id).innerHTML = dj ? 'déjà supprimé<br>(levier Niches)' : (o.m.prudente === o.m.favorable ? '+' + md(o.m.centrale) : '+' + md(o.m.prudente, 0) + ' à ' + md(o.m.favorable, 0)) + ' Md€'; }
-      $('b27-he-cm').textContent = carte ? '+' + md(X.pos) + ' Md€' : '+0 à +' + md(HE.options.reduce((a, o) => a + o.m.favorable, 0), 0) + ' Md€';
+      /* chaque ligne de l'échelle affiche l'horizon choisi : en 2027 (et à maturité en dessous), ou à maturité */
+      const a1h = B.h === 'a1', sg2 = x => (x > 0.05 ? '+' : x < -0.05 ? '−' : '') + (Math.abs(x) < 0.05 ? '0' : md(Math.abs(x), Math.abs(x) >= 10 && Math.abs(x) % 1 === 0 ? 0 : 1));
+      $('b27-he-eh').textContent = a1h ? 'Recettes en 2027 · à maturité' : 'Recettes par an, à maturité';
+      const valHe = id => { const Bx = HE.baisses.find(x => x.id === id), R_ = HE.reformes.find(x => x.id === id);
+        if (Bx) return [Bx.m[B.f], HE.an1.carte];
+        if (R_) return [R_.m, R_.m > 0 ? HE.an1.reforme : HE.an1.carte];
+        if (id === 'carte') { const v = HE.options.filter(o => B.ho.has(o.id) && !(o.niche && B.n.has(o.niche))).reduce((a, o) => a + o.m[B.f], 0); return [carte ? v : null, HE.an1.carte]; }
+        return [0, 1]; };
+      document.querySelectorAll('[data-he]').forEach(l => { const [m, k] = valHe(l.dataset.he), el_ = l.querySelector('.m');
+        if (m === null) { el_.innerHTML = '+0 à +' + md(HE.options.reduce((a, o) => a + o.m.favorable, 0), 0) + ' Md€' + (a1h ? '<br><small>à maturité</small>' : ''); return; }
+        el_.innerHTML = a1h && m ? `${sg2(m * k)} Md€ en 2027<br><small>${sg2(m)} Md€ à maturité</small>` : `${sg2(m)} Md€`; });
+
       const hx = $('b27-hcx'), hr = $('b27-hc'); hx.checked = B.hc > 0; hx.disabled = sansImp; hr.disabled = sansImp; if (+hr.value !== (B.hc || HE.plafond.defaut_m)) hr.value = B.hc || HE.plafond.defaut_m;
       const cc = capHe(B.hc || HE.plafond.defaut_m, tauHe()), ta = tauHe();
       $('b27-hc-v').innerHTML = `${B.hc || HE.plafond.defaut_m} M€<small> reçus dans sa vie${B.hc ? '' : ' · désactivé'}</small>`;
