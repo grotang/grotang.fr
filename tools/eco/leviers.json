@@ -306,6 +306,117 @@
      "u": "https://www.maire-info.com/d%C3%A3%C2%A9veloppement-%C3%A3%C2%A9conomique/sans-veritablement-trancher-le-haut-commissariat-au-plan-evalue-les-aides-versees-aux-entreprises-entre-82-et-187-milliards-d'euros-article-31004"
     }
    ]
+  },
+  {
+   "id": "heritage",
+   "titre": "Taxer davantage les héritages",
+   "sens": "recette",
+   "fiab": "estimation",
+   "chapo": "Chaque année, environ 300 Md€ se transmettent (successions et donations), et l'État en prélève 20,7 Md€. La France affiche des taux élevés (jusqu'à 45 % en ligne directe), mais des régimes d'exception font que les plus gros héritages paient peu : le 0,1 % qui hérite le plus paie à peine 10 %. Deux façons de faire : boucher les exceptions une par une, ou refondre l'impôt.",
+   "contexte": {
+    "flux_md": 300,
+    "recettes_md": 20.7,
+    "recettes_succ_md": 16.2,
+    "recettes_don_md": 4.5,
+    "recettes_annee": 2025,
+    "mediane_k": 70,
+    "top1_m": 4.2,
+    "top01_m": 13,
+    "top01_taux": 10,
+    "taux_affiche": 45,
+    "abattement_k": 100
+   },
+   "options": [
+    {
+     "id": "av",
+     "nom": "Assurance-vie : fin du régime à part",
+     "def": "Aujourd'hui, chaque bénéficiaire reçoit jusqu'à 152 500 € sans droits (versements avant 70 ans), puis 20 % à 31,25 %. Ici, l'assurance-vie entre dans la succession et suit le barème normal.",
+     "m": {
+      "prudente": 4,
+      "centrale": 4.5,
+      "favorable": 5
+     },
+     "qui": "Les bénéficiaires de gros contrats (au-delà de 152 500 €)",
+     "src": "CAE : coût 4 à 5 Md€ ; 44 Md€ transmis par l'assurance-vie en 2019"
+    },
+    {
+     "id": "dutreil",
+     "nom": "Pacte Dutreil réduit de moitié",
+     "def": "Transmission d'une entreprise familiale : l'exonération passe de 75 % à 50 % de la valeur, et la réduction supplémentaire de 50 % pour une donation avant 70 ans disparaît.",
+     "m": {
+      "prudente": 1.5,
+      "centrale": 1.5,
+      "favorable": 1.5
+     },
+     "qui": "Les héritiers d'entreprises familiales, surtout les plus grandes",
+     "src": "CAE : « au moins 1,5 Md€ » ; le CAE ne trouve pas d'effet du Dutreil sur l'investissement ou l'emploi",
+     "niche": "dutreil"
+    },
+    {
+     "id": "demembr",
+     "nom": "Démembrement : taxer l'usufruit",
+     "def": "Donner la nue-propriété (la maison, les titres) en gardant l'usufruit : aujourd'hui, quand l'usufruit s'éteint au décès, l'héritier récupère la pleine propriété sans payer sur cette part. Ici, elle est taxée.",
+     "m": {
+      "prudente": 2,
+      "centrale": 2.5,
+      "favorable": 3
+     },
+     "qui": "Les familles qui ont donné tôt en nue-propriété (patrimoines aisés)",
+     "src": "CAE : coût 2 à 3 Md€"
+    },
+    {
+     "id": "purge",
+     "nom": "Plus-values effacées au décès",
+     "def": "Une action achetée 10 € qui vaut 100 € au décès : la plus-value de 90 € n'est jamais imposée, l'héritier repart de 100 €. Ici, elle est imposée.",
+     "m": {
+      "prudente": 1.3,
+      "centrale": 1.3,
+      "favorable": 1.3
+     },
+     "qui": "Les héritiers de portefeuilles et d'entreprises qui ont pris beaucoup de valeur",
+     "src": "CAE : pas de chiffrage français ; environ 0,05 % du PIB par analogie avec les États-Unis, soit 1,3 Md€ (estimation de la Tax Foundation)"
+    }
+   ],
+   "reformes": [
+    {
+     "id": "neutre",
+     "nom": "Même rendement, plus juste",
+     "def": "On bouche les exceptions (assurance-vie, Dutreil, démembrement) et on baisse le barème pour rendre l'argent : le total ne change pas.",
+     "m": 0,
+     "qui": "Les héritages qui passaient par les exceptions ; 99 % des héritiers y gagnent, selon le CAE"
+    },
+    {
+     "id": "vie200",
+     "nom": "Un abattement de 200 000 € sur toute la vie",
+     "def": "On additionne tout ce qu'une personne reçoit dans sa vie, de tous ses donateurs. Les premiers 200 000 € sont exonérés (le double d'aujourd'hui), les taux sont nettement plus bas jusqu'à 4 M€, et les exceptions disparaissent.",
+     "m": 12,
+     "qui": "Les gros héritages ; 99 % des héritiers gagnent ou ne changent rien, selon le CAE"
+    },
+    {
+     "id": "vie",
+     "nom": "Tout ce qu'on reçoit sur la vie, aux taux d'aujourd'hui",
+     "def": "On additionne tout ce qu'une personne reçoit dans sa vie et on lui applique le barème actuel : plus moyen de fractionner (donations tous les 15 ans, plusieurs donateurs, exceptions).",
+     "m": 19,
+     "qui": "Les héritiers aisés, qui fractionnent aujourd'hui leurs transmissions"
+    }
+   ],
+   "an1": {
+    "carte": 0.5,
+    "reforme": 0.1
+   },
+   "an1_note": "Les droits de succession se paient dans les six mois du décès : la page compte la moitié de l'effet des mesures « à la carte » en 2027 (hypothèse). Une refonte sur toute la vie demande une transition de 10 à 18 ans selon le CAE : la page en compte un dixième en 2027 (hypothèse).",
+   "garde_note": "Chiffrages du Conseil d'analyse économique (note n° 69, décembre 2021), à comportement donné. Le CAE estime que les plus riches réagissent peu à la fiscalité de l'héritage par l'exil (une étude suédoise ne trouve aucun effet de la suppression des droits de succession sur les départs). Les montages des plus grandes fortunes (holdings à l'étranger) ne sont pas chiffrés. Les chiffrages « prudents » et « favorables » ne bougent que là où le CAE donne une fourchette.",
+   "qui": "Les héritiers, selon la mesure",
+   "sources": [
+    {
+     "t": "Conseil d'analyse économique, note n° 69, Repenser l'héritage (décembre 2021)",
+     "u": "https://cae-eco.fr/static/pdf/cae-note069.pdf"
+    },
+    {
+     "t": "Légifiscal, droits de succession et de donation : 20,7 Md€ en 2025 et réformes envisagées",
+     "u": "https://www.legifiscal.fr/actualites-fiscales/4636-future-reforme-droits-succession-donation.html"
+    }
+   ]
   }
  ],
  "limites": "Chiffrage comptable : aucun effet sur la croissance, l'emploi ou les taux d'intérêt n'est pris en compte. Les leviers sont additionnés sans interaction (plafonner les retraites et reculer l'âge touchent en partie les mêmes pensions ; supprimer l'abattement des retraités et plafonner les pensions aussi)."

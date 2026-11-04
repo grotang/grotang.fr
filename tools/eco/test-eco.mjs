@@ -98,6 +98,11 @@ console.log('\ndata.json : tout est cohérent.');
   const AI = L.leviers.find(l => l.id === 'aides');
   if (AI) { t(asc(AI.allegements.garde), 'aides : fourchette des allègements croissante');
     t(AI.allegements.md + AI.budget.md + AI.hors[0].md === 150, `aides : allègements + budgétaires + niches = ${AI.allegements.md + AI.budget.md + AI.hors[0].md} Md€ = 150 Md€ du ministre`); }
+  const HE = L.leviers.find(l => l.id === 'heritage');
+  if (HE) { for (const o of HE.options) t(asc(o.m), `héritage : fourchette « ${o.nom} » croissante`);
+    const a1 = ['av', 'dutreil', 'demembr'].reduce((s, id) => s + HE.options.find(o => o.id === id).m.centrale, 0);
+    t(Math.abs(a1 - 9) <= 1, `héritage : assurance-vie + Dutreil + démembrement = ${a1} Md€ ≈ les 9 Md€ du CAE (« assiette 1 »)`);
+    t(HE.contexte.recettes_succ_md + HE.contexte.recettes_don_md === HE.contexte.recettes_md, 'héritage : successions + donations = recettes'); }
   const AG = L.leviers.find(l => l.id === 'age');
   t(AG.min < AG.ref && AG.ref < AG.max && AG.cout_an1_md_par_an > 0, `âge : de ${AG.min} à ${AG.max} ans autour de ${AG.ref}, coût la première année si on avance`);
   t(L.leviers.every(l => l.sources && l.sources.length && l.sources.every(s => /^https:\/\//.test(s.u))), 'leviers : chaque levier est sourcé');
