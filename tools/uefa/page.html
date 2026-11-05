@@ -3847,7 +3847,16 @@ const legende = segs => segs.map(s =>
     /* ligue */
     for (let k = 0; k < 8; k++) {
       if (J.l) { out.push(exact(J.l[k])); continue; }
-      const m = clubsK(c).reduce((a, n, ki) => a + n * (k < jouees(ki) ? 1 : 0), 0);
+      /* La source range ses points par FENÊTRE de journées, pas par journée de
+         chaque compétition : sa colonne Jn réunit la Jn de C1 et de C3 et la
+         J(n−1) de C4, qui commence une semaine plus tard (vérifié sur les matchs
+         Wikipédia de BEL, POR, FRA, ENG, 05/11/2026). On comptait les matchs de C4
+         dans la mauvaise colonne : le 05/11, la Belgique et le Portugal
+         affichaient 2,67 et 2,25 points par match en J4, plus que le maximum (2).
+         On compte donc les matchs comme la source compte les points, club par
+         club (D.eff, comme jouesClubs). */
+      const OFF = [0, 0, 1];
+      const m = [0, 1, 2].reduce((a, ki) => a + (k - OFF[ki] < 0 ? 0 : jouesClubs(c, ki).filter(g => g > k - OFF[ki]).length), 0);
       out.push(m ? { p: Math.round(S.m[k][1] * d), m, v: null } : null);
     }
     /* phase finale : les matchs vérifiés de KOV, additionnés sur les clubs de la nation */
