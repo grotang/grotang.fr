@@ -52,7 +52,7 @@ name: Soir de match UEFA
 # d'autres robots), et depuis le 30/10 GitHub en saute purement et simplement
 # (le 03/11 : un seul des trois départs prévus, à 23 h 04). Un lancement par
 # l'API, lui, part dans la seconde. cron-job.org appelle donc ce robot chaque
-# jour à 20 h 40 et 22 h 50 (Paris), avec auto = true : le test « y a-t-il
+# jour à 19 h et 22 h 50 (Paris), avec auto = true : le test « y a-t-il
 # match ? » s'applique, un soir sans match coûte quelques secondes. Le jeton
 # utilisé ne sait que lancer les robots de ce dépôt. Les départs planifiés
 # ci-dessous restent en filet.
@@ -140,8 +140,10 @@ jobs:
             git add -A && git commit -qm "$MSG" && { git push || { git pull --rebase && git push; }; } \
               && gh workflow run pages.yml --ref main && echo "Déposé et publié : $MSG"
           }
-          # lancée à la main : un premier tour tout de suite, sans attendre 20 h 35
-          premier=${{ github.event_name == 'workflow_dispatch' }}
+          # lancée à la main : un premier tour tout de suite, sans attendre 20 h 35.
+          # Appelée par le réveil externe (auto = true, à 19 h) : comme un départ
+          # planifié, elle attend 20 h 35 puis veille, au plus 5 h 40 après son départ.
+          premier=${{ github.event_name == 'workflow_dispatch' && inputs.auto != true }}
           # RONDE DE CONFIRMATION (05/11/2026). La source publie parfois une seconde
           # version quelques minutes après la première (22/10 : 22 h 58 puis 23 h 04 ;
           # 04/11 : 22 h 56 puis 23 h 03, le nul de Rennes manquait à la première).
