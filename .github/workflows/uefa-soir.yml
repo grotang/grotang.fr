@@ -132,6 +132,7 @@ jobs:
             git pull --rebase --quiet || true
             node tools/uefa/refresh.mjs || { echo "relecture en échec, on retentera"; return; }
             if [ -z "$(git status --porcelain)" ]; then echo "rien de neuf"; return; fi
+            neuf=true
             node tools/build.mjs && node tools/uefa/projette.mjs 200000 && node tools/uefa/test-page.mjs public/uefa/index.html \
               || { echo "fabrication ou test en échec : rien n'est déposé"; git checkout -- . ; git clean -fdq tools; return; }
             STAND=$(node -p "JSON.parse(require('fs').readFileSync('tools/uefa/page.html','utf8').split('/*DATA_START*/')[1].split('/*DATA_END*/')[0].replace(/^const D\s*=\s*/,'').replace(/;\s*$/,'')).meta.lastUpdated")
@@ -141,12 +142,22 @@ jobs:
           }
           # lancée à la main : un premier tour tout de suite, sans attendre 20 h 35
           premier=${{ github.event_name == 'workflow_dispatch' }}
+          # RONDE DE CONFIRMATION (05/11/2026). La source publie parfois une seconde
+          # version quelques minutes après la première (22/10 : 22 h 58 puis 23 h 04 ;
+          # 04/11 : 22 h 56 puis 23 h 03, le nul de Rennes manquait à la première).
+          # « Tout est à jour » ne suffit donc plus : on refait un tour dix minutes
+          # plus tard et on ne s'arrête que si ce tour n'a rien apporté.
+          confirme=false
           while :; do
             if [ "$premier" != true ] && node tools/uefa/soir.mjs tot; then sleep 300; [ $(date +%s) -ge $fin ] && break; continue; fi
             premier=false
             echo "── $(TZ=Europe/Paris date +%H:%M) (Paris)"
+            neuf=false
             tour
-            if node tools/uefa/soir.mjs fini; then echo "Tout est à jour : fin de la veille."; break; fi
+            if node tools/uefa/soir.mjs fini; then
+              if [ "$confirme" = true ] && [ "$neuf" = false ]; then echo "Tout est à jour, confirmé dix minutes plus tard : fin de la veille."; break; fi
+              confirme=true; echo "Tout paraît à jour : un tour de confirmation dans dix minutes."
+            else confirme=false; fi
             if ! node tools/uefa/soir.mjs match; then echo "Pas un soir de match : un seul tour suffit."; break; fi
             if node tools/uefa/soir.mjs tot; then echo "Lancée en journée : un tour fait, la veille du soir partira toute seule."; break; fi
             if node tools/uefa/soir.mjs tard || [ $(date +%s) -ge $fin ]; then echo "Fin de la veille sans tout avoir : le passage du matin prendra le relais."; break; fi
