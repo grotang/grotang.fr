@@ -72,6 +72,47 @@ a{color:var(--fr)}
 .bulle dd{margin:0}
 .bulle .titre-s{color:var(--ink); font-weight:700}
 
+
+/* ---------- bloc 2 : ères ---------- */
+#frise{width:100%; display:block; touch-action:pan-y}
+#frise text{font-size:11px; fill:var(--ink)}
+#frise .ax text{font-size:11px; fill:var(--ink-3); font-family:"IBM Plex Mono",ui-monospace,monospace}
+#frise .rang-t{font-size:10px; font-weight:700; letter-spacing:.1em; fill:var(--ink-3); font-family:"IBM Plex Mono",ui-monospace,monospace}
+.eres{width:100%; border-collapse:collapse; font-size:13px; margin-top:14px}
+.eres th{font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); text-align:left; padding:6px 8px; border-bottom:1px solid var(--rule)}
+.eres td{padding:7px 8px; border-bottom:1px solid var(--rule-soft); vertical-align:middle}
+.eres td.n, .eres th.n{text-align:right; font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums; white-space:nowrap}
+.eres .nom{font-weight:700; display:flex; align-items:center; gap:8px}
+.eres .nom i{width:10px; height:10px; border-radius:3px; flex:none}
+.eres .per{color:var(--ink-3); font-size:12px}
+.eres td:first-child .per{display:block}
+@media (max-width:560px){ .eres{font-size:12.5px} .eres td,.eres th{padding:6px 5px} .chiffre b{font-size:20px} }
+.eres .barre{display:block; height:6px; border-radius:3px; background:var(--c); margin-top:3px; opacity:.85}
+.eres .tr{color:var(--jaune-trait); letter-spacing:1px}
+:root[data-theme="dark"] .eres .tr{color:var(--jaune)}
+.eres .cd{color:var(--vert); letter-spacing:1px}
+.eres-wrap{overflow-x:auto}
+.chiffres{display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 2px}
+.chiffre{flex:1 1 220px; background:var(--surface-2); border-radius:10px; padding:9px 12px; font-size:12.5px; color:var(--ink-2)}
+.chiffre b{display:block; font-family:"Newsreader",Georgia,serif; font-size:24px; line-height:1.05; color:var(--ink)}
+
+/* ---------- bloc 3 : palmarès ---------- */
+#matrice{display:block; touch-action:pan-y}
+#matrice .lab{font-size:12px; fill:var(--ink)}
+#matrice .lab-s{font-size:10.5px; fill:var(--ink-3)}
+#matrice .ax text{font-size:11px; fill:var(--ink-3); font-family:"IBM Plex Mono",ui-monospace,monospace}
+.leg-m{display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; font-size:12px; color:var(--ink-2); padding:0 4px 10px}
+.leg-m .ech{display:inline-flex; gap:2px; align-items:center}
+.leg-m .ech i{width:14px; height:12px; border-radius:2px; display:inline-block}
+.leg-m .ech em{font-style:normal; font-size:10.5px; color:var(--ink-3); margin:0 4px}
+.finales{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr)); gap:8px; margin-top:12px}
+.finale{background:var(--surface-2); border-radius:10px; padding:9px 12px}
+.finale .c{font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
+.finale .v{font-family:"Newsreader",Georgia,serif; font-size:20px; font-weight:700; margin-top:2px}
+.finale .v span{font-family:Calibri,"Carlito",sans-serif; font-size:12px; font-weight:400; color:var(--ink-3)}
+.finale small{display:block; font-size:11.5px; color:var(--ink-3); margin-top:2px}
+.jamais{margin:10px 4px 0; font-size:12px; color:var(--ink-3)}
+
 .suite{margin-top:34px; padding:16px 18px; border:1px dashed var(--rule); border-radius:12px; color:var(--ink-3); font-size:13px}
 .source{margin-top:30px; font-size:12px; color:var(--ink-3)}
 
@@ -113,7 +154,37 @@ a{color:var(--fr)}
     </div>
   </section>
 
-  <div class="suite" id="suite">Suite en construction : les ères d'entraîneurs, le palmarès saison par saison, l'Europe, les buteurs et les passeurs.</div>
+  <section class="bloc" id="entraineurs">
+    <header>
+      <div class="kicker">2 · Les ères</div>
+      <h2 id="h-eres">Qui était sur le banc</h2>
+      <p id="p-eres"></p>
+    </header>
+    <div class="panneau">
+      <svg id="frise" role="img" tabindex="0" aria-label="Frise des entraîneurs du FC Nantes, saison par saison"></svg>
+      <div class="bulle" id="bulle-f" role="status" aria-live="polite"></div>
+      <div class="chiffres" id="chiffres-eres"></div>
+      <div class="eres-wrap"><table class="eres" id="eres"></table></div>
+      <p class="lecture">★ titre de champion, ◆ Coupe de France. Le tableau ne donne que l'entraîneur de début et celui de fin de saison : quand il y en a eu deux, la saison est partagée à parts égales ; quand il y en a eu trois, celui du milieu n'est pas nommé (hachures). Titres et Coupes comptés à l'entraîneur en place en fin de saison. Rang national : 1 à 20 en D1, 21 = 1er de D2.</p>
+    </div>
+  </section>
+
+  <section class="bloc" id="palmares">
+    <header>
+      <div class="kicker">3 · Palmarès et presque</div>
+      <h2 id="h-palm">Chaque saison, jusqu'où le club est allé</h2>
+      <p id="p-palm"></p>
+    </header>
+    <div class="panneau">
+      <div class="leg-m" id="leg-m"></div>
+      <div id="matrice-wrap"><svg id="matrice" role="img" tabindex="0" aria-label="Parcours du FC Nantes dans chaque compétition, saison par saison"></svg></div>
+      <div class="bulle" id="bulle-m" role="status" aria-live="polite"></div>
+      <div class="finales" id="finales"></div>
+      <p class="jamais" id="jamais"></p>
+    </div>
+  </section>
+
+  <div class="suite" id="suite">Suite en construction : l'Europe, les buteurs et les passeurs.</div>
   <p class="source" id="source"></p>
 </main>
 
@@ -270,8 +341,209 @@ svg.addEventListener('keydown', e => {
 svg.addEventListener('blur', cache);
 document.addEventListener('pointerdown', e => { if (!svg.contains(e.target)) cache(); });
 svg.setAttribute('aria-label', `Rang national du FC Nantes de ${S[0].label} à ${S[N - 1].label}`);
-let rz; addEventListener('resize', () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(dessine); });
-dessine();
+
+/* ---------- bulle générique, posée dans le panneau ---------- */
+function pose(b, svgEl, px, py, html) {
+  b.innerHTML = html; b.classList.add('on');
+  const pan = b.parentNode.getBoundingClientRect(), r = svgEl.getBoundingClientRect();
+  const X = r.left - pan.left + px, Y = r.top - pan.top + py, bw = b.offsetWidth, bh = b.offsetHeight;
+  const gauche = X + 14 + bw > pan.width - 4;
+  b.style.left = Math.max(4, gauche ? X - 14 - bw : X + 14) + 'px';
+  b.style.top = Math.max(4, Math.min(Y - bh / 2, pan.height - bh - 4)) + 'px';
+}
+const tete = (t, d) => `<div class="t"><b>${t}</b>${d ? `<span class="div${d === 2 ? ' d2' : ''}">D${d}</span>` : ''}</div>`;
+const fmt1 = v => v.toLocaleString('fr-FR', { maximumFractionDigits: 1 });
+
+/* ---------- bloc 2 : mandats ---------- */
+/* Chaque saison est découpée en parts : 1 entraîneur = toute la saison ; 2 = moitié-moitié ;
+   3 dont 2 nommés = tiers, celui du milieu inconnu. Les parts contiguës d'un même nom forment un mandat. */
+const parts = [];
+S.forEach((s, i) => {
+  const n = Math.max(s.nEnt, s.ent.length), u = 1 / n;
+  if (s.ent.length === 1) parts.push({ c: s.ent[0], t0: i, t1: i + 1, i });
+  else { parts.push({ c: s.ent[0], t0: i, t1: i + u, i });
+    if (n > 2) parts.push({ c: null, t0: i + u, t1: i + 1 - u, i });
+    parts.push({ c: s.ent[1], t0: i + 1 - u, t1: i + 1, i }); }
+});
+const mandats = [];
+for (const p of parts) { const L = mandats.at(-1);
+  if (L && L.c === p.c && p.c && Math.abs(L.t1 - p.t0) < 1e-9) { L.t1 = p.t1; L.fin = p.i; }
+  else mandats.push({ c: p.c, t0: p.t0, t1: p.t1, deb: p.i, fin: p.i }); }
+const coachs = new Map();
+for (const p of parts) { if (!p.c) continue;
+  const C = coachs.get(p.c) || { nom: p.c, saisons: 0, rangP: 0, rangW: 0, titres: [], cdf: [], d1: 0, mandats: 0 };
+  const w = p.t1 - p.t0, s = S[p.i]; C.saisons += w;
+  if (s.nat != null) { C.rangP += s.nat * w; C.rangW += w; }
+  if (s.div === 1) C.d1 += w;
+  coachs.set(p.c, C); }
+for (const m of mandats) if (m.c) coachs.get(m.c).mandats++;
+S.forEach(s => { const c = s.ent.at(-1), C = coachs.get(c);
+  if (s.div === 1 && s.rang === 1) C.titres.push(s); if (s.coupes.cdf === 'V') C.cdf.push(s); });
+const CL = [...coachs.values()].sort((a, b) => b.saisons - a.saisons || b.titres.length - a.titres.length);
+const PAL = ['var(--n1)', 'var(--n2)', 'var(--n3)', 'var(--n7)', 'var(--n5)', 'var(--n4)', 'var(--n8)', 'var(--n6)'];
+const grands = CL.filter(c => c.saisons >= 4).slice(0, PAL.length);
+const couleur = c => { const k = grands.findIndex(g => g.nom === c); return k >= 0 ? PAL[k] : null; };
+
+const multi = S.filter(s => s.nEnt > 1), coupe = 2000;
+const avant = S.filter(s => s.an <= coupe), depuis = S.filter(s => s.an > coupe);
+const mAv = avant.filter(s => s.nEnt > 1).length, mDe = depuis.filter(s => s.nEnt > 1).length;
+const distinct = L => new Set(L.flatMap(s => s.ent)).size;
+const top = CL[0], top2 = CL[1];
+$('p-eres').textContent = `${coachs.size} entraîneurs nommés dans le tableau. ${top.nom} et ${top2.nom} cumulent à eux deux ${Math.round(top.saisons + top2.saisons)} saisons, et ${top.titres.length + top2.titres.length} des ${champ.length} titres.`;
+$('chiffres-eres').innerHTML =
+  `<div class="chiffre"><b>${mAv} sur ${avant.length}</b>saisons avec un changement d'entraîneur en cours de route, de ${S[0].label} à ${avant.at(-1).label}</div>`
+  + `<div class="chiffre"><b>${mDe} sur ${depuis.length}</b>depuis ${depuis[0].label}${cours ? ', saison en cours comprise' : ''}</div>`
+  + `<div class="chiffre"><b>${distinct(avant)} puis ${distinct(depuis)}</b>entraîneurs différents sur ces deux périodes (au moins : les intérims du milieu de saison ne sont pas nommés)</div>`;
+
+const per = c => mandats.filter(m => m.c === c).map(m => m.deb === m.fin ? S[m.deb].label : `${S[m.deb].label} → ${S[m.fin].label}`).join(', ');
+const rangTxtM = C => { if (!C.rangW) return '—'; const r = C.rangP / C.rangW; return fmt1(r) + (r > 20 ? ' <span class="per">(D2)</span>' : ''); };
+const maxS = CL[0].saisons;
+$('eres').innerHTML = '<thead><tr><th>Entraîneur</th><th class="n">Saisons</th><th class="n">Rang moy.</th><th class="n">Trophées</th></tr></thead><tbody>'
+  + CL.filter(C => C.saisons >= 3).map(C => { const col = couleur(C.nom) || 'var(--ink-3)';
+    return `<tr><td><span class="nom"><i style="background:${col}"></i>${C.nom}</span><span class="per">${per(C.nom)}</span>`
+      + `<span class="barre" style="--c:${col}; width:${(C.saisons / maxS * 100).toFixed(1)}%"></span></td>`
+      + `<td class="n">${fmt1(C.saisons)}</td><td class="n">${rangTxtM(C)}</td>`
+      + `<td class="n"><span class="tr">${'★'.repeat(C.titres.length)}</span><span class="cd">${'◆'.repeat(C.cdf.length)}</span>${C.titres.length + C.cdf.length ? '' : '<span class="per">·</span>'}</td></tr>`; }).join('')
+  + `</tbody>`;
+
+const frise = $('frise'), bf = $('bulle-f');
+let GF = null;
+function dessineFrise() {
+  const W = Math.max(300, frise.parentNode.clientWidth - 24), mob = W < 560;
+  const m = { l: mob ? 30 : 40, r: 10 }, pw = W - m.l - m.r, step = pw / N, x = t => m.l + step * t;
+  const yT = 6, hT = mob ? 30 : 36, yI = yT + hT + 18, hI = 18, H = yI + hI + 22;
+  frise.setAttribute('viewBox', `0 0 ${W} ${H}`); frise.setAttribute('width', W); frise.setAttribute('height', H);
+  frise.replaceChildren();
+  const defs = el('defs', {}), pat = el('pattern', { id: 'hach', width: 4, height: 4, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' });
+  pat.append(el('rect', { width: 4, height: 4, fill: 'var(--surface-2)' }), el('line', { x1: 0, y1: 0, x2: 0, y2: 4, stroke: 'var(--ink-3)', 'stroke-width': 1.2 }));
+  defs.append(pat); frise.append(defs);
+  for (const mm of mandats) {
+    const x0 = x(mm.t0), w = x(mm.t1) - x0, col = mm.c ? couleur(mm.c) : null;
+    const r = el('rect', { x: x0 + .5, y: yT, width: Math.max(1, w - 1), height: hT, rx: 2,
+      fill: mm.c ? (col || 'var(--rule)') : 'url(#hach)', opacity: col ? .9 : 1 });
+    frise.append(r);
+    if (mm.c) { const court = mm.c.split(' ').slice(-1)[0], lbl = w > court.length * 6.4 + 8 ? court : '';
+      if (lbl) frise.append(el('text', { x: x0 + w / 2, y: yT + hT / 2 + 4, 'text-anchor': 'middle', fill: col ? '#fff' : 'var(--ink)', style: `fill:${col ? '#fff' : 'var(--ink)'};font-weight:700;font-size:${mob ? 10 : 11}px` }, lbl)); }
+  }
+  frise.append(el('text', { class: 'rang-t', x: m.l, y: yI - 5 }, 'ENTRAÎNEURS DANS LA SAISON'));
+  S.forEach((s, i) => { const n = s.nEnt, h = hI * n / 3;
+    frise.append(el('rect', { x: x(i) + .8, y: yI + hI - h, width: Math.max(1, step - 1.6), height: h, rx: 1,
+      fill: n === 1 ? 'var(--rule)' : n === 2 ? 'var(--n4)' : 'var(--bad)' })); });
+  const ax = el('g', { class: 'ax' }); frise.append(ax);
+  for (let i = 0; i < N; i++) if (S[i].an % (mob ? 20 : 10) === 0) ax.append(el('text', { x: x(i + .5), y: H - 4, 'text-anchor': 'middle' }, S[i].an));
+  const v = el('line', { y1: 2, y2: yI + hI + 2, stroke: 'var(--ink)', opacity: 0 }); frise.append(v);
+  GF = { W, x, step, m, v, yT, hT };
+}
+function montreF(i) { const s = S[i], g = GF;
+  g.v.setAttribute('x1', g.x(i + .5)); g.v.setAttribute('x2', g.x(i + .5)); g.v.setAttribute('opacity', .3);
+  const L = s.ent.length > 1 ? s.ent.join(' → ') : s.ent[0];
+  const C = coachs.get(s.ent.at(-1));
+  pose(bf, frise, g.x(i + .5) * frise.getBoundingClientRect().width / g.W, g.yT + g.hT / 2,
+    tete(s.label, s.div) + `<dl><dt>${s.nEnt > 1 ? 'Entraîneurs' : 'Entraîneur'}</dt><dd>${L}${s.nEnt > s.ent.length ? ` <span style="color:var(--ink-3)">(${s.nEnt} au total)</span>` : ''}</dd>`
+    + `<dt>Championnat</dt><dd>${rangTxt(s)}</dd><dt>${C.nom.split(' ').slice(-1)[0]}</dt><dd>${fmt1(C.saisons)} saisons au total</dd></dl>`); }
+const cacheF = () => { bf.classList.remove('on'); if (GF) GF.v.setAttribute('opacity', 0); };
+const indiceF = e => { const r = frise.getBoundingClientRect(), px = (e.clientX - r.left) * (GF.W / r.width);
+  return Math.max(0, Math.min(N - 1, Math.floor((px - GF.m.l) / GF.step))); };
+let selF = -1;
+frise.addEventListener('pointermove', e => montreF(selF = indiceF(e)));
+frise.addEventListener('pointerdown', e => montreF(selF = indiceF(e)));
+frise.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') cacheF(); });
+frise.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault();
+  selF = Math.max(0, Math.min(N - 1, (selF < 0 ? N - 1 : selF) + (e.key === 'ArrowRight' ? 1 : -1))); montreF(selF); } if (e.key === 'Escape') cacheF(); });
+frise.addEventListener('blur', cacheF);
+document.addEventListener('pointerdown', e => { if (!frise.contains(e.target)) cacheF(); });
+
+/* ---------- bloc 3 : matrice ---------- */
+const LIGNES = [
+  ['ch', 'Championnat', ''], ['cdf', 'Coupe de France', ''], ['cdl', 'Coupe de la Ligue', ''], ['tdc', 'Trophée des champions', ''],
+  ['c1', 'C1', 'Coupe des champions, Ligue des champions'], ['c2', 'C2', 'Coupe des coupes'], ['c3', 'C3', 'Coupe UEFA, Ligue Europa'],
+  ['c4', 'C4', 'Ligue Conférence'], ['it', 'Intertoto', ''], ['sc', 'Supercoupe d\'Europe', ''], ['ci', 'Coupe intercontinentale', ''], ['cmc', 'Coupe du monde des clubs', ''],
+];
+const jouee = k => S.some(s => !['', '-'].includes(s.coupes[k]));
+const lignes = LIGNES.filter(([k]) => k === 'ch' || jouee(k));
+const jamais = LIGNES.filter(([k]) => k !== 'ch' && !jouee(k));
+const TOURS = ['tp', '1/32', '1/16', '1/8', '1/4', '1/2', 'F'];
+const PCT = { tp: 10, '1/32': 18, '1/16': 28, '1/8': 40, '1/4': 54, '1/2': 72, F: 100 };
+const mix = p => `color-mix(in srgb, var(--vert) ${p}%, var(--surface))`;
+const fond = (k, s) => {
+  if (k === 'ch') { if (s.rang == null) return 'enc';
+    if (s.div === 2) return `color-mix(in srgb, var(--d2) ${s.rang <= 3 ? 55 : 28}%, var(--surface))`;
+    return s.rang === 1 ? 'var(--jaune)' : s.rang <= 3 ? mix(100) : s.rang <= 6 ? mix(72) : s.rang <= 10 ? mix(46) : mix(24); }
+  const v = s.coupes[k]; if (v === 'V') return 'var(--jaune)'; if (v === 'tbd') return 'enc'; if (PCT[v]) return mix(PCT[v]); return v === '-' ? '-' : '';
+};
+$('leg-m').innerHTML = `<span class="ech"><em>coupes</em>${TOURS.map(t => `<i style="background:${mix(PCT[t])}" title="${TOUR[t]}"></i>`).join('')}<i style="background:var(--jaune)"></i><em>tours prél. → finale → victoire</em></span>`
+  + `<span class="ech"><em>championnat</em><i style="background:var(--jaune)"></i><i style="background:${mix(100)}"></i><i style="background:${mix(72)}"></i><i style="background:${mix(46)}"></i><i style="background:${mix(24)}"></i><i style="background:color-mix(in srgb, var(--d2) 40%, var(--surface))"></i><em>1er · podium · 4-6 · 7-10 · 11-20 · D2</em></span>`
+  + `<span><i style="display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--ink-3);margin-right:6px;vertical-align:2px"></i>pas qualifié</span>`;
+$('jamais').textContent = jamais.length ? `Jamais qualifié pour : ${jamais.map(([, a, b]) => b ? `${a} (${b})` : a).join(', ')}.` : '';
+
+/* finales : comptées dans les données */
+const NAT = ['cdf', 'cdl', 'tdc'], EUR = ['c1', 'c2', 'c3', 'c4', 'it'];
+const fin3 = lignes.filter(([k]) => NAT.includes(k)).map(([k, a]) => ({ k, a, V: S.filter(s => s.coupes[k] === 'V'), F: S.filter(s => s.coupes[k] === 'F'),
+  D: S.filter(s => s.coupes[k] === '1/2') })).filter(o => o.V.length + o.F.length);
+const pl = (n, m) => `${n} <span>${m}${n > 1 ? 's' : ''}</span>`;
+/* Europe : le tour le plus loin atteint dans chaque compétition, et quand */
+const euro = lignes.filter(([k]) => EUR.includes(k)).map(([k, a]) => { const r = Math.max(...S.map(s => ORDRE.indexOf(s.coupes[k])));
+  return { a, v: ORDRE[r], quand: S.filter(s => s.coupes[k] === ORDRE[r]), n: S.filter(s => ORDRE.includes(s.coupes[k])).length }; });
+$('finales').innerHTML = fin3.map(o => `<div class="finale"><div class="c">${o.a}</div><div class="v">${pl(o.V.length, 'gagnée')} · ${pl(o.F.length, 'perdue')}</div>`
+  + `<small>${[...o.V.map(s => s.label + ' ★'), ...o.F.map(s => s.label)].sort().join(', ')}${o.D.length ? ` · ${o.D.length} demi-finale${o.D.length > 1 ? 's' : ''} perdue${o.D.length > 1 ? 's' : ''}` : ''}</small></div>`).join('')
+  + (euro.length ? `<div class="finale"><div class="c">Europe · le plus loin</div>` + euro.map(o => `<small><b style="color:var(--ink)">${o.a}</b> ${TOUR[o.v]} (${o.quand.map(s => s.label).join(', ')}) · ${o.n} participation${o.n > 1 ? 's' : ''}</small>`).join('') + `</div>` : '');
+const finales = fin3.reduce((a, o) => a + o.V.length + o.F.length, 0), gagnees = fin3.reduce((a, o) => a + o.V.length, 0);
+$('p-palm').textContent = `Une ligne par compétition, une case par saison ; plus la case est foncée, plus le club est allé loin. En coupes : ${finales} finales, ${gagnees} gagnées.`;
+
+const mat = $('matrice'), bm = $('bulle-m');
+let GM = null;
+function dessineMatrice() {
+  const W = Math.max(300, mat.parentNode.clientWidth), tr = W < 640;   // mobile : on transpose
+  mat.replaceChildren();
+  const cells = [];
+  if (!tr) {
+    const lw = 150, cw = (W - lw - 4) / N, ch = 20, H = lignes.length * (ch + 3) + 22;
+    mat.setAttribute('viewBox', `0 0 ${W} ${H}`); mat.setAttribute('width', W); mat.setAttribute('height', H);
+    lignes.forEach(([k, a, b], r) => { const y = r * (ch + 3);
+      mat.append(el('text', { class: 'lab', x: 0, y: y + ch / 2 + 4 }, a + (b ? '' : '')));
+      if (b) mat.lastChild.append(el('title', {}, b));
+      S.forEach((s, i) => cells.push({ k, a, s, i, x: lw + i * cw, y, w: cw, h: ch })); });
+    const ax = el('g', { class: 'ax' }); mat.append(ax);
+    S.forEach((s, i) => { if (s.an % 10 === 0) { ax.append(el('text', { x: lw + (i + .5) * cw, y: H - 4, 'text-anchor': 'middle' }, s.an));
+      mat.append(el('line', { x1: lw + i * cw - .5, x2: lw + i * cw - .5, y1: 0, y2: H - 18, stroke: 'var(--rule-soft)' })); } });
+    GM = { tr, W, lw, cw, ch };
+  } else {
+    const lh = 66, lw = 40, cw = (W - lw - 22) / lignes.length, ch = 11, gap = 4;
+    const ys = []; let y = lh; S.forEach((s, i) => { if (i && s.an % 10 === 0) y += gap; ys.push(y); y += ch + 1; });
+    const H = y + 4;
+    mat.setAttribute('viewBox', `0 0 ${W} ${H}`); mat.setAttribute('width', W); mat.setAttribute('height', H);
+    lignes.forEach(([k, a], c) => { const t = el('text', { class: 'lab-s', transform: `translate(${lw + (c + .5) * cw + 3},${lh - 6}) rotate(-60)` }, a.replace('Trophée des champions', 'Trophée ch.').replace('Coupe de la Ligue', 'C. Ligue').replace('Coupe de France', 'C. France'));
+      mat.append(t); S.forEach((s, i) => cells.push({ k, a, s, i, x: lw + c * cw, y: ys[i], w: cw, h: ch })); });
+    const ax = el('g', { class: 'ax' }); mat.append(ax);
+    S.forEach((s, i) => { if (s.an % 10 === 0 || i === 0) ax.append(el('text', { x: lw - 6, y: ys[i] + ch - 1, 'text-anchor': 'end' }, s.an)); });
+    GM = { tr, W, lw, cw, ch, ys };
+  }
+  for (const c of cells) { const f = fond(c.k, c.s);
+    if (!f) continue;
+    if (f === '-') { mat.append(el('circle', { cx: c.x + c.w / 2, cy: c.y + c.h / 2, r: 1.3, fill: 'var(--ink-3)', opacity: .55 })); continue; }
+    if (f === 'enc') { mat.append(el('rect', { x: c.x + .6, y: c.y + .6, width: Math.max(1, c.w - 1.2), height: c.h - 1.2, rx: 1.5, fill: 'none', stroke: 'var(--ink-3)', 'stroke-dasharray': '2 2' })); continue; }
+    mat.append(el('rect', { x: c.x + .6, y: c.y + .6, width: Math.max(1, c.w - 1.2), height: c.h - 1.2, rx: 1.5, fill: f,
+      stroke: f === 'var(--jaune)' ? 'var(--jaune-trait)' : 'none', 'stroke-width': .8 })); }
+  GM.cells = cells;
+  const box = el('rect', { fill: 'none', stroke: 'var(--ink)', 'stroke-width': 1.5, rx: 2, opacity: 0 }); mat.append(box); GM.box = box;
+}
+const texteCase = c => { const s = c.s;
+  if (c.k === 'ch') return s.rang == null ? `D${s.div} · en cours` : `D${s.div} · ${rangTxt(s)}${s.div === 1 && s.rang === 1 ? ' · champion' : ''}`;
+  const v = s.coupes[c.k]; return v === '' ? 'compétition non disputée cette saison' : TOUR[v]; };
+function montreM(c) { const g = GM; g.box.setAttribute('x', c.x); g.box.setAttribute('y', c.y); g.box.setAttribute('width', c.w); g.box.setAttribute('height', c.h); g.box.setAttribute('opacity', 1);
+  const sc = mat.getBoundingClientRect().width / g.W;
+  pose(bm, mat, (c.x + c.w / 2) * sc, (c.y + c.h / 2) * sc, tete(c.s.label, c.s.div) + `<dl><dt>${c.a}</dt><dd>${texteCase(c)}</dd></dl>`); }
+const cacheM = () => { bm.classList.remove('on'); if (GM) GM.box.setAttribute('opacity', 0); };
+const caseSous = e => { const r = mat.getBoundingClientRect(), sc = GM.W / r.width, px = (e.clientX - r.left) * sc, py = (e.clientY - r.top) * sc;
+  return GM.cells.find(c => px >= c.x && px < c.x + c.w && py >= c.y && py < c.y + c.h + 3); };
+mat.addEventListener('pointermove', e => { const c = caseSous(e); c ? montreM(c) : cacheM(); });
+mat.addEventListener('pointerdown', e => { const c = caseSous(e); c ? montreM(c) : cacheM(); });
+mat.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') cacheM(); });
+document.addEventListener('pointerdown', e => { if (!mat.contains(e.target)) cacheM(); });
+
+const tout = () => { dessine(); dessineFrise(); dessineMatrice(); };
+let rz; addEventListener('resize', () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(tout); });
+tout();
 })();
 </script>
 </body>
