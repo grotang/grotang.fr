@@ -113,6 +113,45 @@ a{color:var(--fr)}
 .finale small{display:block; font-size:11.5px; color:var(--ink-3); margin-top:2px}
 .jamais{margin:10px 4px 0; font-size:12px; color:var(--ink-3)}
 
+/* ---------- bloc 4 : Europe ---------- */
+.eu{display:grid; grid-template-columns:8.6em 1fr; gap:3px 12px; align-items:center; font-size:12.5px}
+.eu .s{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px; color:var(--ink-2); white-space:nowrap}
+.eu .s b{display:inline-block; min-width:2.6em; margin-left:6px; font-weight:600; color:var(--ink)}
+.eu .piste{position:relative; height:18px; display:grid; grid-template-columns:repeat(8,1fr); gap:2px}
+.eu .piste span{background:var(--surface-2); border-radius:2px}
+.eu .piste span.on{background:var(--c)}
+.eu .piste span.bout{outline:1.5px solid var(--ink); outline-offset:-1.5px}
+.eu .sep{grid-column:1 / -1; height:6px}
+.eu-ax{display:grid; grid-template-columns:8.6em 1fr; gap:0 12px; font-size:10.5px; color:var(--ink-3); font-family:"IBM Plex Mono",ui-monospace,monospace; margin-bottom:4px}
+.eu-ax div:last-child{display:grid; grid-template-columns:repeat(8,1fr); gap:2px; text-align:center}
+.eu-leg{display:flex; flex-wrap:wrap; gap:4px 14px; font-size:12px; color:var(--ink-2); margin-bottom:10px}
+.eu-leg i{display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:-1px}
+
+/* ---------- bloc 5 : buteurs ---------- */
+#buts{width:100%; display:block; touch-action:pan-y}
+#buts .ax text{font-size:11px; fill:var(--ink-3); font-family:"IBM Plex Mono",ui-monospace,monospace}
+#buts .ax line{stroke:var(--rule-soft)}
+#buts .rec{font-size:11px; font-weight:700; fill:var(--ink)}
+.regnes{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr)); gap:8px; margin-top:12px}
+.regne{background:var(--surface-2); border-radius:10px; padding:9px 12px; font-size:12.5px}
+.regne b{display:block; font-size:13.5px}
+.regne small{display:block; color:var(--ink-3); font-size:11.5px; margin-top:2px}
+.regne .n{float:right; font-family:"Newsreader",Georgia,serif; font-size:22px; font-weight:700; line-height:1}
+
+/* ---------- bloc 6 : passeurs ---------- */
+.passes{display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:6px}
+.passe{border:1px solid var(--rule-soft); border-radius:8px; padding:6px 9px; font-size:12.5px; background:var(--surface)}
+.passe .s{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10.5px; color:var(--ink-3)}
+.passe b{display:block}
+.passe .dbl{display:inline-block; margin-left:4px; font-size:10px; font-weight:700; padding:0 5px; border-radius:999px; background:var(--jaune); color:#0F141D; vertical-align:1px}
+
+/* ---------- méthode ---------- */
+.methode{margin-top:36px; padding-top:18px; border-top:1px solid var(--rule); font-size:12.5px; color:var(--ink-2); max-width:820px}
+.methode h2{font-size:19px; margin-bottom:8px}
+.methode ul{margin:6px 0 0; padding-left:18px}
+.methode li{margin:3px 0}
+.methode code{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px; background:var(--surface-2); padding:0 4px; border-radius:3px}
+
 .suite{margin-top:34px; padding:16px 18px; border:1px dashed var(--rule); border-radius:12px; color:var(--ink-3); font-size:13px}
 .source{margin-top:30px; font-size:12px; color:var(--ink-3)}
 
@@ -184,7 +223,61 @@ a{color:var(--fr)}
     </div>
   </section>
 
-  <div class="suite" id="suite">Suite en construction : l'Europe, les buteurs et les passeurs.</div>
+  <section class="bloc" id="europe">
+    <header>
+      <div class="kicker">4 · L'Europe</div>
+      <h2>Rare, et rarement loin</h2>
+      <p id="p-eu"></p>
+    </header>
+    <div class="panneau">
+      <div class="eu-leg" id="eu-leg"></div>
+      <div class="eu-ax"><div></div><div><span>prél.</span><span>1/32</span><span>1/16</span><span>1/8</span><span>1/4</span><span>1/2</span><span>F</span><span>V</span></div></div>
+      <div class="eu" id="eu"></div>
+      <p class="lecture">Une ligne par campagne européenne, remplie jusqu'au tour de sortie. Les tours sont ceux du tableau : selon l'époque et le nombre d'engagés, le premier tour d'une coupe d'Europe s'appelait 1/16 ou 1/32.</p>
+    </div>
+  </section>
+
+  <section class="bloc" id="buteurs">
+    <header>
+      <div class="kicker">5 · Les buteurs</div>
+      <h2 id="h-buts">Le meilleur buteur de chaque saison</h2>
+      <p id="p-buts"></p>
+    </header>
+    <div class="panneau">
+      <div class="leg" aria-hidden="true">
+        <span><i class="pt" style="background:var(--vert);border-radius:2px"></i>saison en D1</span>
+        <span><i class="pt" style="background:var(--d2);border-radius:2px"></i>saison en D2</span>
+      </div>
+      <svg id="buts" role="img" tabindex="0" aria-label="Buts du meilleur buteur du FC Nantes, saison par saison"></svg>
+      <div class="bulle" id="bulle-b" role="status" aria-live="polite"></div>
+      <div class="regnes" id="regnes"></div>
+      <p class="lecture">Buts toutes compétitions du meilleur buteur du club sur la saison.</p>
+    </div>
+  </section>
+
+  <section class="bloc" id="passeurs">
+    <header>
+      <div class="kicker">6 · Les passeurs</div>
+      <h2>Le meilleur passeur, depuis <span class="pass-deb"></span></h2>
+      <p id="p-pass"></p>
+    </header>
+    <div class="panneau">
+      <div class="passes" id="passes"></div>
+      <p class="lecture" id="pass-note">Avant <span class="pass-deb"></span>, le tableau ne recense pas les passes décisives. « Doublé » : meilleur buteur et meilleur passeur la même saison.</p>
+    </div>
+  </section>
+
+  <section class="methode" id="methode">
+    <h2>Méthode</h2>
+    <p>Une ligne par saison, tenue à la main par l'auteur et relue à chaque publication du site. Chaque relecture est contrôlée (codes connus, colonnes à leur place, aucune saison manquante) ; en cas de doute, la page garde la dernière version vérifiée.</p>
+    <ul>
+      <li><b>Saison</b> : désignée par ses deux années (2026-27) ; la dernière est en cours.</li>
+      <li><b>Rang national</b> : rang en D1, ou rang en D2 placé après les vingt places de D1. Le nombre de clubs de D1 a varié ; la règle reste la même.</li>
+      <li><b>Coupes</b> : tour de sortie ; « V » vainqueur, « F » finaliste, « prél. » éliminé avant le tableau principal. Une case vide : la compétition n'existait pas ; un point : le club n'était pas qualifié.</li>
+      <li><b>Buteurs</b> : toutes compétitions. <b>Passeurs</b> : à partir de <span class="pass-deb"></span> seulement.</li>
+      <li><b>Entraîneurs</b> : celui du début et celui de la fin de saison, et leur nombre total. Sans date de changement, la frise partage la saison à parts égales.</li>
+    </ul>
+  </section>
   <p class="source" id="source"></p>
 </main>
 
@@ -541,7 +634,93 @@ mat.addEventListener('pointerdown', e => { const c = caseSous(e); c ? montreM(c)
 mat.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') cacheM(); });
 document.addEventListener('pointerdown', e => { if (!mat.contains(e.target)) cacheM(); });
 
-const tout = () => { dessine(); dessineFrise(); dessineMatrice(); };
+/* ---------- bloc 4 : Europe ---------- */
+const EU = [['c1', 'C1', 'var(--c1)'], ['c2', 'C2', 'var(--n7)'], ['c3', 'C3', 'var(--c3)'], ['c4', 'C4', 'var(--c4)'], ['it', 'Intertoto', 'var(--n4)']];
+const camp = [];
+S.forEach(s => EU.forEach(([k, a, c]) => { const r = ORDRE.indexOf(s.coupes[k]); if (r >= 0) camp.push({ s, k, a, c, r }); }));
+const euUtil = EU.filter(([k]) => camp.some(x => x.k === k));
+$('eu-leg').innerHTML = euUtil.map(([k, a, c]) => `<span><i style="background:${c}"></i>${a}</span>`).join('');
+let html = '', dec = null;
+for (const x of camp) { const d = Math.floor((x.s.an - 1) / 10);
+  if (dec != null && d !== dec) html += '<div class="sep"></div>'; dec = d;
+  html += `<div class="s">${x.s.label}<b>${x.a}</b></div><div class="piste" style="--c:${x.c}" title="${x.s.label} · ${x.a} : ${TOUR[ORDRE[x.r]]}">`
+    + ORDRE.map((t, j) => `<span class="${j <= x.r ? 'on' : ''}${j === x.r ? ' bout' : ''}"></span>`).join('') + '</div>'; }
+$('eu').innerHTML = html;
+const saisonsEu = new Set(camp.map(x => x.s.an)), derEu = camp.at(-1), quartsPlus = camp.filter(x => x.r >= ORDRE.indexOf('1/4'));
+const sansEu = S.filter(s => s.an > derEu.s.an).length;
+$('p-eu').textContent = `${camp.length} campagnes sur ${saisonsEu.size} saisons, en ${N}. ${quartsPlus.length} seulement passent les huitièmes, et aucune n'atteint une finale. `
+  + `Dernière campagne : ${derEu.s.label} (${derEu.a}, ${TOUR[ORDRE[derEu.r]]})${sansEu ? ` ; ${sansEu} saison${sansEu > 1 ? 's' : ''} sans Europe depuis.` : '.'}`;
+if (camp.some(x => x.r >= ORDRE.indexOf('F'))) $('p-eu').textContent = $('p-eu').textContent.replace(", et aucune n'atteint une finale", '');
+
+/* ---------- bloc 5 : buteurs ---------- */
+const BT = S.filter(s => s.buteur && s.buteur.n != null);
+const parNom = new Map();
+BT.forEach(s => { const L = parNom.get(s.buteur.nom) || []; L.push(s); parNom.set(s.buteur.nom, L); });
+/* règnes : saisons consécutives avec le même meilleur buteur */
+const regnes = []; S.forEach((s, i) => { const n = s.buteur?.nom; const L = regnes.at(-1);
+  if (n && L && L.nom === n && L.fin === i - 1) L.fin = i; else if (n) regnes.push({ nom: n, deb: i, fin: i }); });
+regnes.forEach(r => r.n = r.fin - r.deb + 1);
+const recs = [...BT].sort((a, b) => b.buteur.n - a.buteur.n);
+const seuilRec = recs[Math.min(5, recs.length - 1)].buteur.n;
+const souvent = [...parNom].map(([nom, L]) => ({ nom, L, buts: L.reduce((a, s) => a + s.buteur.n, 0) })).sort((a, b) => b.L.length - a.L.length || b.buts - a.buts);
+const maxFois = souvent[0].L.length, rois = souvent.filter(o => o.L.length === maxFois);
+$('p-buts').textContent = `Record : ${recs[0].buteur.n} buts, ${recs[0].buteur.nom} en ${recs[0].label}. ${rois.length} joueurs ont été ${maxFois} fois meilleur buteur du club : ${rois.map(o => o.nom).join(', ')}.`;
+$('regnes').innerHTML = rois.map(o => { const rg = regnes.find(r => r.nom === o.nom && r.n === Math.max(...regnes.filter(x => x.nom === o.nom).map(x => x.n)));
+  return `<div class="regne"><span class="n">${o.buts}</span><b>${o.nom}</b><small>${o.L.length} fois meilleur buteur · ${o.buts} buts sur ces saisons</small>`
+    + `<small>${rg.n > 1 ? `${rg.n} saisons de suite, ${S[rg.deb].label} → ${S[rg.fin].label}` : o.L.map(s => s.label).join(', ')}</small></div>`; }).join('');
+
+const bsvg = $('buts'), bb = $('bulle-b'); let GB = null;
+function dessineButs() {
+  const W = Math.max(300, bsvg.parentNode.clientWidth - 24), mob = W < 560;
+  const m = { l: mob ? 30 : 40, r: 10, t: 34, b: 24 }, H = mob ? 226 : 272, pw = W - m.l - m.r, ph = H - m.t - m.b, step = pw / N;
+  const vmax = Math.ceil(recs[0].buteur.n / 10) * 10, x = i => m.l + step * i, y = v => m.t + ph - v / vmax * ph;
+  bsvg.setAttribute('viewBox', `0 0 ${W} ${H}`); bsvg.setAttribute('width', W); bsvg.setAttribute('height', H); bsvg.replaceChildren();
+  const ax = el('g', { class: 'ax' }); bsvg.append(ax);
+  for (let v = 0; v <= vmax; v += 10) { ax.append(el('line', { x1: m.l, x2: m.l + pw, y1: y(v), y2: y(v) })); ax.append(el('text', { x: m.l - 6, y: y(v) + 4, 'text-anchor': 'end' }, v)); }
+  for (let i = 0; i < N; i++) if (S[i].an % (mob ? 20 : 10) === 0) ax.append(el('text', { x: x(i + .5), y: H - 6, 'text-anchor': 'middle' }, S[i].an));
+  S.forEach((s, i) => { if (!s.buteur || s.buteur.n == null) return;
+    bsvg.append(el('rect', { x: x(i) + .8, y: y(s.buteur.n), width: Math.max(1, step - 1.6), height: y(0) - y(s.buteur.n), rx: 1, fill: s.div === 1 ? 'var(--vert)' : 'var(--d2)' })); });
+  const vus = new Set(), poses = [];
+  recs.filter(s => s.buteur.n >= seuilRec).forEach(s => { const i = S.indexOf(s), k = s.buteur.nom;
+    if (vus.has(k) || (mob && s !== recs[0])) return; vus.add(k);
+    const t = `${k.split(' ').slice(-1)[0]} ${s.buteur.n}`, cx = x(i + .5), w = t.length * 6.2;
+    let ty = y(s.buteur.n) - 5;
+    while (poses.some(p => Math.abs(p.x - cx) < (p.w + w) / 2 + 4 && Math.abs(p.y - ty) < 12)) ty -= 13;
+    poses.push({ x: cx, y: ty, w });
+    bsvg.append(el('line', { x1: cx, x2: cx, y1: ty + 3, y2: y(s.buteur.n) - 1, stroke: 'var(--ink-3)', 'stroke-width': .8 }));
+    bsvg.append(el('text', { class: 'rec', x: cx, y: ty, 'text-anchor': 'middle' }, t)); });
+  const v = el('rect', { y: m.t, height: ph, fill: 'var(--ink)', opacity: 0 }); bsvg.append(v);
+  GB = { W, x, step, m, v, y };
+}
+let selB = -1;
+function montreB(i) { const s = S[i], g = GB; selB = i;
+  g.v.setAttribute('x', g.x(i)); g.v.setAttribute('width', g.step); g.v.setAttribute('opacity', .08);
+  const sc = bsvg.getBoundingClientRect().width / g.W;
+  const L = s.buteur ? `<dt>Buteur</dt><dd>${s.buteur.nom}${s.buteur.n != null ? ' · ' + s.buteur.n + ' buts' : ''}</dd>` : '<dt>Buteur</dt><dd>non renseigné</dd>';
+  const P = s.passeur ? `<dt>Passeur</dt><dd>${s.passeur.nom}${s.passeur.n != null ? ' · ' + s.passeur.n : ''}</dd>` : '';
+  pose(bb, bsvg, g.x(i + .5) * sc, g.y((s.buteur && s.buteur.n) || 0) * sc, tete(s.label, s.div) + `<dl>${L}${P}<dt>Championnat</dt><dd>${rangTxt(s)}</dd></dl>`); }
+const cacheB = () => { bb.classList.remove('on'); if (GB) GB.v.setAttribute('opacity', 0); };
+const indiceB = e => { const r = bsvg.getBoundingClientRect(), px = (e.clientX - r.left) * (GB.W / r.width); return Math.max(0, Math.min(N - 1, Math.floor((px - GB.m.l) / GB.step))); };
+bsvg.addEventListener('pointermove', e => montreB(indiceB(e)));
+bsvg.addEventListener('pointerdown', e => montreB(indiceB(e)));
+bsvg.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') cacheB(); });
+bsvg.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); montreB(Math.max(0, Math.min(N - 1, (selB < 0 ? N - 1 : selB) + (e.key === 'ArrowRight' ? 1 : -1)))); } if (e.key === 'Escape') cacheB(); });
+bsvg.addEventListener('blur', cacheB);
+document.addEventListener('pointerdown', e => { if (!bsvg.contains(e.target)) cacheB(); });
+
+/* ---------- bloc 6 : passeurs ---------- */
+let iP = -1; for (let i = N - 1; i >= 0; i--) { if (S[i].passeur) iP = i; else if (iP >= 0 && !S[i].enCours) break; }
+const PS = iP < 0 ? [] : S.slice(iP), isoles = S.slice(0, Math.max(0, iP)).filter(s => s.passeur);
+document.querySelectorAll('.pass-deb').forEach(e => e.textContent = iP < 0 ? '' : S[iP].label);
+$('passes').innerHTML = PS.filter(s => s.passeur).reverse().map(s => `<div class="passe"><span class="s">${s.label}</span><b>${s.passeur.nom}${s.buteur && s.buteur.nom === s.passeur.nom ? '<span class="dbl">doublé</span>' : ''}</b>`
+  + `<span class="s">${s.passeur.n != null ? s.passeur.n + ' passes' : 'nombre non renseigné'}</span></div>`).join('');
+const pNom = new Map(); PS.forEach(s => { if (s.passeur) pNom.set(s.passeur.nom, (pNom.get(s.passeur.nom) || 0) + 1); });
+const [pTop, pN] = [...pNom].sort((a, b) => b[1] - a[1])[0] || [];
+const dbl = PS.filter(s => s.passeur && s.buteur && s.passeur.nom === s.buteur.nom);
+if (isoles.length) $('pass-note').insertAdjacentText('beforeend', ` Exception : ${isoles.map(s => `${s.passeur.nom} (${s.label})`).join(', ')}.`);
+$('p-pass').textContent = pTop ? `${pTop} a été ${pN} fois le meilleur passeur du club sur ${PS.filter(s => s.passeur).length} saisons renseignées. ${dbl.length} doublés buteur-passeur : ${dbl.map(s => `${s.buteur.nom} (${s.label})`).join(', ')}.` : '';
+
+const tout = () => { dessine(); dessineFrise(); dessineMatrice(); dessineButs(); };
 let rz; addEventListener('resize', () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(tout); });
 tout();
 })();

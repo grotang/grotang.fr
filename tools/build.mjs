@@ -643,6 +643,8 @@ const majTennis = dateGit('tools/tennis.src.html', 'tools/tennis/data.json', ...
   || dateSitemap(url('tennis'), PREC_TENNIS, tennis.html, false);
 const majEco    = dateGit('tools/eco/page.html', 'tools/eco/data.json', 'tools/eco/retraites.json', 'tools/eco/leviers.json', 'tools/eco/page.mjs', ...COMMUN)
   || dateSitemap(url('eco'), PREC_ECO, eco.html, false);
+/* FC Nantes : les données viennent du Sheet, sans commit ; la date suit les sources du dépôt. */
+const majNantes = dateGit('tools/nantes/page.html', 'tools/nantes/page.mjs', 'tools/nantes/source.mjs', 'tools/nantes/historique.csv', ...COMMUN) || today;
 const majB27    = dateGit('tools/eco/page.html', 'tools/eco/data.json', 'tools/eco/retraites.json', 'tools/eco/leviers.json', 'tools/eco/page.mjs', ...COMMUN)
   || dateSitemap(url('b27'), PREC_B27, b27.html, false);
 
@@ -690,7 +692,7 @@ const sizes = {
   'robots.txt': write('robots.txt', ROBOTS),
   'favicon.svg': write('favicon.svg', FAVICON_SVG),
   'site.webmanifest': write('site.webmanifest', MANIFEST),
-  'sitemap.xml': write('sitemap.xml', sitemap({ uefa: majUefa, tennis: majTennis, eco: majEco, b27: majB27 })),
+  'sitemap.xml': write('sitemap.xml', sitemap({ uefa: majUefa, tennis: majTennis, eco: majEco, b27: majB27, nantes: majNantes })),
 };
 
 for (const [f, n] of Object.entries(sizes)) console.log(String(n).padStart(7), f);

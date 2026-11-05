@@ -39,10 +39,7 @@ export const PAGES = [
     aVenir: { h1: 'Les joueurs les plus décisifs',
       texte: "Un but à la 68e qui débloque le 2-1 en finale de Ligue des champions ne vaut pas une passe décisive dans un 6-0 au premier tour d'une coupe nationale. Cette page classera les joueurs, saison par saison, selon ce que leurs actions ont réellement changé au résultat — et selon l'enjeu du match.",
       apercu: '/football-joueurs-decisifs-wip/' } },
-  { key: 'nantes', url: '/football-fc-nantes-histoire/', titre: 'FC Nantes',                rubrique: ['Football'],
-    aVenir: { h1: 'Le FC Nantes, saison par saison',
-      texte: "Classements, coupes, parcours européens, meilleurs buteurs et passeurs, entraîneurs : toute l'histoire du club, décortiquée. Les grandes ères, les ruptures, et ce que les chiffres en disent." ,
-      apercu: '/football-fc-nantes-histoire-wip/' } },
+  { key: 'nantes', url: '/football-fc-nantes-histoire/', titre: 'FC Nantes',                rubrique: ['Football'] },
   { key: 'tennis', url: '/tennis-grand-chelem-nations/', titre: 'Grand Chelem',             rubrique: ['Tennis'] },
   { key: 'eco',    url: '/france-comptes-publics/',      titre: 'Budget de la France',      rubrique: ['Économie'] },
   { key: 'b27',    url: '/france-simulateur-budget/',    titre: 'Faites votre budget 2027', rubrique: ['Économie'] },
@@ -60,6 +57,7 @@ export const RELAIS = {
   '/economie/':      '/france-comptes-publics/',        // jusqu'au 31/10/2026
   '/budget-france/': '/france-comptes-publics/',        // le 31/10/2026, une heure
   '/budget-2027/':   '/france-simulateur-budget/',      // le 31/10/2026, une heure
+  '/football-fc-nantes-histoire-wip/': '/football-fc-nantes-histoire/',   // aperçu du 05/11/2026
 };
 
 /* Rubriques annoncées, sans aucune page encore : elles apparaissent dans le menu
