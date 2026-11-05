@@ -68,6 +68,17 @@ export const RELAIS = {
    et on retire le nom d'ici. */
 export const RUBRIQUES_A_VENIR = ['Énergie'];
 
+/* Les pages CACHÉES : publiées, mais hors menu, hors sitemap, en noindex, et
+   atteignables par un seul lien, posé à la main là où il a un sens. Pour un
+   contenu qu'on veut montrer sans le mettre en avant (05/11/2026 : les probas
+   de classement des clubs français, sorties d'un modèle encore « à la nation »,
+   pas « au club » — une tendance, pas une vitrine). Même règle d'adresse que
+   PAGES ; le lien qui y mène écrit l'adresse en toutes lettres (bloc 2 de la
+   page UEFA, `semLien`). */
+export const CACHEES = {
+  clubsFR: '/football-clubs-francais-phase-de-ligue/',
+};
+
 export const DOMAINE = 'https://grotang.fr';
 
 export const page = key => {
@@ -97,6 +108,11 @@ export const fichier = u => u.replace(/^\//, '') + 'index.html';
       if (vues.has(ap)) throw new Error(`registre : adresse en double « ${ap} »`);
       vues.add(ap);
     }
+  }
+  for (const u of Object.values(CACHEES)) {
+    if (!/^\/(football|tennis|biathlon|rugby|cyclisme|france|europe|monde)-[a-z0-9-]*\/$/.test(u)) throw new Error(`registre : page cachée mal formée « ${u} »`);
+    if (vues.has(u)) throw new Error(`registre : adresse en double « ${u} »`);
+    vues.add(u);
   }
   for (const [de, vers] of Object.entries(RELAIS)) {
     if (vues.has(de)) throw new Error(`registre : « ${de} » est à la fois une page et un relais`);

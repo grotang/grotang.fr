@@ -20,9 +20,10 @@ import { execFileSync } from 'node:child_process';
 import { nav, navCSS, FAVICON, FAVICON_SVG, MANIFEST, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF } from './chrome.mjs';
 import { buildEco } from './eco/page.mjs';
 import { buildJoueurs } from './joueurs/page.mjs';
+import { buildClubsFR } from './uefa/clubs-fr.mjs';
 import { nation } from './tennis/nations.mjs';
 import { compteParcours } from './tennis/wiki.mjs';
-import { PAGES, RELAIS, DOMAINE, url, abs, fichier } from './site.mjs';
+import { PAGES, RELAIS, CACHEES, DOMAINE, url, abs, fichier } from './site.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
@@ -594,6 +595,8 @@ const eco = buildEco('france');
 const b27 = buildEco('b27');
 const APERCU_JOUEURS = PAGES.find(p => p.key === 'joueurs').aVenir?.apercu;
 const joueurs = APERCU_JOUEURS ? buildJoueurs({ apercu: APERCU_JOUEURS }) : null;
+/* page cachée (noindex, hors menu et sitemap) : probas de classement des clubs français, tirées de PRJ */
+const clubsFR = buildClubsFR(read('tools/uefa/page.html'));
 const today = new Date().toISOString().slice(0, 10);
 
 /* `lastmod` d'une page : la date du jour si son contenu a change, sinon celle
@@ -672,6 +675,7 @@ const sizes = {
   [fichier(url('eco'))]: write(fichier(url('eco')), eco.html),
   [fichier(url('b27'))]: write(fichier(url('b27')), b27.html),
   ...(joueurs ? { [fichier(APERCU_JOUEURS)]: write(fichier(APERCU_JOUEURS), joueurs.html) } : {}),
+  [fichier(CACHEES.clubsFR)]: write(fichier(CACHEES.clubsFR), clubsFR.html),
   ...Object.fromEntries(PAGES.filter(p => p.aVenir).map(p => [fichier(p.url), write(fichier(p.url), pageAVenir(p))])),
   ...Object.fromEntries(Object.entries(RELAIS).map(([de, vers]) => [fichier(de), write(fichier(de), relais(vers))])),
   '404.html': write('404.html', NOTFOUND),
