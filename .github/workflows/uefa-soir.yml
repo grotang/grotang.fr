@@ -52,10 +52,11 @@ name: Soir de match UEFA
 # d'autres robots), et depuis le 30/10 GitHub en saute purement et simplement
 # (le 03/11 : un seul des trois départs prévus, à 23 h 04). Un lancement par
 # l'API, lui, part dans la seconde. cron-job.org appelle donc ce robot chaque
-# jour à 19 h et 22 h 50 (Paris), avec auto = true : le test « y a-t-il
-# match ? » s'applique, un soir sans match coûte quelques secondes. Le jeton
-# utilisé ne sait que lancer les robots de ce dépôt. Les départs planifiés
-# ci-dessous restent en filet.
+# jour à 19 h (Paris), une seule fois (choix de GT, 05/11), avec auto = true :
+# le test « y a-t-il match ? » s'applique, un soir sans match coûte quelques
+# secondes ; un soir de match, il attend 20 h 35 et veille jusqu'à 0 h 40 au
+# plus. Le jeton utilisé ne sait que lancer les robots de ce dépôt. Les départs
+# planifiés ci-dessous restent en filet.
 #
 # Une ligne par heure (04/11) : avant le 30/10, une ligne par heure et aucun
 # départ sauté sur 32 ; depuis le passage à « 16,17,19 » sur une seule ligne,

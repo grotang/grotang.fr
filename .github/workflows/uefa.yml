@@ -39,9 +39,11 @@ name: Rafraîchissement UEFA
 #
 # RÉVEIL EXTERNE (depuis le 04/11/2026) : les départs planifiés partaient avec
 # 4 à 7 h de retard, voire pas du tout (le 04/11 : un seul des deux, à 13 h 56).
-# cron-job.org appelle ce robot par l'API à 7 h 20 (Paris) les mercredis,
-# jeudis, vendredis et dimanches ; il part dans la seconde. Les départs
-# planifiés restent en filet, une ligne par heure (voir uefa-soir.yml).
+# Le réveil externe (cron-job.org) ne sert qu'au soir de match (uefa-soir.yml,
+# choix de GT du 05/11) : ici, seuls les départs planifiés de GitHub, en filet,
+# une ligne par heure. Ils peuvent partir avec des heures de retard, et c'est
+# accepté : le soir de match a déjà tout publié.
+# (L'entrée workflow_dispatch reste utilisable par le bouton ou par l'API.)
 on:
   schedule:
     - cron: '12 5 * * 3-5'     # mercredi → vendredi
