@@ -108,7 +108,7 @@ export const THEME_BOOT = `<script>(function(){try{if(localStorage.getItem('grot
 export const THEME_JS = `<script>(function(){
   var dd=document.querySelectorAll('.gn-dd');
   var bar=document.querySelector('.gnav');
-  /* place le panneau : sous sa rubrique, retourné vers la gauche s'il sortait
+  /* place le panneau : sous sa rubrique, poussé vers la gauche s'il sortait
      de l'écran, la pointe au milieu de la rubrique ; et la hauteur de la barre
      pour que le fond ne la recouvre pas */
   function place(d){ var s=d.querySelector('summary'), p=d.querySelector('.gn-panel'); if(!s||!p) return;
@@ -117,7 +117,9 @@ export const THEME_JS = `<script>(function(){
     /* téléphone : si la barre des rubriques passe sur deux lignes, le panneau
        se colle sous la ligne de SA rubrique, pas sous la barre entière */
     if(getComputedStyle(d).position==='static'){ var n=p.offsetParent; if(n){ p.style.top=(s.getBoundingClientRect().bottom-n.getBoundingClientRect().top+10)+'px'; } }
-    var r=p.getBoundingClientRect(); if(r.right>innerWidth-8) p.classList.add('gn-flip');
+    /* s'il dépasse à droite, on le pousse vers la gauche juste ce qu'il faut
+       (plutôt que de le retourner) : il reste au plus près de sa rubrique */
+    p.style.marginLeft=''; var r=p.getBoundingClientRect(); if(r.right>innerWidth-8) p.style.marginLeft=(innerWidth-8-r.right)+'px';
     var sr=s.getBoundingClientRect(); r=p.getBoundingClientRect();
     p.style.setProperty('--cx', Math.max(16, Math.min(r.width-16, sr.left+sr.width/2-r.left))+'px'); }
   dd.forEach(function(d){d.addEventListener('toggle',function(){ if(d.open){ dd.forEach(function(o){ if(o!==d) o.open=false; }); place(d); } });});
@@ -190,12 +192,14 @@ html{scroll-padding-top:58px}
 .gn-dd[open] summary::after{transform:translateY(1px) rotate(-135deg)}
 .gn-dd summary:hover,.gn-dd[open] summary{color:var(--ink);background:color-mix(in srgb,var(--ink) 7%,transparent)}
 .gn-dd summary:focus-visible{outline:2px solid var(--fr);outline-offset:2px}
-.gn-panel{position:absolute;left:0;top:calc(100% + 9px);min-width:max(100%,232px);z-index:60;display:flex;flex-direction:column;gap:2px;
+/* Le texte des choix tombe pile sous le texte de la rubrique : décalage du
+   panneau = bordure 1 + marge du panneau 6 + marge du lien 12 − marge de la rubrique 10. */
+.gn-panel{position:absolute;left:-9px;top:calc(100% + 9px);min-width:210px;width:max-content;max-width:calc(100vw - 16px);z-index:60;display:flex;flex-direction:column;gap:2px;
   padding:6px;background:var(--surface);border:1px solid var(--rule);border-radius:10px;box-shadow:var(--shadow)}
 /* la petite pointe qui relie le panneau à sa rubrique ; --cx est posé par le script */
 .gn-panel::before{content:"";position:absolute;top:-6px;left:var(--cx,24px);width:10px;height:10px;margin-left:-5px;
   background:var(--surface);border-left:1px solid var(--rule);border-top:1px solid var(--rule);transform:rotate(45deg)}
-.gn-panel.gn-flip{left:auto;right:0}
+.gn-panel.gn-flip{left:auto;right:-9px}
 .gnav .gn-panel a{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:9px 12px;border-radius:7px;color:var(--ink-2)}
 .gnav .gn-panel a[aria-current="page"]::after{content:"";margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--fr)}
 /* fond : un clic à côté ferme le menu sans rien déclencher dessous (c'est un
@@ -224,14 +228,14 @@ html{scroll-padding-top:58px}
   .gnav nav{gap:2px}
   .gnav nav a,.gn-dd summary,.gn-avenir{padding:9px 9px}
   .gn-avenir .gn-soon{margin-left:5px}
-  /* sur téléphone, le panneau prend toute la largeur, juste sous la barre des
-     rubriques, la pointe sous la rubrique ouverte ; le reste de la page est
-     voilé et un toucher n'importe où le referme */
-  .gnav nav{position:relative}
-  .gn-dd{position:static}
-  .gn-panel,.gn-panel.gn-flip{left:0;right:0;top:calc(100% + 10px);min-width:0;padding:6px;border-radius:12px}
-  .gnav .gn-panel a{font-size:15px;padding:13px 14px}
-  .gn-dd[open] summary::before{background:rgb(10 13 19 / .32)}}
+  /* sur téléphone : même règle qu'à l'écran large, un panneau étroit accroché
+     à sa rubrique, le texte des choix aligné sur celui de la rubrique
+     (1 + 5 + 10 − 9 = 7 px de décalage), des choix assez hauts pour le pouce ;
+     le reste de la page est légèrement voilé et un toucher à côté referme */
+  .gn-panel{left:-7px;top:calc(100% + 8px);min-width:190px;padding:5px;border-radius:10px}
+  .gn-panel.gn-flip{left:auto;right:-7px}
+  .gnav .gn-panel a{font-size:15px;padding:11px 10px}
+  .gn-dd[open] summary::before{background:rgb(10 13 19 / .2)}}
 `;
 
 
