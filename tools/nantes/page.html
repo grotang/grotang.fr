@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FC Nantes</title>
+<style>
+/* Page /football-fc-nantes-histoire/ — le FC Nantes, saison par saison.
+   Données : onglet « Historique » du Sheet de GT, relu à chaque build (tools/nantes/source.mjs).
+   Jetons communs : chrome.mjs. Couleurs propres à la page : jaune et vert du club. */
+*{box-sizing:border-box}
+body{margin:0; background:var(--ground); color:var(--ink);
+  font-family:Calibri,"Carlito","Helvetica Neue",Arial,sans-serif; font-size:14px; line-height:1.5;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1100px; margin:0 auto; padding-inline:clamp(16px,3vw,32px); padding-block:clamp(16px,3vw,28px) 64px}
+h1,h2{font-family:"Newsreader",Georgia,"Times New Roman",serif; font-optical-sizing:auto; letter-spacing:-.012em; text-wrap:balance; margin:0}
+h1{font-size:clamp(28px,4.4vw,44px); line-height:1.04; font-weight:700}
+h2{font-size:clamp(21px,2.6vw,27px); line-height:1.12; font-weight:700}
+a{color:var(--fr)}
+:focus-visible{outline:2px solid var(--fr); outline-offset:2px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
+.kicker{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3)}
+
+.fcn{--jaune:#FFD400; --jaune-trait:#C9A400; --vert:#0B7A3E; --vert-2:#5FAF83; --d2:#8A94A3;
+  --aire:color-mix(in srgb, var(--vert) 13%, transparent)}
+:root[data-theme="dark"] .fcn{--vert:#3CC27A; --vert-2:#2A7F52; --d2:#6B7584; --jaune-trait:#FFD400;
+  --aire:color-mix(in srgb, var(--vert) 16%, transparent)}
+
+/* ---------- en-tête ---------- */
+.hero{display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:22px 36px; align-items:end; padding:6px 0 26px; border-bottom:1px solid var(--rule)}
+.hero .titre{display:flex; flex-direction:column; gap:10px}
+.hero h1 em{font-style:normal; background:linear-gradient(transparent 62%, var(--jaune) 62%, var(--jaune) 92%, transparent 92%); padding:0 .06em}
+:root[data-theme="dark"] .hero h1 em{color:var(--jaune); background:none}
+.lead{margin:0; font-size:15.5px; color:var(--ink-2); max-width:620px}
+.tuiles{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
+.tuile{background:var(--surface); border:1px solid var(--rule-soft); border-radius:12px; padding:12px 14px 11px; box-shadow:var(--shadow); position:relative; overflow:hidden}
+.tuile::before{content:""; position:absolute; inset:0 auto 0 0; width:4px; background:var(--c, var(--vert))}
+.tuile b{display:block; font-family:"Newsreader",Georgia,serif; font-size:38px; line-height:1; font-weight:700; letter-spacing:-.02em}
+.tuile span{display:block; font-size:13px; font-weight:700; margin-top:4px}
+.tuile small{display:block; font-size:11.5px; color:var(--ink-3); margin-top:2px; line-height:1.35}
+
+/* ---------- blocs ---------- */
+.bloc{padding-top:34px}
+.bloc header{display:flex; flex-direction:column; gap:6px; margin-bottom:14px; max-width:760px}
+.bloc header p{margin:0; color:var(--ink-2)}
+.panneau{background:var(--surface); border:1px solid var(--rule-soft); border-radius:12px; box-shadow:var(--shadow); padding:12px 12px 8px; position:relative}
+.leg{display:flex; flex-wrap:wrap; gap:4px 16px; font-size:12px; color:var(--ink-2); padding:0 4px 8px}
+.leg i{display:inline-block; vertical-align:-1px; margin-right:6px}
+.leg .pt{width:9px; height:9px; border-radius:50%}
+.leg .et{width:11px; height:11px; background:var(--jaune); border:1px solid var(--jaune-trait); clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+.leg .cp{width:9px; height:9px; border-radius:2px; background:var(--vert); transform:rotate(45deg)}
+.lecture{margin:10px 4px 2px; font-size:12px; color:var(--ink-3)}
+
+/* ---------- courbe ---------- */
+#courbe{width:100%; display:block; touch-action:pan-y; user-select:none; -webkit-user-select:none}
+#courbe:focus{outline:none}
+#courbe:focus-visible{outline:2px solid var(--fr); outline-offset:3px; border-radius:6px}
+#courbe .ax text{font-size:11px; fill:var(--ink-3); font-family:"IBM Plex Mono",ui-monospace,monospace}
+#courbe .ax line{stroke:var(--rule-soft)}
+#courbe .zone-t{font-size:10.5px; font-weight:700; letter-spacing:.12em; fill:var(--ink-3); font-family:"IBM Plex Mono",ui-monospace,monospace}
+#courbe .an{font-size:11.5px; fill:var(--ink-2)}
+#courbe .an-b{font-weight:700; fill:var(--ink)}
+.bulle{position:absolute; pointer-events:none; z-index:3; min-width:210px; max-width:260px; background:var(--surface); color:var(--ink);
+  border:1px solid var(--rule); border-radius:10px; box-shadow:var(--shadow); padding:9px 11px; font-size:12.5px; line-height:1.4; opacity:0}
+.bulle.on{opacity:1}
+.bulle .t{display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:4px}
+.bulle .t b{font-family:"Newsreader",Georgia,serif; font-size:17px}
+.bulle .div{font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:600; letter-spacing:.08em; padding:1px 6px; border-radius:999px; color:#fff; background:var(--vert)}
+.bulle .div.d2{background:var(--d2)}
+.bulle dl{display:grid; grid-template-columns:auto 1fr; gap:1px 10px; margin:0}
+.bulle dt{color:var(--ink-3)}
+.bulle dd{margin:0}
+.bulle .titre-s{color:var(--ink); font-weight:700}
+
+.suite{margin-top:34px; padding:16px 18px; border:1px dashed var(--rule); border-radius:12px; color:var(--ink-3); font-size:13px}
+.source{margin-top:30px; font-size:12px; color:var(--ink-3)}
+
+@media (max-width:820px){
+  .hero{grid-template-columns:1fr}
+}
+@media (max-width:420px){
+  .tuile b{font-size:32px}
+}
+</style>
+</head>
+<body>
+<main class="wrap fcn">
+  <section class="hero">
+    <div class="titre">
+      <div class="kicker">Football · FC Nantes · <span id="k-periode"></span></div>
+      <h1>Le FC Nantes, <em>saison par saison</em></h1>
+      <p class="lead" id="lead"></p>
+    </div>
+    <div class="tuiles" id="tuiles"></div>
+  </section>
+
+  <section class="bloc" id="courbe-de-vie">
+    <header>
+      <div class="kicker">1 · La courbe de vie</div>
+      <h2 id="h-courbe">Toute l'histoire en une ligne</h2>
+      <p id="p-courbe"></p>
+    </header>
+    <div class="panneau">
+      <div class="leg" aria-hidden="true">
+        <span><i class="pt" style="background:var(--vert)"></i>saison en D1</span>
+        <span><i class="pt" style="background:var(--d2)"></i>saison en D2</span>
+        <span><i class="et"></i>champion de France</span>
+        <span><i class="cp"></i>Coupe de France gagnée</span>
+      </div>
+      <svg id="courbe" role="img" tabindex="0" aria-describedby="p-courbe"></svg>
+      <div class="bulle" id="bulle" role="status" aria-live="polite"></div>
+      <p class="lecture">Survolez ou touchez la courbe pour le détail d'une saison ; au clavier, flèches gauche et droite. Rang national : rang en D1, ou rang en D2 placé sous la vingtième place.</p>
+    </div>
+  </section>
+
+  <div class="suite" id="suite">Suite en construction : les ères d'entraîneurs, le palmarès saison par saison, l'Europe, les buteurs et les passeurs.</div>
+  <p class="source" id="source"></p>
+</main>
+
+<script>
+/*DATA_START*/const FCN = null;/*DATA_END*/
+(function(){
+'use strict';
+const S = FCN.saisons, N = S.length;
+const fin = S.filter(s => !s.enCours);
+const $ = id => document.getElementById(id);
+const nb = n => n.toLocaleString('fr-FR');
+const lab = s => s.label;
+
+/* ---------- faits tirés des données ---------- */
+const champ = S.filter(s => s.div === 1 && s.rang === 1);
+const cdfV = S.filter(s => s.coupes.cdf === 'V');
+const d1 = S.filter(s => s.div === 1), d2 = S.filter(s => s.div === 2);
+/* séries consécutives dans une même division */
+const series = [];
+S.forEach((s, i) => { const L = series.at(-1); if (L && L.div === s.div) L.fin = i; else series.push({ div: s.div, deb: i, fin: i }); });
+series.forEach(r => r.n = r.fin - r.deb + 1);
+const plusLongueD1 = series.filter(r => r.div === 1).sort((a, b) => b.n - a.n)[0];
+const descentes = series.filter((r, i) => r.div === 2 && i > 0);          // passages D1 → D2
+const apres = descentes.filter(r => r.deb > plusLongueD1.fin);
+const cours = S.find(s => s.enCours);
+
+$('k-periode').textContent = `${S[0].label} → ${S[N - 1].label}`;
+const tiret = (a, b) => `${a.label} → ${b.label}`;
+$('lead').textContent =
+  `${N} saisons dans le tableau. ${plusLongueD1.n} d'entre elles d'affilée en première division, de ${S[plusLongueD1.deb].label} à ${S[plusLongueD1.fin].label}, avec ${champ.length} titres de champion. `
+  + `Depuis, ${apres.length} descente${apres.length > 1 ? 's' : ''} en D2` + (cours ? `, la dernière pour la saison ${cours.label}, en cours.` : '.');
+
+const tuile = (n, t, sous, c) => `<div class="tuile" style="--c:${c}"><b class="mono-n">${n}</b><span>${t}</span><small>${sous}</small></div>`;
+const annees = L => L.map(s => s.an - 1 + '-' + String(s.an).slice(2)).join(' · ');
+$('tuiles').innerHTML =
+  tuile(champ.length, 'titres de champion de France', annees(champ), 'var(--jaune)')
+  + tuile(cdfV.length, 'Coupes de France', annees(cdfV), 'var(--vert)')
+  + tuile(plusLongueD1.n, 'saisons d\'affilée en D1', tiret(S[plusLongueD1.deb], S[plusLongueD1.fin]), 'var(--vert)')
+  + tuile(d1.length + ' / ' + N, 'saisons en D1', `${d2.length} en D2${cours ? ', dont la saison en cours' : ''}`, 'var(--d2)');
+
+$('p-courbe').textContent =
+  `Chaque point est une saison, placé à son rang national. ${series.filter(r => r.div === 1).length} séjours en D1, ${series.filter(r => r.div === 2).length} en D2. `
+  + `Le haut du tableau se concentre sur la longue série ${tiret(S[plusLongueD1.deb], S[plusLongueD1.fin])} : tous les titres de champion y tombent.`;
+if (champ.some(s => s.an - 1 < S[plusLongueD1.deb].an - 1 || s.an > S[plusLongueD1.fin].an)) $('p-courbe').textContent = $('p-courbe').textContent.replace(/ Le haut[^]*$/, '');
+
+$('source').innerHTML = `Source : tableau tenu à la main par l'auteur, relu à chaque publication${FCN.source === 'photo' ? ' (version de secours' + (FCN.photo ? ' du ' + FCN.photo : '') + ')' : ''}. Saison « 2026-27 » : en cours. Buts : toutes compétitions.`;
+
+/* ---------- libellés ---------- */
+const TOUR = { V: 'vainqueur', F: 'finale', '1/2': 'demi-finale', '1/4': 'quart de finale', '1/8': 'huitième', '1/16': 'seizième', '1/32': 'trente-deuxième',
+  tp: 'tours préliminaires', tbd: 'en cours', '-': 'pas engagé', '': '' };
+const COUPE = { c1: 'C1', c2: 'C2', c3: 'C3', c4: 'C4' };
+const ORDRE = ['tp', '1/32', '1/16', '1/8', '1/4', '1/2', 'F', 'V'];
+const europe = s => {
+  let best = null;
+  for (const k of ['c1', 'c2', 'c3', 'c4']) { const v = s.coupes[k]; const r = ORDRE.indexOf(v);
+    if (r >= 0 && (!best || r > best.r)) best = { k, v, r }; }
+  return best;
+};
+const rangTxt = s => s.rang == null ? 'en cours' : (s.rang === 1 ? '1er' : s.rang + 'e');
+
+/* ---------- la courbe ---------- */
+const svg = $('courbe'), bulle = $('bulle'), NS = 'http://www.w3.org/2000/svg';
+let G = null, sel = -1;
+const el = (tag, at, txt) => { const e = document.createElementNS(NS, tag); for (const k in at) e.setAttribute(k, at[k]); if (txt != null) e.textContent = txt; return e; };
+
+function dessine() {
+  const W = Math.max(300, svg.parentNode.clientWidth - 24), mob = W < 560;
+  const H = mob ? 290 : 350, m = { l: mob ? 30 : 40, r: 10, t: 34, b: 24 };
+  const pw = W - m.l - m.r, ph = H - m.t - m.b, YMAX = 40;
+  const step = pw / N, x = i => m.l + step * (i + .5), y = n => m.t + (n - 1) / (YMAX - 1) * ph;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('width', W); svg.setAttribute('height', H);
+  svg.replaceChildren();
+  const ax = el('g', { class: 'ax' }); svg.append(ax);
+  /* zones D1 / D2 */
+  svg.insertBefore(el('rect', { x: m.l, y: y(20.5), width: pw, height: y(YMAX) - y(20.5) + 4, fill: 'var(--band)' }), ax);
+  svg.append(el('line', { x1: m.l, x2: m.l + pw, y1: y(20.5), y2: y(20.5), stroke: 'var(--rule)', 'stroke-dasharray': '3 3' }));
+  svg.append(el('text', { class: 'zone-t', x: m.l + 6, y: y(20.5) - 6 }, 'D1 ↑'));
+  svg.append(el('text', { class: 'zone-t', x: m.l + 6, y: y(YMAX) - 4 }, 'D2 ↓'));
+  for (const n of [1, 5, 10, 15, 20, 25, 30, 35]) {
+    ax.append(el('line', { x1: m.l, x2: m.l + pw, y1: y(n), y2: y(n) }));
+    const r = n > 20 ? n - 20 : n;
+    ax.append(el('text', { x: m.l - 6, y: y(n) + 4, 'text-anchor': 'end' }, r === 1 ? '1er' : r + 'e'));
+  }
+  for (let i = 0; i < N; i++) if (S[i].an % (mob ? 20 : 10) === 0)
+    ax.append(el('text', { x: x(i), y: H - 6, 'text-anchor': 'middle' }, S[i].an));
+
+  /* aire et ligne, coupées là où le rang manque (saison en cours) */
+  const pts = S.map((s, i) => s.nat == null ? null : [x(i), y(s.nat)]);
+  let d = '', a = '', run = [];
+  const ferme = () => { if (run.length) { d += 'M' + run.map(p => p.join(',')).join('L');
+      a += `M${run[0][0]},${y(YMAX)}L` + run.map(p => p.join(',')).join('L') + `L${run.at(-1)[0]},${y(YMAX)}Z`; } run = []; };
+  pts.forEach(p => p ? run.push(p.map(v => v.toFixed(1))) : ferme()); ferme();
+  svg.append(el('path', { d: a, fill: 'var(--aire)' }));
+  svg.append(el('path', { d, fill: 'none', stroke: 'var(--ink-2)', 'stroke-width': 1.4, 'stroke-linejoin': 'round', opacity: .75 }));
+
+  /* la longue série en D1, accolade sous le bandeau des trophées */
+  /* elle se lit dans la bande D2, vide pendant ces années-là */
+  const xa = x(plusLongueD1.deb) - step / 2, xb = x(plusLongueD1.fin) + step / 2, yb = y(31);
+  svg.append(el('path', { d: `M${xa},${yb - 6}V${yb}H${xb}V${yb - 6}`, fill: 'none', stroke: 'var(--vert)', 'stroke-width': 1.5 }));
+  svg.append(el('text', { class: 'an an-b', x: (xa + xb) / 2, y: yb + 16, 'text-anchor': 'middle' }, `${plusLongueD1.n} saisons d'affilée en D1, aucune en D2`));
+
+  /* points */
+  S.forEach((s, i) => { if (s.nat == null) return;
+    svg.append(el('circle', { cx: x(i), cy: y(s.nat), r: mob ? 2.2 : 2.8, fill: s.div === 1 ? 'var(--vert)' : 'var(--d2)' })); });
+  /* titres : étoiles jaunes ; Coupes de France : losanges verts, sur la ligne du haut */
+  const etoile = (cx, cy, R) => { let p = ''; for (let k = 0; k < 10; k++) { const r = k % 2 ? R * .45 : R, t = -Math.PI / 2 + k * Math.PI / 5;
+    p += (k ? 'L' : 'M') + (cx + r * Math.cos(t)).toFixed(1) + ',' + (cy + r * Math.sin(t)).toFixed(1); } return p + 'Z'; };
+  champ.forEach(s => { const i = S.indexOf(s);
+    svg.append(el('path', { d: etoile(x(i), y(1), mob ? 6 : 7.5), fill: 'var(--jaune)', stroke: 'var(--jaune-trait)', 'stroke-width': 1 })); });
+  cdfV.forEach(s => { const i = S.indexOf(s), r = mob ? 3.4 : 4, cy = m.t - 20;
+    svg.append(el('rect', { x: x(i) - r, y: cy - r, width: 2 * r, height: 2 * r, fill: 'var(--vert)', transform: `rotate(45 ${x(i)} ${cy})` })); });
+  /* saison en cours */
+  if (cours) { const i = S.indexOf(cours);
+    svg.append(el('line', { x1: x(i), x2: x(i), y1: y(21), y2: y(YMAX), stroke: 'var(--d2)', 'stroke-dasharray': '2 3' }));
+    if (!mob) svg.append(el('text', { class: 'an', x: x(i) - 6, y: y(YMAX) - 6, 'text-anchor': 'end' }, 'en cours'));
+  }
+  /* repère de survol */
+  const viseur = el('line', { y1: m.t - 26, y2: y(YMAX), stroke: 'var(--ink)', 'stroke-width': 1, opacity: 0 });
+  const rond = el('circle', { r: 5.5, fill: 'none', stroke: 'var(--ink)', 'stroke-width': 1.6, opacity: 0 });
+  svg.append(viseur, rond);
+  G = { x, y, step, m, pw, W, H, viseur, rond };
+  if (sel >= 0) montre(sel);
+}
+
+function montre(i) {
+  sel = i; const s = S[i], g = G;
+  g.viseur.setAttribute('x1', g.x(i)); g.viseur.setAttribute('x2', g.x(i)); g.viseur.setAttribute('opacity', .25);
+  if (s.nat != null) { g.rond.setAttribute('cx', g.x(i)); g.rond.setAttribute('cy', g.y(s.nat)); g.rond.setAttribute('opacity', 1); }
+  else g.rond.setAttribute('opacity', 0);
+  const eu = europe(s), lignes = [];
+  const titreS = s.div === 1 && s.rang === 1 ? ' <span class="titre-s">· champion</span>' : '';
+  lignes.push(['Championnat', `${rangTxt(s)}${titreS}`]);
+  if (s.coupes.cdf) lignes.push(['Coupe de France', TOUR[s.coupes.cdf]]);
+  if (eu) lignes.push(['Europe', `${COUPE[eu.k]} · ${TOUR[eu.v]}`]);
+  if (s.buteur) lignes.push(['Buteur', `${s.buteur.nom}${s.buteur.n != null ? ' · ' + s.buteur.n + ' buts' : ''}`]);
+  lignes.push([s.ent.length > 1 ? 'Entraîneurs' : 'Entraîneur', s.ent.join(' → ') + (s.nEnt > s.ent.length ? ` <span style="color:var(--ink-3)">(${s.nEnt} au total)</span>` : '')]);
+  bulle.innerHTML = `<div class="t"><b>${s.label}</b><span class="div${s.div === 2 ? ' d2' : ''}">D${s.div}</span></div><dl>`
+    + lignes.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('') + '</dl>';
+  bulle.classList.add('on');
+  const bw = bulle.offsetWidth, px = 12 + g.x(i), gauche = px + 14 + bw > g.W + 12;
+  bulle.style.left = Math.max(4, gauche ? px - 14 - bw : px + 14) + 'px';
+  bulle.style.top = (s.nat != null && s.nat < 14 ? 12 + g.y(s.nat) + 16 : 30) + 'px';
+}
+function cache() { sel = -1; bulle.classList.remove('on'); if (G) { G.viseur.setAttribute('opacity', 0); G.rond.setAttribute('opacity', 0); } }
+const indice = e => { const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) * (G.W / r.width);
+  return Math.max(0, Math.min(N - 1, Math.floor((px - G.m.l) / G.step))); };
+svg.addEventListener('pointermove', e => montre(indice(e)));
+svg.addEventListener('pointerdown', e => montre(indice(e)));
+svg.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') cache(); });
+svg.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); montre(Math.max(0, Math.min(N - 1, (sel < 0 ? N - 1 : sel) + (e.key === 'ArrowRight' ? 1 : -1)))); }
+  if (e.key === 'Escape') cache();
+});
+svg.addEventListener('blur', cache);
+document.addEventListener('pointerdown', e => { if (!svg.contains(e.target)) cache(); });
+svg.setAttribute('aria-label', `Rang national du FC Nantes de ${S[0].label} à ${S[N - 1].label}`);
+let rz; addEventListener('resize', () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(dessine); });
+dessine();
+})();
+</script>
+</body>
+</html>

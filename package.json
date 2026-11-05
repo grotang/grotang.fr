@@ -12,7 +12,8 @@
     "projette": "node tools/uefa/projette.mjs",
     "carte": "node tools/uefa/carte.mjs",
     "refresh:eco": "node tools/eco/refresh.mjs",
-    "test:eco": "node tools/eco/test-eco.mjs"
+    "test:eco": "node tools/eco/test-eco.mjs",
+    "refresh:nantes": "node tools/nantes/refresh.mjs"
   },
   "dependencies": {
     "linkedom": "^0.18.13"

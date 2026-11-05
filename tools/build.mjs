@@ -6,6 +6,7 @@
  *             tools/uefa/nations.json (chiffres des vignettes de l'accueil)
  *             tools/eco/page.html + tools/eco/data.json (page économie, relue chaque lundi)
  *             tools/joueurs/page.html + tools/joueurs/data.json (joueurs décisifs, saisons closes)
+ *             tools/nantes/page.html + Google Sheet « FC Nantes » relu à chaque build (photo de secours tools/nantes/historique.csv)
  * Sortie    : public/  — exactement ce que Netlify publie, sans build côté Netlify.
  *
  * Le site n'a volontairement aucune étape de build distante : ce script tourne ici,
@@ -20,6 +21,7 @@ import { execFileSync } from 'node:child_process';
 import { nav, navCSS, FAVICON, FAVICON_SVG, MANIFEST, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF } from './chrome.mjs';
 import { buildEco } from './eco/page.mjs';
 import { buildJoueurs } from './joueurs/page.mjs';
+import { buildNantes } from './nantes/page.mjs';
 import { buildClubsFR } from './uefa/clubs-fr.mjs';
 import { nation } from './tennis/nations.mjs';
 import { compteParcours } from './tennis/wiki.mjs';
@@ -595,6 +597,10 @@ const eco = buildEco('france');
 const b27 = buildEco('b27');
 const APERCU_JOUEURS = PAGES.find(p => p.key === 'joueurs').aVenir?.apercu;
 const joueurs = APERCU_JOUEURS ? buildJoueurs({ apercu: APERCU_JOUEURS }) : null;
+/* FC Nantes : en aperçu (noindex) tant que la page se construit bloc par bloc ;
+   le jour où elle sort, on retire `aVenir` dans site.mjs et buildNantes() sans aperçu. */
+const APERCU_NANTES = PAGES.find(p => p.key === 'nantes').aVenir?.apercu;
+const nantes = await buildNantes(APERCU_NANTES ? { apercu: APERCU_NANTES } : {});
 /* page cachée (noindex, hors menu et sitemap) : probas de classement des clubs français, tirées de PRJ */
 const clubsFR = buildClubsFR(read('tools/uefa/page.html'));
 const today = new Date().toISOString().slice(0, 10);
@@ -675,6 +681,7 @@ const sizes = {
   [fichier(url('eco'))]: write(fichier(url('eco')), eco.html),
   [fichier(url('b27'))]: write(fichier(url('b27')), b27.html),
   ...(joueurs ? { [fichier(APERCU_JOUEURS)]: write(fichier(APERCU_JOUEURS), joueurs.html) } : {}),
+  [fichier(APERCU_NANTES || url('nantes'))]: write(fichier(APERCU_NANTES || url('nantes')), nantes.html),
   [fichier(CACHEES.clubsFR)]: write(fichier(CACHEES.clubsFR), clubsFR.html),
   ...Object.fromEntries(PAGES.filter(p => p.aVenir).map(p => [fichier(p.url), write(fichier(p.url), pageAVenir(p))])),
   ...Object.fromEntries(Object.entries(RELAIS).map(([de, vers]) => [fichier(de), write(fichier(de), relais(vers))])),
@@ -687,4 +694,5 @@ const sizes = {
 };
 
 for (const [f, n] of Object.entries(sizes)) console.log(String(n).padStart(7), f);
+console.log('FC Nantes : données lues dans', nantes.source === 'sheet' ? 'le Sheet' : 'la photo de secours');
 console.log('saison', uefa.meta.season, '· source arrêtée au', uefa.meta.lastUpdated);
