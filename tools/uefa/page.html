@@ -466,10 +466,13 @@ section > .famille + .panel{margin-top:22px}
 .semmeta b{color:var(--ink)}
 /* la semaine regardée : sa phase (même teinte que le bandeau des blocs 2 et 4a) et ses compétitions */
 .semfil{display:inline-grid; grid-template-columns:repeat(3,auto); gap:3px}
-/* le seul accès à la page cachée des probas de classement des clubs français (05/11, choix de GT) */
-.semlien{font-size:12.5px; font-weight:600; color:var(--fr); text-decoration:none; white-space:nowrap; border:1px solid var(--fr); border-radius:999px; padding:2px 10px; background:var(--fr-soft)}
-.semlien:hover{background:var(--fr); color:#fff}
-.semlien[hidden]{display:none}
+/* « Ligue » devient le lien, discret, vers la page cachée des probas de classement
+   des clubs français (05/11, choix de GT) : saison en cours, semaines de phase de
+   ligue seulement. Même pastille, une flèche fine et un soulignement au survol. */
+.semfil a.lien{font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; padding:3px 9px; border-radius:3px; text-decoration:none; color:var(--ink); background:color-mix(in srgb, var(--phc) 30%, transparent); box-shadow:inset 0 -2px 0 var(--phc)}
+.semfil a.lien i{font-style:normal; margin-left:4px; opacity:.55}
+.semfil a.lien:hover{text-decoration:underline; text-underline-offset:2px}
+.semfil a.lien:hover i{opacity:1}
 .semfil span{font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; padding:3px 9px; border-radius:3px; color:var(--ink-3); background:var(--surface-2); cursor:default}
 .semfil span.on{color:var(--ink); background:color-mix(in srgb, var(--phc) 30%, transparent); box-shadow:inset 0 -2px 0 var(--phc)}
 .semks{display:inline-flex; align-items:center; gap:10px; padding-right:14px; border-right:1px solid var(--rule)}
@@ -838,7 +841,7 @@ footer .legal{margin-top:3px; font-size:11px}
   <div class="panel" id="semPanel">
     <div class="ptitle"><span class="no">2</span><h3>La semaine européenne</h3>
       <span class="sub"><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations"><button type="button" id="sem-top" aria-pressed="true">Les 8 premières</button><button type="button" id="sem-all" aria-pressed="false">Toutes</button></span></span><span class="ctl"><span class="lb">Semaine</span><span class="seg semnav" role="group" aria-label="Semaine"><button type="button" id="sem-prev" aria-label="Semaine précédente">‹</button><button type="button" id="sem-lab" class="semlab" aria-pressed="true"></button><button type="button" id="sem-next" aria-label="Semaine suivante">›</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelSem" aria-label="Saison"></select></span></span></span></div>
-    <div class="semmeta"><span class="semfil" id="semFil" aria-label="Phase"></span><a class="semlien" id="semLien" href="/football-clubs-francais-phase-de-ligue/" hidden>Clubs français : où finiront-ils&nbsp;?<span aria-hidden="true"> →</span></a><span class="semks" id="semKs" aria-label="Compétitions"></span><span class="semtxt" id="semMeta"></span></div>
+    <div class="semmeta"><span class="semfil" id="semFil" aria-label="Phase"></span><span class="semks" id="semKs" aria-label="Compétitions"></span><span class="semtxt" id="semMeta"></span></div>
     <div class="semwrap" id="semBox"><div class="semlist" id="semList"></div><div class="tip tipsem" id="tipSem" hidden></div></div>
     <p class="figc" id="semNote"></p>
   </div>
@@ -5695,9 +5698,10 @@ document.getElementById('anomaly').innerHTML = anomalous.length
     /* phase et compétitions de la semaine regardée */
     const phs = new Set(SEMS[k].map(m => typeof m[3] === 'string' ? 0 : m[3] < 8 ? 1 : 2));
     const grp = !COURS && pk().grp;
-    document.getElementById('semLien').hidden = !COURS;   /* saison en cours seulement */
     document.getElementById('semFil').innerHTML = [['Qualifs', 'Qualifications', '--n4'], grp ? ['Groupes', 'Phase de groupes', '--fr'] : ['Ligue', 'Phase de ligue', '--fr'], ['Finale', 'Phase finale', '--n7']]
-      .map(([c, l, v], p) => `<span class="${phs.has(p) ? 'on' : ''}" style="--phc:var(${v})" title="${l}${phs.has(p) ? ' : cette semaine' : ''}">${c}</span>`).join('');
+      .map(([c, l, v], p) => COURS && p === 1 && phs.has(1)
+        ? `<a class="lien" href="/football-clubs-francais-phase-de-ligue/" style="--phc:var(${v})" title="${l} : où finiront les clubs ?">${c}<i aria-hidden="true">↗</i></a>`
+        : `<span class="${phs.has(p) ? 'on' : ''}" style="--phc:var(${v})" title="${l}${phs.has(p) ? ' : cette semaine' : ''}">${c}</span>`).join('');
     document.getElementById('semKs').innerHTML = [0, 1, 2].map(kk => {
       const L = SEMS[k].filter(m => m[2] === kk), C = 'C' + [1, 3, 4][kk];
       if (!L.length) return '';
