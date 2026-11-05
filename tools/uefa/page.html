@@ -1313,20 +1313,25 @@ const LATE = Object.fromEntries(N.map(n=>{
    suivante + C4) — sinon la source reste telle quelle pour cette nation et
    cette journée. Le total ne bouge jamais : on déplace, on n'ajoute rien.
    Les saisons closes (HIST) sont déjà rangées par journée de compétition. */
+/* C4OK : journées de C4 vérifiées (colonne juste avec Wikipédia), y compris
+   quand la C4 n'a rien rapporté (défaites) : rien à déplacer en points, mais
+   le match appartient bien à sa journée. Sert au décompte des matchs du 7a. */
+const C4OK = {};
 const C4SHIFT = (() => {
   const out = {}; if (typeof SEM === 'undefined' || !SEM.length) return out;
-  const W = {};
+  const W = {}, G = {};
   for (const m of SEM) { if (typeof m[3] !== 'number' || m[3] > 7 || m[8] == null) continue;
     for (const [c, a, b] of [[m[5], m[8], m[9]], [m[7], m[9], m[8]]]) {
       const w = W[c] = W[c] || [0, 1, 2].map(() => new Array(8).fill(0));
-      w[m[2]][m[3]] += a > b ? 2 : a === b ? 1 : 0; } }
+      w[m[2]][m[3]] += a > b ? 2 : a === b ? 1 : 0;
+      if (m[2] === 2) (G[c] = G[c] || new Array(8).fill(0))[m[3]]++; } }
   for (const n of N) { const w = W[n.c]; if (!w) continue;
     const d = n.divisor ?? (QUALS[n.c] ? QUALS[n.c].e : null); if (!d) continue;
     const sft = new Array(8).fill(0);
-    for (let j = 0; j < 6; j++) { if (!w[2][j]) continue;
+    for (let j = 0; j < 6; j++) { if (!(G[n.c] || [])[j]) continue;
       const col = nStepsQ + j + 1; if (col > lastPlayed) continue;
       const attendu = (w[0][j + 1] + w[1][j + 1] + w[2][j]) / d;
-      if (Math.abs(rawStep(n.c, col)[1] - attendu) < 0.002) sft[j] = w[2][j] / d; }
+      if (Math.abs(rawStep(n.c, col)[1] - attendu) < 0.002) { sft[j] = w[2][j] / d; (C4OK[n.c] = C4OK[n.c] || [])[j] = true; } }
     if (sft.some(Boolean)) out[n.c] = sft; }
   return out; })();
 const step = (c,i)=>{ const r = rawStep(c,i), e = LATE[c] || 0, S = C4SHIFT[c];
@@ -3847,17 +3852,24 @@ const legende = segs => segs.map(s =>
     /* ligue */
     for (let k = 0; k < 8; k++) {
       if (J.l) { out.push(exact(J.l[k])); continue; }
-      /* La source range ses points par FENÊTRE de journées, pas par journée de
-         chaque compétition : sa colonne Jn réunit la Jn de C1 et de C3 et la
-         J(n−1) de C4, qui commence une semaine plus tard (vérifié sur les matchs
-         Wikipédia de BEL, POR, FRA, ENG, 05/11/2026). On comptait les matchs de C4
-         dans la mauvaise colonne : le 05/11, la Belgique et le Portugal
-         affichaient 2,67 et 2,25 points par match en J4, plus que le maximum (2).
-         On compte donc les matchs comme la source compte les points, club par
-         club (D.eff, comme jouesClubs). */
-      const OFF = [0, 0, 1];
-      const m = [0, 1, 2].reduce((a, ki) => a + (k - OFF[ki] < 0 ? 0 : jouesClubs(c, ki).filter(g => g > k - OFF[ki]).length), 0);
-      out.push(m ? { p: Math.round(S.m[k][1] * d), m, v: null } : null);
+      /* Même règle que les blocs 4 à 6 (C4SHIFT, 05/11/2026). La source range ses
+         points par SEMAINE : sa colonne Jn réunit la Jn de C1 et de C3 et la
+         J(n−1) de C4, qui commence une semaine plus tard. step() redescend la C4
+         dans sa propre journée quand les matchs Wikipédia le confirment ; sinon la
+         colonne reste rangée par semaine. On compte les matchs EXACTEMENT comme
+         les points ont été rangés, club par club (D.eff) :
+           - C1, C3 : les clubs qui ont joué leur (k+1)e journée ;
+           - C4 : sa journée k si elle a été redescendue, sa journée k−1 sinon.
+         Avant ce soir, les matchs de C4 étaient comptés dans leur journée alors
+         que leurs points restaient dans la semaine : le 05/11, 2,67 points par
+         match pour la Belgique en J4, plus que le maximum (2). `sem` signale une
+         colonne où la C4 est encore rangée avec la semaine suivante. */
+      const sh = C4OK[c] || [], g4 = jouesClubs(c, 2);
+      const m4 = g4.filter(g => g > k).length, m4p = k ? g4.filter(g => g > k - 1).length : 0;
+      const ici = sh[k] ? m4 : 0, venu = k && !sh[k - 1] ? m4p : 0;
+      const m = jouesClubs(c, 0).filter(g => g > k).length + jouesClubs(c, 1).filter(g => g > k).length + ici + venu;
+      const pk = step(c, nStepsQ + k)[1];
+      out.push(m ? { p: Math.round(pk * d), m, v: null, sem: venu > 0 } : null);
     }
     /* phase finale : les matchs vérifiés de KOV, additionnés sur les clubs de la nation */
     for (let k = 0; k < 5; k++) {
@@ -3974,7 +3986,8 @@ const legende = segs => segs.map(s =>
         h = `<div class="th">${nom} · ${COLS[k][1]}</div>`
           + (x.v ? `<div class="tr"><span class="nm">Bilan</span><b>${vnd(x.v)}</b></div>` : '')
           + `<div class="tr"><span class="nm">Points</span><b>${x.p} en ${x.m} matchs</b></div>`
-          + `<div class="tfoot">${nfx(x.p / x.m)} point par match${x.v ? '' : ' · tiré du coefficient'}</div>`;
+          + `<div class="tfoot">${nfx(x.p / x.m)} point par match${x.v ? '' : ' · tiré du coefficient'}</div>`
+          + (x.sem ? `<div class="tfoot" style="border:0;margin-top:2px;padding-top:0">Les matchs de C4 de la journée précédente sont rangés ici, avec leur semaine, en attendant que Wikipédia confirme leurs scores.</div>` : '');
       }
       tip.innerHTML = h; tip.hidden = false;
       const br = box.getBoundingClientRect(), tw = tip.offsetWidth || 220, th = tip.offsetHeight || 90;
