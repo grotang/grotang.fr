@@ -107,7 +107,21 @@ export const THEME_BOOT = `<script>(function(){try{if(localStorage.getItem('grot
    carte de chaleur tennis) de se redessiner aux nouvelles couleurs. */
 export const THEME_JS = `<script>(function(){
   var dd=document.querySelectorAll('.gn-dd');
-  dd.forEach(function(d){d.addEventListener('toggle',function(){ if(d.open) dd.forEach(function(o){ if(o!==d) o.open=false; }); });});
+  var bar=document.querySelector('.gnav');
+  /* place le panneau : sous sa rubrique, retourné vers la gauche s'il sortait
+     de l'écran, la pointe au milieu de la rubrique ; et la hauteur de la barre
+     pour que le fond ne la recouvre pas */
+  function place(d){ var s=d.querySelector('summary'), p=d.querySelector('.gn-panel'); if(!s||!p) return;
+    if(bar) document.documentElement.style.setProperty('--gn-h', bar.getBoundingClientRect().bottom+'px');
+    p.classList.remove('gn-flip'); p.style.top='';
+    /* téléphone : si la barre des rubriques passe sur deux lignes, le panneau
+       se colle sous la ligne de SA rubrique, pas sous la barre entière */
+    if(getComputedStyle(d).position==='static'){ var n=p.offsetParent; if(n){ p.style.top=(s.getBoundingClientRect().bottom-n.getBoundingClientRect().top+10)+'px'; } }
+    var r=p.getBoundingClientRect(); if(r.right>innerWidth-8) p.classList.add('gn-flip');
+    var sr=s.getBoundingClientRect(); r=p.getBoundingClientRect();
+    p.style.setProperty('--cx', Math.max(16, Math.min(r.width-16, sr.left+sr.width/2-r.left))+'px'); }
+  dd.forEach(function(d){d.addEventListener('toggle',function(){ if(d.open){ dd.forEach(function(o){ if(o!==d) o.open=false; }); place(d); } });});
+  addEventListener('resize',function(){ dd.forEach(function(d){ if(d.open) place(d); }); });
   document.addEventListener('click',function(e){ dd.forEach(function(d){ if(d.open && !d.contains(e.target)) d.open=false; }); });
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') dd.forEach(function(d){ d.open=false; }); });
 })();
@@ -176,9 +190,17 @@ html{scroll-padding-top:58px}
 .gn-dd[open] summary::after{transform:translateY(1px) rotate(-135deg)}
 .gn-dd summary:hover,.gn-dd[open] summary{color:var(--ink);background:color-mix(in srgb,var(--ink) 7%,transparent)}
 .gn-dd summary:focus-visible{outline:2px solid var(--fr);outline-offset:2px}
-.gn-panel{position:absolute;right:0;top:calc(100% + 6px);min-width:190px;z-index:60;display:flex;flex-direction:column;gap:1px;
-  padding:6px;background:var(--surface);border:1px solid var(--rule);border-radius:9px;box-shadow:var(--shadow)}
-.gnav .gn-panel a{display:block}
+.gn-panel{position:absolute;left:0;top:calc(100% + 9px);min-width:max(100%,232px);z-index:60;display:flex;flex-direction:column;gap:2px;
+  padding:6px;background:var(--surface);border:1px solid var(--rule);border-radius:10px;box-shadow:var(--shadow)}
+/* la petite pointe qui relie le panneau à sa rubrique ; --cx est posé par le script */
+.gn-panel::before{content:"";position:absolute;top:-6px;left:var(--cx,24px);width:10px;height:10px;margin-left:-5px;
+  background:var(--surface);border-left:1px solid var(--rule);border-top:1px solid var(--rule);transform:rotate(45deg)}
+.gn-panel.gn-flip{left:auto;right:0}
+.gnav .gn-panel a{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:9px 12px;border-radius:7px;color:var(--ink-2)}
+.gnav .gn-panel a[aria-current="page"]::after{content:"";margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--fr)}
+/* fond : un clic à côté ferme le menu sans rien déclencher dessous (c'est un
+   clic sur la rubrique, donc sur le <summary>) ; voilé sur téléphone seulement */
+.gn-dd[open] summary::before{content:"";position:fixed;left:0;right:0;bottom:0;top:var(--gn-h,46px);z-index:55;cursor:default}
 .gn-avenir{font-size:12.5px;font-weight:600;color:var(--ink-3);padding:5px 10px;line-height:1.2;white-space:nowrap;cursor:default;opacity:.8}
 .gn-soon{margin-left:7px;font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
   color:var(--ink-3);border:1px solid var(--rule);border-radius:4px;padding:1px 4px;vertical-align:1px}
@@ -199,12 +221,17 @@ html{scroll-padding-top:58px}
   .gnav nav{margin-left:0;width:100%;justify-content:flex-start;order:3}
   .gn-coq{margin-left:auto}
   .gn-theme{margin-left:0;min-height:34px}
-  .gnav nav a,.gn-dd summary,.gn-avenir{padding:9px 12px}
-  /* sur téléphone, le panneau s'accroche à toute la largeur de la barre des
-     rubriques : accroché à sa rubrique, celui de droite sortait de l'écran */
+  .gnav nav{gap:2px}
+  .gnav nav a,.gn-dd summary,.gn-avenir{padding:9px 9px}
+  .gn-avenir .gn-soon{margin-left:5px}
+  /* sur téléphone, le panneau prend toute la largeur, juste sous la barre des
+     rubriques, la pointe sous la rubrique ouverte ; le reste de la page est
+     voilé et un toucher n'importe où le referme */
   .gnav nav{position:relative}
   .gn-dd{position:static}
-  .gn-panel{left:0;right:0}}
+  .gn-panel,.gn-panel.gn-flip{left:0;right:0;top:calc(100% + 10px);min-width:0;padding:6px;border-radius:12px}
+  .gnav .gn-panel a{font-size:15px;padding:13px 14px}
+  .gn-dd[open] summary::before{background:rgb(10 13 19 / .32)}}
 `;
 
 
