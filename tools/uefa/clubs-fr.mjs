@@ -71,39 +71,46 @@ h1{font:700 clamp(26px,4vw,38px)/1.15 Newsreader,Georgia,serif;letter-spacing:-.
 .bkt{font-weight:700;font-size:15px;margin-bottom:6px;display:flex;align-items:center}
 .kb{font:700 10.5px Carlito,sans-serif;color:#fff;border-radius:999px;padding:1px 8px;margin-right:8px}
 :root[data-theme="dark"] .kb{color:#0B0F14}
-.row{display:grid;grid-template-columns:190px 1fr 48px;align-items:center;column-gap:12px}
+.row{display:grid;grid-template-columns:200px 1fr 64px;align-items:center;column-gap:12px}
 .ax{height:18px}.ax .tr{position:relative;height:100%}.ax b{position:absolute;top:0;transform:translateX(-50%);font:10px 'IBM Plex Mono',ui-monospace,monospace;color:var(--ink-3)}
 .cl{min-height:44px;padding:4px 0}
 .nm b{font-size:15px}.nm small{color:var(--ink-3);margin-left:4px}
 .nm .z{display:block;font-size:11.5px;color:var(--ink-3)}.nm .z .g{color:var(--good)}.nm .z .r{color:var(--bad)}
 .tr{position:relative;display:grid;grid-template-columns:8fr 16fr 12fr;height:26px;border-radius:3px;overflow:hidden}
 .ax .tr{display:block;overflow:visible}
-.z8{background:color-mix(in srgb,var(--good) 14%,var(--surface))}.zb{background:var(--surface-2)}.ze{background:color-mix(in srgb,var(--bad) 11%,var(--surface))}
+.z8{background:color-mix(in srgb,var(--good) 24%,var(--surface))}.zb{background:color-mix(in srgb,var(--good) 11%,var(--surface));box-shadow:inset 1px 0 0 color-mix(in srgb,var(--good) 45%,var(--surface))}
+.ze{background:color-mix(in srgb,var(--bad) 17%,var(--surface));box-shadow:inset 2px 0 0 var(--bad)}
 .tr i{position:absolute;top:50%;transform:translateY(-50%)}
 .tr i.w{height:2px;background:var(--ink-3)}.tr i.b{height:12px;border-radius:2px;opacity:.9}
 .tr i.d{width:4px;height:20px;background:var(--ink);border-radius:2px;margin-left:-2px}
-.md{font:700 15px 'IBM Plex Mono',ui-monospace,monospace;text-align:right}
+.md{text-align:right;line-height:1.1}.md b{display:block;font:700 18px 'IBM Plex Mono',ui-monospace,monospace}.md b.ok{color:var(--good)}.md b.ko{color:var(--bad)}
+.md small{font-size:11px;color:var(--ink-3)}
+.ax .zq{position:absolute;top:-1px;font:700 10.5px Carlito,sans-serif;letter-spacing:.06em;text-transform:uppercase}
+.ax .zq.q{left:0;color:var(--good)}.ax .zq.e{right:0;color:var(--bad)}
+.ax .lq{position:absolute;top:14px;height:9999px;border-left:2px solid var(--bad);pointer-events:none;z-index:1}
+.bk{position:relative;overflow:hidden}
+.nm .q{display:block;font-size:12.5px;color:var(--ink-2)}.nm .q b{font-size:13.5px}.nm .q .g{color:var(--good)}.nm .q .r{color:var(--bad)}
 .vide{color:var(--ink-3)}
 .leg{font-size:12.5px;color:var(--ink-2);margin:0 0 14px;display:flex;gap:6px 18px;flex-wrap:wrap;align-items:center}
 .leg i{display:inline-block;vertical-align:middle;margin-right:6px}
 .leg .d{width:4px;height:14px;background:var(--ink);border-radius:2px}.leg .b{width:22px;height:10px;background:var(--ink-3);border-radius:2px}.leg .w{width:22px;height:2px;background:var(--ink-3)}
 .note{font-size:12.5px;color:var(--ink-3);max-width:96ch;line-height:1.55;margin-top:18px}
 .note a{color:var(--fr)}
-@media (max-width:640px){ .row{grid-template-columns:1fr 40px} .row .nm{grid-column:1 / -1} .ax .sp{display:none} .ax{grid-template-columns:1fr 40px} .cl{min-height:0;padding:6px 0 8px} }
+@media (max-width:640px){ .row{grid-template-columns:1fr 58px} .row .nm{grid-column:1 / -1} .ax .sp{display:none} .ax{grid-template-columns:1fr 58px} .cl{min-height:0;padding:6px 0 8px} }
 </style>
 </head>
 <body>
 ${nav('uefa')}
 <main>
 <h1>Où finiront les clubs français ?</h1>
-<p class="lede">Le rang de chaque club à la fin de la phase de ligue : où il a une chance sur deux de finir, et où il en a neuf sur dix. Le fond dit ce que vaut la place : 8es directs, barrages, éliminé.</p>
+<p class="lede">La question qui compte : <b>qualifié ou éliminé</b> ? Les 24 premiers de la phase de ligue continuent — directement en 8es pour le top 8, par les barrages ensuite — les 12 derniers sortent. Pour chaque club, sa chance de passer la ligne, et la fourchette de son rang final.</p>
 <div class="maj">${(P.n || 0).toLocaleString('fr-FR')} saisons simulées · source arrêtée au ${esc(P.maj || D.meta.lastUpdated)} · mise à jour après chaque soir de match</div>
 <div class="pan">
   <div class="selr"><span class="lb">Nation</span><span class="chips" id="chips"></span><select id="autre" aria-label="Autre nation"></select></div>
-  <p class="leg"><span><i class="d"></i>rang médian</span><span><i class="b"></i>une chance sur deux</span><span><i class="w"></i>neuf chances sur dix</span></p>
+  <p class="leg"><span><i class="z" style="width:22px;height:10px;background:color-mix(in srgb,var(--good) 24%,var(--surface))"></i>qualifié : 8es directs (1–8), barrages (9–24)</span><span><i class="z" style="width:22px;height:10px;background:color-mix(in srgb,var(--bad) 17%,var(--surface));box-shadow:inset 2px 0 0 var(--bad)"></i>éliminé (25–36)</span><span><i class="d"></i>rang médian</span><span><i class="b"></i>une chance sur deux</span><span><i class="w"></i>neuf sur dix</span></p>
   <div id="vue"></div>
 </div>
-<p class="note">Une tendance, pas un pronostic. Le modèle donne à chaque club la force de sa nation (au coefficient à cinq ans), un peu plus ou un peu moins selon son rang dans le contingent, et ne retient que les victoires, nuls et défaites : un 9-1 et un 1-0 pèsent pareil. Les égalités de points sont départagées par cette force, pas par la différence de buts comme dans le vrai classement. Méthode complète : <a href="/football-coefficient-uefa/#projection">la projection du coefficient UEFA</a>.</p>
+<p class="note">Une tendance, pas un pronostic. Le modèle donne à chaque club la force de sa nation (au coefficient à cinq ans), un peu plus ou un peu moins selon son rang dans le contingent, et ne retient que les victoires, nuls et défaites : un 9-1 et un 1-0 pèsent pareil. À égalité de points, il tire au sort : la différence de buts, qui départage dans le vrai classement, il ne la connaît pas. Méthode complète : <a href="/football-coefficient-uefa/#projection">la projection du coefficient UEFA</a>.</p>
 </main>
 <script>
 (function(){
@@ -120,24 +127,26 @@ ${nav('uefa')}
   chips.innerHTML = TOP.map(c => '<button type="button" data-n="' + c + '">' + nomN[c] + '</button>').join('');
   autre.innerHTML = '<option value="">Autre nation…</option>' + nations.filter(n => !TOP.includes(n[0])).map(n => n[1]).slice()
     .sort((a, b) => a.localeCompare(b, 'fr')).map(nm => '<option value="' + nations.find(n => n[1] === nm)[0] + '">' + nm + '</option>').join('');
-  const axe = '<div class="row ax"><span class="sp"></span><span class="tr">' + [1, 8, 24, 36].map(r => '<b style="left:' + x(r) + '">' + r + '</b>').join('') + '</span><span class="sp"></span></div>';
+  const axe = '<div class="row ax"><span class="sp"></span><span class="tr">' + [1, 8, 24, 36].map(r => '<b style="left:' + x(r) + '">' + r + '</b>').join('')
+    + '</span><span class="sp"></span></div>';
   function dessine(){
     chips.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.n === nat));
     autre.value = TOP.includes(nat) ? '' : nat;
     const L = clubs.filter(c => c[1] === nat);
     vue.innerHTML = !L.length ? '<p class="vide">Aucun club de cette nation en phase de ligue.</p>' : [0, 1, 2].map(k => {
-      const M = L.filter(c => c[2] === k).sort((a, b) => a[6] - b[6] || b[3] - a[3]);
+      const M = L.filter(c => c[2] === k).sort((a, b) => a[11] - b[11] || a[6] - b[6]);
       if (!M.length) return '';
       return '<div class="bk"><div class="bkt"><span class="kb" style="background:var(' + KV[k] + ')">' + KS[k] + '</span>' + KN[k] + '</div>' + axe
         + M.map(c => { const p = 3 * c[12] + c[13];
           return '<div class="row cl"><span class="nm"><b>' + c[0] + '</b><small>' + c[12] + 'V ' + c[13] + 'N ' + c[14] + 'D · ' + p + ' pt' + (p > 1 ? 's' : '') + '</small>'
-            + '<span class="z"><span class="g">8es ' + pc(c[9]) + '</span> · barrages ' + pc(c[10]) + ' · <span class="r">éliminé ' + pc(c[11]) + '</span></span></span>'
+            + '<span class="q"><span class="' + (c[11] < .5 ? 'g' : 'r') + '"><b>' + (c[11] < .5 ? 'Qualifié ' + pc(1 - c[11]) : 'Éliminé ' + pc(c[11])) + '</b></span>'
+            + ' · dont 8es directs ' + pc(c[9]) + '</span></span>'
             + '<span class="tr" role="img" aria-label="' + c[0] + ' : rang médian ' + c[6] + ', une chance sur deux entre ' + c[5] + ' et ' + c[7] + ', neuf sur dix entre ' + c[4] + ' et ' + c[8] + '">'
             + '<span class="z8"></span><span class="zb"></span><span class="ze"></span>'
             + '<i class="w" style="left:' + x(c[4]) + ';right:calc(100% - ' + x(c[8]) + ')"></i>'
             + '<i class="b" style="left:' + x(c[5]) + ';right:calc(100% - ' + x(c[7]) + ');background:var(' + KV[k] + ')"></i>'
             + '<i class="d" style="left:' + x(c[6]) + '"></i></span>'
-            + '<span class="md">' + c[6] + '<sup>' + (c[6] > 1 ? 'e' : 'er') + '</sup></span></div>'; }).join('') + '</div>'; }).join('');
+            + '<span class="md" title="chance de finir dans les 24 premiers"><b class="' + (c[11] < .5 ? 'ok' : 'ko') + '">' + pc(1 - c[11]) + '</b><small>qualifié · ' + c[6] + '<sup>' + (c[6] > 1 ? 'e' : 'er') + '</sup></small></span></div>'; }).join('') + '</div>'; }).join('');
     document.querySelector('h1').textContent = nat === 'FRA' ? 'Où finiront les clubs français ?' : 'Où finiront les clubs ? · ' + nomN[nat];
   }
   const choisir = n => { nat = n; history.replaceState(null, '', n === 'FRA' ? location.pathname : '#' + n.toLowerCase()); dessine(); };
