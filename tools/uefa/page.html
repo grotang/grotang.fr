@@ -139,6 +139,28 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
   #boxSurv svg{width:880px; max-width:none} }
 .chartbox.big{max-height:84vh}
 .chartbox.big svg{max-height:84vh}
+/* 2b · semaine après semaine */
+#box2b{position:relative; overflow:visible}
+#box2b .sc2b{overflow-x:auto; scrollbar-width:thin}
+#box2b .ya2b{position:absolute; left:0; top:0; background:var(--surface); pointer-events:none}
+#chart2b{display:block; max-width:none}
+#box2b .ax{font:11px "IBM Plex Mono",monospace; fill:var(--ink-3)}
+#box2b .rh{font:700 10.5px "IBM Plex Mono",monospace}
+#chart2b .zl{font:600 10.5px "IBM Plex Mono",monospace; fill:var(--ink-3); letter-spacing:.06em; text-transform:uppercase}
+#chart2b .el{font:600 12px "IBM Plex Mono",monospace; paint-order:stroke; stroke:var(--surface); stroke-width:3px}
+#chart2b .dj{font:600 10.5px "IBM Plex Mono",monospace; fill:var(--ink); letter-spacing:-.4px}
+#chart2b .dm{font:10.5px "IBM Plex Mono",monospace; fill:var(--ink-3)}
+#chart2b .pj{font:10.5px "IBM Plex Mono",monospace; fill:var(--ink-2)}
+#chart2b .pz{font:9.5px "IBM Plex Mono",monospace; fill:var(--ink-3); paint-order:stroke; stroke:var(--surface); stroke-width:4px}
+#chart2b .fut{opacity:.38}
+#chart2b .curbg{fill:var(--ink); opacity:.07}
+#tip2b table{border-collapse:collapse; margin-top:6px; font:12px "IBM Plex Mono",monospace}
+#tip2b td{padding:1px 6px 1px 0} #tip2b td.n{text-align:right} #tip2b td.e{color:var(--ink-3)}
+#tip2b tr.fr td{font-weight:700}
+#tip2b i{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px}
+#tip2b .tp{display:flex; gap:10px; margin-top:4px; font:11px "IBM Plex Mono",monospace}
+#tip2b .tk{font-size:11px; color:var(--ink-3); margin-top:4px}
+@media (max-width:680px){ #chips2b{flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none} #chips2b > *{flex:none} #chips2b .brk{display:none} }
 /* téléphone : le graphique prend toute la largeur ; plafonné en hauteur, il se
    centrait avec deux bandes vides sur les côtés */
 @media (max-width:680px){ .chartbox.big, .chartbox.big svg{max-height:none} }
@@ -844,6 +866,13 @@ footer .legal{margin-top:3px; font-size:11px}
     <div class="semmeta"><span class="semfil" id="semFil" aria-label="Phase"></span><span class="semks" id="semKs" aria-label="Compétitions"></span><span class="semtxt" id="semMeta"></span></div>
     <div class="semwrap" id="semBox"><div class="semlist" id="semList"></div><div class="tip tipsem" id="tipSem" hidden></div></div>
     <p class="figc" id="semNote"></p>
+  </div>
+
+  <div class="panel" id="p2b">
+    <div class="ptitle" id="semaines"><span class="no">2b</span><h3>Semaine après semaine</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="seg" role="group" aria-label="Lecture"><button type="button" id="b2-gap" aria-pressed="true">Écart à la France</button><button type="button" id="b2-cum" aria-pressed="false">Cumul</button></span></span></span></div>
+    <div class="chips" id="chips2b"></div>
+    <figure><div class="chartbox" id="box2b"><div class="tip" id="tip2b" hidden></div></div>
+      <figcaption id="cap2b"></figcaption></figure>
   </div>
 
   <div class="panel">
@@ -2918,6 +2947,151 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
 
 mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
 
+</script>
+<script>
+/* ---------- 2b · semaine après semaine (06/11/2026) ----------
+   Le tempo réel de la saison : une colonne par SEMAINE européenne (mardi-jeudi),
+   datée, de juillet aux finales. Sous la date, une ligne fixe par compétition
+   (C1, C3, C4) avec son étape : Q1A/Q1R (aller, retour), J1…J8, Bar, 8e, ¼, ½, F.
+   Points : la source les range déjà par semaine, sauf deux colonnes à cheval sur
+   deux semaines — J1 (C1 le 8-10 sept., C3 le 16-17) et J7 (C4 J6 le 17 déc.,
+   C1/C3 J7 en janvier). Celles-ci sont réparties avec les matchs Wikipédia (SEM)
+   SI leur total retombe juste sur la source ; sinon la colonne entière va à la
+   semaine de la C1. À la dernière semaine de chaque colonne, le cumul est recalé
+   sur le total exact de la source : pas d'arrondis qui s'accumulent (écart
+   France-Portugal au 05/11 : 3,146, comme L'Équipe).
+   Phase finale : l'axe est posé (dates KO) ; les points y arriveront avec le
+   tableau `k` de la source (février), à brancher ici.
+   Nations par défaut : la France, sa voisine de derrière, et toute voisine (deux
+   places de chaque côté au plus) qui presse : au moins 5 % de chances qu'elle
+   double la France ou que la France la double (PRJ.devFR, bloc 9). Choix de GT. */
+(function(){
+  const box = document.getElementById('box2b'); if (!box || typeof SEM === 'undefined') return;
+  const mon = iso => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7); return d.toISOString().slice(0, 10); };
+  const dd = iso => new Date(iso + 'T12:00:00Z');
+  const MO = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+  const finJ = x => { const m = /–(\d+)/.exec(x[1] || ''); return m ? x[0].slice(0, 8) + m[1].padStart(2, '0') : x[0]; };
+  const CO = ['C1', 'C3', 'C4'], CV = ['--c1', '--c3', '--c4'];
+  /* les semaines : ph 1 = été, 0 = phase de ligue, 2 = phase finale */
+  const M = {};
+  const put = (d, co, lab, ph) => { const w = mon(d), k = M[w] = M[w] || { w, ds: [], p: {}, ph };
+    k.ds.push(d); if (!(co in k.p)) k.p[co] = lab; };
+  for (let co = 0; co < 3; co++) QUAL[co].forEach(([r, a, b]) => { const R = r === 'Bar.' ? 'Bar' : r; put(a, co, R + 'A', 1); put(b, co, R + 'R', 1); });
+  for (let co = 0; co < 3; co++) CAL[co].forEach((x, j) => { put(x[0], co, 'J' + (j + 1), 0); put(finJ(x), co, 'J' + (j + 1), 0); });
+  const KOC = { PO: 'Bar', '8es': '8e', '1/4': '¼', '1/2': '½', F: 'F' };
+  for (let co = 0; co < 3; co++) KO[co].forEach(([r, a, b]) => { const R = KOC[r] || r; if (b) { put(a, co, R + 'A', 2); put(b, co, R + 'R', 2); } else put(a, co, R, 2); });
+  const WK = Object.values(M).sort((a, b) => a.w < b.w ? -1 : 1);
+  WK.forEach(k => { k.ds.sort(); k.d0 = k.ds[0]; k.d1 = k.ds[k.ds.length - 1]; });
+  const ix = w => WK.findIndex(x => x.w === w), n = WK.length;
+  /* points de phase de ligue par club et par journée, lus sur Wikipédia */
+  const W = {};
+  for (const m of SEM) { if (typeof m[3] !== 'number' || m[3] > 7 || m[8] == null) continue;
+    for (const [c, a, b] of [[m[5], m[8], m[9]], [m[7], m[9], m[8]]]) {
+      const w = W[c] = W[c] || [0, 1, 2].map(() => new Array(8).fill(0)); w[m[2]][m[3]] += a > b ? 2 : a === b ? 1 : 0; } }
+  const ETEW = []; QUAL[0].forEach(([r, a, b]) => ETEW.push(ix(mon(a)), ix(mon(b))));
+  let lastW = -1;
+  for (let i = 0; i < nStepsQ && i <= lastPlayed; i++) lastW = Math.max(lastW, ETEW[i]);
+  const G = {}, T = {};
+  for (const nn of N) { const c = nn.c, d = nn.divisor ?? (QUALS[c] ? QUALS[c].e : null);
+    const v = new Array(n).fill(0), anc = new Array(n).fill(null);
+    for (let i = 0; i < nStepsQ && i <= lastPlayed; i++) { v[ETEW[i]] += rawStep(c, i)[1]; anc[ETEW[i]] = rawStep(c, i)[0]; }
+    for (let k = 0; k < nStepsM; k++) { const col = nStepsQ + k; if (col > lastPlayed) break;
+      const tot = rawStep(c, col)[1], parts = [];
+      if (CAL[0][k]) parts.push([0, k]); if (CAL[1][k]) parts.push([1, k]); if (k > 0 && CAL[2][k - 1]) parts.push([2, k - 1]);
+      const wi = ([co, j]) => ix(mon(CAL[co][j][0]));
+      const wks = new Set(parts.map(wi));
+      const s = W[c] && d ? parts.reduce((a, [co, j]) => a + W[c][co][j] / d, 0) : null;
+      let last;
+      if (wks.size > 1 && s != null && Math.abs(s - tot) < 0.002) { parts.forEach(p => v[wi(p)] += W[c][p[0]][p[1]] / d); last = Math.max(...wks); }
+      else { last = wi([0, k]); v[last] += tot; }
+      anc[last] = rawStep(c, col)[0];
+      wks.forEach(i => { if (passe(WK[i].d0)) lastW = Math.max(lastW, i); }); }
+    /* cumul, recalé sur la source à chaque fin de colonne */
+    const t = []; let cur = base(c);
+    for (let i = 0; i < n; i++) { if (i > lastW) { t.push(null); continue; }
+      const nv = anc[i] != null ? anc[i] : cur + v[i]; v[i] = nv - cur; cur = nv; t.push(cur); }
+    G[c] = v; T[c] = t; }
+  if (lastW < 0) return;
+  const L = [...N].sort((a, b) => a.r - b.r).map(x => x.c), fi = L.indexOf('FRA');
+  const DEV = (typeof PRJ !== 'undefined' && PRJ && PRJ.devFR) || {};
+  const presse = c => c && DEV[c] != null && (L.indexOf(c) < fi ? 1 - DEV[c] : DEV[c]) >= .05;
+  const sel = new Set(['FRA', L[fi + 1], ...[L[fi - 1], L[fi - 2], L[fi + 2]].filter(presse)].filter(c => c && TOP8.includes(c)));
+  let mode = 'gap';
+  const tip = document.getElementById('tip2b'), cap = document.getElementById('cap2b');
+  mkChips(document.getElementById('chips2b'), TOP8, sel, true, () => draw());
+  const bG = document.getElementById('b2-gap'), bC = document.getElementById('b2-cum');
+  bG.onclick = () => { mode = 'gap'; draw(); }; bC.onclick = () => { mode = 'cum'; draw(); };
+  /* une décimale ; deux seulement quand une seule effacerait le chiffre (0,04) */
+  const f1 = v => { const a = Math.abs(v); return nf(a, a > 0 && a < .05 ? 2 : 1); };
+  const sgn = v => (v > 0 ? '+' : v < 0 ? '−' : '') + f1(v);
+  const dLong = k => { const A = dd(k.d0), B = dd(k.d1);
+    return k.d0 === k.d1 ? `${A.getUTCDate()} ${MO[A.getUTCMonth()]}` : A.getUTCMonth() === B.getUTCMonth()
+      ? `${A.getUTCDate()}–${B.getUTCDate()} ${MO[A.getUTCMonth()]}` : `${A.getUTCDate()} ${MO[A.getUTCMonth()]} – ${B.getUTCDate()} ${MO[B.getUTCMonth()]}`; };
+  function draw(){
+    bG.setAttribute('aria-pressed', mode === 'gap'); bC.setAttribute('aria-pressed', mode === 'cum');
+    const ph = MOB(), boxW = box.clientWidth || 1000, mL = ph ? 40 : 50, cw = ph ? 36 : Math.max(32, (boxW - mL - 8) / n);
+    const Wd = mL + cw * n + 8, mT = 30, pB = ph ? 270 : 330;
+    const yD = pB + 18, yM = pB + 31, yR = [pB + 52, pB + 70, pB + 88], Ht = pB + 98;
+    const X = i => mL + cw * (i + .5);
+    const tf = T.FRA, S = [...sel].sort((a, b) => (a === 'FRA') - (b === 'FRA')), ser = {};
+    S.forEach(c => { ser[c] = T[c].map((v, i) => v == null ? null : mode === 'cum' ? v - base(c) : v - tf[i]); });
+    const vals = S.flatMap(c => ser[c].filter(v => v != null));
+    let lo = Math.min(0, ...vals), hi = Math.max(0, ...vals); const pad = (hi - lo) * .1 || 1; lo -= pad; hi += pad;
+    const Y = v => mT + (pB - mT) * (1 - (v - lo) / (hi - lo)), st = (hi - lo) > 12 ? 2 : (hi - lo) > 5 ? 1 : .5;
+    let g = '', yl = '';
+    [[1, 'Été · qualifs'], [0, 'Phase de ligue'], [2, 'Phase finale']].forEach(([p, t]) => {
+      const a = WK.findIndex(k => k.ph === p), b = n - 1 - [...WK].reverse().findIndex(k => k.ph === p); if (a < 0) return;
+      if (p) g += `<rect x="${mL + cw * a}" y="${mT - 24}" width="${cw * (b - a + 1)}" height="${pB - mT + 24}" fill="var(--ink)" opacity=".035"/>`;
+      g += `<text x="${mL + cw * (a + b + 1) / 2}" y="${mT - 10}" text-anchor="middle" class="zl">${t}</text>`; });
+    if (lastW < n - 1) g += `<rect x="${mL + cw * (lastW + 1)}" y="${mT}" width="${cw * (n - 1 - lastW)}" height="${pB - mT}" fill="url(#hach2b)"/>`;
+    for (let v = Math.ceil(lo / st) * st; v <= hi; v += st) { const z = Math.abs(v) < 1e-9;
+      g += `<line x1="${mL}" x2="${mL + cw * n}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--rule)" stroke-width="${z ? 1.4 : .6}" ${z ? '' : 'stroke-dasharray="2 3"'}/>`;
+      yl += `<text x="${mL - 8}" y="${Y(v) + 4}" text-anchor="end" class="ax">${(mode === 'gap' && v > 0 ? '+' : '') + nf(v, st < 1 ? 1 : 0)}</text>`; }
+    CO.forEach((c, r) => yl += `<text x="${mL - 8}" y="${yR[r]}" text-anchor="end" class="rh" style="fill:var(${CV[r]})">${c}</text>`);
+    let mo = -1;
+    WK.forEach((k, i) => { const x = X(i), cl = i > lastW ? ' fut' : i === lastW ? ' cur' : '', A = dd(k.d0), B = dd(k.d1);
+      if (i === lastW) g += `<rect x="${x - cw / 2 + 1.5}" y="${pB + 4}" width="${cw - 3}" height="${Ht - pB - 4}" rx="5" class="curbg"/>`;
+      g += `<text x="${x}" y="${yD}" text-anchor="middle" class="dj${cl}">${A.getUTCMonth() === B.getUTCMonth() && k.d0 !== k.d1 ? A.getUTCDate() + '–' + B.getUTCDate() : A.getUTCDate()}</text>`;
+      if (A.getUTCMonth() !== mo) { mo = A.getUTCMonth(); g += `<text x="${x - cw / 2 + 3}" y="${yM}" class="dm${cl}">${MO[mo]}</text>`;
+        if (i) g += `<line x1="${x - cw / 2}" x2="${x - cw / 2}" y1="${pB + 6}" y2="${yM + 2}" stroke="var(--rule)"/>`; }
+      for (let co = 0; co < 3; co++) if (co in k.p)
+        g += `<g class="pa${cl}"><circle cx="${x - cw / 2 + 6}" cy="${yR[co] - 3.6}" r="3" fill="var(${CV[co]})"/><text x="${x - cw / 2 + 11}" y="${yR[co]}" class="pj">${k.p[co]}</text></g>`;
+      if (i) { const gap = Math.round((dd(k.w) - dd(WK[i - 1].w)) / 6048e5) - 1;
+        if (gap > 0) { const xb = mL + cw * i;
+          g += `<line x1="${xb}" x2="${xb}" y1="${mT + 18}" y2="${pB}" stroke="var(--ink-3)" stroke-width=".8" stroke-dasharray="1 4" opacity=".7"/>`
+            + `<text x="${xb}" y="${mT + 12}" text-anchor="middle" class="pz"><title>${gap} semaine${gap > 1 ? 's' : ''} sans match</title>${gap} s.</text>`; } } });
+    g += `<line x1="${mL}" x2="${mL + cw * n}" y1="${pB}" y2="${pB}" stroke="var(--rule)"/>`;
+    S.forEach(c => { const p = ser[c].map((v, i) => v == null ? null : [X(i), Y(v)]).filter(Boolean), col = `var(${SLOT[c]})`;
+      g += `<polyline points="${p.map(q => q.join(',')).join(' ')}" fill="none" stroke="${col}" stroke-width="${c === 'FRA' ? 3 : 2.2}" stroke-linejoin="round"/>`;
+      p.forEach((q, j) => g += `<circle cx="${q[0]}" cy="${q[1]}" r="${j === p.length - 1 ? 4 : 2.2}" fill="${col}"/>`);
+      const e = p[p.length - 1], v = ser[c][lastW];
+      g += `<text x="${e[0] + 9}" y="${e[1] + 4}" class="el" fill="${col}">${ph ? c : name(c)}${mode === 'gap' && c === 'FRA' ? '' : ' ' + (mode === 'gap' ? sgn(v) : f1(v))}</text>`; });
+    g += `<line class="hv" x1="0" x2="0" y1="${mT}" y2="${pB}" stroke="var(--ink-3)" opacity="0"/><rect class="hit" x="${mL}" y="${mT}" width="${cw * n}" height="${Ht - mT}" fill="transparent"/>`;
+    box.innerHTML = `<div class="sc2b"><svg id="chart2b" style="width:${Wd}px;height:${Ht}px" viewBox="0 0 ${Wd} ${Ht}" role="img" aria-label="Coefficient, semaine européenne après semaine européenne">`
+      + `<defs><pattern id="hach2b" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="var(--rule)" stroke-width="1.2"/></pattern></defs>${g}</svg></div>`
+      + `<svg class="ya2b" style="width:${mL}px;height:${Ht}px" viewBox="0 0 ${mL} ${Ht}" aria-hidden="true">${yl}</svg>`;
+    box.appendChild(tip);
+    const svg = box.querySelector('#chart2b'), sc = box.querySelector('.sc2b'), hv = svg.querySelector('.hv');
+    if (sc.scrollWidth > sc.clientWidth) sc.scrollLeft = Math.max(0, X(lastW) - sc.clientWidth * .7);
+    const show = ev => { const r = svg.getBoundingClientRect(), i = Math.max(0, Math.min(n - 1, Math.floor((ev.clientX - r.left - mL) / cw)));
+      if (i > lastW) { tip.hidden = true; hv.setAttribute('opacity', 0); return; }
+      hv.setAttribute('x1', X(i)); hv.setAttribute('x2', X(i)); hv.setAttribute('opacity', .6);
+      const k = WK[i], rs = TOP8.map(c => ({ c, g: G[c][i], e: T[c][i] - tf[i] })).sort((a, b) => b.g - a.g);
+      const pas = [0, 1, 2].filter(co => co in k.p).map(co => `<span><i style="background:var(${CV[co]})"></i><b>${CO[co]}</b> ${k.p[co]}</span>`).join('');
+      tip.innerHTML = `<b>${dLong(k)}</b><div class="tp">${pas}</div>`
+        + `<table>${rs.map(r => `<tr class="${r.c === 'FRA' ? 'fr' : ''}"><td><i style="background:var(${SLOT[r.c]})"></i>${name(r.c)}</td><td class="n">+${f1(r.g)}</td><td class="n e">${r.c === 'FRA' ? '' : sgn(r.e)}</td></tr>`).join('')}</table>`
+        + `<div class="tk">gagné dans la semaine · écart à la France après</div>`
+        + (i === ETEW[0] ? `<div class="tk">Avec le bonus de participation à la C1, compté à l'entrée en lice.</div>` : '');
+      tip.hidden = false; const bx = box.getBoundingClientRect(), px = ev.clientX - bx.left;
+      tip.style.left = Math.max(4, px + 16 + tip.offsetWidth > bx.width ? px - 16 - tip.offsetWidth : px + 16) + 'px'; tip.style.top = '34px'; };
+    const hit = svg.querySelector('.hit'); hit.onmousemove = show; hit.onclick = show;
+    svg.onmouseleave = () => { tip.hidden = true; hv.setAttribute('opacity', 0); };
+    const b = L[fi + 1], av = lastW - 1;
+    if (b && T[b][av] != null) cap.innerHTML = `Semaine du ${dLong(WK[lastW])} : la France prend <b>+${f1(G.FRA[lastW])}</b>, ${name(b)} <b>+${f1(G[b][lastW])}</b> — l'écart passe de ${f1(tf[av] - T[b][av])} à <b>${f1(tf[lastW] - T[b][lastW])}</b> points.`
+      + ` ${ph ? 'Touchez' : 'Survolez'} une semaine pour le détail des huit premières.`;
+  }
+  draw(); let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(draw, 150); });
+})();
 </script>
 <script>/* Script découpé par bloc : entre deux scripts, le navigateur peut afficher et répondre au doigt — plus de longue tâche unique au chargement. */
 /* ---------- 4 · gain et cumul, deux échelles ----------
