@@ -101,6 +101,7 @@ console.log(`${R.n.toLocaleString('fr-FR')} saisons simulees en ${sec} s · ${na
 console.log('page.html : bloc PRJ mis a jour');
 execFileSync(process.execPath, [path.join(RACINE, 'tools/build.mjs')], { stdio: 'inherit' });
 
+
 /* 2b · CHANCES DE LA FRANCE, SEMAINE PAR SEMAINE (06/11/2026, demande de GT).
    Pour chaque semaine européenne close de la saison (fin de l'été comprise), on
    remet la page dans l'état des données au soir du dernier match de la semaine,
@@ -116,7 +117,12 @@ execFileSync(process.execPath, [path.join(RACINE, 'tools/build.mjs')], { stdio: 
    versions du modèle. Tout est recalculé à chaque passage, avec le modèle du
    jour (environ 5 s par semaine à 40 000 saisons). L'été n'est pas rembobiné
    (il faudrait reconstituer qui était encore en course). En cas d'échec, la
-   valeur précédente reste : la projection principale n'est jamais bloquée. */
+   valeur précédente reste : la projection principale n'est jamais bloquée.
+   Par semaine on garde (06/11, pour la gazette 2c) : rg = rang final de la
+   France (rgFR), med = coefficient de saison médian projeté de chaque nation
+   (q.tir), pr = le pronostic 1N2 des matchs de la semaine SUIVANTE, tels que le
+   modèle les voyait avant de les jouer ([compétition, domicile, extérieur,
+   victoire domicile, victoire extérieur]). */
 async function historique(nav, info) {
   const NH = 40000, html = fs.readFileSync(BATI, 'utf8');
   const lit = (deb, fin) => { const a = html.indexOf(deb), b = html.indexOf(fin, a); return a < 0 || b < 0 ? null : [a + deb.length, b]; };
@@ -154,10 +160,16 @@ async function historique(nav, info) {
     fs.writeFileSync(tmp, out); err.length = 0;
     await onglet.goto('file://' + tmp, { waitUntil: 'load' });
     await onglet.waitForFunction(() => typeof window.__projette === 'function', null, { timeout: 15000 });
-    const H = await onglet.evaluate(n => { const r = window.__projette(n); return { rg: r.rgFR, bloque: (r.calendrier || {}).bloque || [], ecarts: r.ecarts || [] }; }, NH);
+    const H = await onglet.evaluate(n => { const r = window.__projette(n);
+      return { rg: r.rgFR, med: Object.fromEntries(Object.entries((r.q || {}).tir || {}).map(([c, v]) => [c, v[2]])), pr: r.pronos || [],
+        bloque: (r.calendrier || {}).bloque || [], ecarts: r.ecarts || [] }; }, NH);
     if (err.length || !H.rg || H.bloque.length || H.ecarts.length) {
       console.log(`historique ${k.w} : semaine sautee (${err[0] || H.bloque[0] || H.ecarts[0] || 'pas de rang'})`); continue; }
-    s[k.w] = H.rg.map(v => +v.toFixed(4));
+    /* les pronostics de la semaine suivante seulement */
+    const nx = info.weeks[k.i + 1], fin7 = nx ? (() => { const d = new Date(nx.w + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + 6); return d.toISOString().slice(0, 10); })() : null;
+    const date = new Map(S0.filter(ligue).map(m => [m[2] + '|' + m[4] + '|' + m[6], (Array.isArray(m[10]) && m[10][0]) || m[0]]));
+    const pr = nx ? H.pr.filter(p => { const d = date.get(p[0] + '|' + p[1] + '|' + p[2]); return d && d >= nx.w && d <= fin7; }) : [];
+    s[k.w] = { rg: H.rg.map(v => +v.toFixed(4)), med: Object.fromEntries(Object.entries(H.med).map(([c, v]) => [c, +v.toFixed(3)])), pr };
     console.log(`historique ${k.w} : France dans les 5 premieres ${(H.rg.slice(0, 5).reduce((a, b) => a + b, 0) * 100).toFixed(1)} %`);
   }
   await onglet.close(); if (fs.existsSync(tmp)) fs.unlinkSync(tmp);
