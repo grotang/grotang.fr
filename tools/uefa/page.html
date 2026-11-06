@@ -157,6 +157,8 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 .gaz .gtab td{text-align:right; padding:4px 6px; border-bottom:1px solid var(--rule)}
 .gaz .gtab tr.fr td{font-weight:700; background:color-mix(in srgb, var(--ink) 6%, transparent)}
 .gaz .gtab i{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px}
+.gaz a.gsofa{color:var(--fr); font-weight:700; text-decoration:none; border-bottom:1px dotted currentColor; white-space:nowrap}
+.gaz a.gsofa i{font-style:normal; font-size:.8em; margin-left:2px}
 .gaz .glien{font-size:13px; margin:10px 0 0} .gaz .glien a{color:var(--fr); font-weight:600}
 .gaz .gpied{font-size:12px; color:var(--ink-3); margin:14px 0 0}
 @media (max-width:680px){ .gaz .gchapo{font-size:15px}
@@ -3215,6 +3217,28 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
     const sc = m[8] == null ? null : dom ? [m[8], m[9]] : [m[9], m[8]];
     return { n, c, o, oc, dom, sc, r: sc ? (sc[0] > sc[1] ? 0 : sc[0] === sc[1] ? 1 : 2) : (typeof m[3] === 'number' ? resSource(n, c, m[2]) : null), co: m[2], d: quand(m), lig: typeof m[3] === 'number', m }; };
   const TOUT = SEM.flatMap(m => [vue(m, true), vue(m, false)]);
+  /* LIENS SOFASCORE des matchs mis en avant (06/11/2026, demande de GT). L'adresse
+     Sofascore finit par un code qu'on ne peut pas déduire des noms, et son API
+     n'est pas publique : on ne fait pas tourner de robot dessus. Les liens sont
+     donc posés À LA MAIN ici (clé « domicile|extérieur », noms Wikipédia du bloc
+     SEM ; valeur : la fin de l'adresse sofascore.com/fr/football/match/…). Sans
+     lien, le score reste du texte. */
+  const SOFA = {
+    "FC Villarreal|Paris Saint-Germain": 'villarreal-paris-saint-germain/UHsugb',
+    "Bayer Leverkusen|Olympique de Marseille": 'bayer-04-leverkusen-olympique-de-marseille/QHsGdb',
+    "RC Lens|Como 1907": 'como-rc-lens/YHseeb',
+    "Paris Saint-Germain|Slovan Bratislava": 'sk-slovan-bratislava-paris-saint-germain/UHseY',
+    "Lille OSC|Real Betis": 'real-betis-lille/THsqgb',
+    "RSC Anderlecht|Olympique Lyonnais": 'rsc-anderlecht-olympique-lyonnais/ZHsaib',
+    "AC Milan|SL Benfica": 'benfica-ac-milan/Rdbsgkb',
+    "Manchester City|Paris Saint-Germain": 'paris-saint-germain-manchester-city/rsUH',
+    "Olympique de Marseille|Olympiakos Piraeus": 'olympiacos-fc-olympique-de-marseille/QHsVob',
+    "RC Lens|Sporting CP": 'sporting-cp-rc-lens/YHsbkb',
+    "Lille OSC|Galatasaray": 'galatasaray-lille/THsllb',
+    "Sturm Graz|Olympique de Marseille": 'sk-sturm-graz-olympique-de-marseille/QHsbQ',
+    "Sporting CP|Linzer ASK": 'sporting-cp-lask/iQsbkb',
+    "FC Porto|PSV Eindhoven": 'fc-porto-psv-eindhoven/cjbsckb'
+  };
   /* places européennes par rang (liste d'accès UEFA, voir plus haut) */
   const PLACES = r => r <= 4 ? { t: 7, c1: 4, d: 4 } : r === 5 ? { t: 7, c1: 4, d: 3 } : r === 6 ? { t: 6, c1: 3, d: 2 } : r <= 12 ? { t: 5, c1: 2 } : null;
   const SAISON_PL = (D.meta && D.meta.allocationSeason || '').replace('/', '\u2011');
@@ -3266,7 +3290,8 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
     const cand = [];
     for (const x of sem) { if (x.c !== 'FRA' && x.c !== R) continue; if (x.r == null) continue;
       if (x.c === R && x.oc === 'FRA') continue;                                   // France-poursuivante : vu côté français
-      const p = proba(x), mg = x.sc ? x.sc[0] - x.sc[1] : 0, s = x.sc ? ` (${x.sc[0]}-${x.sc[1]})` : '';
+      const p = proba(x), mg = x.sc ? x.sc[0] - x.sc[1] : 0, lien = SOFA[(x.dom ? x.n : x.o) + '|' + (x.dom ? x.o : x.n)];
+      const s = !x.sc ? '' : lien ? ` (<a class="gsofa" href="https://www.sofascore.com/fr/football/match/${lien}" target="_blank" rel="noopener" title="Le match sur Sofascore">${x.sc[0]}-${x.sc[1]}<i aria-hidden="true">↗</i></a>)` : ` (${x.sc[0]}-${x.sc[1]})`;
       const club = nom(x.n), adv = nom(x.o), lieu = x.dom ? `face ${a_(adv)}` : a_(adv);
       const jusque = TOUT.filter(y => y.sc && y.d <= dim);
       let txt = null, poids = 0;
