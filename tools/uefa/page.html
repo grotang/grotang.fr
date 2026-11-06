@@ -190,7 +190,7 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 #tip2b i{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px}
 #tip2b .tp{display:flex; gap:10px; margin-top:4px; font:11px "IBM Plex Mono",monospace}
 #tip2b .tk{font-size:11px; color:var(--ink-3); margin-top:4px}
-@media (max-width:680px){ #chips2b{flex-wrap:wrap; gap:6px} #chips2b .sep{display:none} }
+@media (max-width:680px){ #chips2b{flex-wrap:wrap; gap:6px} #chips2b .sep{flex-basis:100%; height:0; margin:0; border:0; width:auto} #chips2b .lbl{display:none} #chips2b button.tint{font-size:13px; padding:5px 9px} }
 /* téléphone : le graphique prend toute la largeur ; plafonné en hauteur, il se
    centrait avec deux bandes vides sur les côtés */
 @media (max-width:680px){ .chartbox.big, .chartbox.big svg{max-height:none} }
@@ -3085,27 +3085,23 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
   const palette = () => { const L2 = [...cur()], pris = new Set(L2.map(c => SLOT[c]).filter(Boolean)), libres = JET.filter(t => !pris.has(t) && t !== SLOT.FRA);   // le bleu reste à la France, même absente
     PAL = {}; L2.forEach(c => { PAL[c] = SLOT[c] || libres.shift() || '--ink-3'; }); };
   const coul = c => PAL[c] || SLOT[c] || '--ink-3';
-  const chips = () => { palette(); const S0 = cur(), plein = S0.size >= MAX2B;
-    if (mode === 'gap') {
-      hostC.innerHTML = `<span class="lbl">Nations</span>`
-        + TOP8.map(c => { const on = S0.has(c), off = !on && plein;
-          return `<button type="button" class="tint" data-c="${c}" aria-pressed="${on}"${off ? ` disabled title="${MAX2B} nations au plus"` : ''}${on ? ` style="background:var(${coul(c)});border-color:var(${coul(c)})"` : ''}>${name(c)}</button>`; }).join('');
-    } else {
-      /* Cumul : les 8 premières restent en pastilles (on y revient d'un clic, la
-         France d'abord), ↺ ramène la France et ses voisines après quelques tirages,
-         les autres nations s'ajoutent par le menu et se retirent par « × ». */
-      const autres = [...S0].filter(c => !TOP8.includes(c));
-      const dispo = TOUTES.filter(c => !S0.has(c) && !TOP8.includes(c)).sort((a, b) => name(a).localeCompare(name(b), 'fr'));
-      const ord8 = ['FRA', ...TOP8.filter(c => c !== 'FRA')];
-      hostC.innerHTML = `<span class="lbl">Nations</span><button type="button" data-rnd="1" title="Trois nations au hasard, parmi toutes">🎲 Random</button>`
-        + `<button type="button" data-raz="1" title="La France et ses deux voisines au classement à 5 ans">↺ France et voisines</button><span class="sep"></span>`
-        + ord8.map(c => { const on = S0.has(c), off = !on && plein;
-          return `<button type="button" class="tint" data-c="${c}" aria-pressed="${on}"${off ? ` disabled title="${MAX2B} nations au plus"` : ''}${on ? ` style="background:var(${coul(c)});border-color:var(${coul(c)})"` : ''}>${name(c)}</button>`; }).join('')
-        + autres.map(c => `<button type="button" class="tint" data-del="${c}" aria-pressed="true" style="background:var(${coul(c)});border-color:var(${coul(c)})" title="Retirer ${name(c)}">${name(c)} ×</button>`).join('')
-        + `<span class="sel"><select id="add2b"${plein ? ' disabled' : ''} aria-label="Ajouter une autre nation"><option value="">${plein ? `${MAX2B} nations, c'est le maximum` : 'Autre nation…'}</option>`
-        + dispo.map(c => `<option value="${c}">${name(c)}</option>`).join('') + `</select></span>`;
-      hostC.querySelector('#add2b').onchange = ev => { const c = ev.target.value; if (c && S0.size < MAX2B) S0.add(c); chips(); draw(); };
-    } };
+  /* Les pastilles : seulement les nations choisies, « × » pour retirer (GT, 06/11 :
+     les 8 pastilles permanentes étaient trop lourdes). Un seul menu pour ajouter :
+     en Écart, les 8 premières ; en Cumul, « Les 8 premières » (France en tête) puis
+     « Toutes les autres ». En Cumul seulement : 🎲 et ↺ France et voisines (icônes
+     seules au téléphone). */
+  const chips = () => { palette(); const S0 = cur(), plein = S0.size >= MAX2B, ph = MOB();
+    const ord8 = ['FRA', ...TOP8.filter(c => c !== 'FRA')].filter(c => !S0.has(c));
+    const autres = mode === 'cum' ? TOUTES.filter(c => !S0.has(c) && !TOP8.includes(c)).sort((a, b) => name(a).localeCompare(name(b), 'fr')) : [];
+    const opt = c => `<option value="${c}">${name(c)}</option>`;
+    const menu = `<span class="sel"><select id="add2b"${plein ? ' disabled' : ''} aria-label="Ajouter une nation"><option value="">${plein ? `${MAX2B} nations au plus` : ph ? '+ Ajouter…' : '+ Ajouter une nation…'}</option>`
+      + (mode === 'cum' ? `<optgroup label="Les 8 premières">${ord8.map(opt).join('')}</optgroup><optgroup label="Toutes les autres">${autres.map(opt).join('')}</optgroup>` : ord8.map(opt).join(''))
+      + `</select></span>`;
+    const cmd = mode === 'cum' ? `<button type="button" data-rnd="1" title="Trois nations au hasard, parmi toutes" aria-label="Trois nations au hasard">${ph ? '🎲' : '🎲 Random'}</button>`
+      + `<button type="button" data-raz="1" title="La France et ses deux voisines au classement à 5 ans" aria-label="La France et ses voisines">${ph ? '↺' : '↺ France et voisines'}</button>` : '';
+    hostC.innerHTML = `<span class="lbl">Nations</span>` + menu + cmd + `<span class="sep"></span>`
+      + [...S0].map(c => `<button type="button" class="tint" data-del="${c}" aria-pressed="true" style="background:var(${coul(c)});border-color:var(${coul(c)})" title="Retirer ${name(c)}">${name(c)} ×</button>`).join('');
+    hostC.querySelector('#add2b').onchange = ev => { const c = ev.target.value; if (c && S0.size < MAX2B) S0.add(c); chips(); draw(); }; };
   hostC.onclick = ev => { const b = ev.target.closest('button'); if (!b || b.disabled) return; const S0 = cur();
     if (b.dataset.rnd) { S0.clear(); tirage().forEach(c => S0.add(c)); }
     else if (b.dataset.raz) { S0.clear(); voisines().forEach(c => S0.add(c)); }
@@ -3197,7 +3193,7 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
       + (P5[lastW] != null && P5[lastW - 1] != null ? ` Chances de finir dans les 5 premières : ${pc(P5[lastW - 1])} → <b>${pc(P5[lastW])}</b>.` : '')
       + ` ${ph ? 'Touchez' : 'Survolez'} une semaine pour le détail des huit premières.`;
   }
-  draw(); let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(draw, 150); });
+  draw(); let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { chips(); draw(); }, 150); });
 })();
 </script>
 <script>
