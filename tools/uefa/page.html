@@ -3064,24 +3064,46 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
   const L = [...N].sort((a, b) => a.r - b.r).map(x => x.c), fi = L.indexOf('FRA');
   const DEV = (typeof PRJ !== 'undefined' && PRJ && PRJ.devFR) || {};
   const presse = c => c && DEV[c] != null && (L.indexOf(c) < fi ? 1 - DEV[c] : DEV[c]) >= .05;
-  const sel = new Set(['FRA', L[fi + 1], ...[L[fi - 1], L[fi - 2], L[fi + 2]].filter(presse)].filter(c => c && TOP8.includes(c)));
+  /* Deux sélections, une par lecture (GT, 06/11) :
+     - « Écart à la France » : les nations du top 8, en pastilles ;
+     - « Cumul » : n'importe laquelle des nations engagées (menu « Ajouter une
+       nation… ») et 🎲 Random, qui en tire trois au hasard parmi TOUTES, comme le
+       bloc 8b. Cinq nations au plus dans les deux cas. */
+  const selG = new Set(['FRA', L[fi + 1], ...[L[fi - 1], L[fi - 2], L[fi + 2]].filter(presse)].filter(c => c && TOP8.includes(c)));
+  const selC = new Set(selG);
   let mode = 'gap';
+  const cur = () => mode === 'gap' ? selG : selC;
   const tip = document.getElementById('tip2b'), cap = document.getElementById('cap2b');
-  /* Nations : cinq au plus (GT, 06/11) ; 🎲 tire trois nations du top 8 au hasard,
-     comme le bloc 8b. À cinq, les autres pastilles se grisent. */
   const MAX2B = 5, hostC = document.getElementById('chips2b');
-  const tirage = () => { const pool = [...TOP8], out = []; while (out.length < 3 && pool.length) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]); return out; };
-  const chips = () => { const plein = sel.size >= MAX2B;
-    hostC.innerHTML = `<span class="lbl">Nations</span><button type="button" data-rnd="1" title="Trois nations du top 8 au hasard">🎲 Random</button><span class="sep"></span>`
-      + TOP8.map(c => { const on = sel.has(c), off = !on && plein;
-        return `<button type="button" class="tint" data-c="${c}" aria-pressed="${on}"${off ? ` disabled title="${MAX2B} nations au plus"` : ''}${on ? ` style="background:var(${SLOT[c]});border-color:var(${SLOT[c]})"` : ''}>${name(c)}</button>`; }).join(''); };
-  hostC.onclick = ev => { const b = ev.target.closest('button'); if (!b || b.disabled) return;
-    if (b.dataset.rnd) { sel.clear(); tirage().forEach(c => sel.add(c)); }
-    else { const c = b.dataset.c; if (sel.has(c)) { if (sel.size > 1) sel.delete(c); } else if (sel.size < MAX2B) sel.add(c); }
+  const TOUTES = N.map(x => x.c).filter(c => T[c] && T[c].some(v => v != null));
+  const tirage = () => { const pool = [...TOUTES], out = []; while (out.length < 3 && pool.length) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]); return out; };
+  /* couleurs : celle de la nation si elle en a une (top 8), sinon un jeton libre */
+  const JET = ['--n1', '--n2', '--n3', '--n4', '--n5', '--n6', '--n7', '--n8'];
+  let PAL = {};
+  const palette = () => { const L2 = [...cur()], pris = new Set(L2.map(c => SLOT[c]).filter(Boolean)), libres = JET.filter(t => !pris.has(t));
+    PAL = {}; L2.forEach(c => { PAL[c] = SLOT[c] || libres.shift() || '--ink-3'; }); };
+  const coul = c => PAL[c] || SLOT[c] || '--ink-3';
+  const chips = () => { palette(); const S0 = cur(), plein = S0.size >= MAX2B;
+    if (mode === 'gap') {
+      hostC.innerHTML = `<span class="lbl">Nations</span>`
+        + TOP8.map(c => { const on = S0.has(c), off = !on && plein;
+          return `<button type="button" class="tint" data-c="${c}" aria-pressed="${on}"${off ? ` disabled title="${MAX2B} nations au plus"` : ''}${on ? ` style="background:var(${coul(c)});border-color:var(${coul(c)})"` : ''}>${name(c)}</button>`; }).join('');
+    } else {
+      const dispo = TOUTES.filter(c => !S0.has(c)).sort((a, b) => name(a).localeCompare(name(b), 'fr'));
+      hostC.innerHTML = `<span class="lbl">Nations</span><button type="button" data-rnd="1" title="Trois nations au hasard, parmi toutes">🎲 Random</button>`
+        + `<span class="sel"><select id="add2b"${plein ? ' disabled' : ''} aria-label="Ajouter une nation"><option value="">${plein ? `${MAX2B} nations, c'est le maximum` : 'Ajouter une nation…'}</option>`
+        + dispo.map(c => `<option value="${c}">${name(c)}</option>`).join('') + `</select></span><span class="sep"></span>`
+        + [...S0].map(c => `<button type="button" class="tint" data-del="${c}" aria-pressed="true" style="background:var(${coul(c)});border-color:var(${coul(c)})" title="Retirer ${name(c)}">${name(c)} ×</button>`).join('');
+      hostC.querySelector('#add2b').onchange = ev => { const c = ev.target.value; if (c && S0.size < MAX2B) S0.add(c); chips(); draw(); };
+    } };
+  hostC.onclick = ev => { const b = ev.target.closest('button'); if (!b || b.disabled) return; const S0 = cur();
+    if (b.dataset.rnd) { S0.clear(); tirage().forEach(c => S0.add(c)); }
+    else if (b.dataset.del) { if (S0.size > 1) S0.delete(b.dataset.del); }
+    else if (b.dataset.c) { const c = b.dataset.c; if (S0.has(c)) { if (S0.size > 1) S0.delete(c); } else if (S0.size < MAX2B) S0.add(c); }
     chips(); draw(); };
-  chips();
   const bG = document.getElementById('b2-gap'), bC = document.getElementById('b2-cum');
-  bG.onclick = () => { mode = 'gap'; draw(); }; bC.onclick = () => { mode = 'cum'; draw(); };
+  bG.onclick = () => { mode = 'gap'; chips(); draw(); }; bC.onclick = () => { mode = 'cum'; chips(); draw(); };
+  chips();
   /* une décimale ; deux seulement quand une seule effacerait le chiffre (0,04) */
   const f1 = v => { const a = Math.abs(v); return nf(a, a > 0 && a < .05 ? 2 : 1); };
   const sgn = v => (v > 0 ? '+' : v < 0 ? '−' : '') + f1(v);
@@ -3090,11 +3112,11 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
       ? `${A.getUTCDate()}–${B.getUTCDate()} ${MO[A.getUTCMonth()]}` : `${A.getUTCDate()} ${MO[A.getUTCMonth()]} – ${B.getUTCDate()} ${MO[B.getUTCMonth()]}`; };
   function draw(){
     bG.setAttribute('aria-pressed', mode === 'gap'); bC.setAttribute('aria-pressed', mode === 'cum');
-    const ph = MOB(), boxW = box.clientWidth || 1000, mL = ph ? 40 : 50, cw = ph ? 36 : Math.max(32, (boxW - mL - 8) / n);
+    const ph = MOB(), boxW = box.clientWidth || 1000, mL = ph ? 50 : 54, cw = ph ? 36 : Math.max(32, (boxW - mL - 8) / n);
     const Wd = mL + cw * n + 8, mT = 30, pB = ph ? 270 : 330;
-    const yD = pB + 18, yM = pB + 31, yR = [pB + 52, pB + 70, pB + 88], yP = pB + 114, avecP = sel.has('FRA') && P5.some(v => v != null), Ht = pB + (avecP ? 124 : 98);
+    const yD = pB + 18, yM = pB + 31, yR = [pB + 52, pB + 70, pB + 88], yP = pB + 114, avecP = cur().has('FRA') && P5.some(v => v != null), Ht = pB + (avecP ? 124 : 98);
     const X = i => mL + cw * (i + .5);
-    const tf = T.FRA, S = [...sel].sort((a, b) => (a === 'FRA') - (b === 'FRA')), ser = {};
+    const tf = T.FRA, S = [...cur()].sort((a, b) => (a === 'FRA') - (b === 'FRA')), ser = {};
     S.forEach(c => { ser[c] = T[c].map((v, i) => v == null ? null : mode === 'cum' ? v - base(c) : v - tf[i]); });
     const vals = S.flatMap(c => ser[c].filter(v => v != null));
     let lo = Math.min(0, ...vals), hi = Math.max(0, ...vals); const pad = (hi - lo) * .1 || 1; lo -= pad; hi += pad;
@@ -3111,7 +3133,7 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
     if (lastW < n - 1) g += `<rect x="${mL + cw * (lastW + 1)}" y="${mT}" width="${cw * (n - 1 - lastW)}" height="${pB - mT}" fill="url(#hach2b)"/>`;
     for (let v = Math.ceil(lo / st) * st; v <= hi; v += st) { const z = Math.abs(v) < 1e-9;
       g += `<line x1="${mL}" x2="${mL + cw * n}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--rule)" stroke-width="${z ? 1.4 : .6}" ${z ? '' : 'stroke-dasharray="2 3"'}/>`;
-      yl += `<text x="${mL - 8}" y="${Y(v) + 4}" text-anchor="end" class="ax">${(mode === 'gap' && v > 0 ? '+' : '') + nf(v, st < 1 ? 1 : 0)}</text>`; }
+      yl += `<text x="${mL - 8}" y="${Y(v) + 4}" text-anchor="end" class="ax">${(mode === 'gap' && v > 0 ? '+' : '') + nf(z ? 0 : v, st < 1 ? 1 : 0)}</text>`; }
     if (avecP) yl += `<text x="${mL - 8}" y="${yP - 6}" text-anchor="end" class="rh" style="fill:var(--fr)">France</text><text x="${mL - 8}" y="${yP + 5}" text-anchor="end" class="rh" style="fill:var(--ink-2)">top\u00a05</text>`;
     CO.forEach((c, r) => yl += `<text x="${mL - 8}" y="${yR[r]}" text-anchor="end" class="rh" style="fill:var(${CV[r]})">${c}</text>`);
     let mo = -1;
@@ -3129,7 +3151,7 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
           g += `<line x1="${xb}" x2="${xb}" y1="${mT + 18}" y2="${pB}" stroke="var(--ink-3)" stroke-width=".8" stroke-dasharray="1 4" opacity=".7"/>`
             + `<text x="${xb}" y="${mT + 12}" text-anchor="middle" class="pz"><title>${gap} semaine${gap > 1 ? 's' : ''} sans match</title>${gap} s.</text>`; } } });
     g += `<line x1="${mL}" x2="${mL + cw * n}" y1="${pB}" y2="${pB}" stroke="var(--rule)"/>`;
-    S.forEach(c => { const p = ser[c].map((v, i) => v == null ? null : [X(i), Y(v)]).filter(Boolean), col = `var(${SLOT[c]})`;
+    S.forEach(c => { const p = ser[c].map((v, i) => v == null ? null : [X(i), Y(v)]).filter(Boolean), col = `var(${coul(c)})`;
       g += `<polyline points="${p.map(q => q.join(',')).join(' ')}" fill="none" stroke="${col}" stroke-width="${c === 'FRA' ? 3 : 2.2}" stroke-linejoin="round"/>`;
       p.forEach((q, j) => g += `<circle cx="${q[0]}" cy="${q[1]}" r="${j === p.length - 1 ? 4 : 2.2}" fill="${col}"/>`);
       const e = p[p.length - 1], v = ser[c][lastW];
@@ -3144,10 +3166,10 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
     const show = ev => { const r = svg.getBoundingClientRect(), i = Math.max(0, Math.min(n - 1, Math.floor((ev.clientX - r.left - mL) / cw)));
       if (i > lastW) { tip.hidden = true; hv.setAttribute('opacity', 0); return; }
       hv.setAttribute('x1', X(i)); hv.setAttribute('x2', X(i)); hv.setAttribute('opacity', .6);
-      const k = WK[i], rs = TOP8.map(c => ({ c, g: G[c][i], e: T[c][i] - tf[i] })).sort((a, b) => b.g - a.g);
+      const k = WK[i], rs = [...new Set([...TOP8, ...cur()])].map(c => ({ c, g: G[c][i], e: T[c][i] - tf[i] })).sort((a, b) => b.g - a.g);
       const pas = [0, 1, 2].filter(co => co in k.p).map(co => `<span><i style="background:var(${CV[co]})"></i><b>${CO[co]}</b> ${k.p[co]}</span>`).join('');
       tip.innerHTML = `<b>${dLong(k)}</b><div class="tp">${pas}</div>`
-        + `<table>${rs.map(r => `<tr class="${r.c === 'FRA' ? 'fr' : ''}"><td><i style="background:var(${SLOT[r.c]})"></i>${name(r.c)}</td><td class="n">+${f1(r.g)}</td><td class="n e">${r.c === 'FRA' ? '' : sgn(r.e)}</td></tr>`).join('')}</table>`
+        + `<table>${rs.map(r => `<tr class="${r.c === 'FRA' ? 'fr' : ''}"><td><i style="background:var(${coul(r.c)})"></i>${name(r.c)}</td><td class="n">+${f1(r.g)}</td><td class="n e">${r.c === 'FRA' ? '' : sgn(r.e)}</td></tr>`).join('')}</table>`
         + `<div class="tk">gagné dans la semaine · écart à la France après</div>`
         + (P5[i] != null ? `<div class="tk">France dans les 5 premières en fin de saison : <b>${pc(P5[i])}</b>${i && P5[i - 1] != null ? ` (${P5[i] >= P5[i - 1] ? '+' : '−'}${Math.round(Math.abs(P5[i] - P5[i - 1]) * 100)} pts sur la semaine)` : ''}</div>` : '')
         + (i === ETEW[0] ? `<div class="tk">Avec le bonus de participation à la C1, compté à l'entrée en lice.</div>` : '');
