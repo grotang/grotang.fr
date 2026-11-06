@@ -190,7 +190,7 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 #tip2b i{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px}
 #tip2b .tp{display:flex; gap:10px; margin-top:4px; font:11px "IBM Plex Mono",monospace}
 #tip2b .tk{font-size:11px; color:var(--ink-3); margin-top:4px}
-@media (max-width:680px){ #chips2b{flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none} #chips2b > *{flex:none} #chips2b .brk{display:none} }
+@media (max-width:680px){ #chips2b{flex-wrap:wrap; gap:6px} #chips2b .sep{display:none} }
 /* téléphone : le graphique prend toute la largeur ; plafonné en hauteur, il se
    centrait avec deux bandes vides sur les côtés */
 @media (max-width:680px){ .chartbox.big, .chartbox.big svg{max-height:none} }
@@ -3070,7 +3070,9 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
        nation… ») et 🎲 Random, qui en tire trois au hasard parmi TOUTES, comme le
        bloc 8b. Cinq nations au plus dans les deux cas. */
   const selG = new Set(['FRA', L[fi + 1], ...[L[fi - 1], L[fi - 2], L[fi + 2]].filter(presse)].filter(c => c && TOP8.includes(c)));
-  const selC = new Set(selG);
+  /* Cumul, par défaut : la France et ses voisines directes au classement à 5 ans (GT, 06/11) */
+  const voisines = () => ['FRA', L[fi - 1], L[fi + 1]].filter(Boolean);
+  const selC = new Set(voisines());
   let mode = 'gap';
   const cur = () => mode === 'gap' ? selG : selC;
   const tip = document.getElementById('tip2b'), cap = document.getElementById('cap2b');
@@ -3080,7 +3082,7 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
   /* couleurs : celle de la nation si elle en a une (top 8), sinon un jeton libre */
   const JET = ['--n1', '--n2', '--n3', '--n4', '--n5', '--n6', '--n7', '--n8'];
   let PAL = {};
-  const palette = () => { const L2 = [...cur()], pris = new Set(L2.map(c => SLOT[c]).filter(Boolean)), libres = JET.filter(t => !pris.has(t));
+  const palette = () => { const L2 = [...cur()], pris = new Set(L2.map(c => SLOT[c]).filter(Boolean)), libres = JET.filter(t => !pris.has(t) && t !== SLOT.FRA);   // le bleu reste à la France, même absente
     PAL = {}; L2.forEach(c => { PAL[c] = SLOT[c] || libres.shift() || '--ink-3'; }); };
   const coul = c => PAL[c] || SLOT[c] || '--ink-3';
   const chips = () => { palette(); const S0 = cur(), plein = S0.size >= MAX2B;
@@ -3089,15 +3091,24 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
         + TOP8.map(c => { const on = S0.has(c), off = !on && plein;
           return `<button type="button" class="tint" data-c="${c}" aria-pressed="${on}"${off ? ` disabled title="${MAX2B} nations au plus"` : ''}${on ? ` style="background:var(${coul(c)});border-color:var(${coul(c)})"` : ''}>${name(c)}</button>`; }).join('');
     } else {
-      const dispo = TOUTES.filter(c => !S0.has(c)).sort((a, b) => name(a).localeCompare(name(b), 'fr'));
+      /* Cumul : les 8 premières restent en pastilles (on y revient d'un clic, la
+         France d'abord), ↺ ramène la France et ses voisines après quelques tirages,
+         les autres nations s'ajoutent par le menu et se retirent par « × ». */
+      const autres = [...S0].filter(c => !TOP8.includes(c));
+      const dispo = TOUTES.filter(c => !S0.has(c) && !TOP8.includes(c)).sort((a, b) => name(a).localeCompare(name(b), 'fr'));
+      const ord8 = ['FRA', ...TOP8.filter(c => c !== 'FRA')];
       hostC.innerHTML = `<span class="lbl">Nations</span><button type="button" data-rnd="1" title="Trois nations au hasard, parmi toutes">🎲 Random</button>`
-        + `<span class="sel"><select id="add2b"${plein ? ' disabled' : ''} aria-label="Ajouter une nation"><option value="">${plein ? `${MAX2B} nations, c'est le maximum` : 'Ajouter une nation…'}</option>`
-        + dispo.map(c => `<option value="${c}">${name(c)}</option>`).join('') + `</select></span><span class="sep"></span>`
-        + [...S0].map(c => `<button type="button" class="tint" data-del="${c}" aria-pressed="true" style="background:var(${coul(c)});border-color:var(${coul(c)})" title="Retirer ${name(c)}">${name(c)} ×</button>`).join('');
+        + `<button type="button" data-raz="1" title="La France et ses deux voisines au classement à 5 ans">↺ France et voisines</button><span class="sep"></span>`
+        + ord8.map(c => { const on = S0.has(c), off = !on && plein;
+          return `<button type="button" class="tint" data-c="${c}" aria-pressed="${on}"${off ? ` disabled title="${MAX2B} nations au plus"` : ''}${on ? ` style="background:var(${coul(c)});border-color:var(${coul(c)})"` : ''}>${name(c)}</button>`; }).join('')
+        + autres.map(c => `<button type="button" class="tint" data-del="${c}" aria-pressed="true" style="background:var(${coul(c)});border-color:var(${coul(c)})" title="Retirer ${name(c)}">${name(c)} ×</button>`).join('')
+        + `<span class="sel"><select id="add2b"${plein ? ' disabled' : ''} aria-label="Ajouter une autre nation"><option value="">${plein ? `${MAX2B} nations, c'est le maximum` : 'Autre nation…'}</option>`
+        + dispo.map(c => `<option value="${c}">${name(c)}</option>`).join('') + `</select></span>`;
       hostC.querySelector('#add2b').onchange = ev => { const c = ev.target.value; if (c && S0.size < MAX2B) S0.add(c); chips(); draw(); };
     } };
   hostC.onclick = ev => { const b = ev.target.closest('button'); if (!b || b.disabled) return; const S0 = cur();
     if (b.dataset.rnd) { S0.clear(); tirage().forEach(c => S0.add(c)); }
+    else if (b.dataset.raz) { S0.clear(); voisines().forEach(c => S0.add(c)); }
     else if (b.dataset.del) { if (S0.size > 1) S0.delete(b.dataset.del); }
     else if (b.dataset.c) { const c = b.dataset.c; if (S0.has(c)) { if (S0.size > 1) S0.delete(c); } else if (S0.size < MAX2B) S0.add(c); }
     chips(); draw(); };
@@ -3151,11 +3162,15 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
           g += `<line x1="${xb}" x2="${xb}" y1="${mT + 18}" y2="${pB}" stroke="var(--ink-3)" stroke-width=".8" stroke-dasharray="1 4" opacity=".7"/>`
             + `<text x="${xb}" y="${mT + 12}" text-anchor="middle" class="pz"><title>${gap} semaine${gap > 1 ? 's' : ''} sans match</title>${gap} s.</text>`; } } });
     g += `<line x1="${mL}" x2="${mL + cw * n}" y1="${pB}" y2="${pB}" stroke="var(--rule)"/>`;
+    const etiq = [];
     S.forEach(c => { const p = ser[c].map((v, i) => v == null ? null : [X(i), Y(v)]).filter(Boolean), col = `var(${coul(c)})`;
       g += `<polyline points="${p.map(q => q.join(',')).join(' ')}" fill="none" stroke="${col}" stroke-width="${c === 'FRA' ? 3 : 2.2}" stroke-linejoin="round"/>`;
       p.forEach((q, j) => g += `<circle cx="${q[0]}" cy="${q[1]}" r="${j === p.length - 1 ? 4 : 2.2}" fill="${col}"/>`);
       const e = p[p.length - 1], v = ser[c][lastW];
-      g += `<text x="${e[0] + 9}" y="${e[1] + 4}" class="el" fill="${col}">${ph ? c : name(c)}${mode === 'gap' && c === 'FRA' ? '' : ' ' + (mode === 'gap' ? sgn(v) : f1(v))}</text>`; });
+      etiq.push({ x: e[0] + 9, y: e[1] + 4, col, t: `${ph ? c : name(c)}${mode === 'gap' && c === 'FRA' ? '' : ' ' + (mode === 'gap' ? sgn(v) : f1(v))}` }); });
+    /* étiquettes de fin de courbe : écartées de 14 px au moins, pour ne pas se chevaucher */
+    etiq.sort((a, b) => a.y - b.y); for (let j = 1; j < etiq.length; j++) if (etiq[j].y - etiq[j - 1].y < 14) etiq[j].y = etiq[j - 1].y + 14;
+    etiq.forEach(t => g += `<text x="${t.x}" y="${t.y}" class="el" fill="${t.col}">${t.t}</text>`);
     g += `<line class="hv" x1="0" x2="0" y1="${mT}" y2="${pB}" stroke="var(--ink-3)" opacity="0"/><rect class="hit" x="${mL}" y="${mT}" width="${cw * n}" height="${Ht - mT}" fill="transparent"/>`;
     box.innerHTML = `<div class="sc2b"><svg id="chart2b" style="width:${Wd}px;height:${Ht}px" viewBox="0 0 ${Wd} ${Ht}" role="img" aria-label="Coefficient, semaine européenne après semaine européenne">`
       + `<defs><pattern id="hach2b" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="var(--rule)" stroke-width="1.2"/></pattern></defs>${g}</svg></div>`
