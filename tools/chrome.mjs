@@ -14,7 +14,21 @@
    premier texte (≈ 2,5 s perdues sur mobile selon PageSpeed). Les trois fichiers
    du premier écran sont préchargés ; les autres (latin étendu, chasse fixe) ne
    viennent que si un caractère les demande. */
-import { arbre, url, RUBRIQUES_A_VENIR } from './site.mjs';
+import fs from 'node:fs';
+import { arbre, url, RUBRIQUES_A_VENIR, GAZETTE } from './site.mjs';
+
+/* LA GAZETTE DANS LE MENU (06/11/2026, maquette B choisie par GT) : une ligne en
+   retrait sous « Coefficient UEFA », qui mène à la DERNIÈRE gazette, avec sa date
+   (« 5 nov. ») en étiquette. Elle dépend du coefficient, elle n'est pas une page
+   de plus. Lue dans tools/uefa/archive/gazettes.json (rangé par gazettes.mjs) ;
+   sans fichier, pas de ligne. Sur une page de gazette : nav('gazette'). */
+const DERNIERE = (() => { try {
+  const L = JSON.parse(fs.readFileSync(new URL('./uefa/archive/gazettes.json', import.meta.url), 'utf8')).liste || [];
+  return L.length ? L.reduce((a, b) => (b.slug > a.slug ? b : a)) : null; } catch { return null; } })();
+const MOIS_C = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+const sousGazette = current => { if (!DERNIERE) return '';
+  const [, m, j] = DERNIERE.slug.split('-').map(Number);
+  return `<a class="gn-sub" href="${GAZETTE}${DERNIERE.slug}/" title="${String(DERNIERE.titre).replace(/"/g, '&quot;')}"${current === 'gazette' ? ' aria-current="page"' : ''}>La gazette de la semaine<span class="gn-date">${j} ${MOIS_C[m - 1]}</span></a>`; };
 
 export const FONTS = `<link rel="preload" href="/fonts/carlito-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/carlito-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -202,6 +216,10 @@ html{scroll-padding-top:58px}
 .gn-panel.gn-flip{left:auto;right:-9px}
 .gnav .gn-panel a{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:9px 12px;border-radius:7px;color:var(--ink-2)}
 .gnav .gn-panel a[aria-current="page"]::after{content:"";margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--fr)}
+.gnav .gn-panel a.gn-sub{position:relative;padding-left:30px;font-size:13px}
+.gnav .gn-panel a.gn-sub::before{content:"";position:absolute;left:16px;top:6px;height:calc(50% - 6px);width:7px;border-left:1.5px solid var(--rule);border-bottom:1.5px solid var(--rule);border-bottom-left-radius:4px}
+.gnav .gn-panel .gn-date{margin-left:auto;font:600 10px "IBM Plex Mono",monospace;letter-spacing:.04em;padding:2px 6px;border-radius:4px;background:var(--fr-soft);color:var(--fr);white-space:nowrap}
+.gnav .gn-panel a.gn-sub[aria-current="page"]::after{margin-left:6px}
 /* fond : un clic à côté ferme le menu sans rien déclencher dessous (c'est un
    clic sur la rubrique, donc sur le <summary>) ; voilé sur téléphone seulement */
 .gn-dd[open] summary::before{content:"";position:fixed;left:0;right:0;bottom:0;top:var(--gn-h,46px);z-index:55;cursor:default}
@@ -255,11 +273,11 @@ const toutes = r => r.pages.concat(...r.sous.map(toutes));
 function rubrique(r, current) {
   const pp = toutes(r);
   if (pp.length === 1) return lien(pp[0], current, r.nom).replace('<a ', `<a title="${esc(pp[0].titre)}" `);
-  const ici = pp.some(p => p.key === current);
+  const ici = pp.some(p => p.key === current) || (current === 'gazette' && pp.some(p => p.key === 'uefa'));
   const groupe = (s, niv) => `<div class="gn-grp"><span class="gn-grp-t">${esc(s.nom)}</span>`
     + s.pages.map(p => lien(p, current)).join('') + s.sous.map(x => groupe(x, niv + 1)).join('') + '</div>';
   return `<details class="gn-dd"><summary${ici ? ' class="gn-ici"' : ''}>${esc(r.nom)}</summary><div class="gn-panel">`
-    + r.pages.map(p => lien(p, current)).join('') + r.sous.map(s => groupe(s, 1)).join('') + '</div></details>';
+    + r.pages.map(p => lien(p, current) + (p.key === 'uefa' ? sousGazette(current) : '')).join('') + r.sous.map(s => groupe(s, 1)).join('') + '</div></details>';
 }
 
 export function nav(current) {

@@ -64,7 +64,7 @@ ${css}
 </style>
 </head>
 <body>
-${nav('uefa')}
+${nav('gazette')}
 <main>`;
   const pied = `</main>
 ${THEME_JS}
