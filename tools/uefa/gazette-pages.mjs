@@ -2,7 +2,13 @@
  * propre pour chaque gazette, pour Google et pour le partage).
  *
  *   /football-gazette-uefa/              toutes les gazettes, la plus récente d'abord
- *   /football-gazette-uefa/AAAA-MM-JJ/   la gazette d'une semaine (date du premier match)
+ *   /football-gazette-uefa/AAAA-MM-JJ/   la gazette d'une semaine (date du DERNIER match de
+ *                                        la semaine, choix de GT le 06/11/2026)
+ *
+ * Le 06/11/2026, de 02:03 à 02:10 environ, les adresses ont porté la date du
+ * PREMIER match. Elles ont été publiées : chacune reçoit une page relais vers
+ * la bonne adresse (même mécanique que RELAIS dans site.mjs), fabriquée ici à
+ * partir de `d0`, pour toujours.
  *
  * Le texte n'est PAS écrit ici : c'est le bloc 2c de la page UEFA qui l'écrit
  * (un seul exemplaire du rédacteur). tools/uefa/gazettes.mjs ouvre la page
@@ -77,6 +83,20 @@ ${ANALYTICS}
       + `<nav class="pn" aria-label="Autres gazettes"><span>${av ? `<a href="${GAZETTE}${av.slug}/">‹ ${esc(av.per)}</a>` : ''}</span><span>${ap ? `<a href="${GAZETTE}${ap.slug}/">${esc(ap.per)} ›</a>` : `<a href="${url('uefa')}#gazette">Suivre la saison en direct ›</a>`}</span></nav>`
       + pied;
   });
+  /* relais des adresses « premier match » (voir plus haut) */
+  for (const g of L) { if (!g.d0 || g.d0 === g.slug || L.some(x => x.slug === g.d0)) continue;
+    const vers = `${GAZETTE}${g.slug}/`;
+    pages[`${GAZETTE}${g.d0}/`] = `<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Page déplacée — grotang.fr</title>
+<link rel="canonical" href="${DOMAINE}${vers}">
+<meta http-equiv="refresh" content="0; url=${vers}">
+<script>location.replace('${vers}' + location.search + location.hash);</script>
+</head>
+<body><a href="${vers}">${esc(g.titre)}</a></body>
+</html>`; }
   const R = [...L].reverse();
   pages[GAZETTE] = tete('La gazette du coefficient UEFA', `Chaque semaine européenne, le bilan de la France au coefficient UEFA : points pris, écart avec ses poursuivants, projection de fin de saison et faits marquants.`, GAZETTE)
     + `<div class="fil"><a href="${url('uefa')}">Coefficient UEFA</a> › La gazette</div><div class="carte"><h1>La gazette du coefficient UEFA</h1>`

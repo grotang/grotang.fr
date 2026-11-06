@@ -3164,7 +3164,8 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
    Wikipédia). Le classement à cinq ans de fin de saison fixe les places de la
    saison N+2 (D.meta.allocationSeason). Rangs 1 à 5 : 7 clubs (4 en C1, dont
    pour le 5e un au 3e tour de qualification), 6e : 6 (3 en C1), 7e à 12e : 5.
-   Chaque gazette a sa page (/football-gazette-uefa/AAAA-MM-JJ/), fabriquée par
+   Chaque gazette a sa page (/football-gazette-uefa/AAAA-MM-JJ/, date du DERNIER
+   match de la semaine, choix de GT 06/11), fabriquée par
    build.mjs depuis tools/uefa/archive/gazettes.json, que tools/uefa/gazettes.mjs
    remplit en lisant window.__gazettes() après chaque projection.
    Été : pas de pronostics ni de projection rembobinée (voir projette.mjs) ; la
@@ -3297,7 +3298,7 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
     const per = A0.getUTCMonth() === B0.getUTCMonth() ? `du ${A0.getUTCDate()} au ${B0.getUTCDate()} ${MOIS[B0.getUTCMonth()]}` : `du ${A0.getUTCDate()} ${MOIS[A0.getUTCMonth()]} au ${B0.getUTCDate()} ${MOIS[B0.getUTCMonth()]}`;
     const brut = h => h.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
     const desc = (() => { const t = brut(chapo); if (t.length <= 158) return t; const c = t.slice(0, 157); return c.slice(0, c.lastIndexOf(' ')) + '…'; })();
-    return { slug: k.d0, d1: k.d1, titre, desc, per: `Semaine ${per} ${B0.getUTCFullYear()}`, lab: `${A0.getUTCDate()}${A0.getUTCMonth() === B0.getUTCMonth() ? '' : ' ' + MOC[A0.getUTCMonth()]} – ${B0.getUTCDate()} ${MOC[B0.getUTCMonth()]}`,
+    return { slug: k.d1, d0: k.d0, d1: k.d1, titre, desc, per: `Semaine ${per} ${B0.getUTCFullYear()}`, lab: `${A0.getUTCDate()}${A0.getUTCMonth() === B0.getUTCMonth() ? '' : ' ' + MOC[A0.getUTCMonth()]} – ${B0.getUTCDate()} ${MOC[B0.getUTCMonth()]}`,
       html: `<div class="gdate">Semaine ${per} ${B0.getUTCFullYear()}${k.ph === 1 ? ' · barrages de qualification' : ''}</div>`
         + `<h4 class="gtitre">${titre}</h4><p class="gchapo">${chapo}</p>`
         + (notes.length || faits.length ? `<h5 class="gh">Ce qui a compté</h5>` + notes.map(t => `<p class="gp">${t}</p>`).join('')
@@ -3306,7 +3307,7 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
         + `<p class="gpied">Écrit automatiquement à partir des données de la page Coefficient UEFA de grotang.fr${k.ph === 1 ? ' ; pas de pronostics ni de projection rembobinée pour l\'été' : ''}. Projeté : total à cinq ans en fin de saison, médiane de la projection du site. Places européennes : liste d'accès UEFA en vigueur (règlement 2026/27). Scores : Wikipédia.</p>` };
   }
   /* pour tools/uefa/gazettes.mjs : toutes les gazettes, de la plus ancienne à la plus récente */
-  window.__gazettes = () => { const L = []; for (let j = deb; j <= fin; j++) { const a = article(j); L.push({ slug: a.slug, d1: a.d1, titre: a.titre, desc: a.desc, per: a.per, html: a.html }); } return { maj: D.meta.lastUpdated, liste: L }; };
+  window.__gazettes = () => { const L = []; for (let j = deb; j <= fin; j++) { const a = article(j); L.push({ slug: a.slug, d0: a.d0, d1: a.d1, titre: a.titre, desc: a.desc, per: a.per, html: a.html }); } return { maj: D.meta.lastUpdated, liste: L }; };
   const GAZ = '/football-gazette-uefa/';
   let cur = fin;
   function draw() {
