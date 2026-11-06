@@ -157,8 +157,12 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 .gaz .gtab td{text-align:right; padding:4px 6px; border-bottom:1px solid var(--rule)}
 .gaz .gtab tr.fr td{font-weight:700; background:color-mix(in srgb, var(--ink) 6%, transparent)}
 .gaz .gtab i{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px}
+.gaz .glien{font-size:13px; margin:10px 0 0} .gaz .glien a{color:var(--fr); font-weight:600}
 .gaz .gpied{font-size:12px; color:var(--ink-3); margin:14px 0 0}
-@media (max-width:680px){ .gaz .gchapo{font-size:15px} }
+@media (max-width:680px){ .gaz .gchapo{font-size:15px}
+  .gaz .gtab{font-size:11.5px; min-width:520px} .gaz .gtab th, .gaz .gtab td{padding:4px 4px}
+  .gaz .gtab td:nth-child(2), .gaz .gtab th:nth-child(2){position:sticky; left:0; background:var(--surface); z-index:1}
+  .gaz .gtab tr.fr td:nth-child(2){background:color-mix(in srgb, var(--ink) 6%, var(--surface))} }
 /* 2b · semaine après semaine */
 #box2b{position:relative; overflow:visible}
 #box2b .sc2b{overflow-x:auto; scrollbar-width:thin}
@@ -3155,6 +3159,14 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
      l'ampleur (record de la saison quand c'en est un, compté sur SEM).
    - Tableau : top 8 en fin de semaine, total, gain, écart à la France, total
      projeté et son évolution sur la semaine, écart projeté.
+   L'enjeu en places : liste d'accès UEFA en vigueur (règlement 2026/27, décision
+   du Comité exécutif du 20/05/2026 ; la même figure dans la saison 2027/28 sur
+   Wikipédia). Le classement à cinq ans de fin de saison fixe les places de la
+   saison N+2 (D.meta.allocationSeason). Rangs 1 à 5 : 7 clubs (4 en C1, dont
+   pour le 5e un au 3e tour de qualification), 6e : 6 (3 en C1), 7e à 12e : 5.
+   Chaque gazette a sa page (/football-gazette-uefa/AAAA-MM-JJ/), fabriquée par
+   build.mjs depuis tools/uefa/archive/gazettes.json, que tools/uefa/gazettes.mjs
+   remplit en lisant window.__gazettes() après chaque projection.
    Été : pas de pronostics ni de projection rembobinée (voir projette.mjs) ; la
    gazette s'en tient aux points et aux résultats.
    Une semaine est complète quand la source est arrêtée après son dernier match.
@@ -3202,6 +3214,9 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
     const sc = m[8] == null ? null : dom ? [m[8], m[9]] : [m[9], m[8]];
     return { n, c, o, oc, dom, sc, r: sc ? (sc[0] > sc[1] ? 0 : sc[0] === sc[1] ? 1 : 2) : (typeof m[3] === 'number' ? resSource(n, c, m[2]) : null), co: m[2], d: quand(m), lig: typeof m[3] === 'number', m }; };
   const TOUT = SEM.flatMap(m => [vue(m, true), vue(m, false)]);
+  /* places européennes par rang (liste d'accès UEFA, voir plus haut) */
+  const PLACES = r => r <= 4 ? { t: 7, c1: 4, d: 4 } : r === 5 ? { t: 7, c1: 4, d: 3 } : r === 6 ? { t: 6, c1: 3, d: 2 } : r <= 12 ? { t: 5, c1: 2 } : null;
+  const SAISON_PL = (D.meta && D.meta.allocationSeason || '').replace('/', '\u2011');
 
   function article(i) {
     const k = WK[i], dim = (() => { const d = dd(k.w); d.setUTCDate(d.getUTCDate() + 6); return d.toISOString().slice(0, 10); })();
@@ -3265,6 +3280,10 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
     cand.sort((a, b) => b.poids - a.poids);
     const faits = [...cand.filter(x => x.fr).slice(0, 3), ...cand.filter(x => !x.fr).slice(0, 2)];
     /* devant, derrière */
+    const rg = fi + 1, Pi = PLACES(rg), Pd = PLACES(rg + 1), Pu = rg > 1 ? PLACES(rg - 1) : null;
+    const enjeu = Pi && Pd && SAISON_PL ? `L'enjeu : en finissant ${rg}<sup>e</sup>, la France enverrait ${Pi.t} clubs en coupes d'Europe en ${SAISON_PL} (dont ${Pi.c1} en Ligue des champions)`
+      + (Pd.t < Pi.t ? ` ; ${rg + 1}<sup>e</sup>, ce serait ${Pd.t} (dont ${Pd.c1})` : '')
+      + (Pu && Pu.t === Pi.t && Pu.d > Pi.d ? `. Monter ${rg - 1}<sup>e</sup> n'apporterait pas de club de plus, seulement une entrée directe en phase de ligue au lieu d'un 3<sup>e</sup> tour de qualification` : '') + '.' : '';
     const voisins = `${A ? `Devant, ${le(A)} ${v3(A, 'reste', 'restent')} à ${pts(-ec(A, i))}` : ''}${A && B ? ' ; d' : 'D'}${B ? `errière, ${le(B)} ${v3(B, 'pointe', 'pointent')} à ${pts(ec(B, i))}` : ''}.`;
     /* le tableau */
     const ligne = (c, j) => { const pa = proj(P1, c), pb = proj(P0, c), e = ec(c, i), eq = ep(c, P1);
@@ -3276,18 +3295,23 @@ mkChips(document.getElementById('lchips'), TOP8, selL, true, ()=>drawL());
       + LE.slice(0, 8).map(ligne).join('') + `</tbody></table></div>`;
     const A0 = dd(k.d0), B0 = dd(k.d1);
     const per = A0.getUTCMonth() === B0.getUTCMonth() ? `du ${A0.getUTCDate()} au ${B0.getUTCDate()} ${MOIS[B0.getUTCMonth()]}` : `du ${A0.getUTCDate()} ${MOIS[A0.getUTCMonth()]} au ${B0.getUTCDate()} ${MOIS[B0.getUTCMonth()]}`;
-    return { lab: `${A0.getUTCDate()}${A0.getUTCMonth() === B0.getUTCMonth() ? '' : ' ' + MOC[A0.getUTCMonth()]} – ${B0.getUTCDate()} ${MOC[B0.getUTCMonth()]}`,
+    const brut = h => h.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+    const desc = (() => { const t = brut(chapo); if (t.length <= 158) return t; const c = t.slice(0, 157); return c.slice(0, c.lastIndexOf(' ')) + '…'; })();
+    return { slug: k.d0, d1: k.d1, titre, desc, per: `Semaine ${per} ${B0.getUTCFullYear()}`, lab: `${A0.getUTCDate()}${A0.getUTCMonth() === B0.getUTCMonth() ? '' : ' ' + MOC[A0.getUTCMonth()]} – ${B0.getUTCDate()} ${MOC[B0.getUTCMonth()]}`,
       html: `<div class="gdate">Semaine ${per} ${B0.getUTCFullYear()}${k.ph === 1 ? ' · barrages de qualification' : ''}</div>`
         + `<h4 class="gtitre">${titre}</h4><p class="gchapo">${chapo}</p>`
         + (notes.length || faits.length ? `<h5 class="gh">Ce qui a compté</h5>` + notes.map(t => `<p class="gp">${t}</p>`).join('')
           + (faits.length ? `<ul class="gfaits">${faits.map(f => `<li>${f.txt}.</li>`).join('')}</ul>` : '') : '')
-        + `<p class="gp">${voisins}</p>` + tab
-        + `<p class="gpied">Écrit automatiquement à partir des données de cette page${k.ph === 1 ? ' ; pas de pronostics ni de projection rembobinée pour l\'été' : ''}. Projeté : total à cinq ans en fin de saison, médiane du bloc 9. Scores : Wikipédia.</p>` };
+        + `<p class="gp">${voisins}${enjeu ? ' ' + enjeu : ''}</p>` + tab
+        + `<p class="gpied">Écrit automatiquement à partir des données de la page Coefficient UEFA de grotang.fr${k.ph === 1 ? ' ; pas de pronostics ni de projection rembobinée pour l\'été' : ''}. Projeté : total à cinq ans en fin de saison, médiane de la projection du site. Places européennes : liste d'accès UEFA en vigueur (règlement 2026/27). Scores : Wikipédia.</p>` };
   }
+  /* pour tools/uefa/gazettes.mjs : toutes les gazettes, de la plus ancienne à la plus récente */
+  window.__gazettes = () => { const L = []; for (let j = deb; j <= fin; j++) { const a = article(j); L.push({ slug: a.slug, d1: a.d1, titre: a.titre, desc: a.desc, per: a.per, html: a.html }); } return { maj: D.meta.lastUpdated, liste: L }; };
+  const GAZ = '/football-gazette-uefa/';
   let cur = fin;
   function draw() {
     const a = article(cur);
-    host.innerHTML = a.html;
+    host.innerHTML = a.html + `<p class="glien"><a href="${GAZ}${a.slug}/">Lien permanent de cette gazette ↗</a> · <a href="${GAZ}">Toutes les gazettes</a></p>`;
     document.getElementById('gaz-lab').textContent = a.lab;
     document.getElementById('gaz-prev').disabled = cur <= deb; document.getElementById('gaz-next').disabled = cur >= fin;
   }

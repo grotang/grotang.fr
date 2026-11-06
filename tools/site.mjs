@@ -78,6 +78,13 @@ export const CACHEES = {
   clubsFR: '/football-clubs-francais-phase-de-ligue/',
 };
 
+/* LA GAZETTE (06/11/2026) : une page par semaine européenne, sous une adresse
+   racine qui suit la règle (périmètre-objet-angle) ; la semaine est un
+   sous-dossier daté AAAA-MM-JJ (premier match de la semaine), qui ne change
+   jamais. Indexées et dans le sitemap, hors menu (lien depuis le bloc 2c de la
+   page UEFA). Fabriquées par tools/uefa/gazette-pages.mjs. */
+export const GAZETTE = '/football-gazette-uefa/';
+
 export const DOMAINE = 'https://grotang.fr';
 
 export const page = key => {
@@ -113,6 +120,8 @@ export const fichier = u => u.replace(/^\//, '') + 'index.html';
     if (vues.has(u)) throw new Error(`registre : adresse en double « ${u} »`);
     vues.add(u);
   }
+  if (!/^\/football-[a-z0-9-]+\/$/.test(GAZETTE) || vues.has(GAZETTE)) throw new Error(`registre : adresse de la gazette mal formée ou en double « ${GAZETTE} »`);
+  vues.add(GAZETTE);
   for (const [de, vers] of Object.entries(RELAIS)) {
     if (vues.has(de)) throw new Error(`registre : « ${de} » est à la fois une page et un relais`);
     if (!vues.has(vers)) throw new Error(`registre : le relais « ${de} » mène à « ${vers} », qui n'est pas une page`);

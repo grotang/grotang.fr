@@ -100,6 +100,8 @@ fs.writeFileSync(PAGE + '.tmp', out); fs.renameSync(PAGE + '.tmp', PAGE);
 console.log(`${R.n.toLocaleString('fr-FR')} saisons simulees en ${sec} s · ${nations} nations · controles de conservation OK`);
 console.log('page.html : bloc PRJ mis a jour');
 execFileSync(process.execPath, [path.join(RACINE, 'tools/build.mjs')], { stdio: 'inherit' });
+/* la gazette (bloc 2c) : rangée dans tools/uefa/archive/gazettes.json, une page par semaine (06/11/2026) */
+try { execFileSync(process.execPath, [path.join(ICI, 'gazettes.mjs')], { stdio: 'inherit' }); } catch (e) { console.log('gazettes : echec, fichier precedent garde'); }
 
 
 /* 2b · CHANCES DE LA FRANCE, SEMAINE PAR SEMAINE (06/11/2026, demande de GT).

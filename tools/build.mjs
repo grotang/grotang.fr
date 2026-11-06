@@ -23,9 +23,10 @@ import { buildEco } from './eco/page.mjs';
 import { buildJoueurs } from './joueurs/page.mjs';
 import { buildNantes } from './nantes/page.mjs';
 import { buildClubsFR } from './uefa/clubs-fr.mjs';
+import { buildGazettes } from './uefa/gazette-pages.mjs';
 import { nation } from './tennis/nations.mjs';
 import { compteParcours } from './tennis/wiki.mjs';
-import { PAGES, RELAIS, CACHEES, DOMAINE, url, abs, fichier } from './site.mjs';
+import { PAGES, RELAIS, CACHEES, GAZETTE, DOMAINE, url, abs, fichier } from './site.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
@@ -480,6 +481,7 @@ ${FAVICON}
 const sitemap = dates => `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${PAGES.filter(p => !p.aVenir).map(p => `  <url><loc>${DOMAINE}${p.url}</loc><lastmod>${dates[p.key]}</lastmod></url>`).join('\n')}
+${(dates.gazettes || []).map(([u, d]) => `  <url><loc>${DOMAINE}${u}</loc><lastmod>${d}</lastmod></url>`).join('\n')}
 </urlset>
 `;
 
@@ -603,6 +605,12 @@ const APERCU_NANTES = PAGES.find(p => p.key === 'nantes').aVenir?.apercu;
 const nantes = await buildNantes(APERCU_NANTES ? { apercu: APERCU_NANTES } : {});
 /* page cachée (noindex, hors menu et sitemap) : probas de classement des clubs français, tirées de PRJ */
 const clubsFR = buildClubsFR(read('tools/uefa/page.html'));
+/* la gazette, une page par semaine (tools/uefa/gazette-pages.mjs) : le texte vient du bloc 2c,
+   rangé par tools/uefa/gazettes.mjs ; le style aussi, pris dans la page UEFA */
+const GAZ = (() => { let j = null; try { j = JSON.parse(read('tools/uefa/archive/gazettes.json')); } catch { return { pages: {}, liste: [] }; }
+  const src = read('tools/uefa/page.html'), a = src.indexOf('/* 2c · la gazette */'), b = src.indexOf('/* 2b · semaine après semaine */', a);
+  return buildGazettes(j, a >= 0 && b > a ? src.slice(a, b) : ''); })();
+const datesGaz = GAZ.liste.length ? [[GAZETTE, GAZ.liste[GAZ.liste.length - 1].d1], ...GAZ.liste.map(g => [`${GAZETTE}${g.slug}/`, g.d1])] : [];
 const today = new Date().toISOString().slice(0, 10);
 
 /* `lastmod` d'une page : la date du jour si son contenu a change, sinon celle
@@ -685,6 +693,7 @@ const sizes = {
   ...(joueurs ? { [fichier(APERCU_JOUEURS)]: write(fichier(APERCU_JOUEURS), joueurs.html) } : {}),
   [fichier(APERCU_NANTES || url('nantes'))]: write(fichier(APERCU_NANTES || url('nantes')), nantes.html),
   [fichier(CACHEES.clubsFR)]: write(fichier(CACHEES.clubsFR), clubsFR.html),
+  ...Object.fromEntries(Object.entries(GAZ.pages).map(([u, h]) => [fichier(u), write(fichier(u), h)])),
   ...Object.fromEntries(PAGES.filter(p => p.aVenir).map(p => [fichier(p.url), write(fichier(p.url), pageAVenir(p))])),
   ...Object.fromEntries(Object.entries(RELAIS).map(([de, vers]) => [fichier(de), write(fichier(de), relais(vers))])),
   '404.html': write('404.html', NOTFOUND),
@@ -692,7 +701,7 @@ const sizes = {
   'robots.txt': write('robots.txt', ROBOTS),
   'favicon.svg': write('favicon.svg', FAVICON_SVG),
   'site.webmanifest': write('site.webmanifest', MANIFEST),
-  'sitemap.xml': write('sitemap.xml', sitemap({ uefa: majUefa, tennis: majTennis, eco: majEco, b27: majB27, nantes: majNantes })),
+  'sitemap.xml': write('sitemap.xml', sitemap({ uefa: majUefa, tennis: majTennis, eco: majEco, b27: majB27, nantes: majNantes, gazettes: datesGaz })),
 };
 
 for (const [f, n] of Object.entries(sizes)) console.log(String(n).padStart(7), f);
