@@ -193,7 +193,7 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 #tip2b i{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px}
 #tip2b .tp{display:flex; gap:10px; margin-top:4px; font:11px "IBM Plex Mono",monospace}
 #tip2b .tk{font-size:11px; color:var(--ink-3); margin-top:4px}
-@media (max-width:680px){ #chips2b{flex-wrap:wrap; gap:6px} #chips2b .sep{flex-basis:100%; height:0; margin:0; border:0; width:auto} #chips2b .lbl{display:none} #chips2b button.tint{font-size:13px; padding:5px 9px} }
+@media (max-width:680px){ #chips2b{flex-wrap:wrap; gap:6px} #chips2b .sep{flex-basis:100%; height:0; margin:0; border:0; width:auto} #chips2b .lbl{display:none} #chips2b button.tint, #lchips button.tint{font-size:12px; padding:4px 8px; min-height:32px} }
 /* téléphone : le graphique prend toute la largeur ; plafonné en hauteur, il se
    centrait avec deux bandes vides sur les côtés */
 @media (max-width:680px){ .chartbox.big, .chartbox.big svg{max-height:none} }
@@ -1287,6 +1287,9 @@ const el = (t,a={},...k)=>{const n=document.createElement(t);for(const[p,v]of Ob
 const SEASONS = ["2022/23","2023/24","2024/25","2025/26","2026/27"];
 const FRNAME = {ENG:"Angleterre",ITA:"Italie",ESP:"Espagne",GER:"Allemagne",FRA:"France",POR:"Portugal",BEL:"Belgique",NED:"Pays-Bas",TUR:"Turquie",POL:"Pologne",CZE:"Tchéquie",GRE:"Grèce",NOR:"Norvège",DEN:"Danemark",CYP:"Chypre",SUI:"Suisse",AUT:"Autriche",HUN:"Hongrie",SCO:"Écosse",SWE:"Suède",CRO:"Croatie",ROU:"Roumanie",UKR:"Ukraine",ISR:"Israël",AZE:"Azerbaïdjan",SVN:"Slovénie",SVK:"Slovaquie",BUL:"Bulgarie",SRB:"Serbie",RUS:"Russie",ISL:"Islande",IRL:"Irlande",ARM:"Arménie",KOS:"Kosovo",BIH:"Bosnie-Herzégovine",LVA:"Lettonie",FIN:"Finlande",KAZ:"Kazakhstan",LIE:"Liechtenstein",MDA:"Moldavie",FRO:"Îles Féroé",ALB:"Albanie",MKD:"Macédoine du Nord",BLR:"Biélorussie",LTU:"Lituanie",AND:"Andorre",MLT:"Malte",GIB:"Gibraltar",EST:"Estonie",NIR:"Irlande du Nord",GEO:"Géorgie",LUX:"Luxembourg",MNE:"Monténégro",WAL:"Pays de Galles",SMR:"Saint-Marin"};
 const name = c => FRNAME[c] || c;
+/* Pastilles des blocs 2b et 4 au téléphone : les 3 noms trop longs passent en sigle
+   (07/11/2026) — 5 pastilles tiennent alors toujours sur 2 lignes, même à 360 px. */
+const nomPastille = (c, ph) => ph && ['MKD', 'BIH', 'NIR'].includes(c) ? c : name(c);
 
 const QL = ["Entrée en lice (bonus C1 + Q1 aller)","Q1 retour","Q2 aller","Q2 retour","Q3 aller","Q3 retour","Barrages aller","Barrages retour"];
 const ML = ["J1","J2","J3","J4","J5","J6","J7 C1/C3","J8 C1/C3"];
@@ -3019,7 +3022,7 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
     host.innerHTML = `<span class="lbl">Nations</span><span class="sel"><select id="addL"${plein ? ' disabled' : ''} aria-label="Ajouter une nation"><option value="">${plein ? `${MAX} nations au plus` : ph ? '+ Ajouter…' : '+ Ajouter une nation…'}</option>`
       + dispo.map(c => `<option value="${c}">${name(c)}</option>`).join('') + `</select></span>`
       + `<button type="button" data-raz="1" title="La France et ses voisines directes au classement à 5 ans" aria-label="La France et ses voisines">${ph ? '↺' : '↺ France et voisines'}</button><span class="sep"></span>`
-      + [...selL].filter(hasSeason).map(c => `<button type="button" class="tint" data-del="${c}" aria-pressed="true" style="background:var(${SLOT[c]});border-color:var(${SLOT[c]})" title="Retirer ${name(c)}">${name(c)} ×</button>`).join('');
+      + [...selL].filter(hasSeason).map(c => `<button type="button" class="tint" data-del="${c}" aria-pressed="true" style="background:var(${SLOT[c]});border-color:var(${SLOT[c]})" title="Retirer ${name(c)}">${nomPastille(c, ph)} ×</button>`).join('');
     host.querySelector('#addL').onchange = ev => { const c = ev.target.value; if (c && selL.size < MAX) selL.add(c); chips(); drawL(); }; };
   host.onclick = ev => { const b = ev.target.closest('button'); if (!b) return;
     if (b.dataset.raz) { selL.clear(); L5.forEach(c => selL.add(c)); }
@@ -3146,7 +3149,7 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
     const cmd = mode === 'cum' ? `<button type="button" data-rnd="1" title="Trois nations au hasard, parmi toutes" aria-label="Trois nations au hasard">${ph ? '🎲' : '🎲 Random'}</button>`
       + `<button type="button" data-raz="1" title="La France et ses deux voisines au classement à 5 ans" aria-label="La France et ses voisines">${ph ? '↺' : '↺ France et voisines'}</button>` : '';
     hostC.innerHTML = `<span class="lbl">Nations</span>` + menu + cmd + `<span class="sep"></span>`
-      + [...S0].map(c => `<button type="button" class="tint" data-del="${c}" aria-pressed="true" style="background:var(${coul(c)});border-color:var(${coul(c)})" title="Retirer ${name(c)}">${name(c)} ×</button>`).join('');
+      + [...S0].map(c => `<button type="button" class="tint" data-del="${c}" aria-pressed="true" style="background:var(${coul(c)});border-color:var(${coul(c)})" title="Retirer ${name(c)}">${nomPastille(c, ph)} ×</button>`).join('');
     hostC.querySelector('#add2b').onchange = ev => { const c = ev.target.value; if (c && S0.size < MAX2B) S0.add(c); chips(); draw(); }; };
   hostC.onclick = ev => { const b = ev.target.closest('button'); if (!b || b.disabled) return; const S0 = cur();
     if (b.dataset.rnd) { S0.clear(); tirage().forEach(c => S0.add(c)); }
