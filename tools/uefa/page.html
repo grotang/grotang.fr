@@ -193,7 +193,7 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 #tip2b i{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px}
 #tip2b .tp{display:flex; gap:10px; margin-top:4px; font:11px "IBM Plex Mono",monospace}
 #tip2b .tk{font-size:11px; color:var(--ink-3); margin-top:4px}
-@media (max-width:680px){ #chips2b{flex-wrap:wrap; gap:6px} #chips2b .sep{flex-basis:100%; height:0; margin:0; border:0; width:auto} #chips2b .lbl{display:none} #chips2b button.tint, #lchips button.tint{font-size:12px; padding:4px 8px; min-height:32px} }
+@media (max-width:680px){ #chips2b{flex-wrap:wrap; gap:6px} #chips2b .sep{flex-basis:100%; height:0; margin:0; border:0; width:auto} #chips2b .lbl{display:none} #chips2b button.tint, #lchips button.tint, #bchips button.tint{font-size:12px; padding:4px 8px; min-height:32px} }
 /* téléphone : le graphique prend toute la largeur ; plafonné en hauteur, il se
    centrait avec deux bandes vides sur les côtés */
 @media (max-width:680px){ .chartbox.big, .chartbox.big svg{max-height:none} }
@@ -273,9 +273,9 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
   #zchips > *{flex:none}
   #zchips .brk{display:none}
   /* blocs 2b et 4 : même rangée (07/11/2026) — commandes en haut, pastilles dessous */
-  #lchips, #chips2b{flex-wrap:wrap; gap:6px}
-  #lchips .lbl, #chips2b .lbl{display:none}
-  #lchips .sep, #chips2b .sep{flex-basis:100%; height:0; margin:0; border:0; width:auto}
+  #lchips, #chips2b, #bchips{flex-wrap:wrap; gap:6px}
+  #lchips .lbl, #chips2b .lbl, #bchips .lbl{display:none}
+  #lchips .sep, #chips2b .sep, #bchips .sep{flex-basis:100%; height:0; margin:0; border:0; width:auto}
   .voir-tout{appearance:none; font:inherit; font-size:13px; font-weight:600; color:var(--ink); background:var(--surface-2);
     border:1px solid var(--rule); border-radius:3px; min-height:40px; width:100%; margin:10px 0 2px; cursor:pointer}
   /* En-tete : bloc de fraicheur aligne a droite, une info par ligne (comme au bureau). */
@@ -1292,6 +1292,11 @@ const FRNAME = {ENG:"Angleterre",ITA:"Italie",ESP:"Espagne",GER:"Allemagne",FRA:
 const name = c => FRNAME[c] || c;
 /* Pastilles des blocs 2b et 4 au téléphone : les 3 noms trop longs passent en sigle
    (07/11/2026) — 5 pastilles tiennent alors toujours sur 2 lignes, même à 360 px. */
+/* Noms des nations dans les graphiques et tableaux : en couleur partout (GT, 07/11/2026),
+   comme la matrice du bloc 6 — la couleur de la nation (top 8), gris sinon ; graisse
+   600, 700 pour la France. */
+const kNom = c => c === 'FRA' ? 'var(--fr)' : SLOT[c] ? `var(${SLOT[c]})` : 'var(--ink-2)';
+const styleNom = c => `color:${kNom(c)};font-weight:${c === 'FRA' ? 700 : 600}`;
 const nomPastille = (c, ph) => ph && ['MKD', 'BIH', 'NIR'].includes(c) ? c : name(c);
 /* Étiquette de phase, DA du bloc 7a retenue par GT pour tous les graphiques de saison
    (07/11/2026) : aplat arrondi à la couleur de la phase, nom en gras, période plus
@@ -2256,7 +2261,7 @@ function drawBars(){
   document.getElementById('bars').innerHTML = rows.map((c,i)=>{
     const n=BY[c];
     return `<div class="barrow${c==='FRA'?' me':''}">
-      <div class="nm"><span class="rk">${rangOf(c, i)}.</span><b>${name(c)}</b>${
+      <div class="nm"><span class="rk">${rangOf(c, i)}.</span><b style="${styleNom(c)}">${name(c)}</b>${
         S ? (() => { const d = F.rang(n) - rangP[c];
           return d === 0 ? '' : `<span class="dlt ${d > 0 ? 'up' : 'down'}" title="${d > 0 ? '+' : ''}${d} place${Math.abs(d) > 1 ? 's' : ''} par rapport au réel acquis, saison en cours comprise">${d > 0 ? '▲' : '▼'}${Math.abs(d)}</span>`;
         })() : P ? (() => { const d = rangReel(c) - rangOf(c, i);
@@ -2565,7 +2570,7 @@ function drawK(){
     });
     const split=k.map((v,i)=>`<u>${v>0?(kMode==='abs'?nf(v,2):Math.round(v/tot*100)+' %'):'·'}</u>`).join('');
     return `<div class="barrow${c==='FRA'?' me':''}">
-      <div class="nm"><b>${name(c)}</b></div>
+      <div class="nm"><b style="${styleNom(c)}">${name(c)}</b></div>
       <div class="cnt num">${cnt[0]}·${cnt[1]}·${cnt[2]}</div>
       <div class="track" data-nat="${c}">${segs}</div>
       <div class="val num">${kMode==='abs'?nf(tot):'100 %'}</div>
@@ -2677,8 +2682,8 @@ function drawClubs(){
 
   ALL.forEach((row, i) => {
     const y = mT + i*LANE + LANE/2, isFR = row.c === 'FRA';
-    s += MOB() ? `<text x="2" y="${y+5}" font-size="14" font-weight="${isFR?'700':'600'}" fill="${isFR?'var(--fr)':'var(--ink)'}">${nomPays(row.c)}</text>`
-      : `<text x="${mL-14}" y="${y+5}" text-anchor="end" font-size="14" font-weight="${isFR?'700':'600'}" fill="${isFR?'var(--fr)':'var(--ink)'}">${name(row.c)}</text>`;
+    s += MOB() ? `<text x="2" y="${y+5}" font-size="14" font-weight="${isFR?'700':'600'}" fill="${kNom(row.c)}">${nomPays(row.c)}</text>`
+      : `<text x="${mL-14}" y="${y+5}" text-anchor="end" font-size="14" font-weight="${isFR?'700':'600'}" fill="${kNom(row.c)}">${name(row.c)}</text>`;
     let x = mL;
     row.cl.forEach(cb => {
       const r = rad(cb.p); x += r;
@@ -3655,8 +3660,8 @@ function drawM(){
     if (fr) g += `<rect x="${mL - 8}" y="${(yc - rowH / 2 + 2).toFixed(1)}" width="${(W - mR - mL + 8).toFixed(1)}" height="${rowH - 4}" fill="var(--fr-soft)"/>`;
     else if (ri % 2 && porteeM !== 'top') g += `<rect x="${mL - 8}" y="${(yc - rowH / 2 + 2).toFixed(1)}" width="${(W - mR - mL + 8).toFixed(1)}" height="${rowH - 4}" fill="var(--band)" opacity=".5"/>`;
     /* la couleur de chaque nation, celle des blocs 2 et 4 (les autres en gris) */
-    g += M ? `<text x="2" y="${(yc + 5).toFixed(1)}" font-size="14" font-weight="${fr ? '700' : '600'}" fill="${SLOT[c] ? k : 'var(--ink-2)'}">${nomPays(c)}</text>`
-      : `<text x="${mL - 14}" y="${(yc + 4).toFixed(1)}" text-anchor="end" font-size="12" font-weight="${fr ? '700' : '600'}" fill="${SLOT[c] ? k : 'var(--ink-2)'}">${name(c)}</text>`;
+    g += M ? `<text x="2" y="${(yc + 5).toFixed(1)}" font-size="14" font-weight="${fr ? '700' : '600'}" fill="${kNom(c)}">${nomPays(c)}</text>`
+      : `<text x="${mL - 14}" y="${(yc + 4).toFixed(1)}" text-anchor="end" font-size="12" font-weight="${fr ? '700' : '600'}" fill="${kNom(c)}">${name(c)}</text>`;
     gs.forEach(gi => { if (estAbsente(gi)) return;
       /* Étape pas encore jouée : rien à montrer. La source range le bonus de
          participation des nations venues des qualifications dans la DERNIÈRE
@@ -4498,7 +4503,7 @@ const legende = segs => segs.map(s =>
       if (ri % 2) s += `<rect x="${mL - 8}" y="${(Y - cellH / 2).toFixed(1)}" width="${(W - mL + 8 - 4).toFixed(1)}" height="${cellH}" fill="var(--band)" opacity=".6"/>`;
       /* noms : même DA que la matrice du bloc 6 (07/11/2026) — couleur de la nation,
          graisse 600 (700 pour la France), 12,6 px rendus au téléphone comme au bloc 6 */
-      const kN = SLOT[c] ? `var(${SLOT[c]})` : 'var(--ink-2)';
+      const kN = kNom(c);
       s += M ? `<text x="2" y="${(Y + 5).toFixed(1)}" font-size="12.6" font-weight="${fr ? 700 : 600}" fill="${kN}">${nomPays(c)}</text>`
              : `<text x="${mL - 14}" y="${(Y + 4).toFixed(1)}" text-anchor="end" font-size="12" font-weight="${fr ? 700 : 600}" fill="${kN}">${name(c)}</text>`;
       for (let i = 0; i < nC; i++) {
@@ -5300,8 +5305,8 @@ const legende = segs => segs.map(s =>
     rows.forEach((r, i) => {
       const y = mT + i * rowH + rowH / 2, fr = r.c === 'FRA';
       const c0 = col(r.c);
-      s += M ? `<text x="2" y="${(y + 6).toFixed(1)}" font-size="17" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${nomPays(r.c)}</text>`
-        : `<text x="${mL - 10}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="12.5" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${name(r.c)}</text>`;
+      s += M ? `<text x="2" y="${(y + 6).toFixed(1)}" font-size="17" font-weight="${fr ? 700 : 600}" fill="${kNom(r.c)}">${nomPays(r.c)}</text>`
+        : `<text x="${mL - 10}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="12.5" font-weight="${fr ? 700 : 600}" fill="${kNom(r.c)}">${name(r.c)}</text>`;
       /* Éventail à cinq repères, du plus large au plus étroit : le trait fin va
          du 5e au 95e centile, la barre épaisse du 20e au 80e, le disque est la
          médiane. Une seule famille de repères, une seule lecture. */
@@ -5491,7 +5496,7 @@ const legende = segs => segs.map(s =>
             : `<i class="vcell out x${Math.min(t + 1, 5)}" data-i="${vivants.length + j}">${TL[t]}</i>`).join('');
       const pm = partMorte(n);
       return `<div class="vrow${n.c === 'FRA' ? ' me' : ''}" data-nat="${n.c}">
-        <div class="nm">${name(n.c)}</div>
+        <div class="nm" style="${styleNom(n.c)}">${name(n.c)}</div>
         <div class="vgrid">${cases}</div>
         <div class="rd"><b>${enVie(n)}/${engages(n)}</b> ${pm > 0
           /* « 20 % des clubs engagés au départ ne rapportent plus rien » disait
@@ -5580,7 +5585,7 @@ const legende = segs => segs.map(s =>
     N.forEach(o => {
       const fr = o.c === 'FRA', me = fr ? ' me' : '';
       const R = B[o.c].map(r => ({ s: r.slice(0, 11), n: r[11] })).sort(vsLigne);
-      h += `<div class="nm${me}" title="${name(o.c)}">${NOM_COURT[o.c] || name(o.c)}</div>`;
+      h += `<div class="nm${me}" style="${styleNom(o.c)}" title="${name(o.c)}">${NOM_COURT[o.c] || name(o.c)}</div>`;
       for (let k = 0; k < NC2; k++) {
         if (k > km) { h += `<div class="cell${sep(k)}${me}"></div>`; continue; }
         const viv = R.filter(r => r.s[k] !== 9);
@@ -5633,7 +5638,7 @@ const legende = segs => segs.map(s =>
     });
     N.forEach((o, i) => { const y = mT + i * rh, fr = o.c === 'FRA';
       if (fr) g += `<rect x="4" y="${y}" width="${W - 8}" height="${rh}" rx="3" fill="var(--fr-soft)"/>`;
-      g += `<text x="${mL - 8}" y="${y + 11}" text-anchor="end" font-size="11" font-weight="${fr ? 700 : 400}" fill="${fr ? 'var(--ink)' : 'var(--ink-2)'}">${name(o.c)}</text>`;
+      g += `<text x="${mL - 8}" y="${y + 11}" text-anchor="end" font-size="11" font-weight="${fr ? 700 : 600}" fill="${kNom(o.c)}">${name(o.c)}</text>`;
       // les clubs de la nation, du plus long parcours au plus court : chacun garde sa place d'une colonne à l'autre
       const R = B[o.c].map(r => ({ s: r.slice(0, 11), n: r[11] })).sort(vsLigne);
       const dx = Math.min(10, (cw - 8) / Math.max(1, R.length)), rad = Math.min(4, dx / 2 - .4), yy = y + rh / 2;
@@ -5674,11 +5679,16 @@ const legende = segs => segs.map(s =>
      Entre deux tours, la courbe descend en pente. À chaque perte, en gris : le
      nombre de clubs perdus et leurs noms. Le nom de la nation est posé sur sa
      courbe, sur le plus long palier proche du centre, pas en bout de course. */
-  const MAXB = 3;
+  /* Choix des nations aligné sur le bloc 2b (GT, 07/11/2026) : 5 au plus ; par défaut
+     la France et ses voisines directes au classement à 5 ans ; 🎲 en tire trois au
+     hasard parmi les nations engagées ; un menu « Les 8 premières / Toutes les autres ». */
+  const MAXB = 5;
   const tirageB = () => { const pool = natsV(), out = [];
-    while (out.length < MAXB && pool.length) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+    while (out.length < 3 && pool.length) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
     return out; };
-  const selB = new Set(tirageB());
+  const voisinesB = () => { const L = [...N].sort((a, b) => a.r - b.r).map(n => n.c), i = L.indexOf('FRA'), V = natsV();
+    return ['FRA', L[i - 1], L[i + 1]].filter(c => c && V.includes(c)); };
+  const selB = new Set(voisinesB());
   const JETONS = ['--n1','--n2','--n3','--n4','--n5','--n6','--n7','--n8'];
   let PALB = {};
   const majPalB = () => { const list = [...selB];
@@ -5786,7 +5796,7 @@ const legende = segs => segs.map(s =>
       noms += `<text x="${pose.x.toFixed(1)}" y="${pose.y.toFixed(1)}" text-anchor="middle" font-size="${M ? 15 : 13}" font-weight="700" fill="${col}" ${halo}>${txt}</text>`;
     });
     g += traits + notes + noms + '</svg>';
-    svg.outerHTML = g.replace('<svg', '<svg id="chartCs" role="img" aria-label="Clubs encore en lice après chaque tour, pour trois nations au plus"');
+    svg.outerHTML = g.replace('<svg', '<svg id="chartCs" role="img" aria-label="Clubs encore en lice après chaque tour, pour cinq nations au plus"');
     let lst = document.getElementById('csListe');
     if (!M) { if (lst) lst.remove(); glisser(box, document.getElementById('chartCs'), null, mL); return; }
     if (!lst) { lst = document.createElement('div'); lst.id = 'csListe'; box.after(lst); }
@@ -5807,25 +5817,27 @@ const legende = segs => segs.map(s =>
   (function(){
     const host = document.getElementById('bchips');
     const dessine = () => { majPalB();
-      const sel = [...selB], plein = sel.length >= MAXB;
-      const dispo = [...new Set([...natsV(), ...ENGAGEES.map(n => n.c)])].filter(c => !selB.has(c)).sort((a, b) => name(a).localeCompare(name(b), 'fr'));
+      const sel = [...selB], plein = sel.length >= MAXB, ph = MOB();
+      const dispo = [...new Set([...natsV(), ...ENGAGEES.map(n => n.c)])].filter(c => !selB.has(c));
+      const ord8 = ['FRA', ...TOP8.filter(c => c !== 'FRA')].filter(c => dispo.includes(c));
+      const autres = dispo.filter(c => !TOP8.includes(c)).sort((a, b) => name(a).localeCompare(name(b), 'fr'));
+      const opt = c => `<option value="${c}">${name(c)}</option>`;
       host.innerHTML = `<span class="lbl">Nations</span>`
-        + `<button type="button" data-rnd="1" title="Rejouer le tirage">🎲 Random</button>`
-        + `<button type="button" data-fr="1">France seule</button>`
-        + `<span class="sep"></span>`
         + `<span class="sel"><select id="badd"${plein ? ' disabled' : ''} aria-label="Ajouter une nation">`
-        + `<option value="">${plein ? `${MAXB} nations au plus` : MOB() ? '+ Ajouter…' : '+ Ajouter une nation…'}</option>`
-        + dispo.map(c => `<option value="${c}">${name(c)}</option>`).join('')
+        + `<option value="">${plein ? `${MAXB} nations au plus` : ph ? '+ Ajouter…' : '+ Ajouter une nation…'}</option>`
+        + `<optgroup label="Les 8 premières">${ord8.map(opt).join('')}</optgroup><optgroup label="Toutes les autres">${autres.map(opt).join('')}</optgroup>`
         + `</select></span>`
-        + `<span class="brk"></span>`
+        + `<button type="button" data-rnd="1" title="Trois nations au hasard, parmi toutes" aria-label="Trois nations au hasard">${ph ? '🎲' : '🎲 Random'}</button>`
+        + `<button type="button" data-raz="1" title="La France et ses voisines directes au classement à 5 ans" aria-label="La France et ses voisines">${ph ? '↺' : '↺ France et voisines'}</button>`
+        + `<span class="sep"></span>`
         + sel.map(c => `<button type="button" class="tint" data-del="${c}" aria-pressed="true"`
-            + ` style="background:var(${PALB[c]});border-color:var(${PALB[c]})" title="Retirer ${name(c)}">${name(c)} ×</button>`).join('');
+            + ` style="background:var(${PALB[c]});border-color:var(${PALB[c]})" title="Retirer ${name(c)}">${nomPastille(c, ph)} ×</button>`).join('');
       host.querySelector('#badd').onchange = ev => { if (!ev.target.value) return;
         if (selB.size < MAXB) selB.add(ev.target.value); dessine(); courbe(); };
     };
     host.onclick = ev => { const b = ev.target.closest('button'); if (!b) return;
       if (b.dataset.rnd) { selB.clear(); tirageB().forEach(c => selB.add(c)); }
-      else if (b.dataset.fr) { selB.clear(); selB.add('FRA'); }
+      else if (b.dataset.raz) { selB.clear(); voisinesB().forEach(c => selB.add(c)); }
       else if (b.dataset.del && selB.size > 1) selB.delete(b.dataset.del);
       dessine(); courbe(); };
     dessine();
@@ -5892,7 +5904,7 @@ const legende = segs => segs.map(s =>
   const rows = N.slice(0, 10), mx = Math.max(...rows.map(n => Math.max(part(n.c), proj(n.c))));
   const pc = v => (v / mx * 100).toFixed(2) + '%';
   document.getElementById('defRows').innerHTML = rows.map(n => { const c = n.c, d = part(c), g = pris(c), pj = proj(c);
-    return `<div class="drow${c === 'FRA' ? ' me' : ''}" style="--c:${col(c)}"><div class="nmd"><i></i>${name(c)}</div>`
+    return `<div class="drow${c === 'FRA' ? ' me' : ''}" style="--c:${col(c)}"><div class="nmd" style="${styleNom(c)}"><i></i>${name(c)}</div>`
       + `<div class="trk"><div class="due" style="width:${pc(d)}"></div><div class="prj" style="width:${pc(pj)}"></div><div class="got" style="width:${pc(g)}"></div></div>`
       + `<div class="dv num">${f2(g)} / ${f2(d)}</div>`
       + `<div class="dr">${chip(solde(c))} <span class="vt">en juillet</span></div></div>`; }).join('');
@@ -5909,7 +5921,7 @@ const legende = segs => segs.map(s =>
   etes.push({ t: 'Les trois étés', s: 'cumul', v: c => BY[c].y[0] + BY[c].y[1] + BY[c].y[2], tot: true });
   document.getElementById('eteCols').innerHTML = etes.map(E => { const m = Math.max(...voisins.map(E.v)), fr = E.v('FRA');
     return `<div class="ec${E.tot ? ' tot' : ''}"><div class="eh"><b>${E.t}</b><span>${E.s}</span></div>` + voisins.map(c => { const v = E.v(c), dv = v - fr;
-      return `<div class="erow${c === 'FRA' ? ' me' : ''}" style="--c:${col(c)}"><div>${name(c)}</div>`
+      return `<div class="erow${c === 'FRA' ? ' me' : ''}" style="--c:${col(c)}"><div style="${styleNom(c)}">${name(c)}</div>`
         + `<div class="eb"><div style="width:${(v / m * 100).toFixed(1)}%"></div>${c === 'FRA' ? '' : `<s style="left:${(fr / m * 100).toFixed(1)}%"></s>`}</div>`
         + `<div class="ev">−${f2(v)}</div>`
         + (c === 'FRA' ? '' : `<div class="ed ${dv > 0 ? 'g' : 'b'}">${dv > 0 ? `perd ${f2(dv)} de plus` : `perd ${f2(-dv)} de moins`}</div>`) + `</div>`; }).join('') + `</div>`; }).join('');
@@ -6051,7 +6063,7 @@ function bilanVND(cfg){
     for (const c of nats) {
       const A = agg(c), T = tot(A), fr = c === 'FRA', o = vu(c), i = lignes.push({ nom: name(c), p: A, n: Dn[c].length }) - 1;
       h += `<div class="vnd-nat${fr ? ' me' : ''}${o ? ' ouv' : ''}" data-c="${c}" data-i="${i}" role="button" tabindex="0" aria-expanded="${o}">`
-        + `<span class="nm"><i class="chev"></i>${nomPays(c)}<em>${nb(T)} m.</em></span>`
+        + `<span class="nm" style="${styleNom(c)}"><i class="chev"></i>${nomPays(c)}<em>${nb(T)} m.</em></span>`
         + [0, 1, 2, 3].map(col => `<span class="cel${col === 3 ? ' g' : ''}">${barre(tranches(A, col), maxc[col])}</span>`).join('')
         + `<span class="p">${T[0] - T[2] > 0 ? '+' : ''}${T[0] - T[2]}</span><span class="p">${pc(pct(T)) || '—'}</span></div>`;
       if (o) Dn[c].slice().sort((a, b) => { const ta = tot(a.p), tb = tot(b.p); return (tb[0] - tb[2]) - (ta[0] - ta[2]) || nb(tb) - nb(ta); }).forEach(x => {

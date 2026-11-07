@@ -55,6 +55,19 @@ h1{font-size:clamp(32px,5vw,52px); font-weight:600; line-height:1.02; letter-spa
 .yr .sel select{border-radius:0; font-variant-numeric:tabular-nums; font-size:13px}
 .filtres .hint{font-size:12px; color:var(--ink-3)}
 @media (max-width:560px){ .filtres{top:auto; position:static} .seg button{padding:7px 9px; font-size:12px} }
+/* Téléphone : commandes au gabarit de la page UEFA (07/11/2026) — libellé AU-DESSUS
+   des boutons, boutons de 38 px de haut, texte 13 px. */
+@media (max-width:680px){
+  .ctl{flex-wrap:wrap; align-items:center; gap:6px 8px; margin:0; position:relative; padding-top:17px}
+  .ctl:not(:has(> .lb)){padding-top:0}
+  .ctl > .lb{font-size:10px; position:absolute; top:0; left:0; white-space:nowrap; line-height:1.3}
+  .seg button{min-height:38px; padding:0 12px; font-size:13px}
+  .sel select{min-height:38px; font-size:13px}
+  .b27 .ptitle .sub .x{min-height:38px; font-size:13px; padding:0 12px}
+  .defis{position:relative; padding-top:17px}
+  .defis .lb{font-size:10px; position:absolute; top:0; left:0; line-height:1.3}
+  .defis button{min-height:36px}
+}
 
 /* ---------- chiffres de tête ---------- */
 .hyp{margin-top:12px; background:var(--surface); border:1px solid var(--rule); border-left:4px solid var(--n2); border-radius:3px; padding:clamp(14px,2vw,20px) clamp(14px,2.2vw,22px)}
@@ -376,7 +389,7 @@ svg .m{font-variant-numeric:tabular-nums}
 .phr b{font-weight:700}
 .defis{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:-2px 0 14px}
 .defis .lb{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700; color:var(--ink-3); margin-right:2px}
-.defis button{appearance:none; font:inherit; font-size:13px; font-weight:600; color:var(--ink); background:var(--surface); border:1px solid var(--rule); border-radius:16px; padding:5px 13px; cursor:pointer}
+.defis button{appearance:none; font:inherit; font-size:12.5px; font-weight:600; color:var(--ink); background:var(--surface); border:1px solid var(--rule); border-radius:2px; padding:5px 11px; cursor:pointer}   /* pastilles carrées, comme les autres pages (07/11/2026) */
 .defis button[aria-pressed="true"]{background:var(--n2); border-color:var(--n2); color:#fff}
 .defis button:focus-visible{outline:2px solid var(--fr); outline-offset:2px}
 .defis button .ok{margin-left:6px; color:var(--good); font-weight:700}
@@ -583,9 +596,10 @@ body[data-mode="b27"] #budget-2027 > .shead{display:none}
     <p>Montants en euros courants, arrondis au million. « Sur 100 € » rapporte chaque poste à la dépense publique totale de l'année (à l'ensemble des impôts et cotisations dans le bloc 2). Le PIB et la population sont ceux d'Eurostat, cohérents avec les comptes publics. Les ratios européens du bloc 7 sont ceux qu'Eurostat publie avec sa ventilation par fonction ; ils peuvent différer de quelques dixièmes de point des agrégats révisés plus récemment.</p>
     <p>Le robot relit Eurostat chaque lundi. Avant d'écrire quoi que ce soit, il vérifie que les comptes tombent juste : recettes égales à la somme de leurs composantes, dépenses à la somme de leurs natures, solde à la différence des deux, chaque politique à la somme de ses sous-postes, détail des impôts à l'agrégat. Un seul écart, et la page garde ses chiffres précédents.</p>
   </div>
-  <p class="foot">© Tanguy Drouin — grotang.fr. Les chiffres sont ceux d'Eurostat ; leur mise en forme et les textes sont protégés.</p>
+  <p class="foot">Les chiffres sont ceux d'Eurostat ; leur mise en forme et les textes sont protégés.</p>
 </section>
 
+<!--PIED-->
 </div>
 
 <div class="tip" id="tip" hidden></div>

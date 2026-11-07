@@ -18,7 +18,7 @@
  * (un score qui arrive, un modèle recalé). Les pages sont indexées et dans le
  * sitemap ; elles ne sont pas dans le menu (on y arrive depuis le bloc 2c).
  */
-import { nav, navCSS, FAVICON, FONTS, TOKENS, THEME_BOOT, THEME_JS, ANALYTICS } from '../chrome.mjs';
+import { nav, navCSS, FAVICON, FONTS, TOKENS, THEME_BOOT, THEME_JS, ANALYTICS, PIED } from '../chrome.mjs';
 import { GAZETTE, DOMAINE, url } from '../site.mjs';
 
 const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -50,7 +50,7 @@ ${navCSS}
 body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.5 Carlito,Calibri,system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}
 main{max-width:980px;margin:0 auto;padding:24px clamp(14px,3vw,28px) 60px}
 .carte{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:clamp(16px,3vw,28px);margin-top:14px}
-.fil{font-size:13px;color:var(--ink-3)} .fil a{color:var(--fr);font-weight:600;text-decoration:none}
+.fil{margin-bottom:10px}
 .pn{display:flex;justify-content:space-between;gap:12px;margin-top:16px;font-size:14px}
 .pn a{color:var(--fr);font-weight:600;text-decoration:none}
 .liste{list-style:none;margin:0;padding:0}
@@ -66,7 +66,8 @@ ${css}
 <body>
 ${nav('gazette')}
 <main>`;
-  const pied = `</main>
+  const pied = `${PIED}
+</main>
 ${THEME_JS}
 ${ANALYTICS}
 </body>
@@ -78,7 +79,7 @@ ${ANALYTICS}
       datePublished: g.d1, dateModified: g.d1, inLanguage: 'fr-FR', mainEntityOfPage: DOMAINE + u,
       author: { '@type': 'Organization', name: 'grotang.fr', url: DOMAINE + '/' }, publisher: { '@type': 'Organization', name: 'grotang.fr' } };
     pages[u] = tete(`${g.titre} · ${g.per}`, g.desc, u, ld)
-      + `<div class="fil"><a href="${url('uefa')}">Coefficient UEFA</a> › <a href="${GAZETTE}">La gazette</a> › ${esc(g.per)}</div>`
+      + `<div class="surtitre fil">Football · <a href="${url('uefa')}">Coefficient UEFA</a> · <a href="${GAZETTE}">La gazette</a></div>`
       + `<article class="carte gaz">${g.html.replace(/<h4 class="gtitre">([^]*?)<\/h4>/, '<h1 class="gtitre">$1</h1>')}</article>`
       + `<nav class="pn" aria-label="Autres gazettes"><span>${av ? `<a href="${GAZETTE}${av.slug}/">‹ ${esc(av.per)}</a>` : ''}</span><span>${ap ? `<a href="${GAZETTE}${ap.slug}/">${esc(ap.per)} ›</a>` : `<a href="${url('uefa')}#gazette">Suivre la saison en direct ›</a>`}</span></nav>`
       + pied;
@@ -99,7 +100,7 @@ ${ANALYTICS}
 </html>`; }
   const R = [...L].reverse();
   pages[GAZETTE] = tete('La gazette du coefficient UEFA', `Chaque semaine européenne, le bilan de la France au coefficient UEFA : points pris, écart avec ses poursuivants, projection de fin de saison et faits marquants.`, GAZETTE)
-    + `<div class="fil"><a href="${url('uefa')}">Coefficient UEFA</a> › La gazette</div><div class="carte"><h1>La gazette du coefficient UEFA</h1>`
+    + `<div class="surtitre fil">Football · <a href="${url('uefa')}">Coefficient UEFA</a> · La gazette</div><div class="carte"><h1>La gazette du coefficient UEFA</h1>`
     + `<p style="color:var(--ink-2);margin:0 0 10px">Chaque semaine européenne, écrite automatiquement à partir des données du site : la course de la France, ce que le modèle attendait, ce qui a compté.</p>`
     + `<ul class="liste">${R.map(g => `<li><div class="d">${esc(g.per)}</div><a href="${GAZETTE}${g.slug}/">${esc(g.titre)}</a><p>${esc(g.desc)}</p></li>`).join('')}</ul></div>` + pied;
   return { pages, liste: L };

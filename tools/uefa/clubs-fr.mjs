@@ -20,7 +20,7 @@
  * classement final et ne va pas plus loin : rien sur la phase finale tant que le
  * modèle n'est pas au club.
  */
-import { nav, navCSS, FAVICON, FONTS, TOKENS, THEME_BOOT, THEME_JS, ANALYTICS } from '../chrome.mjs';
+import { nav, navCSS, FAVICON, FONTS, TOKENS, THEME_BOOT, THEME_JS, ANALYTICS, PIED } from '../chrome.mjs';
 import { CACHEES, DOMAINE } from '../site.mjs';
 
 const entre = (src, a, b) => { const i = src.indexOf(a); if (i < 0) return null; const j = src.indexOf(b, i + a.length); return j < 0 ? null : src.slice(i + a.length, j); };
@@ -102,6 +102,7 @@ h1{font:700 clamp(26px,4vw,38px)/1.15 Newsreader,Georgia,serif;letter-spacing:-.
 <body>
 ${nav('uefa')}
 <main>
+<div class="surtitre">Football · <a href="/football-coefficient-uefa/">Coefficient UEFA</a> · Phase de ligue</div>
 <h1>Où finiront les clubs français ?</h1>
 <p class="lede">La question qui compte : <b>qualifié ou éliminé</b> ? Les 24 premiers de la phase de ligue continuent — directement en 8es pour le top 8, par les barrages ensuite — les 12 derniers sortent. Pour chaque club, sa chance de passer la ligne, et la fourchette de son rang final.</p>
 <div class="maj">${(P.n || 0).toLocaleString('fr-FR')} saisons simulées · source arrêtée au ${esc(P.maj || D.meta.lastUpdated)} · mise à jour après chaque soir de match</div>
@@ -111,6 +112,7 @@ ${nav('uefa')}
   <div id="vue"></div>
 </div>
 <p class="note">Une tendance, pas un pronostic. Le modèle donne à chaque club la force de sa nation (au coefficient à cinq ans), un peu plus ou un peu moins selon son rang dans le contingent, et ne retient que les victoires, nuls et défaites : un 9-1 et un 1-0 pèsent pareil. À égalité de points, il tire au sort : la différence de buts, qui départage dans le vrai classement, il ne la connaît pas. Méthode complète : <a href="/football-coefficient-uefa/#projection">la projection du coefficient UEFA</a>.</p>
+${PIED}
 </main>
 <script>
 (function(){

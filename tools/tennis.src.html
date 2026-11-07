@@ -26,7 +26,11 @@ body {
   color: var(--ink);
   min-height: 100vh;
 }
-h1 { text-align:center; font-size:1rem; font-weight:700; color:var(--ink); margin-bottom:4px; letter-spacing:.03em; }
+/* en-tête au gabarit du site (07/11/2026) : surtitre, grand titre à empattements, chapeau */
+.tete { max-width:1100px; margin:6px auto 18px; }
+.tete .surtitre { margin-bottom:8px; }
+h1 { font-family:"Newsreader",Georgia,"Times New Roman",serif; font-optical-sizing:auto; font-size:clamp(28px,4.4vw,44px); line-height:1.04; font-weight:700; letter-spacing:-.015em; color:var(--ink); margin-bottom:8px; text-wrap:balance; }
+.tete .subtitle { text-align:left; margin-bottom:0; font-size:15px; line-height:1.5; color:var(--ink-2); max-width:62ch; }
 .subtitle { text-align:center; font-size:.68rem; color:var(--ink-3); margin-bottom:14px; }
 
 .legend {
@@ -179,7 +183,6 @@ select option, select optgroup { background-color:var(--surface); color:var(--in
   .legend > span[style] { margin-left:0 !important; flex-basis:100%; text-align:center; }
   .nat label { width:100%; max-width:420px; }
   .nat select { flex:1; min-width:0; height:38px; font-size:.85rem; padding:0 28px 0 10px; }
-  h1 { font-size:.95rem; }
   .jr-l li { height:34px; font-size:.78rem; }
   .jr-f { min-height:0; }
 }
@@ -217,8 +220,8 @@ select option, select optgroup { background-color:var(--surface); color:var(--in
 .card.wide { grid-column:1 / -1; }
 .card-h { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap:8px 14px; }
 .card-h h3 { font-size:.85rem; margin:0; color:var(--ink); display:flex; align-items:baseline; gap:8px; }
-.card-h h3 .num { flex:none; display:inline-grid; place-items:center; width:1.45em; height:1.45em; border-radius:50%;
-  background:var(--ink); color:var(--surface); font-size:.8em; font-weight:700; font-variant-numeric:tabular-nums; transform:translateY(-1px); }
+.card-h h3 .num { flex:none; display:inline-block; border-radius:2px; padding:2px 6px; line-height:1.35;   /* carré noir, comme partout (07/11/2026) */
+  background:var(--ink); color:var(--surface); font-size:11px; font-weight:700; letter-spacing:.06em; font-variant-numeric:tabular-nums; }
 .card-h p { font-size:.68rem; color:var(--ink-3); margin:2px 0 0; max-width:60ch; line-height:1.4; }
 .card .sg { display:inline-grid; grid-auto-flow:column; gap:1px; background:var(--rule); border:1px solid var(--rule); border-radius:3px; overflow:hidden; }
 .card .sg button { appearance:none; border:0; background:var(--surface); color:var(--ink-2); font:inherit; font-size:.68rem;
@@ -310,8 +313,11 @@ td[data-s], td.tc { cursor:default; }
 </head>
 <body>
 
-<h1 id="titre">🇫🇷 Français au 1er tour — Simple Messieurs · Ère Open</h1>
-<p class="subtitle" id="soustitre">Nombre de joueurs français présents à ce tour, par Grand Chelem · Source : en.wikipedia.org, relue chaque jour</p>
+<header class="tete">
+<div class="surtitre">Tennis · Grand Chelem · Simple messieurs · Ère Open</div>
+<h1 id="titre">🇫🇷 Français au 1er tour</h1>
+<p class="subtitle" id="soustitre">Nombre de joueurs français présents à ce tour, par Grand Chelem, depuis 1968. Source : en.wikipedia.org, relue chaque jour.</p>
+</header>
 
 <div class="nat">
   <label for="nat">Nation <select id="nat"></select></label>
@@ -407,8 +413,7 @@ td[data-s], td.tc { cursor:default; }
   </div>
 </section>
 
-<p class="subtitle" style="margin-top:28px;margin-bottom:2px">© 2026 Tanguy Drouin — grotang.fr. Tous droits réservés.</p>
-<p class="subtitle" style="font-size:.6rem">Site personnel non professionnel · Hébergeur : GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis · +1 877 448 4820</p>
+<!--PIED-->
 
 <script>
 /* Données : tools/tennis/data.json, réduit aux nations titrées et injecté ici
@@ -569,11 +574,11 @@ function drawLegend(){
 function titres(){
   const fin = years[0], dr = NAT.drap ? NAT.drap + ' ' : '';
   document.getElementById('titre').textContent = tour === 'V'
-    ? `${dr}Titres ${NAT.ap} — Simple Messieurs · Ère Open (1968–${fin})`
-    : `${dr}${GP()} ${NOM[tour]} — Simple Messieurs · Ère Open (1968–${fin})`;
+    ? `${dr}Titres ${NAT.ap}`
+    : `${dr}${GP()} ${NOM[tour]}`;
   document.getElementById('soustitre').textContent = tour === 'V'
-    ? `Grands Chelems remportés par un ${G1()} · Source : en.wikipedia.org, relue chaque jour`
-    : `Nombre de joueurs ${NAT.ap} ${NOM[tour]}, par Grand Chelem · Source : en.wikipedia.org, relue chaque jour`;
+    ? `Grands Chelems remportés par un ${G1()}, de 1968 à ${fin}. Source : en.wikipedia.org, relue chaque jour.`
+    : `Nombre de joueurs ${NAT.ap} ${NOM[tour]}, par Grand Chelem, de 1968 à ${fin}. Source : en.wikipedia.org, relue chaque jour.`;
   document.title = `${NAT.nom} en Grand Chelem — Ère Open`;
   document.getElementById('natNote').textContent = NAT.note;
 }

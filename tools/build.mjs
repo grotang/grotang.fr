@@ -18,7 +18,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
-import { nav, navCSS, FAVICON, FAVICON_SVG, MANIFEST, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF } from './chrome.mjs';
+import { nav, navCSS, FAVICON, FAVICON_SVG, MANIFEST, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF, PIED } from './chrome.mjs';
 import { buildEco } from './eco/page.mjs';
 import { buildJoueurs } from './joueurs/page.mjs';
 import { buildNantes } from './nantes/page.mjs';
@@ -364,7 +364,7 @@ ${navCSS}
 body{padding-top:0}
 .gnav{margin:-20px -20px 18px}
 </style>`);
-  out = out.replace('<body>\n', `<body>\n${nav('tennis')}\n`);
+  out = out.replace('<body>\n', `<body>\n${nav('tennis')}\n`).replace('<!--PIED-->', () => PIED);
   out = out.replace('</body>', `${THEME_JS}\n${ANALYTICS}\n</body>`);
   if (!out.includes('gnav')) throw new Error('tennis : injection de la navigation ratée');
 
@@ -547,7 +547,7 @@ body{margin:0;background:var(--ground);color:var(--ink);font-family:Carlito,Cali
 <body>
 ${nav(p.key)}
 <main class="av">
-  <div class="eb">${p.rubrique.join(' · ')}</div>
+  <div class="surtitre">${p.rubrique.join(' · ')}</div>
   <h1>${p.aVenir.h1}</h1>
   <p>${p.aVenir.texte}</p>
   <div class="tba"><i></i>À venir</div>${p.aVenir.apercu ? `
@@ -555,6 +555,7 @@ ${nav(p.key)}
     <a class="cta" href="${p.aVenir.apercu}"><span class="k">WIP</span>Preview<span class="f" aria-hidden="true">→</span></a>
     <small>Le modèle tourne déjà sur trois saisons. Données encore incomplètes : les classements vont bouger.</small>
   </div>` : ''}
+  ${PIED}
 </main>
 ${THEME_JS}
 ${ANALYTICS}

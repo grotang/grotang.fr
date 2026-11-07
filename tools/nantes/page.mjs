@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
-import { nav, navCSS, FAVICON, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF } from '../chrome.mjs';
+import { nav, navCSS, FAVICON, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF, PIED } from '../chrome.mjs';
 import { abs, DOMAINE } from '../site.mjs';
 import { charge, PHOTO } from './source.mjs';
 
@@ -57,7 +57,7 @@ ${THEME_BOOT}`);
 ${navCSS}
 .gnav{margin:0}
 </style>`);
-  out = out.replace('<body>\n', () => `<body>\n${nav(KEY)}\n`);
+  out = out.replace('<body>\n', () => `<body>\n${nav(KEY)}\n`).replace('<!--PIED-->', () => PIED);
   out = out.replace('</body>', () => `${THEME_JS}\n${ANALYTICS}\n</body>`);
   if (apercu) {
     const BANDEAU = `<div class="wip" role="note"><span class="k">Preview · travail en cours</span><span>Page en construction, bloc par bloc.</span><a href="${abs(KEY)}">← Retour</a></div>`;

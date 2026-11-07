@@ -8,7 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { nav, navCSS, FAVICON, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF } from '../chrome.mjs';
+import { nav, navCSS, FAVICON, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF, PIED } from '../chrome.mjs';
 import { abs } from '../site.mjs';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
@@ -86,7 +86,7 @@ ${THEME_BOOT}`);
 ${navCSS}
 .gnav{margin:0}
 </style>`);
-  out = out.replace('<body>\n', () => `<body data-mode="${mode}">\n${nav(key)}\n`);
+  out = out.replace('<body>\n', () => `<body data-mode="${mode}">\n${nav(key)}\n`).replace('<!--PIED-->', () => PIED);
   out = out.replace('</body>', () => `${THEME_JS}\n${ANALYTICS}\n</body>`);
   if (!out.includes('gnav') || !out.includes('const DE = {') || !out.includes('const RT = {') || (mode === 'b27') !== out.includes('const LV = {') || !out.includes(`data-mode="${mode}"`)) throw new Error('économie : injection ratée');
   return { html: out, der: D.der };

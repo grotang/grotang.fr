@@ -174,7 +174,21 @@ export const THEME_JS = `<script>(function(){
 
 /* La barre lit les jetons partagés — plus de variante « sombre » à passer à la
    main, plus de palette parallèle qui dérive de celle des pages. */
+/* Pied de page commun à toutes les pages (07/11/2026, GT : « aligne sur ce qu'il y a
+   de mieux ») : celui de la page UEFA — filet, droits, mention légale. */
+export const PIED = `<footer class="pied-site"><p class="droits">© ${new Date().getFullYear()} Tanguy Drouin — grotang.fr. Tous droits réservés.</p><p class="legal">Site personnel non professionnel · Hébergeur : GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis · +1 877 448 4820</p></footer>`;
 export const navCSS = `
+.pied-site{margin-top:36px;padding-top:14px;border-top:1px solid var(--rule);font-size:12px;line-height:1.5;color:var(--ink-3);text-align:left;
+  font-family:Carlito,Calibri,system-ui,-apple-system,'Segoe UI',sans-serif}
+footer.pied-site p{margin:0;font-size:inherit;line-height:inherit;max-width:none;color:inherit}
+/* surtitre de page, commun (07/11/2026) : le même que la page UEFA (.eyebrow) */
+.surtitre{font-family:Carlito,Calibri,system-ui,-apple-system,'Segoe UI',sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.surtitre a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule)}
+.surtitre a:hover{color:var(--fr)}
+/* numéro de bloc, commun (07/11/2026) : le carré noir de la page UEFA */
+.no-bloc{display:inline-block;font-family:Carlito,Calibri,system-ui,sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;line-height:1.35;color:var(--surface);background:var(--ink);border-radius:2px;padding:2px 6px;margin-right:9px;vertical-align:.3em}
+footer.pied-site p.droits{color:var(--ink-2)}
+footer.pied-site p.legal{margin-top:3px;font-size:11px}
 html{scroll-padding-top:58px}
 @media (max-width:560px){html{scroll-padding-top:106px}}
 .gnav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
