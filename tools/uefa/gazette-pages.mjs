@@ -23,6 +23,8 @@ import { GAZETTE, DOMAINE, url } from '../site.mjs';
 
 const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 
+const MOIS_G = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+const dateCourte = slug => { const [a, m, j] = slug.split('-').map(Number); return `${j}${j === 1 ? 'er' : ''} ${MOIS_G[m - 1]} ${a}`; };
 export function buildGazettes(json, css) {
   if (!json || !Array.isArray(json.liste) || !json.liste.length) return { pages: {}, liste: [] };
   const L = [...json.liste].sort((a, b) => a.slug < b.slug ? -1 : 1);
@@ -40,6 +42,10 @@ export function buildGazettes(json, css) {
 <meta property="og:title" content="${esc(titre)}">
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:url" content="${DOMAINE}${u}">
+<meta property="og:image" content="${DOMAINE}${url('uefa')}carte.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script>` : ''}
 ${FAVICON}
 ${FONTS}
@@ -76,9 +82,10 @@ ${ANALYTICS}
   L.forEach((g, i) => {
     const u = `${GAZETTE}${g.slug}/`, av = L[i - 1], ap = L[i + 1];
     const ld = { '@context': 'https://schema.org', '@type': 'NewsArticle', headline: g.titre, description: g.desc,
-      datePublished: g.d1, dateModified: g.d1, inLanguage: 'fr-FR', mainEntityOfPage: DOMAINE + u,
+      datePublished: g.d1, dateModified: g.d1, inLanguage: 'fr-FR', mainEntityOfPage: DOMAINE + u, image: [DOMAINE + url('uefa') + 'carte.png'],
       author: { '@type': 'Organization', name: 'grotang.fr', url: DOMAINE + '/' }, publisher: { '@type': 'Organization', name: 'grotang.fr' } };
-    pages[u] = tete(`${g.titre} · ${g.per}`, g.desc, u, ld)
+    /* titre Google court (07/11/2026) : le titre de la semaine + sa date, sans « Semaine du … au … » */
+    pages[u] = tete(`${g.titre} · ${dateCourte(g.slug)}`, g.desc, u, ld)
       + `<div class="surtitre fil">Football · <a href="${url('uefa')}">Coefficient UEFA</a> · <a href="${GAZETTE}">La gazette</a></div>`
       + `<article class="carte gaz">${g.html.replace(/<h4 class="gtitre">([^]*?)<\/h4>/, '<h1 class="gtitre">$1</h1>')}</article>`
       + `<nav class="pn" aria-label="Autres gazettes"><span>${av ? `<a href="${GAZETTE}${av.slug}/">‹ ${esc(av.per)}</a>` : ''}</span><span>${ap ? `<a href="${GAZETTE}${ap.slug}/">${esc(ap.per)} ›</a>` : `<a href="${url('uefa')}#gazette">Suivre la saison en direct ›</a>`}</span></nav>`

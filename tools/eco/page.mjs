@@ -31,9 +31,9 @@ export function buildEco(mode = 'france') {
     ? `Faites votre budget ${LB.annee} : les leviers pour réduire le déficit de la France`
     : `Où va l'argent public ? Dépenses et recettes publiques de la France (${D.der})`;
   const desc = mode === 'b27'
-    ? `Le gouvernement prévoit un déficit de ${(-LB.solde_pct).toLocaleString('fr-FR')} % du PIB en ${LB.annee}. Actionnez les leviers (plafond des pensions, âge de la retraite avancé ou reculé, convergence avec nos voisins, niches fiscales, taxe Zucman, aides aux entreprises) et voyez où arrivent le déficit et la dette. Chaque chiffrage est sourcé.`
-    : `En ${D.der}, ${md(te)} milliards d'euros de dépenses publiques (${pc(te)} % du PIB), ${md(tr)} milliards de recettes, ${md(-b9)} milliards de déficit. `
-    + `Le circuit complet de l'argent public, politique par politique, impôt par impôt, depuis 1995, et la comparaison avec l'Europe.`;
+    /* ≤ 160 signes (07/11/2026) */
+    ? `Déficit prévu en ${LB.annee} : ${(-LB.solde_pct).toLocaleString('fr-FR')} % du PIB. Actionnez les leviers (retraites, niches fiscales, taxe Zucman…) et voyez où arrivent déficit et dette.`
+    : `En ${D.der} : ${md(te)} Md€ de dépenses publiques (${pc(te)} % du PIB), ${md(tr)} Md€ de recettes, ${md(-b9)} Md€ de déficit. Où va l'argent public, poste par poste, depuis 1995.`;
   const jsonld = mode === 'b27' ? JSON.stringify({
     '@context': 'https://schema.org', '@type': 'WebApplication', name: titre, description: desc, url: abs(key),
     applicationCategory: 'EducationalApplication', operatingSystem: 'Tous', inLanguage: 'fr', isAccessibleForFree: true,
@@ -44,6 +44,9 @@ export function buildEco(mode = 'france') {
     inLanguage: 'fr', isAccessibleForFree: true, temporalCoverage: `1995/${D.der}`,
     copyrightHolder: { '@type': 'Person', name: 'Tanguy Drouin' },
     copyrightNotice: '© Tanguy Drouin — grotang.fr. Tous droits réservés.',
+    /* `license` (07/11/2026, alerte Search Console « champ license manquant ») : pas une licence
+       libre — l'adresse de la mention « Tous droits réservés », en pied de page. */
+    license: abs(key) + '#droits',
     isBasedOn: 'https://ec.europa.eu/eurostat/databrowser/view/gov_10a_exp/default/table',
     creator: { '@type': 'Organization', name: 'grotang.fr', url: 'https://grotang.fr/' },
     keywords: ['dépenses publiques', 'recettes publiques', 'budget de la France', 'déficit public', 'dette publique', 'COFOG', 'prélèvements obligatoires'],
@@ -65,6 +68,10 @@ export function buildEco(mode = 'france') {
   if (!RE4.test(out)) throw new Error('économie : sentinelles MODE introuvables');
   out = out.replace(RE4, () => `/*MODE_START*/const MODE = ${JSON.stringify(mode)};/*MODE_END*/`);
   out = out.replace(/<title>[^<]*<\/title>/, () => `<title>${titre}</title>`);
+  /* un seul h1 par page (07/11/2026) : celui de l'autre mode, masqué, devient un simple bloc */
+  const autreH1 = mode === 'b27' ? "<h1>Où va l'argent public ?</h1>" : '<h1>Faites votre budget 2027</h1>';
+  if (!out.includes(autreH1)) throw new Error('économie : h1 de l\'autre mode introuvable');
+  out = out.replace(autreH1, () => autreH1.replace('<h1>', '<div class="h1" aria-hidden="true">').replace('</h1>', '</div>'));
   out = out.replace('<meta name="viewport" content="width=device-width, initial-scale=1.0">',
     () => `<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="${desc}">

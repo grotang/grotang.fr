@@ -176,7 +176,7 @@ export const THEME_JS = `<script>(function(){
    main, plus de palette parallèle qui dérive de celle des pages. */
 /* Pied de page commun à toutes les pages (07/11/2026, GT : « aligne sur ce qu'il y a
    de mieux ») : celui de la page UEFA — filet, droits, mention légale. */
-export const PIED = `<footer class="pied-site"><p class="droits">© ${new Date().getFullYear()} Tanguy Drouin — grotang.fr. Tous droits réservés.</p><p class="legal">Site personnel non professionnel · Hébergeur : GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis · +1 877 448 4820</p></footer>`;
+export const PIED = `<footer class="pied-site" id="droits"><p class="droits">© ${new Date().getFullYear()} Tanguy Drouin — grotang.fr. Tous droits réservés.</p><p class="legal">Site personnel non professionnel · Hébergeur : GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis · +1 877 448 4820</p></footer>`;
 export const navCSS = `
 .pied-site{margin-top:36px;padding-top:14px;border-top:1px solid var(--rule);font-size:12px;line-height:1.5;color:var(--ink-3);text-align:left;
   font-family:Carlito,Calibri,system-ui,-apple-system,'Segoe UI',sans-serif}

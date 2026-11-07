@@ -31,6 +31,11 @@ export async function buildNantes({ apercu = null } = {}) {
   const jsonld = JSON.stringify({
     '@context': 'https://schema.org', '@type': 'Dataset', name: titre, description: desc, url: abs(KEY),
     inLanguage: 'fr', isAccessibleForFree: true, temporalCoverage: `${saisons[0].an - 1}/${saisons.at(-1).an}`,
+    copyrightHolder: { '@type': 'Person', name: 'Tanguy Drouin' },
+    copyrightNotice: '© Tanguy Drouin — grotang.fr. Tous droits réservés.',
+    /* `license` (07/11/2026, alerte Search Console « champ license manquant ») : pas une licence
+       libre — l'adresse de la mention « Tous droits réservés », en pied de page. */
+    license: abs(KEY) + '#droits',
     creator: { '@type': 'Organization', name: 'grotang.fr', url: 'https://grotang.fr/' },
     keywords: ['FC Nantes', 'histoire du FC Nantes', 'palmarès FC Nantes', 'Canaris', 'Ligue 1'],
   });

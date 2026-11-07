@@ -239,7 +239,8 @@ function buildUefa() {
   const saisonC = String(meta.season).replace(/^(\d{4})\/\d{2}(\d{2})$/, '$1/$2');
   const seo = {
     titre: `Coefficient UEFA ${saisonC} : classement et évolution`,
-    desc: `Coefficient UEFA ${saisonC} : le classement des 55 associations et son évolution journée par journée, mis à jour chaque matin. D'où viennent les points, et où en est la France dans la course à la 5e place.`,
+    /* ≤ 160 signes (Google coupe au-delà) ; « après chaque soir de match » : c'est le vrai rythme (07/11/2026) */
+    desc: `Coefficient UEFA ${saisonC} : classement des 55 associations, évolution journée par journée et projection de fin de saison. Mis à jour après chaque soir de match.`,
     url: abs('uefa'),
   };
   /* dateModified au format ISO, à partir de « 17/09/2026 - 22:56 » */
@@ -256,6 +257,9 @@ function buildUefa() {
        réutilisation. L'ancienne mention CC BY 4.0 est retirée. */
     copyrightHolder: { '@type': 'Person', name: 'Tanguy Drouin' },
     copyrightNotice: '© Tanguy Drouin — grotang.fr. Tous droits réservés.',
+    /* `license` (07/11/2026, alerte Search Console « champ license manquant ») : pas une licence
+       libre — l'adresse de la mention « Tous droits réservés », en pied de page. */
+    license: seo.url + '#droits',
     dateModified: isoMaj, temporalCoverage: '2022/2027',
     creator: { '@type': 'Organization', name: 'grotang.fr', url: 'https://grotang.fr/' },
     keywords: ['coefficient UEFA', 'évolution du coefficient UEFA', 'classement des associations', 'indice UEFA',
@@ -345,7 +349,7 @@ function buildTennis() {
   const src = brut.replace(RE, () => `/*DATA_START*/const DT = ${JSON.stringify(PAGE)};/*DATA_END*/`);
   let out = src.replace('<meta name="viewport" content="width=device-width, initial-scale=1.0">',
     `<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Les joueurs de chaque nation tour par tour dans les Grands Chelems, simple messieurs, ère Open : France, Espagne, États-Unis, Suisse, Serbie… 1er tour, 8es, quarts, demies, finales, titres. Mis à jour chaque jour.">
+<meta name="description" content="Grands Chelems, simple messieurs, ère Open : les joueurs de chaque nation tour par tour, du 1er tour au titre. France, Espagne, États-Unis, Suisse…">
 ${VERIF}
 <link rel="canonical" href="${abs('tennis')}">
 <meta name="robots" content="index,follow,max-image-preview:large">
