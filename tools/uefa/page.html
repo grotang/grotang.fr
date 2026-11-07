@@ -232,7 +232,8 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 .ecr-m .nm{position:sticky; left:0; z-index:2; background:var(--surface); display:flex; align-items:center; padding:0 8px 0 2px;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink-2); border-right:1px solid var(--rule)}
 .ecr-m .nm.me{background:var(--fr-soft); color:var(--ink); font-weight:700}
-.ecr-m .ph{margin:0 1px 4px; border-radius:4px; text-align:center; font-size:10px; font-weight:700; letter-spacing:.03em; color:var(--ink-2);
+.ecr-m .ph .mo, .vnd-h .ph .mo{font-weight:500; color:var(--ink-3)}
+.ecr-m .ph{margin:0 1px 4px; border-radius:4px; text-align:center; font-size:10.5px; font-weight:700; letter-spacing:.05em; color:var(--ink-2);
   background:color-mix(in srgb, var(--t) 26%, transparent); display:flex; align-items:center; justify-content:center; min-height:19px}
 .ecr-m .ch{display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:5px; font-size:10.5px; color:var(--ink-2)}
 .ecr-m .ch span{font-size:9.5px; color:var(--ink-3)}
@@ -292,7 +293,7 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 .vnd > div > span.cel.g{border-left:1px solid var(--rule)}
 .vnd-h > span{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; font-weight:700; color:var(--ink-3); border-bottom:1px solid var(--rule)!important; position:sticky; top:0; background:var(--surface); z-index:3}
 .vnd-h .c{justify-content:center}
-.vnd-h .ph{display:block; width:100%; text-align:center; padding:3px 4px; border-radius:4px; font-weight:700; color:var(--ink-2);
+.vnd-h .ph{display:block; width:100%; text-align:center; padding:3px 4px; border-radius:4px; font-weight:700; color:var(--ink-2); text-transform:none; letter-spacing:.05em; white-space:nowrap;
   background:color-mix(in srgb, var(--t, var(--ink-3)) 26%, transparent)}
 .vnd-h .ph:not([style]){background:color-mix(in srgb, var(--ink-3) 12%, transparent)}
 .vnd .p{justify-content:flex-end; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:600}
@@ -354,6 +355,8 @@ svg{display:block; width:100%; height:auto}
 .ptitle .no{font-size:11px; font-weight:700; letter-spacing:.06em; color:var(--surface); background:var(--ink);
             border-radius:2px; padding:2px 6px; flex:none}
 .ptitle h3{font-size:17.5px; font-weight:600; letter-spacing:-.008em}
+/* téléphone : un titre long reste à côté de son numéro et passe à la ligne en dessous (07/11/2026) */
+@media (max-width:680px){ .ptitle h3{flex:1 1 12em; min-width:0} }
 .ptitle .sub{font-size:12.5px; color:var(--ink-3); margin-left:auto; text-align:right; min-width:0}
 @media (max-width:700px){ .ptitle .sub{margin-left:0; text-align:left; flex-basis:100%} .seg button{padding:5px 9px; font-size:12px} }
 section > .panel + .panel{margin-top:14px}
@@ -1290,6 +1293,26 @@ const name = c => FRNAME[c] || c;
 /* Pastilles des blocs 2b et 4 au téléphone : les 3 noms trop longs passent en sigle
    (07/11/2026) — 5 pastilles tiennent alors toujours sur 2 lignes, même à 360 px. */
 const nomPastille = (c, ph) => ph && ['MKD', 'BIH', 'NIR'].includes(c) ? c : name(c);
+/* Étiquette de phase, DA du bloc 7a retenue par GT pour tous les graphiques de saison
+   (07/11/2026) : aplat arrondi à la couleur de la phase, nom en gras, période plus
+   légère (« Qualifications · juil.–août »). Si la bande est trop étroite : nom court,
+   puis sans la période. « fs » : 12 px sur ordinateur pour les graphiques dessinés à
+   taille réelle (2b, 4), ce que rend le 7a une fois mis à l'échelle. */
+function etiqPhase(x1, w, y, h, t, noms, mois, fs = 10.5, attr = ''){
+  const tient = txt => txt.length * 6.4 * fs / 10.5 + 14 <= w;
+  let lab = noms[0], m = mois;
+  if (!tient(lab + ' · ' + m)) { if (tient(noms[1] + ' · ' + m)) lab = noms[1]; else { m = ''; if (!tient(lab)) lab = tient(noms[1]) ? noms[1] : ''; } }
+  if (!lab) return `<rect x="${x1.toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="4" style="fill:var(${t})" opacity=".26"/>`;
+  return `<rect x="${x1.toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="4" style="fill:var(${t})" opacity=".26"/>`
+    + `<text x="${(x1 + w / 2).toFixed(1)}" y="${(y + h / 2 + fs * .36).toFixed(1)}" text-anchor="middle" font-size="${fs}" font-weight="700" letter-spacing=".05em" style="fill:var(--ink-2)" class="zlab" data-a="${x1.toFixed(1)}" data-b="${(x1 + w).toFixed(1)}"${attr}>${lab}${m ? `<tspan font-weight="500" style="fill:var(--ink-3)"> · ${m}</tspan>` : ''}</text>`;
+}
+/* noms et périodes des trois phases, pour tous les bandeaux de phase (etiqPhase) */
+const PH_NOMS = anc => [[['Qualifications', 'Qualifs'], 'juil.–août', '--n4'],
+  [anc ? ['Groupes', 'Groupes'] : ['Ligue', 'Ligue'], anc ? 'sept.–déc.' : 'sept.–janv.', '--fr'],
+  [['Phase finale', 'Finale'], 'févr.–mai', '--n7']];
+/* Un seul libellé pour l'indice « Faites glisser » (07/11/2026) : graphique ouvert au
+   début → « pour voir la suite » ; ouvert au milieu (calé sur aujourd'hui) → des deux côtés. */
+const TXT_GLISSE = deuxCotes => deuxCotes ? '← Faites glisser des deux côtés →' : 'Faites glisser pour voir la suite →';
 
 const QL = ["Entrée en lice (bonus C1 + Q1 aller)","Q1 retour","Q2 aller","Q2 retour","Q3 aller","Q3 retour","Barrages aller","Barrages retour"];
 const ML = ["J1","J2","J3","J4","J5","J6","J7 C1/C3","J8 C1/C3"];
@@ -1696,6 +1719,19 @@ const MOB = () => window.matchMedia('(max-width:680px)').matches;
 /* Téléphone : les mêmes noms courts partout (blocs 2b, 5, 6, 7c, 8), alignés à gauche. */
 const NOM_COURT = { BIH: 'Bosnie-Herz.', MKD: 'Macédoine N.', NIR: 'Irlande N.', WAL: 'P. de Galles', LIE: 'Liechtenst.' };
 const nomPays = c => (MOB() && NOM_COURT[c]) || name(c);
+/* Téléphone : le nom d'une phase suit la partie visible de son bandeau quand on fait
+   glisser le graphique (comme le calendrier du bloc 1) ; s'il n'y tient pas, il se
+   cache plutôt que de laisser un bout de mot (07/11/2026). */
+function suivreEtiq(sc, svg){
+  const zl = [...svg.querySelectorAll('.zlab')]; if (!zl.length) return;
+  const L = zl.map(t => { try { return t.getComputedTextLength(); } catch (e) { return 60; } });
+  const maj = () => { const vb = svg.viewBox.baseVal, s = vb && vb.width ? svg.getBoundingClientRect().width / vb.width : 1;
+    const ep = sc.querySelector('.epingle'), pin = ep ? ep.getBoundingClientRect().width : (+sc.dataset.pin || 0);
+    const g = (sc.scrollLeft + pin) / s, d = (sc.scrollLeft + sc.clientWidth) / s;
+    zl.forEach((t, i) => { const lo = Math.max(+t.dataset.a, g), hi = Math.min(+t.dataset.b, d);
+      t.setAttribute('x', ((lo + hi) / 2).toFixed(1)); t.style.visibility = hi - lo >= L[i] + 8 ? '' : 'hidden'; }); };
+  sc.addEventListener('scroll', maj, { passive: true }); requestAnimationFrame(maj);
+}
 function glisser(box, svg, largeur, epingle){
   if (!box || !svg) return;
   box.querySelectorAll('.epingle').forEach(e => e.remove());
@@ -1729,6 +1765,7 @@ function glisser(box, svg, largeur, epingle){
     box.parentNode.insertBefore(i, box);
     box.addEventListener('scroll', () => { if (box.__auto) { box.__auto = false; return; } if (box.scrollLeft > 24) i.classList.add('vu'); }, { passive: true });
   };
+  if (box.id !== 'cal') suivreEtiq(box, svg);
   const wConnu = largeur || +svg.getAttribute('width') || 0;
   if (wConnu) { if (wConnu > window.innerWidth - 62 + 4) indice(); }
   else requestAnimationFrame(() => { if (box.scrollWidth > box.clientWidth + 4) indice(); });
@@ -1806,21 +1843,22 @@ function drawCal(){
        Les frontières, elles, restent tracées pleine hauteur : ce sont de vrais
        changements de régime, pas des découpages décoratifs. */
     const yBot = mT + 3*LANE - 4;
-    const zone = (x1, x2, lab, teinte) => {
+    /* étiquettes : DA commune des bandeaux de phase (etiqPhase, 07/11/2026) */
+    const PN1 = PH_NOMS(P.grp);
+    const zone = (x1, x2, [noms, mois, teinte]) => {
       const w = x2 - x1;
-      return `<rect x="${(x1+1).toFixed(1)}" y="4" width="${(w-2).toFixed(1)}" height="19" rx="4" fill="var(${teinte})" opacity=".26"/>`
+      return etiqPhase(x1 + 1, w - 2, 4, 19, teinte, noms, mois)
         + `<line x1="${x1.toFixed(1)}" y1="4" x2="${x1.toFixed(1)}" y2="${yBot}" stroke="var(--rule)" stroke-width="1"/>`
-        + `<line x1="${x2.toFixed(1)}" y1="4" x2="${x2.toFixed(1)}" y2="${yBot}" stroke="var(--rule)" stroke-width="1"/>`
-        + `<text class="zlab" data-a="${x1.toFixed(1)}" data-b="${x2.toFixed(1)}" x="${(x1 + w/2).toFixed(1)}" y="17.5" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing=".05em" fill="var(--ink-2)">${lab}</text>`;
+        + `<line x1="${x2.toFixed(1)}" y1="4" x2="${x2.toFixed(1)}" y2="${yBot}" stroke="var(--rule)" stroke-width="1"/>`;
     };
     if (calQual) {
       const xq = (X(QUAL[0][3][2]) + X(CAL[0][0][0])) / 2;
-      s += zone(mL, xq, 'Phase qualificative', '--n4') + zone(xq, xa, PH, '--fr') + zone(xa, W - mR, 'Phase finale', '--n7');
+      s += zone(mL, xq, PN1[0]) + zone(xq, xa, PN1[1]) + zone(xa, W - mR, PN1[2]);
       /* mêmes étiquettes de tour qu'en phase finale, au même endroit, à la même
          taille : c'est la cohérence qui fait qu'on lit les deux bouts de la
          saison avec la même grille de lecture. */
       QUAL[0].filter(Boolean).forEach(([lab, a, r]) => s += `<text x="${((X(a)+X(r))/2).toFixed(1)}" y="${mT-8}" text-anchor="middle" font-size="10" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${lab}</text>`);
-    } else s += zone(mL, xa, PH, '--fr') + zone(xa, W - mR, 'Phase finale', '--n7');
+    } else s += zone(mL, xa, PN1[1]) + zone(xa, W - mR, PN1[2]);
     /* les tours, au-dessus de leur zone : à deux jours près les trois compétitions
        jouent ensemble, donc une seule série d'étiquettes suffit. */
     /* Le libellé se centre sur la confrontation entière, pas sur son seul aller :
@@ -1910,7 +1948,7 @@ function drawCal(){
             t.setAttribute('x', ((lo + hi) / 2).toFixed(1)); t.style.visibility = hi - lo > 90 ? '' : 'hidden'; }); })();
         const i = b.previousElementSibling;
         if (i && i.classList.contains('glisse-indice'))
-          setTimeout(() => { i.classList.remove('vu'); i.textContent = b.scrollLeft > 0 ? '← Faites glisser →' : 'Faites glisser pour voir la suite →'; }, 60);
+          setTimeout(() => { i.classList.remove('vu'); i.textContent = TXT_GLISSE(b.scrollLeft > 0); }, 60);
       });
     } }
 
@@ -2258,7 +2296,8 @@ function drawBars(){
                  à 5,6 après la vue à 55 nations : à 4,6 les libellés de l'Autriche
                  et de Chypre sortaient du segment d'un ou deux caractères.
                  On n'écrit rien plutôt que de rogner ; l'infobulle prend le relais. */
-            const lab = (!wip && pc >= 5.6)
+            /* téléphone : la barre fait ~260 px, il faut 13 % pour les mêmes 35 px (07/11/2026) */
+            const lab = (!wip && pc >= (MOB() ? 13 : 5.6))
               ? `<span style="color:${encre(fond, base)}">${SEASONS[yi].slice(2)}</span>` : '';
             return `<div class="yseg${wip ? ' wip' : ''}" data-y="${yi}" style="width:${larg(pc)};`
               + `background:${toHex(fond)}">${lab}</div>`;
@@ -2750,21 +2789,6 @@ function zoneAbsente(id, X, cw, yH, yB, M, yTexte){
   }
   return s;
 }
-/* Étiquette de phase, DA du bloc 7a retenue par GT pour tous les graphiques de saison
-   (07/11/2026) : aplat arrondi à la couleur de la phase, nom en gras, période plus
-   légère (« Qualifications · juil.–août »). Si la bande est trop étroite : nom court,
-   puis sans la période. « fs » : 12 px sur ordinateur pour les graphiques dessinés à
-   taille réelle (2b, 4), ce que rend le 7a une fois mis à l'échelle. */
-function etiqPhase(x1, w, y, h, t, noms, mois, fs = 10.5){
-  const tient = txt => txt.length * 6.4 * fs / 10.5 + 14 <= w;
-  let lab = noms[0], m = mois;
-  if (!tient(lab + ' · ' + m)) { if (tient(noms[1] + ' · ' + m)) lab = noms[1]; else { m = ''; if (!tient(lab)) lab = noms[1]; } }
-  return `<rect x="${x1.toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${h}" rx="4" style="fill:var(${t})" opacity=".26"/>`
-    + `<text x="${(x1 + w / 2).toFixed(1)}" y="${(y + h / 2 + fs * .36).toFixed(1)}" text-anchor="middle" font-size="${fs}" font-weight="700" letter-spacing=".05em" style="fill:var(--ink-2)">${lab}${m ? `<tspan font-weight="500" style="fill:var(--ink-3)"> · ${m}</tspan>` : ''}</text>`;
-}
-const PH_NOMS = anc => [[['Qualifications', 'Qualifs'], 'juil.–août', '--n4'],
-  [anc ? ['Groupes', 'Groupes'] : ['Ligue', 'Ligue'], anc ? 'sept.–déc.' : 'sept.–janv.', '--fr'],
-  [['Phase finale', 'Finale'], 'févr.–mai', '--n7']];
 function bandePhases(X, cw, mL, mR, W, mT, yB, M, fs = 10.5){
   const anc = !isCur() && +selY < 2024, P = PH_NOMS(anc);
   const PH = [[0, G_J1 - 1, ...P[0]], [G_J1, G_KO - 1, ...P[1]], [G_KO, nG - 1, ...P[2]]];
@@ -2957,7 +2981,8 @@ function drawL(){
   document.getElementById('chartL').outerHTML = g.replace('<svg','<svg id="chartL" role="img" aria-label="Coefficient de saison cumulé, étape par étape"');
   hoverL(sel, LI, X, Y, W, H, mL, mR, PAD);
   glisser(boxL, document.getElementById('chartL'), M ? W : null, M ? mL : 0);
-  if (M && boxL) { const sl = Math.max(0, X(LI) - boxL.clientWidth * .65); if (Math.abs(boxL.scrollLeft - sl) > 1) { boxL.__auto = true; boxL.scrollLeft = sl; } }
+  if (M && boxL) { const sl = Math.max(0, X(LI) - boxL.clientWidth * .65); if (Math.abs(boxL.scrollLeft - sl) > 1) { boxL.__auto = true; boxL.scrollLeft = sl; }
+    const iL = boxL.previousElementSibling; if (iL && iL.classList.contains('glisse-indice')) iL.textContent = TXT_GLISSE(sl > 0); }
   const lab=SEAS.find(x=>x[0]===selY)[1];
   /* téléphone : les valeurs ne sont plus au bout des lignes, la légende les donne */
   const totL = M ? ' ' + [...sel].sort((a,b)=>(series(b)[LI]??0)-(series(a)[LI]??0)).map(c=>`${name(c)} <b>${txtFin(c)}</b>`).join(' · ') + '.' : '';
@@ -3228,11 +3253,12 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
       + `<svg class="ya2b" style="width:${mL}px;height:${Ht}px" viewBox="0 0 ${mL} ${Ht}" aria-hidden="true">${yl}</svg>`;
     box.appendChild(tip);
     const svg = box.querySelector('#chart2b'), sc = box.querySelector('.sc2b'), hv = svg.querySelector('.hv');
-    if (sc.scrollWidth > sc.clientWidth) sc.scrollLeft = Math.max(0, X(lastW) - sc.clientWidth * .7);
+    if (sc.scrollWidth > sc.clientWidth) { sc.scrollLeft = Math.max(0, X(lastW) - sc.clientWidth * .7); sc.dataset.pin = mL; suivreEtiq(sc, svg); }
     /* même indication que les autres graphiques qui défilent (GT, 07/11/2026) ; elle s'efface au premier glissement du doigt */
     { const av = box.previousElementSibling, deja = av && av.classList.contains('glisse-indice');
       if (ph && sc.scrollWidth > sc.clientWidth + 4) { let i = av;
-        if (!deja) { i = document.createElement('div'); i.className = 'glisse-indice'; i.textContent = 'Faites glisser pour voir la suite →'; box.parentNode.insertBefore(i, box); }
+        if (!deja) { i = document.createElement('div'); i.className = 'glisse-indice'; box.parentNode.insertBefore(i, box); }
+        i.textContent = TXT_GLISSE(sc.scrollLeft > 0);
         const vu = () => i.classList.add('vu'); sc.addEventListener('touchstart', vu, { passive: true, once: true }); sc.addEventListener('wheel', vu, { passive: true, once: true }); }
       else if (deja) av.remove(); }
     const show = ev => { const r = svg.getBoundingClientRect(), i = Math.max(0, Math.min(n - 1, Math.floor((ev.clientX - r.left - mL) / cw)));
@@ -3661,7 +3687,7 @@ function drawM(){
        l'indice dit qu'on peut glisser des deux côtés */
     if (M) { const k = 900 / W, i = box.previousElementSibling;
       const caler = () => { box.scrollLeft = isCur() ? Math.max(0, X(LI) * k - mL * k - (box.clientWidth - mL * k) * 0.55) : 0;
-        if (i && i.classList.contains('glisse-indice')) { i.textContent = isCur() ? '← juillet · glissez des deux côtés · finale →' : 'Faites glisser pour voir la suite →';
+        if (i && i.classList.contains('glisse-indice')) { i.textContent = TXT_GLISSE(box.scrollLeft > 0);
           requestAnimationFrame(() => requestAnimationFrame(() => i.classList.remove('vu'))); } };
       requestAnimationFrame(caler); } }
   const labM = SEAS.find(x => x[0] === selY)[1], nP = poolM().length;
@@ -3821,10 +3847,9 @@ const CLUB_COURT = {'Tottenham Hotspur':'Tottenham','Manchester United':'Man Uni
     // séparateur été / phase finale
     // bandeau de phases : même dessin que le calendrier du bloc 0
     const yBas = (VAR === 'A' ? H : yG - 22) - 6, bord = [mL - 30, (X[3] + X[4] + NW) / 2, (X[4] + X[5] + NW) / 2, W - 6];
-    [['Phase qualificative', '--n4'], [ancien() ? 'Phase de groupes' : 'Phase de ligue', '--fr'], ['Phase finale', '--n7']].forEach(([ph, t], i) => {
+    PH_NOMS(ancien()).forEach(([noms, mois, t], i) => {
       const x1 = bord[i], x2 = bord[i + 1];
-      s += `<rect x="${(x1 + 1).toFixed(1)}" y="4" width="${(x2 - x1 - 2).toFixed(1)}" height="19" rx="4" fill="var(${t})" opacity=".26"/>`
-        + `<text x="${((x1 + x2) / 2).toFixed(1)}" y="17.5" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing=".05em" fill="var(--ink-2)">${ph}</text>`;
+      s += etiqPhase(x1 + 1, x2 - x1 - 2, 4, 19, t, noms, mois);
       if (i) s += `<line x1="${x1.toFixed(1)}" x2="${x1.toFixed(1)}" y1="4" y2="${yBas}" stroke="var(--rule)"/>`;
     });
     if (VAR !== 'A') {
@@ -4471,8 +4496,11 @@ const legende = segs => segs.map(s =>
     for (let ri = 0; ri < rows.length; ri++) {
       const c = rows[ri], fr = c === 'FRA', L = lignesR[ri], Y = cy(ri);
       if (ri % 2) s += `<rect x="${mL - 8}" y="${(Y - cellH / 2).toFixed(1)}" width="${(W - mL + 8 - 4).toFixed(1)}" height="${cellH}" fill="var(--band)" opacity=".6"/>`;
-      s += M ? `<text x="2" y="${(Y + 5).toFixed(1)}" font-size="13.5" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${nomPays(c)}</text>`
-             : `<text x="${mL - 14}" y="${(Y + 4).toFixed(1)}" text-anchor="end" font-size="12.5" font-weight="${fr ? 700 : 500}" fill="${fr ? 'var(--fr)' : 'var(--ink-2)'}">${name(c)}</text>`;
+      /* noms : même DA que la matrice du bloc 6 (07/11/2026) — couleur de la nation,
+         graisse 600 (700 pour la France), 12,6 px rendus au téléphone comme au bloc 6 */
+      const kN = SLOT[c] ? `var(${SLOT[c]})` : 'var(--ink-2)';
+      s += M ? `<text x="2" y="${(Y + 5).toFixed(1)}" font-size="12.6" font-weight="${fr ? 700 : 600}" fill="${kN}">${nomPays(c)}</text>`
+             : `<text x="${mL - 14}" y="${(Y + 4).toFixed(1)}" text-anchor="end" font-size="12" font-weight="${fr ? 700 : 600}" fill="${kN}">${name(c)}</text>`;
       for (let i = 0; i < nC; i++) {
         const X = cx(i), x = L[i];
         if (!x) { s += `<circle cx="${X.toFixed(1)}" cy="${Y.toFixed(1)}" r="1.6" fill="var(--ink-3)" opacity="${i > fin ? '.25' : '.45'}"/>`; continue; }
@@ -5544,9 +5572,9 @@ const legende = segs => segs.map(s =>
     let h = `<div class="ecr-m" style="--nc:${NC2}">`;
     // bandeau de phases
     h += `<div class="nm hd"></div>`
-      + `<div class="ph" style="grid-column:span 4;--t:var(--n4)">Phase qualificative</div>`
+      + `<div class="ph" style="grid-column:span 4;--t:var(--n4)">Qualifications<span class="mo">&nbsp;· juil.–août</span></div>`
       + `<div class="ph sep" style="--t:var(--fr)">${ancienV() ? 'Groupes' : 'Ligue'}</div>`
-      + `<div class="ph sep" style="grid-column:span ${NC2 - 5};--t:var(--n7)">Phase finale</div>`;
+      + `<div class="ph sep" style="grid-column:span ${NC2 - 5};--t:var(--n7)">Phase finale<span class="mo">&nbsp;· févr.–mai</span></div>`;
     // en-têtes de colonnes
     h += `<div class="nm hd"></div>` + COLS.map((lab, k) => `<div class="ch${sep(k)}${k > km ? ' futur' : ''}"><b>${lab}</b><span>${k > km ? 'à venir' : tot(k)}</span></div>`).join('');
     N.forEach(o => {
@@ -5593,10 +5621,9 @@ const legende = segs => segs.map(s =>
     const cw = (W - mL - mR) / NC2, X = k => mL + cw * k;
     const colC = k => `var(${['--c1', '--c3', '--c4'][k]})`;
     let g = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`;
-    [['Phase qualificative', '--n4', 0, 4], [ancienV() ? 'Phase de groupes' : 'Phase de ligue', '--fr', 4, 5], ['Phase finale', '--n7', 5, NC2]].forEach(([ph, t, a, b]) => {
-      const x1 = X(a), x2 = X(b), etroit = b - a === 1;
-      g += `<rect x="${(x1 + 1).toFixed(1)}" y="2" width="${(x2 - x1 - 2).toFixed(1)}" height="19" rx="4" fill="var(${t})" opacity=".26"/>`
-        + `<text x="${((x1 + x2) / 2).toFixed(1)}" y="15.5" text-anchor="middle" font-size="${etroit ? 9.5 : 10.5}" font-weight="700" letter-spacing="${etroit ? '0' : '.05em'}" fill="var(--ink-2)">${ph}</text>`
+    PH_NOMS(ancienV()).map((p, i) => [...p, [0, 4, 5][i], [4, 5, NC2][i]]).forEach(([noms, mois, t, a, b]) => {
+      const x1 = X(a), x2 = X(b);
+      g += etiqPhase(x1 + 1, x2 - x1 - 2, 2, 19, t, noms, mois)
         + (a ? `<line x1="${x1.toFixed(1)}" y1="2" x2="${x1.toFixed(1)}" y2="${H - 4}" stroke="var(--rule)"/>` : '');
     });
     const tot = k => N.reduce((a, o) => a + B[o.c].filter(r => r[k] !== 9).length, 0);
@@ -5656,7 +5683,8 @@ const legende = segs => segs.map(s =>
   let PALB = {};
   const majPalB = () => { const list = [...selB];
     const pris = new Set(list.map(c => SLOT[c]).filter(Boolean));
-    const libres = JETONS.filter(t => !pris.has(t));
+    /* le bleu de la France ne va jamais à une autre nation (07/11/2026) */
+    const libres = JETONS.filter(t => !pris.has(t) && t !== SLOT.FRA);
     PALB = {}; let i = 0;
     for (const c of list) PALB[c] = SLOT[c] || libres[i++] || '--ink-3'; };
   const nomCourt = n => { const f = nomClub(n); return CLUB_COURT[f] || f; };
@@ -5685,10 +5713,9 @@ const legende = segs => segs.map(s =>
     const Y = v => mT + (H - mT - mB) * (1 - v / hi);
     const halo = `stroke="var(--surface)" stroke-width="3.5" stroke-linejoin="round" paint-order="stroke"`;
     let g = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`;
-    [['Phase qualificative', '--n4', 0, 4], [ancienV() ? 'Phase de groupes' : 'Phase de ligue', '--fr', 4, 5], ['Phase finale', '--n7', 5, COLS.length]].forEach(([ph, t, a, b]) => {
+    PH_NOMS(ancienV()).map((p, i) => [...p, [0, 4, 5][i], [4, 5, COLS.length][i]]).forEach(([noms, mois, t, a, b]) => {
       const x1 = E(a), x2 = E(b);
-      g += `<rect x="${(x1 + 1).toFixed(1)}" y="4" width="${(x2 - x1 - 2).toFixed(1)}" height="19" rx="4" fill="var(${t})" opacity=".26"/>`
-        + ((M && b - a === 1) ? '' : `<text x="${((x1 + x2) / 2).toFixed(1)}" y="17.5" text-anchor="middle" font-size="${M ? 12 : 10.5}" font-weight="700" letter-spacing="${b - a > 1 ? '.05em' : '0'}" fill="var(--ink-2)">${M ? ph.replace('Phase qualificative', 'Qualifications').replace('Phase finale', 'Finale') : ph}</text>`)
+      g += etiqPhase(x1 + 1, x2 - x1 - 2, 4, 19, t, noms, mois)
         + (a ? `<line x1="${x1.toFixed(1)}" y1="4" x2="${x1.toFixed(1)}" y2="${H - mB}" stroke="var(--rule)"/>` : '');
     });
     for (let v = 0; v <= Math.floor(hi); v++)
@@ -5787,7 +5814,7 @@ const legende = segs => segs.map(s =>
         + `<button type="button" data-fr="1">France seule</button>`
         + `<span class="sep"></span>`
         + `<span class="sel"><select id="badd"${plein ? ' disabled' : ''} aria-label="Ajouter une nation">`
-        + `<option value="">${plein ? `${MAXB} nations, c'est le maximum` : 'Ajouter une nation…'}</option>`
+        + `<option value="">${plein ? `${MAXB} nations au plus` : MOB() ? '+ Ajouter…' : '+ Ajouter une nation…'}</option>`
         + dispo.map(c => `<option value="${c}">${name(c)}</option>`).join('')
         + `</select></span>`
         + `<span class="brk"></span>`
@@ -6013,13 +6040,14 @@ function bilanVND(cfg){
     const vu = c => seule() || (ouvert !== bascule.has(c));
     const anc = saison !== '5' && +saison < 2024;
     const COLS = ['Qualifications', anc ? 'Groupes' : 'Ligue', 'Phase finale', 'Global'];
+    const MOIS7 = ['juil.–août', anc ? 'sept.–déc.' : 'sept.–janv.', 'févr.–mai', ''];
     const maxc = [0, 1, 2, 3].map(col => Math.max(1, ...nats.map(c => nb(tranches(agg(c), col).reduce((a, q) => add(a, q.t), Z())))));
     lignes = []; pastilles = [];
     if (nats.some(vu)) charge();
     /* en-têtes de phase dans les teintes du site (bandeaux des blocs 6a et 7) : qualifications,
        ligue, phase finale ; le global reste neutre */
     const TEINTE = ['--n4', '--fr', '--n7', null];
-    let h = `<div class="vnd-h"><span></span>${COLS.map((x, i) => `<span class="c"><b class="ph"${TEINTE[i] ? ` style="--t:var(${TEINTE[i]})"` : ''}>${x}</b></span>`).join('')}<span class="p">V−D</span><span class="p">% pts</span></div>`;
+    let h = `<div class="vnd-h"><span></span>${COLS.map((x, i) => `<span class="c"><b class="ph"${TEINTE[i] ? ` style="--t:var(${TEINTE[i]})"` : ''}>${x}${MOIS7[i] ? `<span class="mo"> · ${MOIS7[i]}</span>` : ''}</b></span>`).join('')}<span class="p">V−D</span><span class="p">% pts</span></div>`;
     for (const c of nats) {
       const A = agg(c), T = tot(A), fr = c === 'FRA', o = vu(c), i = lignes.push({ nom: name(c), p: A, n: Dn[c].length }) - 1;
       h += `<div class="vnd-nat${fr ? ' me' : ''}${o ? ' ouv' : ''}" data-c="${c}" data-i="${i}" role="button" tabindex="0" aria-expanded="${o}">`

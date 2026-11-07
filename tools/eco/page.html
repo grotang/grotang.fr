@@ -125,6 +125,8 @@ section{margin-top:clamp(30px,4.5vw,50px)}
 .ptitle .no{font-size:11px; font-weight:700; letter-spacing:.06em; color:var(--surface); background:var(--ink); padding:2px 7px; border-radius:2px}
 .ptitle h3{font-size:17.5px; font-weight:600}
 .ptitle .sub{margin-left:auto; display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center}
+/* téléphone : un titre long reste à côté de son numéro et passe à la ligne en dessous (07/11/2026) */
+@media (max-width:680px){ .ptitle h3{flex:1 1 12em; min-width:0} }
 .figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-height:1.55; max-width:124ch}
 .figc b{color:var(--ink)}
 .chart{width:100%; position:relative}
