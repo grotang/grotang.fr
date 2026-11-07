@@ -114,6 +114,9 @@ section{margin-top:clamp(30px,4.5vw,52px)}
 .ctl > .hint{font-size:12.5px; color:var(--ink-3)}
 /* légende de lecture sous le titre (6a, 6b) : elle n'est pas un filtre, elle sort de la zone des filtres */
 .lect{font-size:12.5px; color:var(--ink-3); margin:-4px 0 12px}
+/* récit semaine / journée (07/11/2026) : ce que mesure le bloc, et l'autre lecture */
+.recit{font-size:13.5px; line-height:1.5; color:var(--ink-2); margin:-2px 0 12px; max-width:110ch}
+.recit b{color:var(--ink)} .recit a{color:var(--fr); font-weight:600; text-decoration:none; border-bottom:1px dotted currentColor}
 .sel{position:relative; display:inline-flex; align-items:center}
 .sel select{appearance:none; font:inherit; font-size:12.5px; font-weight:600; color:var(--ink);
   background:var(--surface); border:1px solid var(--rule); border-radius:2px;
@@ -900,6 +903,7 @@ footer .legal{margin-top:3px; font-size:11px}
 
   <div class="panel" id="p2b">
     <div class="ptitle" id="semaines"><span class="no">2b</span><h3>Semaine après semaine</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="seg" role="group" aria-label="Lecture"><button type="button" id="b2-gap" aria-pressed="true">Écart à la France<small>classement 5 ans</small></button><button type="button" id="b2-cum" aria-pressed="false">Cumul<small>saison</small></button></span></span></span></div>
+    <p class="recit">Au <b>rythme réel</b> : chaque point est une semaine européenne, du mardi au jeudi, toutes compétitions confondues. C'est la course telle que la France la vit, date après date. Même total à l'arrivée que le <a href="#journees">bloc 4</a>, qui compare, lui, à étape égale.</p>
     <div class="chips" id="chips2b"></div>
     <figure><div class="chartbox" id="box2b"><div class="tip" id="tip2b" hidden></div></div>
       <figcaption id="cap2b"></figcaption></figure>
@@ -921,7 +925,8 @@ footer .legal{margin-top:3px; font-size:11px}
   </div>
 
   <div class="panel">
-    <div class="ptitle"><span class="no">4</span><h3>Évolution journée par journée</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="seg" role="group" aria-label="Lecture"><button type="button" id="l-cum" aria-pressed="true">Cumul</button><button type="button" id="l-gap" aria-pressed="false">Écart au leader</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSel" aria-label="Saison"></select></span></span></span></div>
+    <div class="ptitle" id="journees"><span class="no">4</span><h3>Évolution journée par journée</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="seg" role="group" aria-label="Lecture"><button type="button" id="l-cum" aria-pressed="true">Cumul</button><button type="button" id="l-gap" aria-pressed="false">Écart au leader</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSel" aria-label="Saison"></select></span></span></span></div>
+    <p class="recit">À <b>étape égale</b> : chaque point est une journée de compétition, même quand la Ligue Conférence la joue une semaine après la Ligue des champions. C'est la comparaison sportive. Même total à l'arrivée que le <a href="#semaines">bloc 2b</a>, qui suit, lui, le calendrier réel.</p>
     <div class="chips" id="lchips"></div>
     <figure><div class="chartbox big" id="boxL"><svg id="chartL" role="img" aria-label="Coefficient de saison cumulé, étape par étape"></svg><div class="tip" id="tipL" hidden></div></div>
       <figcaption id="capL"></figcaption></figure>
