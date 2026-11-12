@@ -185,6 +185,8 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 #chart2b .pz{font:9.5px "IBM Plex Mono",monospace; fill:var(--ink-3); paint-order:stroke; stroke:var(--surface); stroke-width:4px}
 #chart2b .pp{font:600 10.5px "IBM Plex Mono",monospace; fill:var(--ink)}
 #chart2b .pp.haut{fill:var(--vl)} #chart2b .pp.bas{fill:var(--dl)}
+#box2b .rs{font:600 9.5px "IBM Plex Mono",monospace; fill:var(--fr)}
+#chart2b .arrete{fill:var(--ink-3); opacity:.16}
 #chart2b .fut{opacity:.38}
 #chart2b .curbg{fill:var(--ink); opacity:.07}
 #tip2b table{border-collapse:collapse; margin-top:6px; font:12px "IBM Plex Mono",monospace}
@@ -3148,8 +3150,18 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
   window.__semaines = () => ({ weeks: WK.map(k => ({ w: k.w, d0: k.d0, d1: k.d1, ph: k.ph })), lastW, T, G });
   /* chances « top 5 » de la France, semaine par semaine */
   const top5 = a => { a = a && !Array.isArray(a) ? a.rg : a; return Array.isArray(a) ? a.slice(0, 5).reduce((x, y) => x + y, 0) : null; };
-  const P5 = WK.map((k, i) => i > lastW ? null : i === lastW ? top5(typeof PRJ !== 'undefined' && PRJ && PRJ.rgFR)
-    : top5(typeof PSEM !== 'undefined' && PSEM && PSEM.s && PSEM.s[k.w]));
+  /* DEUX LIGNES depuis la force des clubs (GT, 12/11/2026) : « nations » = le modèle
+     initial, arrêté à la semaine de bascule (grisé ensuite) ; « clubs » = le modèle
+     avec la force des clubs, à partir de cette semaine-là (voir projette.mjs). */
+  const BASC = '2026-11-02', iB = WK.findIndex(k => k.w === BASC);
+  const PRJc = typeof PRJ !== 'undefined' && PRJ ? PRJ : null, prjClubs = !!(PRJc && PRJc.modele === 'clubs');
+  const PSx = typeof PSEM !== 'undefined' && PSEM ? PSEM : {};
+  const deux = iB >= 0 && iB <= lastW && (prjClubs || !!(PSx.c && Object.keys(PSx.c).length));
+  const P5 = WK.map((k, i) => i > lastW || (deux && i > iB) ? null
+    : i === lastW && !deux ? top5(PRJc && PRJc.rgFR)
+    : top5(PSx.s && PSx.s[k.w]));
+  const P5C = WK.map((k, i) => !deux || i < iB || i > lastW ? null
+    : i === lastW ? (prjClubs ? top5(PRJc.rgFR) : null) : top5(PSx.c && PSx.c[k.w]));
   const pc = v => v == null ? '' : v >= .995 ? '>99\u00a0%' : v < .005 ? '<1\u00a0%' : Math.round(v * 100) + '\u00a0%';
   const L = [...N].sort((a, b) => a.r - b.r).map(x => x.c), fi = L.indexOf('FRA');
   const DEV = (typeof PRJ !== 'undefined' && PRJ && PRJ.devFR) || {};
@@ -3211,7 +3223,7 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
     bG.setAttribute('aria-pressed', mode === 'gap'); bC.setAttribute('aria-pressed', mode === 'cum');
     const ph = MOB(), boxW = box.clientWidth || 1000, mL = ph ? 50 : 54, cw = ph ? 36 : Math.max(32, (boxW - mL - 8) / n);
     const Wd = mL + cw * n + 8, mT = 30, pB = ph ? 270 : 330;
-    const yD = pB + 18, yM = pB + 31, yR = [pB + 52, pB + 70, pB + 88], yP = pB + 114, avecP = cur().has('FRA') && P5.some(v => v != null), Ht = pB + (avecP ? 124 : 98);
+    const yD = pB + 18, yM = pB + 31, yR = [pB + 52, pB + 70, pB + 88], yP = pB + 116, yP2 = pB + 133, avecP = cur().has('FRA') && (P5.some(v => v != null) || P5C.some(v => v != null)), avec2 = avecP && deux, Ht = pB + (avecP ? (avec2 ? 142 : 124) : 98);
     const X = i => mL + cw * (i + .5);
     const tf = T.FRA, S = [...cur()].sort((a, b) => (a === 'FRA') - (b === 'FRA')), ser = {};
     S.forEach(c => { ser[c] = T[c].map((v, i) => v == null ? null : mode === 'cum' ? v - base(c) : v - tf[i]); });
@@ -3230,7 +3242,9 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
     for (let v = Math.ceil(lo / st) * st; v <= hi; v += st) { const z = Math.abs(v) < 1e-9;
       g += `<line x1="${mL}" x2="${mL + cw * n}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--rule)" stroke-width="${z ? 1.4 : .6}" ${z ? '' : 'stroke-dasharray="2 3"'}/>`;
       yl += `<text x="${mL - 8}" y="${Y(v) + 4}" text-anchor="end" class="ax">${(mode === 'gap' && v > 0 ? '+' : '') + nf(z ? 0 : v, st < 1 ? 1 : 0)}</text>`; }
-    if (avecP) yl += `<text x="${mL - 8}" y="${yP - 6}" text-anchor="end" class="rh" style="fill:var(--fr)">France</text><text x="${mL - 8}" y="${yP + 5}" text-anchor="end" class="rh" style="fill:var(--ink-2)">top\u00a05</text>`;
+    if (avecP) yl += avec2
+      ? `<text x="${mL - 8}" y="${yP - 13}" text-anchor="end" class="rh" style="fill:var(--fr)">top\u00a05</text><text x="${mL - 8}" y="${yP}" text-anchor="end" class="rs">nations</text><text x="${mL - 8}" y="${yP2}" text-anchor="end" class="rs">clubs</text>`
+      : `<text x="${mL - 8}" y="${yP - 6}" text-anchor="end" class="rh" style="fill:var(--fr)">France</text><text x="${mL - 8}" y="${yP + 5}" text-anchor="end" class="rh" style="fill:var(--ink-2)">top\u00a05</text>`;
     CO.forEach((c, r) => yl += `<text x="${mL - 8}" y="${yR[r]}" text-anchor="end" class="rh" style="fill:var(${CV[r]})">${c}</text>`);
     let mo = -1;
     WK.forEach((k, i) => { const x = X(i), cl = i > lastW ? ' fut' : i === lastW ? ' cur' : '', A = dd(k.d0), B = dd(k.d1);
@@ -3242,6 +3256,10 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
         g += `<g class="pa${cl}"><circle cx="${x - cw / 2 + 6}" cy="${yR[co] - 3.6}" r="3" fill="var(${CV[co]})"/><text x="${x - cw / 2 + 11}" y="${yR[co]}" class="pj">${k.p[co]}</text></g>`;
       if (avecP && P5[i] != null) { const pv = i ? P5[i - 1] : null, dl = pv == null ? 0 : P5[i] - pv;
         g += `<text x="${x}" y="${yP}" text-anchor="middle" class="pp${cl}${dl <= -.005 ? ' bas' : dl >= .005 ? ' haut' : ''}">${pc(P5[i]).replace('\u00a0%', '')}</text>`; }
+      /* ligne « nations » arrêtée : cases grisées après la bascule, pour dire la discontinuité */
+      if (avec2 && i > iB) g += `<rect x="${x - cw / 2 + 4}" y="${yP - 10}" width="${cw - 8}" height="13" rx="2" class="arrete"><title>Modèle initial remplacé par la force des clubs (semaine du 3–5 nov.)</title></rect>`;
+      if (avec2 && P5C[i] != null) { const pv = i > iB ? P5C[i - 1] : null, dl = pv == null ? 0 : P5C[i] - pv;
+        g += `<text x="${x}" y="${yP2}" text-anchor="middle" class="pp${cl}${dl <= -.005 ? ' bas' : dl >= .005 ? ' haut' : ''}">${pc(P5C[i]).replace('\u00a0%', '')}</text>`; }
       if (i) { const gap = Math.round((dd(k.w) - dd(WK[i - 1].w)) / 6048e5) - 1;
         if (gap > 0) { const xb = mL + cw * i;
           g += `<line x1="${xb}" x2="${xb}" y1="${mT + 18}" y2="${pB}" stroke="var(--ink-3)" stroke-width=".8" stroke-dasharray="1 4" opacity=".7"/>`
@@ -3286,7 +3304,10 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
     svg.onmouseleave = () => { tip.hidden = true; hv.setAttribute('opacity', 0); };
     const b = L[fi + 1], av = lastW - 1;
     if (b && T[b][av] != null) cap.innerHTML = `Semaine du ${dLong(WK[lastW])} : la France prend <b>+${f1(G.FRA[lastW])}</b>, ${name(b)} <b>+${f1(G[b][lastW])}</b> — l'écart passe de ${f1(tf[av] - T[b][av])} à <b>${f1(tf[lastW] - T[b][lastW])}</b> points.`
-      + (P5[lastW] != null && P5[lastW - 1] != null ? ` Chances de finir dans les 5 premières : ${pc(P5[lastW - 1])} → <b>${pc(P5[lastW])}</b>.` : '')
+      + (avec2 && P5[lastW] != null && P5C[lastW] != null
+          ? ` Chances de finir dans les 5 premières : ${P5[lastW - 1] != null ? pc(P5[lastW - 1]) + ' → ' : ''}<b>${pc(P5[lastW])}</b> avec le modèle initial (force des nations), <b>${pc(P5C[lastW])}</b> avec la force des clubs, qui le remplace à partir de cette semaine.`
+        : avec2 && P5C[lastW] != null && P5C[lastW - 1] != null ? ` Chances de finir dans les 5 premières : ${pc(P5C[lastW - 1])} → <b>${pc(P5C[lastW])}</b> (force des clubs).`
+        : !avec2 && P5[lastW] != null && P5[lastW - 1] != null ? ` Chances de finir dans les 5 premières : ${pc(P5[lastW - 1])} → <b>${pc(P5[lastW])}</b>.` : '')
       + ` ${ph ? 'Touchez' : 'Survolez'} une semaine pour le détail des huit premières.`;
   }
   draw(); let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { chips(); draw(); }, 150); });
@@ -3355,8 +3376,12 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
   const resSource = (n, c, co) => { const r = ((D.eff || {})[c] || []).find(x => x[0] === n && x[1] === co); if (!r || r.length < 10) return null;
     const t = bilanSEM[n + '|' + co] || [0, 0, 0], d = [r[7] - t[0], r[8] - t[1], r[9] - t[2]]; return d[0] + d[1] + d[2] === 1 ? d.indexOf(1) : null; };
   /* projection de fin de semaine : PRJ pour la semaine en cours, PSEM sinon */
-  const ps = i => i === lastW ? (typeof PRJ !== 'undefined' && PRJ ? { rg: PRJ.rgFR, med: Object.fromEntries(Object.entries((PRJ.q || {}).tir || {}).map(([c, v]) => [c, v[2]])) } : null)
-    : (typeof PSEM !== 'undefined' && PSEM && PSEM.s && PSEM.s[WK[i].w] && !Array.isArray(PSEM.s[WK[i].w]) ? PSEM.s[WK[i].w] : null);
+  /* depuis la force des clubs (12/11/2026) : une gazette d'avant la bascule garde le modèle
+     initial (PSEM.s, marqué m: 'n') ; après, le modèle avec la force des clubs (PSEM.c) */
+  const ps = i => { const w = WK[i].w, P = typeof PSEM !== 'undefined' && PSEM ? PSEM : {}, sN = P.s && P.s[w] && !Array.isArray(P.s[w]) ? P.s[w] : null;
+    if (sN && sN.m === 'n') return sN;
+    if (i === lastW) return typeof PRJ !== 'undefined' && PRJ ? { rg: PRJ.rgFR, med: Object.fromEntries(Object.entries((PRJ.q || {}).tir || {}).map(([c, v]) => [c, v[2]])) } : null;
+    return (P.c && P.c[w]) || sN; };
   const top5 = p => p && Array.isArray(p.rg) ? p.rg.slice(0, 5).reduce((x, y) => x + y, 0) : null;
   const proj = (p, c) => p && p.med && p.med[c] != null && BY[c] ? BY[c].y[0] + BY[c].y[1] + BY[c].y[2] + BY[c].y[3] + p.med[c] : null;
   /* tous les matchs de la saison jusqu'à une date, vus de chaque club (pour les records) */
@@ -5190,7 +5215,7 @@ const legende = segs => segs.map(s =>
         for (const c of S.codes) { if (c === 'FRA' || !S.tir[c]) continue; let k = 0;
           for (let i = 0; i < F.length; i++) if (base[c] + S.tir[c][i] > base.FRA + F[i]) k++;
           if (k > 0 && k < F.length) devFR[c] = +(k / F.length).toFixed(6); } }
-      return { n, q, dv, rgFR, devFR, ecarts: S.ecarts, calendrier: S.calendrier, moteur: S.moteur, pronos: (S.pronos || []).map(x => [x.k, x.dom, x.ext, x.p[0], x.p[2]]), ...(opts && opts.rangs ? { rangs: S.rangs } : {}),
+      return { n, modele: (typeof FORCE !== 'undefined' && FORCE) ? 'clubs' : 'nations', q, dv, rgFR, devFR, ecarts: S.ecarts, calendrier: S.calendrier, moteur: S.moteur, pronos: (S.pronos || []).map(x => [x.k, x.dom, x.ext, x.p[0], x.p[2]]), ...(opts && opts.rangs ? { rangs: S.rangs } : {}),
         /* fin de phase de ligue, club par club, toutes nations (page cachée
            /football-clubs-francais-phase-de-ligue/, 05/11) : [nom, nation, compétition,
            points attendus, rangs à 10/25/50/75/90 %, part top 8, barrages, éliminé] */

@@ -36,6 +36,9 @@ const PAGE = path.join(ICI, 'page.html');
 const BATI = path.join(RACINE, 'public', url('uefa'), 'index.html');   // adresse lue dans le registre (tools/site.mjs)
 const SENT = ['/*PRJ_START*/', '/*PRJ_END*/'];
 const N = Number(process.argv[2] || 100000);
+/* BASCULE (12/11/2026) : semaine du passage de la force des nations à la force des
+   clubs. La ligne « nations » du 2b s'arrête là, la ligne « clubs » commence là. */
+const BASCULE = '2026-11-02';
 
 if (!fs.existsSync(BATI)) { console.error(BATI + ' absent : lancer le build d\'abord.'); process.exit(2); }
 
@@ -91,9 +94,9 @@ let out = src.slice(0, a) + SENT[0] + 'const PRJ = ' + JSON.stringify(R) + ';' +
 const PA = out.indexOf('/*PSEM_START*/'), PB = out.indexOf('/*PSEM_END*/');
 if (PS && PA >= 0 && PB > PA) {
   let avant = null; try { avant = JSON.parse(out.slice(PA + 14, PB).replace(/^const PSEM = /, '').replace(/;$/, '')); } catch (e) { avant = null; }
-  const s = { ...((avant && avant.s) || {}), ...PS.s };
-  out = out.slice(0, PA) + '/*PSEM_START*/const PSEM = ' + JSON.stringify({ ...PS, s }) + ';' + out.slice(PB);
-  console.log(`page.html : bloc PSEM mis a jour (${Object.keys(PS.s).length} semaines recalculees)`);
+  const s = { ...((avant && avant.s) || {}), ...PS.s }, c = { ...((avant && avant.c) || {}), ...(PS.c || {}) };
+  out = out.slice(0, PA) + '/*PSEM_START*/const PSEM = ' + JSON.stringify({ ...PS, s, c }) + ';' + out.slice(PB);
+  console.log(`page.html : bloc PSEM mis a jour (${Object.keys(PS.s).length} semaines « nations », ${Object.keys(PS.c || {}).length} « clubs » calculees)`);
 }
 fs.writeFileSync(PAGE + '.tmp', out); fs.renameSync(PAGE + '.tmp', PAGE);
 
@@ -125,18 +128,35 @@ try { execFileSync(process.execPath, [path.join(ICI, 'gazettes.mjs')], { stdio: 
    (q.tir), pr = le pronostic 1N2 des matchs de la semaine SUIVANTE, tels que le
    modèle les voyait avant de les jouer ([compétition, domicile, extérieur,
    victoire domicile, victoire extérieur]). */
+/* DEUX SÉRIES DEPUIS LA FORCE DES CLUBS (GT, 12/11/2026). Tant que la page n'a
+   pas de forces (FORCE = null), rien ne change : s = le modèle du jour, recalculé.
+   Dès que FORCE est là :
+   - PSEM.s = le modèle INITIAL (force des nations), pour les semaines jusqu'à la
+     BASCULE comprise, recalculé UNE fois en forçant FORCE = null, puis figé
+     (marque m: 'n') ;
+   - PSEM.c = le modèle avec la force des clubs, pour les semaines à partir de la
+     BASCULE, calculé une fois la semaine close, puis figé (les forces bougent
+     chaque semaine : recalculer une semaine passée avec les forces du jour lui
+     ferait voir l'avenir). */
 async function historique(nav, info) {
   const NH = 40000, html = fs.readFileSync(BATI, 'utf8');
+  const forceActif = /\/\*FORCE_START\*\/const FORCE = \{/.test(html);
+  let avant = {}; try { const p = fs.readFileSync(PAGE, 'utf8'), a = p.indexOf('/*PSEM_START*/'), b = p.indexOf('/*PSEM_END*/');
+    avant = JSON.parse(p.slice(a + 14, b).replace(/^const PSEM = /, '').replace(/;$/, '')); } catch (e) { avant = {}; }
+  const sN = {}, sC = {};
   const lit = (deb, fin) => { const a = html.indexOf(deb), b = html.indexOf(fin, a); return a < 0 || b < 0 ? null : [a + deb.length, b]; };
   const pD = lit('/*DATA_START*/const D = ', ';/*DATA_END*/'), pS = lit('/*SEM_START*/const SEM = ', ';/*SEM_END*/');
   if (!pD || !pS) { console.log('historique : sentinelles DATA/SEM introuvables, rien de calcule'); return null; }
   const D0 = JSON.parse(html.slice(...pD)), S0 = JSON.parse(html.slice(...pS));
   const ligue = m => typeof m[3] === 'number' && m[3] <= 7;
-  const cibles = info.weeks.map((k, i) => ({ ...k, i })).filter(k => k.i < info.lastW
+  const cibles = info.weeks.map((k, i) => ({ ...k, i })).filter(k => (k.i < info.lastW || (forceActif && k.w === BASCULE && k.i <= info.lastW))
     && (k.ph === 0 || (k.ph === 1 && info.weeks[k.i + 1] && info.weeks[k.i + 1].ph === 0)));
-  const s = {}, tmp = path.join(os.tmpdir(), 'grotang-rembobine.html');
+  const tmp = path.join(os.tmpdir(), 'grotang-rembobine.html');
   const onglet = await nav.newPage(); const err = []; onglet.on('pageerror', e => err.push(e.message));
   for (const k of cibles) {
+    const needN = !forceActif || (k.w <= BASCULE && !(avant.s && avant.s[k.w] && avant.s[k.w].m === 'n'));
+    const needC = forceActif && k.w >= BASCULE && k.i < info.lastW && !(avant.c && avant.c[k.w]);
+    if (!needN && !needC) continue;
     const cut = k.d1;
     const SEM = S0.map(m => ligue(m) && m[0] > cut ? [...m.slice(0, 8), null, null, ...m.slice(10)] : m);
     const passes = S0.filter(m => ligue(m) && m[0] <= cut);
@@ -159,21 +179,26 @@ async function historique(nav, info) {
     /* les deux blocs sont remplacés du dernier au premier : les positions restent justes */
     const morceaux = [[pD, JSON.stringify(D)], [pS, JSON.stringify(SEM)]].sort((x, y) => y[0][0] - x[0][0]);
     let out = html; for (const [[a, b], v] of morceaux) out = out.slice(0, a) + v + out.slice(b);
-    fs.writeFileSync(tmp, out); err.length = 0;
+    const sansForce = out.replace(/\/\*FORCE_START\*\/[\s\S]*?\/\*FORCE_END\*\//, '/*FORCE_START*/const FORCE = null;/*FORCE_END*/');
+    const essais = forceActif ? [needN && ['n', sansForce], needC && ['c', out]].filter(Boolean) : [['s', out]];
+    for (const [modele, page2] of essais) {
+    fs.writeFileSync(tmp, page2); err.length = 0;
     await onglet.goto('file://' + tmp, { waitUntil: 'load' });
     await onglet.waitForFunction(() => typeof window.__projette === 'function', null, { timeout: 15000 });
     const H = await onglet.evaluate(n => { const r = window.__projette(n);
       return { rg: r.rgFR, med: Object.fromEntries(Object.entries((r.q || {}).tir || {}).map(([c, v]) => [c, v[2]])), pr: r.pronos || [],
         bloque: (r.calendrier || {}).bloque || [], ecarts: r.ecarts || [] }; }, NH);
     if (err.length || !H.rg || H.bloque.length || H.ecarts.length) {
-      console.log(`historique ${k.w} : semaine sautee (${err[0] || H.bloque[0] || H.ecarts[0] || 'pas de rang'})`); continue; }
+      console.log(`historique ${k.w} (${modele}) : semaine sautee (${err[0] || H.bloque[0] || H.ecarts[0] || 'pas de rang'})`); continue; }
     /* les pronostics de la semaine suivante seulement */
     const nx = info.weeks[k.i + 1], fin7 = nx ? (() => { const d = new Date(nx.w + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + 6); return d.toISOString().slice(0, 10); })() : null;
     const date = new Map(S0.filter(ligue).map(m => [m[2] + '|' + m[4] + '|' + m[6], (Array.isArray(m[10]) && m[10][0]) || m[0]]));
     const pr = nx ? H.pr.filter(p => { const d = date.get(p[0] + '|' + p[1] + '|' + p[2]); return d && d >= nx.w && d <= fin7; }) : [];
-    s[k.w] = { rg: H.rg.map(v => +v.toFixed(4)), med: Object.fromEntries(Object.entries(H.med).map(([c, v]) => [c, +v.toFixed(3)])), pr };
-    console.log(`historique ${k.w} : France dans les 5 premieres ${(H.rg.slice(0, 5).reduce((a, b) => a + b, 0) * 100).toFixed(1)} %`);
+    const val = { rg: H.rg.map(v => +v.toFixed(4)), med: Object.fromEntries(Object.entries(H.med).map(([c, v]) => [c, +v.toFixed(3)])), pr };
+    if (modele === 'c') sC[k.w] = val; else sN[k.w] = modele === 'n' ? { ...val, m: 'n' } : val;
+    console.log(`historique ${k.w} (${modele === 'c' ? 'clubs' : 'nations'}) : France dans les 5 premieres ${(H.rg.slice(0, 5).reduce((a, b) => a + b, 0) * 100).toFixed(1)} %`);
+    }
   }
   await onglet.close(); if (fs.existsSync(tmp)) fs.unlinkSync(tmp);
-  return { n: NH, maj: D0.meta.lastUpdated, s };
+  return { n: NH, maj: D0.meta.lastUpdated, s: sN, c: sC };
 }
