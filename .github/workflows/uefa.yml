@@ -35,7 +35,7 @@ name: Rafraîchissement UEFA
 # déjà publiés et sort sans rien écrire s'ils n'ont pas bougé.
 #
 # Lancé à la main (« Run workflow ») : un passage tout de suite, à n'importe
-# quelle heure ; la case « force » republie même sans données neuves.
+# quelle heure ; la case « republier » republie même sans données neuves (ex-« force », renommée le 12/11 : rien à voir avec la force des clubs).
 #
 # RÉVEIL EXTERNE (depuis le 04/11/2026) : les départs planifiés partaient avec
 # 4 à 7 h de retard, voire pas du tout (le 04/11 : un seul des deux, à 13 h 56).
@@ -52,7 +52,7 @@ on:
     - cron: '12 6 * 5,6 0'
   workflow_dispatch:
     inputs:
-      force:
+      republier:
         description: 'Republier même si les données sont inchangées'
         type: boolean
         default: false
@@ -102,7 +102,7 @@ jobs:
         run: npm run test:extract
 
       # Aucun passage planifié n'est forcé : le script compare les chiffres à ceux
-      # déjà publiés et sort sans rien écrire s'ils n'ont pas bougé. `--force` ne
+      # déjà publiés et sort sans rien écrire s'ils n'ont pas bougé. `--force` (case « republier ») ne
       # sert qu'au lancement à la main, pour republier après une correction de
       # gabarit qui ne touche pas les données.
       # Chromium sert deux fois : a la projection, puis au test.
@@ -112,7 +112,7 @@ jobs:
 
       - name: Relire la source et reconstruire
         id: refresh
-        run: node tools/uefa/refresh.mjs ${{ inputs.force && '--force' || '' }}
+        run: node tools/uefa/refresh.mjs ${{ inputs.republier && '--force' || '' }}
 
       # public/ n'est plus dans le dépôt : sur une machine neuve il n'existe pas.
       # Le script ci-dessus ne le fabrique que s'il a trouvé du neuf ; la

@@ -19,7 +19,7 @@ name: Force des clubs
 # e-mail avec la liste des alertes. Seul blocage : plus de la moitié des ligues
 # illisibles (structure de Wikipédia changée) → rien n'est écrit.
 #
-# Après dépôt, on relance « Rafraîchissement UEFA » avec la case force : c'est lui
+# Après dépôt, on relance « Rafraîchissement UEFA » avec la case « republier » : c'est lui
 # qui refait la projection (200 000 saisons) avec les nouvelles forces, la teste
 # et publie. Un push du robot ne réveille pas les autres workflows (voir uefa.yml) :
 # d'où l'appel explicite, et le droit `actions: write`.
@@ -76,7 +76,7 @@ jobs:
         if: steps.depot.outputs.deploy == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh workflow run uefa.yml --ref main -f force=true
+        run: gh workflow run uefa.yml --ref main -f republier=true
 
       # Publié, mais signalé : s'il y a des alertes, cette étape échoue et GitHub
       # envoie son e-mail. Le site, lui, a déjà les forces de la semaine.
