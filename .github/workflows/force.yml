@@ -12,9 +12,12 @@ name: Force des clubs
 # Le lundi matin : les championnats ont joué le week-end. Cron ne parle qu'UTC :
 #   41 6 UTC → 08 h 41 été · 07 h 41 hiver. La minute n'est jamais 00.
 #
-# Garde-fous (dans le script) : une ligue illisible, des résultats perdus, ou un
-# club engagé sans force → échec, rien n'est écrit, GitHub envoie son e-mail, et
-# le site garde les forces de la semaine précédente.
+# Garde-fous (dans le script) — dégradé plutôt que bloqué : une ligue illisible
+# garde ses résultats archivés, un club sans force prend celle de sa nation, une
+# ligue sans neuf depuis 4 semaines est signalée. Le fichier est quand même écrit
+# et publié ; la dernière étape échoue ensuite exprès pour que GitHub envoie son
+# e-mail avec la liste des alertes. Seul blocage : plus de la moitié des ligues
+# illisibles (structure de Wikipédia changée) → rien n'est écrit.
 #
 # Après dépôt, on relance « Rafraîchissement UEFA » avec la case force : c'est lui
 # qui refait la projection (200 000 saisons) avec les nouvelles forces, la teste
@@ -74,3 +77,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh workflow run uefa.yml --ref main -f force=true
+
+      # Publié, mais signalé : s'il y a des alertes, cette étape échoue et GitHub
+      # envoie son e-mail. Le site, lui, a déjà les forces de la semaine.
+      - name: Alertes
+        run: |
+          python3 -c "import json,sys; a=json.load(open('tools/uefa/force-clubs.json', encoding='utf-8')).get('alertes', []); print(chr(10).join(a) if a else 'Aucune alerte.'); sys.exit(1 if a else 0)"

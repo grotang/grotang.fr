@@ -21,10 +21,16 @@ Réglages décidés avec GT le 08/11/2026 ; échelle calée par le backtest du
 12/11/2026 (apprentissage 2024/25, validation 2025/26 et 2026/27).
 Python standard uniquement (aucune dépendance à installer).
 
-Garde-fous : si une ligue ne se lit pas, ou perd des résultats par rapport à
-l'archive, ou si un club des 10 nations engagé cette saison n'a pas de force,
-le script s'arrête en erreur SANS rien écrire : le site garde les forces de la
-semaine précédente.
+Garde-fous — DÉGRADÉ PLUTÔT QUE BLOQUÉ (GT, 12/11/2026) :
+  - une ligue illisible, ou qui perd des résultats : on garde ses résultats déjà
+    archivés, les autres ligues sont mises à jour ;
+  - un club engagé sans force (nom inconnu) : il prend la force de sa nation
+    (la page sait le faire) ;
+  - une ligue sans résultat neuf depuis 4 semaines en pleine saison : alerte ;
+  - dans ces cas le fichier est QUAND MÊME écrit, avec la liste « alertes » ;
+    le workflow publie puis échoue exprès, pour que GitHub envoie son e-mail ;
+  - seul vrai blocage : plus de la moitié des ligues illisibles (la structure de
+    Wikipédia a changé partout). Rien n'est écrit, le site garde l'existant.
 """
 import datetime as dt, difflib, html.parser, json, math, os, re, sys, time, unicodedata, urllib.parse, urllib.request
 
@@ -52,6 +58,8 @@ def poids_age(jours): return 0.0 if jours > FENETRE or jours < 0 else 0.5 ** (jo
 def poids_europe(etape): return 2.0 if isinstance(etape, str) else 3.0 if etape < 8 else 4.0
 def canon(x): return re.sub(r'\s+', ' ', x.replace('.', '')).strip()
 def stop(msg): print('ÉCHEC :', msg); sys.exit(1)
+ALERTES = []
+def alerte(msg): print('ALERTE :', msg); ALERTES.append(msg)
 
 # ---- 1. lecture des grilles Wikipédia -------------------------------------------
 class Grilles(html.parser.HTMLParser):
@@ -108,16 +116,18 @@ y_cours = saison_de(AUJ)
 SAISONS = [libelle(y) for y in range(y_cours - 3, y_cours + 1)]
 archive = json.load(open(ARCHIVE, encoding='utf-8')) if os.path.exists(ARCHIVE) else []
 deja = {(r[0], r[1], r[2], r[3], r[4]): r for r in archive}
-neuf, total = 0, {}
+neuf, total, illisibles, nouvelles = 0, {}, set(), set()
 for nat, lg in LIGUES.items():
     for sa in SAISONS:
         titre, L = grilles_saison(lg, sa)
         y0 = int(sa[:4])
-        if L is None:
-            if y0 == y_cours and AUJ < dt.date(y0, 8, 20): continue      # championnat pas encore commencé
-            stop(f'{lg} {sa} : page introuvable ou illisible')
         avant = sum(1 for k in deja if k[0] == nat and k[1] == sa)
-        if len(L) < avant: stop(f'{titre} : {len(L)} résultats lus, {avant} dans l\'archive')
+        if not L:
+            if y0 == y_cours and AUJ < dt.date(y0, 8, 20): continue      # championnat pas encore commencé
+            if avant: illisibles.add(nat); alerte(f'{lg} {sa} : page illisible, on garde les {avant} résultats archivés'); continue
+            illisibles.add(nat); alerte(f'{lg} {sa} : page introuvable ou illisible, aucun résultat'); continue
+        if len(L) < avant:
+            illisibles.add(nat); alerte(f'{titre} : {len(L)} résultats lus, {avant} dans l\'archive — on garde l\'archive'); continue
         total[(nat, sa)] = len(L)
         if y0 < y_cours: date = dt.date(y0 + 1, 1, 15)
         elif not any(k[0] == nat and k[1] == sa for k in deja):            # premier passage sur la saison en cours
@@ -126,8 +136,20 @@ for nat, lg in LIGUES.items():
         for gi, h, a, bh, ba in L:
             k = (nat, sa, gi, h, a)
             if k in deja: deja[k][5], deja[k][6] = bh, ba
-            else: deja[k] = [nat, sa, gi, h, a, bh, ba, date.isoformat()]; neuf += 1
+            else: deja[k] = [nat, sa, gi, h, a, bh, ba, date.isoformat()]; neuf += 1; nouvelles.add(k)
         time.sleep(1)
+if len(illisibles) > len(LIGUES) // 2:
+    stop(f'{len(illisibles)} ligues sur {len(LIGUES)} illisibles : la structure de Wikipédia a sans doute changé. Rien n\'est écrit.')
+# fraîcheur : date du dernier passage où chaque ligue a gagné des résultats (gardée d'une semaine à l'autre
+# dans force-clubs.json) ; en pleine saison (septembre → mai), rien de neuf depuis 4 semaines = alerte
+prec = json.load(open(SORTIE, encoding='utf-8')).get('fraicheur', {}) if os.path.exists(SORTIE) else {}
+fraicheur = {}
+sa_c = libelle(y_cours)
+for nat, lg in LIGUES.items():
+    a_bouge = any(k[0] == nat and k[1] == sa_c for k in nouvelles)
+    fraicheur[nat] = AUJ.isoformat() if a_bouge or nat not in prec else prec[nat]
+    if AUJ.month in (9, 10, 11, 12, 1, 2, 3, 4, 5) and (AUJ - dt.date.fromisoformat(fraicheur[nat])).days > 28:
+        alerte(f'{lg} : aucun résultat neuf depuis le {fraicheur[nat]}')
 garde = libelle(y_cours - 3)
 archive = sorted([r for r in deja.values() if r[1] >= garde], key=lambda r: (r[0], r[1], r[7], r[3]))
 print(f'championnats : {len(archive)} résultats, dont {neuf} nouveaux')
@@ -225,13 +247,13 @@ for m in SEM:
             k = nom(n, c)
             if k in force: clubs[n] = round(force[k], 4)
             else: manque.append(n)
-if manque: stop('clubs sans force : ' + ', '.join(sorted(set(manque))))
+if manque: alerte('clubs sans force propre (ils prennent celle de leur nation) : ' + ', '.join(sorted(set(manque))))
 nations = {e[4:]: round(v, 4) for e, v in force.items() if e.startswith('NAT:')}
 for c in DIX:
     v = [force[k] for k in force if nat_de.get(k) == c]; nations[c] = round(sum(v) / len(v), 4)
 f = list(clubs.values()); lo, hi = min(f), max(f)
 notes = sorted([[n, round(100 * (v - lo) / (hi - lo), 1)] for n, v in clubs.items()], key=lambda x: -x[1])
-json.dump({'date': AUJ.isoformat(), 'echelle': ECHELLE, 'avantage_terrain': round(beta[H], 3),
+json.dump({'date': AUJ.isoformat(), 'alertes': ALERTES, 'fraicheur': fraicheur, 'echelle': ECHELLE, 'avantage_terrain': round(beta[H], 3),
            'clubs': dict(sorted(clubs.items())), 'nations': dict(sorted(nations.items())), 'notes': notes},
           open(SORTIE, 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
 json.dump(archive, open(ARCHIVE, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
