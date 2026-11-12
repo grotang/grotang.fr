@@ -238,6 +238,18 @@ html{scroll-padding-top:58px}
    clic sur la rubrique, donc sur le <summary>) ; voilé sur téléphone seulement */
 .gn-dd[open] summary::before{content:"";position:fixed;left:0;right:0;bottom:0;top:var(--gn-h,46px);z-index:55;cursor:default}
 .gn-avenir{font-size:12.5px;font-weight:600;color:var(--ink-3);padding:5px 10px;line-height:1.2;white-space:nowrap;cursor:default;opacity:.8}
+.gn-ligne{display:flex;align-items:center;gap:8px}
+.gnav .gn-ligne > a:first-child{flex:1 1 auto}
+/* page en cours : toute la ligne est surlignée, pas seulement le nom */
+.gnav .gn-panel .gn-ligne:has(> a[aria-current="page"]){border-radius:7px;background:color-mix(in srgb,var(--fr) 12%,transparent)}
+.gnav .gn-panel .gn-ligne > a[aria-current="page"]{background:none}
+.gnav .gn-panel a.gn-prev,.gnav nav a.gn-prev{flex:none;display:inline-flex;align-items:center;gap:6px;padding:4px 11px 4px 12px;margin-right:4px;border-radius:999px;
+  background:var(--ink);color:var(--surface);font-size:12px;font-weight:700;line-height:1.2;box-shadow:var(--shadow);transition:background .15s}
+.gnav .gn-panel a.gn-prev span{transition:transform .15s}
+.gnav .gn-panel a.gn-prev:hover,.gnav nav a.gn-prev:hover{background:var(--fr);color:var(--surface)}
+.gnav .gn-panel a.gn-prev:hover span{transform:translateX(2px)}
+.gnav a.gn-prev:focus-visible{outline:2px solid var(--fr);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.gnav a.gn-prev,.gnav a.gn-prev span{transition:none}}
 .gn-soon{margin-left:7px;font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
   color:var(--ink-3);border:1px solid var(--rule);border-radius:4px;padding:1px 4px;vertical-align:1px}
 .gn-grp{display:flex;flex-direction:column;gap:1px;padding-top:4px}
@@ -281,8 +293,12 @@ const COQ_SVG = `<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.
    le petit script de THEME_JS ne fait que refermer les autres et fermer au clic
    ailleurs ou sur Échap. */
 const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-const lien = (p, current, label = p.titre) =>
-  `<a href="${p.url}"${p.key === current ? ' aria-current="page"' : ''}>${esc(label)}${p.aVenir ? '<span class="gn-soon">bientôt</span>' : ''}</a>`;
+/* Page annoncée : « bientôt » ; si un aperçu existe déjà, le bouton noir
+   « Preview » de la page d'attente, qui mène droit à l'aperçu (13/11/2026). */
+const lien = (p, current, label = p.titre) => {
+  const a = `<a href="${p.url}"${p.key === current ? ' aria-current="page"' : ''}>${esc(label)}${p.aVenir && !p.aVenir.apercu ? '<span class="gn-soon">bientôt</span>' : ''}</a>`;
+  return p.aVenir?.apercu ? `<span class="gn-ligne">${a}<a class="gn-prev" href="${p.aVenir.apercu}">Preview<span aria-hidden="true">→</span></a></span>` : a;
+};
 const toutes = r => r.pages.concat(...r.sous.map(toutes));
 function rubrique(r, current) {
   const pp = toutes(r);

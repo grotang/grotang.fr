@@ -560,7 +560,7 @@ ${nav(p.key)}
   <p>${p.aVenir.texte}</p>
   <div class="tba"><i></i>À venir</div>${p.aVenir.apercu ? `
   <div class="ap">
-    <a class="cta" href="${p.aVenir.apercu}"><span class="k">WIP</span>Preview<span class="f" aria-hidden="true">→</span></a>
+    <a class="cta" href="${p.aVenir.apercu}">Preview<span class="f" aria-hidden="true">→</span></a>
     <small>Le modèle tourne déjà sur trois saisons. Données encore incomplètes : les classements vont bouger.</small>
   </div>` : ''}
   ${PIED}
