@@ -186,6 +186,12 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 #chart2b .pp{font:600 10.5px "IBM Plex Mono",monospace; fill:var(--ink)}
 #chart2b .pp.haut{fill:var(--vl)} #chart2b .pp.bas{fill:var(--dl)}
 #box2b .rs{font:600 9.5px "IBM Plex Mono",monospace; fill:var(--fr)}
+/* bloc « France top 5 l'été prochain ? » à deux modèles (variante C, GT 12/11) :
+   titre et noms des lignes collés à gauche, au-dessus des chiffres ; ils
+   débordent de la colonne fixe, sur des rangées sans chiffres */
+#box2b .ya2b{overflow:visible}
+#box2b .rc{font:9.5px "IBM Plex Mono",monospace; fill:var(--ink-3)}
+#box2b .nw{fill:var(--fr)} #box2b .nwt{font:700 7.5px "IBM Plex Mono",monospace; fill:var(--surface); letter-spacing:.06em}
 #chart2b .arrete{fill:var(--ink-3); opacity:.16}
 #chart2b .fut{opacity:.38}
 #chart2b .curbg{fill:var(--ink); opacity:.07}
@@ -195,6 +201,19 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 #tip2b i{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px}
 #tip2b .tp{display:flex; gap:10px; margin-top:4px; font:11px "IBM Plex Mono",monospace}
 #tip2b .tk{font-size:11px; color:var(--ink-3); margin-top:4px}
+/* infobulle du bloc top 5 : le détail modèle par modèle */
+#tip2b .th5{font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); font-weight:700}
+#tip2b table.t5 td, #tip2b table.t5 th{padding:4px 0 3px 12px; text-align:right; font:500 12px "IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; color:var(--ink-2)}
+#tip2b table.t5 th{font-size:10px; font-weight:600; color:var(--ink-3); padding-bottom:3px; border-bottom:1px solid var(--rule); background:none; text-transform:none; letter-spacing:0}
+#tip2b table.t5 :is(td, th):first-child{padding-left:0; text-align:left; white-space:nowrap}
+#tip2b table.t5 td:first-child{font:12.5px Carlito,sans-serif; color:var(--ink-2)}
+#tip2b table.t5 tr + tr td{border-top:1px solid var(--rule-soft)}
+#tip2b table.t5 tr.act td{color:var(--ink); font-weight:700}
+#tip2b table.t5 tr.act td:nth-child(2){color:var(--fr)}
+#tip2b table.t5 td.na{text-align:left; font:12px Carlito,sans-serif; color:var(--ink-3)}
+#tip2b .nw{display:inline-block; font:700 8px "IBM Plex Mono",monospace; letter-spacing:.06em; background:var(--fr); color:var(--surface); border-radius:2px; padding:1px 3px 0; margin-left:5px; vertical-align:1px}
+#tip2b .ft{font-size:11.5px; color:var(--ink-3); margin-top:6px; max-width:300px; line-height:1.3}
+@media (max-width:680px){ #tip2b table.t5 :is(td, th){padding-left:8px; font-size:11px} #tip2b table.t5 td:first-child{font-size:12px} #tip2b table.t5 th{font-size:9.5px} #tip2b .lg{display:none} }
 @media (max-width:680px){ #chips2b{flex-wrap:wrap; gap:6px} #chips2b .sep{flex-basis:100%; height:0; margin:0; border:0; width:auto} #chips2b .lbl{display:none} #chips2b button.tint, #lchips button.tint, #bchips button.tint{font-size:12px; padding:4px 8px; min-height:32px} }
 /* téléphone : le graphique prend toute la largeur ; plafonné en hauteur, il se
    centrait avec deux bandes vides sur les côtés */
@@ -3162,6 +3181,10 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
     : top5(PSx.s && PSx.s[k.w]));
   const P5C = WK.map((k, i) => !deux || i < iB || i > lastW ? null
     : i === lastW ? (prjClubs ? top5(PRJc.rgFR) : null) : top5(PSx.c && PSx.c[k.w]));
+  /* détail pour l'infobulle : rangs 5e/6e et coefficient de saison médian de la France */
+  const prjDet = PRJc && PRJc.rgFR ? { rg: PRJc.rgFR, med: PRJc.q && PRJc.q.tir && PRJc.q.tir.FRA ? PRJc.q.tir.FRA[2] : null } : null;
+  const detN = i => P5[i] == null ? null : i === lastW && !deux ? prjDet : PSx.s && PSx.s[WK[i].w] ? { rg: PSx.s[WK[i].w].rg, med: (PSx.s[WK[i].w].med || {}).FRA } : null;
+  const detC = i => P5C[i] == null ? null : i === lastW ? prjDet : PSx.c && PSx.c[WK[i].w] ? { rg: PSx.c[WK[i].w].rg, med: (PSx.c[WK[i].w].med || {}).FRA } : null;
   const pc = v => v == null ? '' : v >= .995 ? '>99\u00a0%' : v < .005 ? '<1\u00a0%' : Math.round(v * 100) + '\u00a0%';
   const L = [...N].sort((a, b) => a.r - b.r).map(x => x.c), fi = L.indexOf('FRA');
   const DEV = (typeof PRJ !== 'undefined' && PRJ && PRJ.devFR) || {};
@@ -3223,7 +3246,8 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
     bG.setAttribute('aria-pressed', mode === 'gap'); bC.setAttribute('aria-pressed', mode === 'cum');
     const ph = MOB(), boxW = box.clientWidth || 1000, mL = ph ? 50 : 54, cw = ph ? 36 : Math.max(32, (boxW - mL - 8) / n);
     const Wd = mL + cw * n + 8, mT = 30, pB = ph ? 270 : 330;
-    const yD = pB + 18, yM = pB + 31, yR = [pB + 52, pB + 70, pB + 88], yP = pB + 116, yP2 = pB + 133, avecP = cur().has('FRA') && (P5.some(v => v != null) || P5C.some(v => v != null)), avec2 = avecP && deux, Ht = pB + (avecP ? (avec2 ? 142 : 124) : 98);
+    const yD = pB + 18, yM = pB + 31, yR = [pB + 52, pB + 70, pB + 88], avecP = cur().has('FRA') && (P5.some(v => v != null) || P5C.some(v => v != null)), avec2 = avecP && deux,
+      yP = avec2 ? pB + 140 : pB + 116, yP2 = pB + 171, y5 = pB + 97, Ht = pB + (avecP ? (avec2 ? 180 : 124) : 98);
     const X = i => mL + cw * (i + .5);
     const tf = T.FRA, S = [...cur()].sort((a, b) => (a === 'FRA') - (b === 'FRA')), ser = {};
     S.forEach(c => { ser[c] = T[c].map((v, i) => v == null ? null : mode === 'cum' ? v - base(c) : v - tf[i]); });
@@ -3243,7 +3267,9 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
       g += `<line x1="${mL}" x2="${mL + cw * n}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--rule)" stroke-width="${z ? 1.4 : .6}" ${z ? '' : 'stroke-dasharray="2 3"'}/>`;
       yl += `<text x="${mL - 8}" y="${Y(v) + 4}" text-anchor="end" class="ax">${(mode === 'gap' && v > 0 ? '+' : '') + nf(z ? 0 : v, st < 1 ? 1 : 0)}</text>`; }
     if (avecP) yl += avec2
-      ? `<text x="${mL - 8}" y="${yP - 13}" text-anchor="end" class="rh" style="fill:var(--fr)">top\u00a05</text><text x="${mL - 8}" y="${yP}" text-anchor="end" class="rs">nations</text><text x="${mL - 8}" y="${yP2}" text-anchor="end" class="rs">clubs</text>`
+      ? `<line x1="8" x2="${mL}" y1="${y5}" y2="${y5}" stroke="var(--rule)"/><text x="8" y="${pB + 111}" class="rh" style="fill:var(--fr)">France top\u00a05 l'été prochain\u00a0?</text>`
+        + `<text x="8" y="${yP - 14}" class="rc">modèle originel</text>`
+        + `<text x="8" y="${yP2 - 14}" class="rs">modèle force des clubs</text><rect class="nw" x="139" y="${yP2 - 22}" width="25" height="10.5" rx="2"/><text class="nwt" x="151.5" y="${yP2 - 14}" text-anchor="middle">NEW</text>`
       : `<text x="${mL - 8}" y="${yP - 6}" text-anchor="end" class="rh" style="fill:var(--fr)">France</text><text x="${mL - 8}" y="${yP + 5}" text-anchor="end" class="rh" style="fill:var(--ink-2)">top\u00a05</text>`;
     CO.forEach((c, r) => yl += `<text x="${mL - 8}" y="${yR[r]}" text-anchor="end" class="rh" style="fill:var(${CV[r]})">${c}</text>`);
     let mo = -1;
@@ -3257,7 +3283,7 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
       if (avecP && P5[i] != null) { const pv = i ? P5[i - 1] : null, dl = pv == null ? 0 : P5[i] - pv;
         g += `<text x="${x}" y="${yP}" text-anchor="middle" class="pp${cl}${dl <= -.005 ? ' bas' : dl >= .005 ? ' haut' : ''}">${pc(P5[i]).replace('\u00a0%', '')}</text>`; }
       /* ligne « nations » arrêtée : cases grisées après la bascule, pour dire la discontinuité */
-      if (avec2 && i > iB) g += `<rect x="${x - cw / 2 + 4}" y="${yP - 10}" width="${cw - 8}" height="13" rx="2" class="arrete"><title>Modèle initial remplacé par la force des clubs (semaine du 3–5 nov.)</title></rect>`;
+      if (avec2 && i > iB) g += `<rect x="${x - cw / 2 + 4}" y="${yP - 10}" width="${cw - 8}" height="13" rx="2" class="arrete"><title>Modèle originel remplacé par la force des clubs (semaine du ${dLong(WK[iB])})</title></rect>`;
       if (avec2 && P5C[i] != null) { const pv = i > iB ? P5C[i - 1] : null, dl = pv == null ? 0 : P5C[i] - pv;
         g += `<text x="${x}" y="${yP2}" text-anchor="middle" class="pp${cl}${dl <= -.005 ? ' bas' : dl >= .005 ? ' haut' : ''}">${pc(P5C[i]).replace('\u00a0%', '')}</text>`; }
       if (i) { const gap = Math.round((dd(k.w) - dd(WK[i - 1].w)) / 6048e5) - 1;
@@ -3265,6 +3291,7 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
           g += `<line x1="${xb}" x2="${xb}" y1="${mT + 18}" y2="${pB}" stroke="var(--ink-3)" stroke-width=".8" stroke-dasharray="1 4" opacity=".7"/>`
             + `<text x="${xb}" y="${mT + 12}" text-anchor="middle" class="pz"><title>${gap} semaine${gap > 1 ? 's' : ''} sans match</title>${gap} s.</text>`; } } });
     g += `<line x1="${mL}" x2="${mL + cw * n}" y1="${pB}" y2="${pB}" stroke="var(--rule)"/>`;
+    if (avec2) g += `<line x1="${mL}" x2="${mL + cw * n}" y1="${y5}" y2="${y5}" stroke="var(--rule)"/>`;
     const etiq = [];
     S.forEach(c => { const p = ser[c].map((v, i) => v == null ? null : [X(i), Y(v)]).filter(Boolean), col = `var(${coul(c)})`;
       g += `<polyline points="${p.map(q => q.join(',')).join(' ')}" fill="none" stroke="${col}" stroke-width="${c === 'FRA' ? 3 : 2.2}" stroke-linejoin="round"/>`;
@@ -3290,13 +3317,31 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
       else if (deja) av.remove(); }
     const show = ev => { const r = svg.getBoundingClientRect(), i = Math.max(0, Math.min(n - 1, Math.floor((ev.clientX - r.left - mL) / cw)));
       if (i > lastW) { tip.hidden = true; hv.setAttribute('opacity', 0); return; }
+      /* sur le bloc top 5 : le détail modèle par modèle (GT, 12/11) */
+      const yv = (ev.clientY - r.top) * Ht / r.height;
+      if (avecP && yv >= (avec2 ? y5 : pB + 100) && (P5[i] != null || P5C[i] != null)) {
+        hv.setAttribute('opacity', 0);
+        const ligne = (nom, d, act, vide) => `<tr${act ? ' class="act"' : ''}><td>${nom}</td>` + (d
+          ? `<td>${pc(top5(d.rg))}</td><td>${pc(d.rg[4])}</td><td>${pc(d.rg[5])}</td><td>${d.med == null ? '' : nf(d.med, 1)}</td>`
+          : `<td colspan="4" class="na">${vide}</td>`) + `</tr>`;
+        const dN = detN(i), dC = detC(i);
+        tip.innerHTML = `<div class="th5">${dLong(WK[i])} · France dans le top\u00a05\u00a0?</div>`
+          + `<table class="t5"><tr><th>modèle</th><th>top\u00a05</th><th>5e</th><th>6e</th><th>coef.<span class="lg"> saison</span></th></tr>`
+          + ligne('originel', dN, !dC, i > iB ? `arrêté le ${dLong(WK[iB])}` : 'non calculé')
+          + (deux ? ligne('force des clubs<span class="nw">NEW</span>', dC, !!dC, i < iB ? `en service à partir du ${dLong(WK[iB])}` : 'non calculé') : '')
+          + `</table><div class="ft">${!deux ? 'Coefficient de saison médian de la France, projeté en fin de saison.'
+            : i < iB ? 'Le site suivait alors le modèle originel (force des nations).'
+            : `Depuis la semaine du ${dLong(WK[iB])}, le site suit la <b>force des clubs</b>.`}</div>`;
+        tip.hidden = false; const bx = box.getBoundingClientRect(), px = ev.clientX - bx.left;
+        tip.style.left = Math.max(4, Math.min(bx.width - tip.offsetWidth - 4, px - tip.offsetWidth / 2)) + 'px';
+        tip.style.top = Math.max(4, (y5 - 8) * r.height / Ht + (r.top - bx.top) - tip.offsetHeight) + 'px'; return; }
       hv.setAttribute('x1', X(i)); hv.setAttribute('x2', X(i)); hv.setAttribute('opacity', .6);
       const k = WK[i], rs = [...new Set([...TOP8, ...cur()])].map(c => ({ c, g: G[c][i], e: T[c][i] - tf[i] })).sort((a, b) => b.g - a.g);
       const pas = [0, 1, 2].filter(co => co in k.p).map(co => `<span><i style="background:var(${CV[co]})"></i><b>${CO[co]}</b> ${k.p[co]}</span>`).join('');
       tip.innerHTML = `<b>${dLong(k)}</b><div class="tp">${pas}</div>`
         + `<table>${rs.map(r => `<tr class="${r.c === 'FRA' ? 'fr' : ''}"><td><i style="background:var(${coul(r.c)})"></i>${name(r.c)}</td><td class="n">+${f1(r.g)}</td><td class="n e">${r.c === 'FRA' ? '' : sgn(r.e)}</td></tr>`).join('')}</table>`
         + `<div class="tk">gagné dans la semaine · écart à la France après</div>`
-        + (P5[i] != null ? `<div class="tk">France dans les 5 premières en fin de saison : <b>${pc(P5[i])}</b>${i && P5[i - 1] != null ? ` (${P5[i] >= P5[i - 1] ? '+' : '−'}${Math.round(Math.abs(P5[i] - P5[i - 1]) * 100)} pts sur la semaine)` : ''}</div>` : '')
+        + ((Q => Q[i] != null ? `<div class="tk">France dans les 5 premières en fin de saison : <b>${pc(Q[i])}</b>${i && Q[i - 1] != null ? ` (${Q[i] >= Q[i - 1] ? '+' : '−'}${Math.round(Math.abs(Q[i] - Q[i - 1]) * 100)} pts sur la semaine)` : ''}</div>` : '')(P5C[i] != null ? P5C : P5))
         + (i === ETEW[0] ? `<div class="tk">Avec le bonus de participation à la C1, compté à l'entrée en lice.</div>` : '');
       tip.hidden = false; const bx = box.getBoundingClientRect(), px = ev.clientX - bx.left;
       tip.style.left = Math.max(4, px + 16 + tip.offsetWidth > bx.width ? px - 16 - tip.offsetWidth : px + 16) + 'px'; tip.style.top = '34px'; };
@@ -3305,7 +3350,7 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
     const b = L[fi + 1], av = lastW - 1;
     if (b && T[b][av] != null) cap.innerHTML = `Semaine du ${dLong(WK[lastW])} : la France prend <b>+${f1(G.FRA[lastW])}</b>, ${name(b)} <b>+${f1(G[b][lastW])}</b> — l'écart passe de ${f1(tf[av] - T[b][av])} à <b>${f1(tf[lastW] - T[b][lastW])}</b> points.`
       + (avec2 && P5[lastW] != null && P5C[lastW] != null
-          ? ` Chances de finir dans les 5 premières : ${P5[lastW - 1] != null ? pc(P5[lastW - 1]) + ' → ' : ''}<b>${pc(P5[lastW])}</b> avec le modèle initial (force des nations), <b>${pc(P5C[lastW])}</b> avec la force des clubs, qui le remplace à partir de cette semaine.`
+          ? ` Chances de finir dans les 5 premières : ${P5[lastW - 1] != null ? pc(P5[lastW - 1]) + ' → ' : ''}<b>${pc(P5[lastW])}</b> avec le modèle originel (force des nations), <b>${pc(P5C[lastW])}</b> avec la force des clubs, qui le remplace à partir de cette semaine.`
         : avec2 && P5C[lastW] != null && P5C[lastW - 1] != null ? ` Chances de finir dans les 5 premières : ${pc(P5C[lastW - 1])} → <b>${pc(P5C[lastW])}</b> (force des clubs).`
         : !avec2 && P5[lastW] != null && P5[lastW - 1] != null ? ` Chances de finir dans les 5 premières : ${pc(P5[lastW - 1])} → <b>${pc(P5[lastW])}</b>.` : '')
       + ` ${ph ? 'Touchez' : 'Survolez'} une semaine pour le détail des huit premières.`;
