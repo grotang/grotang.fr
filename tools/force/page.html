@@ -35,7 +35,10 @@ table.cl td{padding:5px 6px;border-bottom:1px solid var(--rule-soft);vertical-al
 table.cl tr.fr td{background:var(--fr-soft)}
 td.rg{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-3);width:28px;text-align:right}
 td.club{font-weight:600}
-.nat{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--ink-3);margin-left:6px}
+.nation{white-space:nowrap;font-size:13.5px}
+.nation i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:7px;vertical-align:0}
+.nation .court{display:none;font-family:'IBM Plex Mono',monospace;font-size:11.5px}
+main.fc.bn .barre i{background:var(--nc)}
 .promu{font-size:10.5px;font-weight:600;color:var(--ink-3);border:1px solid var(--rule);border-radius:2px;padding:0 4px;margin-left:6px;white-space:nowrap}
 .cp{display:inline-block;min-width:24px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;color:#fff;border-radius:2px;padding:1px 4px;font-style:normal}
 :root[data-theme="dark"] .cp{color:#0A0D13}
@@ -54,18 +57,20 @@ td.td.up{color:var(--good)} td.td.dn{color:var(--bad)}
 /* bloc 2 · les clubs face à leur championnat */
 .ech{position:relative;height:18px;margin-left:var(--gauche);font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-3)}
 .ech span{position:absolute;transform:translateX(-50%)}
-.ln{display:flex;align-items:center;border-bottom:1px solid var(--rule-soft);min-height:42px}
+.ln{display:flex;align-items:center;border-bottom:1px solid var(--rule-soft);min-height:54px}
 .ln.fr{background:var(--fr-soft)}
 .ln .nm{width:var(--gauche);flex:none;font-weight:700;font-size:14px;padding-left:4px;line-height:1.25}
 .ln .nm small{display:block;font-weight:400;font-size:11.5px;color:var(--ink-3)}
-.piste{position:relative;flex:1;height:42px}
+.piste{position:relative;flex:1;height:54px}
 .piste .g{position:absolute;top:0;bottom:0;width:0;border-left:1px dotted var(--rule)}
-.piste .lg{position:absolute;top:7px;bottom:7px;width:0;border-left:2.5px solid var(--ink)}
-.piste .pt{position:absolute;top:58%;width:13px;height:13px;margin:-6.5px 0 0 -6.5px;border-radius:50%;border:2px solid var(--surface);cursor:default}
+.piste .lg{position:absolute;top:16px;bottom:16px;width:0;border-left:2.5px solid var(--ink)}
+.piste .pt{position:absolute;top:50%;width:13px;height:13px;margin:-6.5px 0 0 -6.5px;border-radius:50%;border:2px solid var(--surface);cursor:default}
 .pt.C1{background:var(--c1)} .pt.C3{background:var(--c3)} .pt.C4{background:var(--c4)}
 .pt.non{background:var(--surface);border:2px solid var(--ink-3)}
 .piste .et{position:absolute;top:1px;font-size:11px;font-weight:600;color:var(--ink-2);white-space:nowrap;transform:translateX(-50%)}
 .piste .et.fin{transform:translateX(-100%)}
+.piste .et.bas{top:auto;bottom:1px;font-weight:400;color:var(--ink-3)}
+.piste .et.deb{transform:none}
 .leg2{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12.5px;color:var(--ink-2);margin:0 0 10px;align-items:center}
 .leg2 .cp{margin-right:5px}
 .leg2 .rond{display:inline-block;width:10px;height:10px;border-radius:50%;border:2px solid var(--ink-3);margin-right:5px;vertical-align:-1px}
@@ -84,7 +89,8 @@ td.td.up{color:var(--good)} td.td.dn{color:var(--bad)}
 .ecart{font-size:15px;margin:14px 0 0}
 .ecart b{font-family:'IBM Plex Mono',monospace}
 @media (max-width:640px){
-  td.but,th.but{display:none} td.bar{width:26%} table.cl{font-size:13px} td.rg{width:22px}
+  td.but,th.but,td.bar,th.bar{display:none} table.cl{font-size:13px} td.rg{width:22px}
+  .nation .long{display:none} .nation .court{display:inline} .nation i{margin-right:4px}
   #b2{--gauche:86px!important} .ln .nm{font-size:12.5px} .ln .nm small{font-size:10.5px} .piste .et{font-size:10px}
   .duel{grid-template-columns:1fr} .duel .vs{display:none}
 }
@@ -104,7 +110,7 @@ td.td.up{color:var(--good)} td.td.dn{color:var(--bad)}
       <span class="lb">Clubs</span><span class="seg" id="f1"><button class="on" data-v="tous">Tous</button><button data-v="eu">Engagés en Europe</button></span>
       <span class="lb">Nation</span><select class="sel" id="f1n" aria-label="Nation"></select>
     </div>
-    <table class="cl"><thead><tr><th></th><th>Club</th><th>Coupe</th><th style="text-align:right">Indice</th><th></th><th class="but" style="text-align:right">Face au club moyen</th><th style="text-align:right">Sem.</th></tr></thead><tbody id="t1"></tbody></table>
+    <table class="cl"><thead><tr><th></th><th>Club</th><th>Nation</th><th>Coupe</th><th style="text-align:right">Indice</th><th class="bar"></th><th class="but" style="text-align:right">Face au club moyen</th><th style="text-align:right">Sem.</th></tr></thead><tbody id="t1"></tbody></table>
     <p class="pied" id="p1"></p>
   </section>
 
@@ -136,6 +142,9 @@ td.td.up{color:var(--good)} td.td.dn{color:var(--bad)}
 /*DATA_START*/const FD = null;/*DATA_END*/
 const NOMS = {ENG:'Angleterre',ITA:'Italie',ESP:'Espagne',GER:'Allemagne',FRA:'France',POR:'Portugal',BEL:'Belgique',NED:'Pays-Bas',TUR:'Turquie',GRE:'Grèce'};
 const ORDRE = FD.ordre;
+const SLOT = {}; FD.top8.forEach((c, i) => SLOT[c] = '--n' + (i + 1));
+const kNom = c => c === 'FRA' ? 'var(--fr)' : SLOT[c] ? `var(${SLOT[c]})` : 'var(--ink-3)';
+const styleNom = c => `color:${kNom(c)};font-weight:${c === 'FRA' ? 700 : 600}`;
 const dec = (x, n) => x.toFixed(n).replace('.', ',');
 const butsTxt = ix => { const g = (ix - 100) / FD.pts_but; return (g >= 0 ? '+' : '−') + dec(Math.abs(g), 2) + ' but'; };
 const cp = c => c ? `<i class="cp ${c}">${c}</i>` : '<i class="cp non">—</i>';
@@ -151,7 +160,7 @@ function t1(){
   const n = s1.value;
   let L = FD.clubs.filter(c => (!n || c.nat === n) && (m1 === 'tous' || c.coupe));
   if (!n) L = L.slice(0, 30);
-  document.getElementById('t1').innerHTML = L.map(c => `<tr class="${c.nat === 'FRA' ? 'fr' : ''}"><td class="rg">${c.rang}</td><td class="club">${c.nom}<span class="nat">${c.nat}</span>${c.promu ? '<span class="promu" title="Promu cette saison : son point de départ est le niveau moyen des promus de sa ligue">promu</span>' : ''}</td><td>${cp(c.coupe)}</td><td class="ix">${Math.round(c.ix)}</td><td class="bar"><div class="barre"><i style="width:${pos(c.ix)}%"></i><b style="left:${pos(100)}%"></b></div></td><td class="but">${butsTxt(c.ix)}</td>${sem(c)}</tr>`).join('');
+  document.getElementById('t1').innerHTML = L.map(c => `<tr class="${c.nat === 'FRA' ? 'fr' : ''}"><td class="rg">${c.rang}</td><td class="club">${c.nom}${c.promu ? '<span class="promu" title="Promu cette saison : son point de départ est le niveau moyen des promus de sa ligue">promu</span>' : ''}</td><td class="nation" style="${styleNom(c.nat)}"><i style="background:${kNom(c.nat)}"></i><span class="long">${NOMS[c.nat]}</span><span class="court">${c.nat}</span></td><td>${cp(c.coupe)}</td><td class="ix">${Math.round(c.ix)}</td><td class="bar"><div class="barre"><i style="width:${pos(c.ix)}%;--nc:${kNom(c.nat)}"></i><b style="left:${pos(100)}%"></b></div></td><td class="but">${butsTxt(c.ix)}</td>${sem(c)}</tr>`).join('');
 }
 document.querySelectorAll('#f1 button').forEach(b => b.onclick = () => { document.querySelectorAll('#f1 button').forEach(x => x.classList.toggle('on', x === b)); m1 = b.dataset.v; t1(); });
 s1.onchange = t1; t1();
@@ -167,7 +176,9 @@ for (const c of ORDRE) {
   if (!L.length) continue;
   const moy = L.reduce((s, x) => s + x.ix, 0) / L.length, lg = FD.ligue[c];
   const et = L[0] ? `<span class="et ${pos(L[0].ix) > 78 ? 'fin' : ''}" style="left:${pos(L[0].ix) > 78 ? 'calc(' + pos(L[0].ix) + '% + 6px)' : pos(L[0].ix) + '%'}">${L[0].nom}</span>` : '';
-  h2 += `<div class="ln ${c === 'FRA' ? 'fr' : ''}"><div class="nm">${NOMS[c]}<small>ligue ${Math.round(lg)} · Europe ${Math.round(moy)}</small></div><div class="piste">${GR.map(g => `<i class="g" style="left:${pos(g)}%"></i>`).join('')}<i class="lg" style="left:${pos(lg)}%"></i>${L.map(x => `<i class="pt ${x.lp ? x.coupe : 'non'}" style="left:${pos(x.ix)}%" data-h="${x.nom} · ${Math.round(x.ix)}<br>${x.lp ? x.coupe + ' · ' + dec(x.pts, x.pts % 1 ? 1 : 0) + ' pts de coefficient' : 'sorti en qualifications (' + x.coupe + ')'}"></i>`).join('')}${et}</div></div>`;
+  const z = L.at(-1), pz = z ? pos(z.ix) : 0;
+  const et2 = L.length > 1 ? `<span class="et bas ${pz < 14 ? 'deb' : ''}" style="left:${pz < 14 ? 'calc(' + pz + '% - 6px)' : pz + '%'}">${z.nom}</span>` : '';
+  h2 += `<div class="ln ${c === 'FRA' ? 'fr' : ''}"><div class="nm">${NOMS[c]}<small>ligue ${Math.round(lg)} · Europe ${Math.round(moy)}</small></div><div class="piste">${GR.map(g => `<i class="g" style="left:${pos(g)}%"></i>`).join('')}<i class="lg" style="left:${pos(lg)}%"></i>${L.map(x => `<i class="pt ${x.lp ? x.coupe : 'non'}" style="left:${pos(x.ix)}%" data-h="${x.nom} · ${Math.round(x.ix)}<br>${x.lp ? x.coupe + ' · ' + dec(x.pts, x.pts % 1 ? 1 : 0) + ' pts de coefficient' : 'sorti en qualifications (' + x.coupe + ')'}"></i>`).join('')}${et}${et2}</div></div>`;
 }
 const b2 = document.getElementById('b2'); b2.innerHTML = h2;
 b2.querySelectorAll('.pt').forEach(p => { p.onmousemove = e => montre(e, p.dataset.h); p.onmouseleave = cache; p.onclick = e => montre(e, p.dataset.h); });

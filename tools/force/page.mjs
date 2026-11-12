@@ -64,7 +64,7 @@ export function buildForce() {
     ...Object.entries(eff).filter(([s]) => !dans.has(fr(s)) && FC.clubs[s] != null).map(([s, e]) => [fr(s), e.nat, FC.clubs[s]])]
     .sort((a, b) => a[0].localeCompare(b[0], 'fr'));
   const FD = { date: FC.date, semPrec, pts_but: K, echelle: FC.echelle, terrain: Math.round(FC.avantage_terrain * 100) / 100,
-    ordre: DIX, clubs, contingents, ligue, comparateur, defaut: [fr('Paris Saint-Germain'), fr('Arsenal FC')] };
+    ordre: DIX, top8: ['FRA', ...(D.nations || []).slice(0, 8).map(n => n.c).filter(c => c !== 'FRA')].slice(0, 8), clubs, contingents, ligue, comparateur, defaut: [fr('Paris Saint-Germain'), fr('Arsenal FC')] };
 
   const titre = 'La force des clubs de football européens : classement et indice chaque semaine';
   const desc = `Le niveau réel de ${clubs.length} clubs des 10 premiers championnats européens, mesuré sur trois saisons de championnat et de coupes d'Europe. Mis à jour chaque lundi.`;
