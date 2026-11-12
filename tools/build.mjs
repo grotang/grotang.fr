@@ -23,6 +23,7 @@ import { buildEco } from './eco/page.mjs';
 import { buildJoueurs } from './joueurs/page.mjs';
 import { buildNantes } from './nantes/page.mjs';
 import { buildClubsFR } from './uefa/clubs-fr.mjs';
+import { buildForce } from './force/page.mjs';
 import { buildGazettes } from './uefa/gazette-pages.mjs';
 import { nation } from './tennis/nations.mjs';
 import { compteParcours } from './tennis/wiki.mjs';
@@ -613,6 +614,11 @@ const APERCU_NANTES = PAGES.find(p => p.key === 'nantes').aVenir?.apercu;
 const nantes = await buildNantes(APERCU_NANTES ? { apercu: APERCU_NANTES } : {});
 /* page cachée (noindex, hors menu et sitemap) : probas de classement des clubs français, tirées de PRJ */
 const clubsFR = buildClubsFR(read('tools/uefa/page.html'));
+/* Force des clubs (C23) : tools/force/page.mjs, depuis tools/uefa/force-clubs.json (robot force.yml) ;
+   null si le fichier n'a pas encore les championnats -> page d'attente */
+const force = buildForce();
+const FORCE_ATTENTE = { ...PAGES.find(p => p.key === 'force'), aVenir: { h1: 'La force des clubs',
+  texte: "Le niveau réel des clubs européens, mesuré sur leurs résultats des trois dernières saisons, mis à jour chaque semaine." } };
 /* la gazette, une page par semaine (tools/uefa/gazette-pages.mjs) : le texte vient du bloc 2c,
    rangé par tools/uefa/gazettes.mjs ; le style aussi, pris dans la page UEFA */
 const GAZ = (() => { let j = null; try { j = JSON.parse(read('tools/uefa/archive/gazettes.json')); } catch { return { pages: {}, liste: [] }; }
@@ -661,6 +667,7 @@ const majEco    = dateGit('tools/eco/page.html', 'tools/eco/data.json', 'tools/e
   || dateSitemap(url('eco'), PREC_ECO, eco.html, false);
 /* FC Nantes : les données viennent du Sheet, sans commit ; la date suit les sources du dépôt. */
 const majNantes = dateGit('tools/nantes/page.html', 'tools/nantes/page.mjs', 'tools/nantes/source.mjs', 'tools/nantes/historique.csv', ...COMMUN) || today;
+const majForce  = dateGit('tools/force/page.html', 'tools/force/page.mjs', 'tools/uefa/force-clubs.json', ...COMMUN) || today;
 const majB27    = dateGit('tools/eco/page.html', 'tools/eco/data.json', 'tools/eco/retraites.json', 'tools/eco/leviers.json', 'tools/eco/page.mjs', ...COMMUN)
   || dateSitemap(url('b27'), PREC_B27, b27.html, false);
 
@@ -701,6 +708,7 @@ const sizes = {
   ...(joueurs ? { [fichier(APERCU_JOUEURS)]: write(fichier(APERCU_JOUEURS), joueurs.html) } : {}),
   [fichier(APERCU_NANTES || url('nantes'))]: write(fichier(APERCU_NANTES || url('nantes')), nantes.html),
   [fichier(CACHEES.clubsFR)]: write(fichier(CACHEES.clubsFR), clubsFR.html),
+  [fichier(url('force'))]: write(fichier(url('force')), force ? force.html : pageAVenir(FORCE_ATTENTE)),
   ...Object.fromEntries(Object.entries(GAZ.pages).map(([u, h]) => [fichier(u), write(fichier(u), h)])),
   ...Object.fromEntries(PAGES.filter(p => p.aVenir).map(p => [fichier(p.url), write(fichier(p.url), pageAVenir(p))])),
   ...Object.fromEntries(Object.entries(RELAIS).map(([de, vers]) => [fichier(de), write(fichier(de), relais(vers))])),
@@ -709,7 +717,7 @@ const sizes = {
   'robots.txt': write('robots.txt', ROBOTS),
   'favicon.svg': write('favicon.svg', FAVICON_SVG),
   'site.webmanifest': write('site.webmanifest', MANIFEST),
-  'sitemap.xml': write('sitemap.xml', sitemap({ uefa: majUefa, tennis: majTennis, eco: majEco, b27: majB27, nantes: majNantes, gazettes: datesGaz })),
+  'sitemap.xml': write('sitemap.xml', sitemap({ uefa: majUefa, force: majForce, tennis: majTennis, eco: majEco, b27: majB27, nantes: majNantes, gazettes: datesGaz })),
 };
 
 for (const [f, n] of Object.entries(sizes)) console.log(String(n).padStart(7), f);

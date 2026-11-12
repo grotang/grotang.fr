@@ -1,13 +1,14 @@
 name: Force des clubs
 
-# FORCE DES CLUBS (chantier C03, 12/11/2026) — une fois par semaine.
+# FORCE DES CLUBS (chantier C03, 12/11/2026 ; page C23, 13/11/2026) — une fois par semaine.
 #
 # Relit sur Wikipédia les grilles de résultats des 10 championnats des 10
 # premières nations, date les nouveaux résultats à la semaine (archive
 # tools/uefa/archive/championnats.json), reprend les matchs européens de la page,
 # recalcule la force de chaque club et écrit tools/uefa/force-clubs.json.
 # La projection du coefficient UEFA s'en sert : un club des 10 premières nations
-# porte SA force, plus celle de son championnat.
+# porte SA force, plus celle de son championnat. La page /football-force-des-clubs/ lit
+# aussi force-clubs.json et l'historique tools/uefa/archive/force-historique.json.
 #
 # Le lundi matin : les championnats ont joué le week-end. Cron ne parle qu'UTC :
 #   41 6 UTC → 08 h 41 été · 07 h 41 hiver. La minute n'est jamais 00.
@@ -61,13 +62,14 @@ jobs:
         id: depot
         run: |
           set -euo pipefail
-          if git diff --quiet -- tools/uefa/force-clubs.json tools/uefa/archive/championnats.json tools/uefa/force-noms.json; then
+          # git status voit aussi un fichier nouveau (l'historique, au premier passage)
+          if [ -z "$(git status --porcelain -- tools/uefa/force-clubs.json tools/uefa/archive/championnats.json tools/uefa/force-noms.json tools/uefa/archive/force-historique.json)" ]; then
             echo "Rien à déposer."
             exit 0
           fi
           git config user.name  "grotang.fr (robot)"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tools/uefa/force-clubs.json tools/uefa/archive/championnats.json tools/uefa/force-noms.json
+          git add tools/uefa/force-clubs.json tools/uefa/archive/championnats.json tools/uefa/force-noms.json tools/uefa/archive/force-historique.json
           git commit -m "Force des clubs : semaine du $(date -u +%d/%m)"
           git push || { git pull --rebase && git push; }
           echo "deploy=true" >> "$GITHUB_OUTPUT"

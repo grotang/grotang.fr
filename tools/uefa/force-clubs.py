@@ -21,6 +21,10 @@ Réglages décidés avec GT le 08/11/2026 ; échelle calée par le backtest du
 12/11/2026 (apprentissage 2024/25, validation 2025/26 et 2026/27).
 Python standard uniquement (aucune dépendance à installer).
 
+Réglages du 13/11/2026 (GT) : poids européens par tour, règle des promus,
+noms de clubs renommés (ALIAS_LIGUE), sortie des clubs de 1re division
+(`championnats`) et de l'indice pour la page /football-force-des-clubs/.
+
 Garde-fous — DÉGRADÉ PLUTÔT QUE BLOQUÉ (GT, 12/11/2026) :
   - une ligue illisible, ou qui perd des résultats : on garde ses résultats déjà
     archivés, les autres ligues sont mises à jour ;
@@ -39,6 +43,7 @@ RACINE = os.path.dirname(os.path.dirname(ICI))
 ARCHIVE = os.path.join(ICI, 'archive', 'championnats.json')
 SORTIE = os.path.join(ICI, 'force-clubs.json')
 NOMS = os.path.join(ICI, 'force-noms.json')
+HISTO = os.path.join(ICI, 'archive', 'force-historique.json')   # indice de chaque club, semaine par semaine (page, colonne « Sem. »)
 SAISONS_EU = os.environ.get('FORCE_SAISONS', os.path.join(RACINE, 'public', 'football-coefficient-uefa', 'saisons.json'))
 PAGE = os.environ.get('FORCE_PAGE', os.path.join(RACINE, 'public', 'football-coefficient-uefa', 'index.html'))
 AUJ = dt.date.fromisoformat(os.environ['FORCE_DATE']) if os.environ.get('FORCE_DATE') else dt.date.today()
@@ -46,6 +51,10 @@ AUJ = dt.date.fromisoformat(os.environ['FORCE_DATE']) if os.environ.get('FORCE_D
 # ---- réglages (GT, 08/11/2026) ------------------------------------------------
 DEMI_VIE, FENETRE, PLAFOND, LAMBDA, BONUS_TAB = 365.0, 3 * 365, 3, 4.0, 0.5
 ECHELLE = 1.157     # 1 but d'écart de force = 1,157 unité du moteur de projection (backtest du 12/11/2026)
+# INDICE (GT, 12/11/2026) : 100 = le club moyen de la phase de ligue 2026/27 (moyenne des 108 clubs
+# des trois coupes, force propre ou, à défaut, celle de sa nation), GELÉ pour la saison : 1,192 but
+# (modèle du 13/11). 40 points = 1 but d'écart sur terrain neutre.
+BASE_INDICE, POINTS_PAR_BUT = 1.192, 40
 LIGUES = {'ENG': 'Premier League', 'ITA': 'Serie A', 'ESP': 'La Liga', 'GER': 'Bundesliga', 'FRA': 'Ligue 1',
           'POR': 'Primeira Liga', 'BEL': 'Belgian Pro League', 'NED': 'Eredivisie', 'TUR': 'Süper Lig', 'GRE': 'Super League Greece'}
 AUTRES_TITRES = {'Belgian Pro League': ['Belgian First Division A']}
@@ -55,8 +64,15 @@ FINALES_TAB = {('2026-05-30', 'Paris Saint-Germain FC')}
 UA = {'User-Agent': 'grotang.fr-force-clubs/1.0 (+https://grotang.fr)'}
 
 def poids_age(jours): return 0.0 if jours > FENETRE or jours < 0 else 0.5 ** (jours / DEMI_VIE)
-def poids_europe(etape): return 2.0 if isinstance(etape, str) else 3.0 if etape < 8 else 4.0
+# poids d'un match européen (GT, 12/11/2026 ; backtest neutre : log-loss 0,9526 contre 0,9524) :
+# qualifications ×1,5 ; phase de groupes / de ligue ×3 ; barrages KO ×3, 8es ×4, quarts ×5, demies ×6, finale ×8
+def poids_europe(etape): return 1.5 if isinstance(etape, str) else 3.0 if etape < 8 else {8: 3.0, 9: 4.0, 10: 5.0, 11: 6.0}.get(etape, 8.0)
 def canon(x): return re.sub(r'\s+', ' ', x.replace('.', '')).strip()
+# Un club dont Wikipédia change le nom d'une saison à l'autre deviendrait deux clubs (et un faux
+# promu). Ancien nom -> nom retenu ; appliqué aux grilles lues ET à l'archive. Vérifié le 13/11/2026 :
+# un seul cas sur les 10 ligues et 4 saisons. Le script signale tout nouveau cas (alerte « renommé ? »).
+ALIAS_LIGUE = {'Gençlerbirliği SK': 'Gençlerbirliği'}
+def nom_ligue(x): x = canon(x); return ALIAS_LIGUE.get(x, x)
 def stop(msg): print('ÉCHEC :', msg); sys.exit(1)
 ALERTES = []
 def alerte(msg): print('ALERTE :', msg); ALERTES.append(msg)
@@ -105,7 +121,7 @@ def grilles_saison(lg, saison):
             for i, l in enumerate(corps):
                 for j, c in enumerate(l[1:]):
                     m = re.match(r'^\s*(\d+)\s*[–-]\s*(\d+)\s*$', c['texte'])
-                    if m and j < len(equipes) and j != i: out.append([gi, canon(equipes[i]), canon(equipes[j]), int(m[1]), int(m[2])])
+                    if m and j < len(equipes) and j != i: out.append([gi, nom_ligue(equipes[i]), nom_ligue(equipes[j]), int(m[1]), int(m[2])])
         return titre, out
     return None, None
 
@@ -115,6 +131,7 @@ def libelle(y): return f'{y}–{str(y + 1)[2:]}'
 y_cours = saison_de(AUJ)
 SAISONS = [libelle(y) for y in range(y_cours - 3, y_cours + 1)]
 archive = json.load(open(ARCHIVE, encoding='utf-8')) if os.path.exists(ARCHIVE) else []
+for r in archive: r[3], r[4] = ALIAS_LIGUE.get(r[3], r[3]), ALIAS_LIGUE.get(r[4], r[4])
 deja = {(r[0], r[1], r[2], r[3], r[4]): r for r in archive}
 neuf, total, illisibles, nouvelles = 0, {}, set(), set()
 for nat, lg in LIGUES.items():
@@ -225,18 +242,51 @@ for h, a, gd, w, dom, nh, na in M:
         for j, vj in x.items(): A[i][j] += w * vi * vj
 for i in range(len(eq)): A[i][i] += LAMBDA
 for i in range(len(eq), H): A[i][i] += 0.01
-# élimination de Gauss (la matrice est symétrique définie positive)
-for c in range(P):
-    piv = A[c][c]
-    for r in range(c + 1, P):
-        f = A[r][c] / piv
-        if f:
-            Ar, Ac = A[r], A[c]
-            for j in range(c, P): Ar[j] -= f * Ac[j]
-            b[r] -= f * b[c]
-beta = [0.0] * P
-for c in range(P - 1, -1, -1):
-    beta[c] = (b[c] - sum(A[c][j] * beta[j] for j in range(c + 1, P))) / A[c][c]
+def resout(A, b):
+    """élimination de Gauss (la matrice est symétrique définie positive) ; A et b sont recopiés"""
+    A = [l[:] for l in A]; b = b[:]
+    for c in range(P):
+        piv = A[c][c]
+        for r in range(c + 1, P):
+            f = A[r][c] / piv
+            if f:
+                Ar, Ac = A[r], A[c]
+                for j in range(c, P): Ar[j] -= f * Ac[j]
+                b[r] -= f * b[c]
+    beta = [0.0] * P
+    for c in range(P - 1, -1, -1):
+        beta[c] = (b[c] - sum(A[c][j] * beta[j] for j in range(c + 1, P))) / A[c][c]
+    return beta
+beta = resout(A, b)
+# RÈGLE DES PROMUS (GT, 08/11 puis 13/11/2026). La retenue (LAMBDA) ramène un club qui a peu de
+# matchs vers le niveau moyen de sa ligue. Pour un PROMU DE LA SAISON EN COURS, le point de départ
+# devient le niveau moyen des promus de sa ligue : un promu n'est pas un club moyen de 1re division.
+#   - promu de la saison = club présent en 1re division cette saison et absent la saison d'avant
+#     (un club monté l'an dernier, comme le Paris FC en 2025-26, n'est plus un promu) ;
+#   - niveau des promus = moyenne de l'écart à la ligue des clubs montés lors des saisons passées
+#     de l'archive (calculée une première fois sans la règle) ;
+#   - ses vrais matchs l'en écartent ensuite, comme pour tout club (le point de départ pèse 4 matchs).
+sais = {}
+for nat, sa, gi, h, a, bh, ba, d in archive:
+    for e in (h, a): sais.setdefault(nat, {}).setdefault(e, set()).add(int(sa[:4]))
+promus, anciens_promus = {}, {}
+for nat, cl in sais.items():
+    s0 = min(min(v) for v in cl.values())
+    for e, v in cl.items():
+        if e not in idx: continue
+        for y in v:
+            if y > s0 and y - 1 not in v:              # monté cette saison-là
+                if y == y_cours: promus[e] = nat
+                else: anciens_promus.setdefault(nat, []).append(e)
+for nat, cl in sais.items():                            # renommé ? (même nom normalisé, saisons disjointes)
+    for e in [e for e, v in cl.items() if y_cours in v and y_cours - 1 not in v]:
+        for o in [o for o, v in cl.items() if y_cours - 1 in v and y_cours not in v]:
+            if norme(e) == norme(o): alerte(f'{LIGUES[nat]} : « {e} » et « {o} » sont peut-être le même club renommé (ALIAS_LIGUE)')
+niveau_promus = {c: sum(beta[idx[e]] for e in v) / len(v) for c, v in anciens_promus.items() if v}
+b2 = b[:]
+for e, n in promus.items():
+    if n in niveau_promus: b2[idx[e]] += LAMBDA * niveau_promus[n]
+beta = resout(A, b2)
 force = {e: beta[idx[e]] + (beta[li[nat_de[e]]] if nat_de[e] in li else 0) for e in eq}
 
 # ---- 5. sortie : clubs engagés cette saison (noms de la source) + nations ---------
@@ -251,13 +301,25 @@ if manque: alerte('clubs sans force propre (ils prennent celle de leur nation) :
 nations = {e[4:]: round(v, 4) for e, v in force.items() if e.startswith('NAT:')}
 for c in DIX:
     v = [force[k] for k in force if nat_de.get(k) == c]; nations[c] = round(sum(v) / len(v), 4)
-f = list(clubs.values()); lo, hi = min(f), max(f)
-notes = sorted([[n, round(100 * (v - lo) / (hi - lo), 1)] for n, v in clubs.items()], key=lambda x: -x[1])
+# les clubs de 1re division de la saison (la dernière saison lue de chaque ligue), pour la page
+# /football-force-des-clubs/ : [nom Wikipédia, nation, force en buts], du plus fort au plus faible
+derniere = {}
+for nat, sa, gi, h, a, bh, ba, d in archive: derniere[nat] = max(derniere.get(nat, ''), sa)
+champ = {(nat, e) for nat, sa, gi, h, a, bh, ba, d in archive if sa == derniere[nat] for e in (h, a)}
+championnats = sorted([[e, nat, round(force[e], 4)] for nat, e in champ if e in force], key=lambda x: -x[2])
+indice = lambda v: round(100 + POINTS_PAR_BUT * (v - BASE_INDICE), 1)
 json.dump({'date': AUJ.isoformat(), 'alertes': ALERTES, 'fraicheur': fraicheur, 'echelle': ECHELLE, 'avantage_terrain': round(beta[H], 3),
-           'clubs': dict(sorted(clubs.items())), 'nations': dict(sorted(nations.items())), 'notes': notes},
+           'base_indice': BASE_INDICE, 'points_par_but': POINTS_PAR_BUT,
+           'clubs': dict(sorted(clubs.items())), 'nations': dict(sorted(nations.items())),
+           'championnats': championnats, 'promus': sorted(promus)},
           open(SORTIE, 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
 json.dump(archive, open(ARCHIVE, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+# historique : une entrée par semaine (le lundi), réécrite si le robot repasse dans la semaine
+histo = json.load(open(HISTO, encoding='utf-8')) if os.path.exists(HISTO) else {}
+histo[(AUJ - dt.timedelta(days=AUJ.weekday())).isoformat()] = {e: indice(v) for e, nat, v in championnats}
+histo = dict(sorted(histo.items())[-60:])
+json.dump(histo, open(HISTO, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'), sort_keys=True)
 json.dump(dict(sorted(noms.items())), open(NOMS, 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
 print(f'{len(M)} matchs, {len(eq)} équipes, avantage du terrain {beta[H]:.2f} but')
-print('top 5 :', ', '.join(f'{n} {v}' for n, v in notes[:5]))
+print('top 5 (indice) :', ', '.join(f'{n} {indice(v)}' for n, nat, v in championnats[:5]), f'· {len(championnats)} clubs, {len(promus)} promus')
 if nouveaux_noms: print('noms rapprochés automatiquement :', '; '.join(nouveaux_noms))

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Force des clubs</title>
+<style>
+/* Page /football-force-des-clubs/ — la force des clubs (chantier C23, 13/11/2026).
+   Données : tools/uefa/force-clubs.json (robot force.yml, chaque lundi) et l'historique
+   tools/uefa/archive/force-historique.json ; noms, coupes et points de coefficient lus
+   dans la page UEFA. Assemblé par tools/force/page.mjs. Jetons communs : chrome.mjs. */
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:Carlito,Calibri,system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+main.fc{max-width:1100px;margin:0 auto;padding:28px clamp(14px,3vw,28px) 48px}
+main.fc h1{font-family:Newsreader,Georgia,serif;font-weight:700;font-size:clamp(30px,4.4vw,44px);line-height:1.08;margin:6px 0 10px;letter-spacing:-.01em}
+main.fc .lede{font-size:17px;line-height:1.5;color:var(--ink-2);max-width:68ch;margin:0 0 8px}
+main.fc .maj{font-size:12.5px;color:var(--ink-3);margin-bottom:22px}
+main.fc .maj b{color:var(--ink-2);font-weight:600}
+a{color:var(--fr)}
+:focus-visible{outline:2px solid var(--fr);outline-offset:2px}
+.bloc{background:var(--surface);border:1px solid var(--rule);border-radius:3px;box-shadow:var(--shadow);padding:clamp(16px,2.4vw,24px);margin:0 0 22px}
+.bloc h2{font-family:Newsreader,Georgia,serif;font-size:23px;font-weight:700;margin:0 0 4px;line-height:1.2}
+.recit{font-size:14px;color:var(--ink-2);margin:0 0 14px;max-width:80ch;line-height:1.5}
+.filtres{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:0 0 14px}
+.filtres .lb{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-right:2px}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.seg button{font:inherit;font-size:13px;padding:5px 10px;border:0;background:var(--surface);color:var(--ink-2);cursor:pointer;border-right:1px solid var(--rule)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--ink);color:var(--surface);font-weight:700}
+select.sel{font:inherit;font-size:13.5px;padding:5px 8px;border:1px solid var(--rule);border-radius:3px;background:var(--surface);color:var(--ink);max-width:100%}
+/* bloc 1 · le classement */
+table.cl{width:100%;border-collapse:collapse;font-size:14px}
+table.cl th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;text-align:left;padding:0 6px 6px;border-bottom:1px solid var(--rule)}
+table.cl td{padding:5px 6px;border-bottom:1px solid var(--rule-soft);vertical-align:middle}
+table.cl tr.fr td{background:var(--fr-soft)}
+td.rg{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-3);width:28px;text-align:right}
+td.club{font-weight:600}
+.nat{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--ink-3);margin-left:6px}
+.promu{font-size:10.5px;font-weight:600;color:var(--ink-3);border:1px solid var(--rule);border-radius:2px;padding:0 4px;margin-left:6px;white-space:nowrap}
+.cp{display:inline-block;min-width:24px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;color:#fff;border-radius:2px;padding:1px 4px;font-style:normal}
+:root[data-theme="dark"] .cp{color:#0A0D13}
+.cp.C1{background:var(--c1)} .cp.C3{background:var(--c3)} .cp.C4{background:var(--c4)}
+.cp.non{background:none;color:var(--ink-3);border:1px dashed var(--rule)}
+td.ix{font-family:'IBM Plex Mono',monospace;font-weight:600;text-align:right;width:44px}
+td.bar{width:40%}
+.barre{position:relative;height:12px}
+.barre i{position:absolute;left:0;top:2px;height:8px;background:color-mix(in srgb,var(--ink) 55%,var(--surface));border-radius:1px}
+tr.fr .barre i{background:var(--fr)}
+.barre b{position:absolute;top:-2px;bottom:-2px;width:0;border-left:1.5px dashed var(--ink-3)}
+td.but{font-size:12.5px;color:var(--ink-3);white-space:nowrap;text-align:right}
+td.td{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-3);text-align:right;width:52px;white-space:nowrap}
+td.td.up{color:var(--good)} td.td.dn{color:var(--bad)}
+.pied{font-size:12.5px;color:var(--ink-3);margin:10px 0 0;line-height:1.5}
+/* bloc 2 · les clubs face à leur championnat */
+.ech{position:relative;height:18px;margin-left:var(--gauche);font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-3)}
+.ech span{position:absolute;transform:translateX(-50%)}
+.ln{display:flex;align-items:center;border-bottom:1px solid var(--rule-soft);min-height:42px}
+.ln.fr{background:var(--fr-soft)}
+.ln .nm{width:var(--gauche);flex:none;font-weight:700;font-size:14px;padding-left:4px;line-height:1.25}
+.ln .nm small{display:block;font-weight:400;font-size:11.5px;color:var(--ink-3)}
+.piste{position:relative;flex:1;height:42px}
+.piste .g{position:absolute;top:0;bottom:0;width:0;border-left:1px dotted var(--rule)}
+.piste .lg{position:absolute;top:7px;bottom:7px;width:0;border-left:2.5px solid var(--ink)}
+.piste .pt{position:absolute;top:58%;width:13px;height:13px;margin:-6.5px 0 0 -6.5px;border-radius:50%;border:2px solid var(--surface);cursor:default}
+.pt.C1{background:var(--c1)} .pt.C3{background:var(--c3)} .pt.C4{background:var(--c4)}
+.pt.non{background:var(--surface);border:2px solid var(--ink-3)}
+.piste .et{position:absolute;top:1px;font-size:11px;font-weight:600;color:var(--ink-2);white-space:nowrap;transform:translateX(-50%)}
+.piste .et.fin{transform:translateX(-100%)}
+.leg2{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12.5px;color:var(--ink-2);margin:0 0 10px;align-items:center}
+.leg2 .cp{margin-right:5px}
+.leg2 .rond{display:inline-block;width:10px;height:10px;border-radius:50%;border:2px solid var(--ink-3);margin-right:5px;vertical-align:-1px}
+.leg2 .trait{display:inline-block;width:0;height:12px;border-left:2.5px solid var(--ink);margin-right:6px;vertical-align:-2px}
+.bulle{position:fixed;z-index:60;pointer-events:none;background:var(--ink);color:var(--surface);font-size:12.5px;line-height:1.4;padding:6px 9px;border-radius:3px;max-width:260px;display:none}
+/* bloc 3 · qui gagnerait ? */
+.duel{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:end;margin-bottom:14px}
+.duel label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:4px}
+.duel .vs{font-family:Newsreader,Georgia,serif;font-size:20px;font-weight:700;color:var(--ink-3);padding-bottom:4px}
+.duel select{width:100%}
+.res{display:flex;height:46px;border-radius:3px;overflow:hidden;font-weight:700;font-size:15px}
+.res div{display:flex;align-items:center;justify-content:center;min-width:0;white-space:nowrap;overflow:hidden}
+.res .v{background:var(--fr);color:#fff} .res .n{background:color-mix(in srgb,var(--ink) 18%,var(--surface));color:var(--ink)} .res .d{background:var(--n2);color:#fff}
+.res-leg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12.5px;color:var(--ink-2);margin-top:6px}
+.res-leg span:nth-child(2){text-align:center} .res-leg span:nth-child(3){text-align:right}
+.ecart{font-size:15px;margin:14px 0 0}
+.ecart b{font-family:'IBM Plex Mono',monospace}
+@media (max-width:640px){
+  td.but,th.but{display:none} td.bar{width:26%} table.cl{font-size:13px} td.rg{width:22px}
+  #b2{--gauche:86px!important} .ln .nm{font-size:12.5px} .ln .nm small{font-size:10.5px} .piste .et{font-size:10px}
+  .duel{grid-template-columns:1fr} .duel .vs{display:none}
+}
+</style>
+</head>
+<body>
+<main class="fc">
+  <div class="surtitre">Football · Force des clubs</div>
+  <h1>La force des clubs</h1>
+  <p class="lede">Le niveau réel des clubs, mesuré sur leurs résultats des trois dernières saisons — championnat et coupes d'Europe, les plus récents comptant le plus. <b>100 = le club moyen de la phase de ligue européenne.</b> 40 points d'écart = un but d'écart sur terrain neutre.</p>
+  <div class="maj" id="maj"></div>
+
+  <section class="bloc" id="classement">
+    <h2><span class="no-bloc">1</span>Le classement</h2>
+    <p class="recit">Les 30 clubs les plus forts. Un club à 140 bat le club européen moyen d'un but en moyenne ; à 180, de deux buts.</p>
+    <div class="filtres">
+      <span class="lb">Clubs</span><span class="seg" id="f1"><button class="on" data-v="tous">Tous</button><button data-v="eu">Engagés en Europe</button></span>
+      <span class="lb">Nation</span><select class="sel" id="f1n" aria-label="Nation"></select>
+    </div>
+    <table class="cl"><thead><tr><th></th><th>Club</th><th>Coupe</th><th style="text-align:right">Indice</th><th></th><th class="but" style="text-align:right">Face au club moyen</th><th style="text-align:right">Sem.</th></tr></thead><tbody id="t1"></tbody></table>
+    <p class="pied" id="p1"></p>
+  </section>
+
+  <section class="bloc" id="nations">
+    <h2><span class="no-bloc">2</span>Les clubs face à leur championnat</h2>
+    <p class="recit">Pour chaque nation, le trait épais est le niveau moyen de son championnat ; chaque point, un club engagé en Europe cette saison. Ce sont eux qui ramènent les points du <a href="/football-coefficient-uefa/">coefficient UEFA</a>.</p>
+    <div class="leg2"><span><i class="cp C1">C1</i>Ligue des champions</span><span><i class="cp C3">C3</i>Ligue Europa</span><span><i class="cp C4">C4</i>Ligue Conférence</span><span><i class="rond"></i>sorti en qualifications</span><span><i class="trait"></i>moyenne du championnat</span></div>
+    <div id="b2" style="--gauche:118px"></div>
+  </section>
+
+  <section class="bloc" id="duel">
+    <h2><span class="no-bloc">3</span>Qui gagnerait ?</h2>
+    <p class="recit">Deux clubs, un match : les chances de chacun, avec le même calcul que la projection du coefficient UEFA.</p>
+    <div class="duel">
+      <div><label for="cA">Club A</label><select class="sel" id="cA"></select></div>
+      <div class="vs">contre</div>
+      <div><label for="cB">Club B</label><select class="sel" id="cB"></select></div>
+    </div>
+    <div class="filtres"><span class="lb">Terrain</span><span class="seg" id="f3"><button data-v="1" class="on">Chez A</button><button data-v="0">Neutre</button><button data-v="-1">Chez B</button></span></div>
+    <div class="res" id="res"></div><div class="res-leg" id="resl"></div>
+    <p class="ecart" id="ec"></p>
+    <p class="pied">Sur les matchs européens de 2025/26 et 2026/27, que le modèle n'avait pas vus, le favori désigné a gagné 62 % des duels entre clubs des 10 premières nations. Un match reste un match.</p>
+  </section>
+  <div class="bulle" id="bulle"></div>
+<!--PIED-->
+</main>
+<script>
+(function(){
+/*DATA_START*/const FD = null;/*DATA_END*/
+const NOMS = {ENG:'Angleterre',ITA:'Italie',ESP:'Espagne',GER:'Allemagne',FRA:'France',POR:'Portugal',BEL:'Belgique',NED:'Pays-Bas',TUR:'Turquie',GRE:'Grèce'};
+const ORDRE = FD.ordre;
+const dec = (x, n) => x.toFixed(n).replace('.', ',');
+const butsTxt = ix => { const g = (ix - 100) / FD.pts_but; return (g >= 0 ? '+' : '−') + dec(Math.abs(g), 2) + ' but'; };
+const cp = c => c ? `<i class="cp ${c}">${c}</i>` : '<i class="cp non">—</i>';
+const MAXI = 190, MINI = 40, pos = ix => Math.max(0, Math.min(100, (ix - MINI) / (MAXI - MINI) * 100));
+const dJ = FD.date.split('-').reverse().join('/');
+document.getElementById('maj').innerHTML = `Données au <b>${dJ}</b> · mise à jour chaque lundi · ${FD.clubs.length} clubs notés : les championnats des 10 premières nations du coefficient UEFA`;
+/* bloc 1 */
+const s1 = document.getElementById('f1n');
+s1.innerHTML = '<option value="">Toutes</option>' + ORDRE.map(c => `<option value="${c}">${NOMS[c]}</option>`).join('');
+let m1 = 'tous';
+const sem = c => { if (c.av == null) return '<td class="td">·</td>'; const d = c.ix - c.av; if (Math.abs(d) < 0.5) return '<td class="td">=</td>'; return `<td class="td ${d > 0 ? 'up' : 'dn'}">${d > 0 ? '▲' : '▼'} ${dec(Math.abs(d), 0)}</td>`; };
+function t1(){
+  const n = s1.value;
+  let L = FD.clubs.filter(c => (!n || c.nat === n) && (m1 === 'tous' || c.coupe));
+  if (!n) L = L.slice(0, 30);
+  document.getElementById('t1').innerHTML = L.map(c => `<tr class="${c.nat === 'FRA' ? 'fr' : ''}"><td class="rg">${c.rang}</td><td class="club">${c.nom}<span class="nat">${c.nat}</span>${c.promu ? '<span class="promu" title="Promu cette saison : son point de départ est le niveau moyen des promus de sa ligue">promu</span>' : ''}</td><td>${cp(c.coupe)}</td><td class="ix">${Math.round(c.ix)}</td><td class="bar"><div class="barre"><i style="width:${pos(c.ix)}%"></i><b style="left:${pos(100)}%"></b></div></td><td class="but">${butsTxt(c.ix)}</td>${sem(c)}</tr>`).join('');
+}
+document.querySelectorAll('#f1 button').forEach(b => b.onclick = () => { document.querySelectorAll('#f1 button').forEach(x => x.classList.toggle('on', x === b)); m1 = b.dataset.v; t1(); });
+s1.onchange = t1; t1();
+document.getElementById('p1').textContent = `Trait pointillé : 100, le club moyen de la phase de ligue (Ligue des champions, Ligue Europa, Ligue Conférence). « Sem. » : évolution de l'indice depuis le relevé de la semaine précédente${FD.semPrec ? ' (' + FD.semPrec.split('-').reverse().join('/') + ')' : ' — premier relevé cette semaine'}.`;
+/* bloc 2 */
+const bul = document.getElementById('bulle');
+const montre = (e, h) => { bul.innerHTML = h; bul.style.display = 'block'; bul.style.left = Math.max(6, Math.min(e.clientX + 12, innerWidth - 270)) + 'px'; bul.style.top = (e.clientY + 14) + 'px'; };
+const cache = () => bul.style.display = 'none';
+const GR = [60, 80, 100, 120, 140, 160, 180];
+let h2 = `<div class="ech">${GR.map(g => `<span style="left:${pos(g)}%">${g}</span>`).join('')}</div>`;
+for (const c of ORDRE) {
+  const L = FD.contingents.filter(x => x.nat === c).sort((a, b) => b.ix - a.ix);
+  if (!L.length) continue;
+  const moy = L.reduce((s, x) => s + x.ix, 0) / L.length, lg = FD.ligue[c];
+  const et = L[0] ? `<span class="et ${pos(L[0].ix) > 78 ? 'fin' : ''}" style="left:${pos(L[0].ix) > 78 ? 'calc(' + pos(L[0].ix) + '% + 6px)' : pos(L[0].ix) + '%'}">${L[0].nom}</span>` : '';
+  h2 += `<div class="ln ${c === 'FRA' ? 'fr' : ''}"><div class="nm">${NOMS[c]}<small>ligue ${Math.round(lg)} · Europe ${Math.round(moy)}</small></div><div class="piste">${GR.map(g => `<i class="g" style="left:${pos(g)}%"></i>`).join('')}<i class="lg" style="left:${pos(lg)}%"></i>${L.map(x => `<i class="pt ${x.lp ? x.coupe : 'non'}" style="left:${pos(x.ix)}%" data-h="${x.nom} · ${Math.round(x.ix)}<br>${x.lp ? x.coupe + ' · ' + dec(x.pts, x.pts % 1 ? 1 : 0) + ' pts de coefficient' : 'sorti en qualifications (' + x.coupe + ')'}"></i>`).join('')}${et}</div></div>`;
+}
+const b2 = document.getElementById('b2'); b2.innerHTML = h2;
+b2.querySelectorAll('.pt').forEach(p => { p.onmousemove = e => montre(e, p.dataset.h); p.onmouseleave = cache; p.onclick = e => montre(e, p.dataset.h); });
+document.addEventListener('scroll', cache, { passive: true });
+/* bloc 3 : même formule que la projection (page UEFA : BETA, HOME, NUL_MAX, NUL_PENTE) */
+const BETA = 1.10, HOME = 0.57, NUL_MAX = 0.22, NUL_PENTE = 0.24, sig = x => 1 / (1 + Math.exp(-x));
+const C = FD.comparateur;
+const opts = C.map((c, i) => `<option value="${i}">${c[0]} (${c[1]})</option>`).join('');
+const cA = document.getElementById('cA'), cB = document.getElementById('cB');
+cA.innerHTML = opts; cB.innerHTML = opts;
+const idx = n => Math.max(0, C.findIndex(c => c[0] === n));
+cA.value = idx(FD.defaut[0]); cB.value = idx(FD.defaut[1]);
+let ter = 1;
+function t3(){
+  const A = C[cA.value], Bc = C[cB.value];
+  const dl = FD.echelle * (A[2] - Bc[2]) * (ter === -1 ? -1 : 1), h = ter === 0 ? 0 : HOME;
+  const pn = NUL_MAX * Math.exp(-NUL_PENTE * Math.abs(dl)), pf = (1 - pn) * sig(BETA * dl + h);
+  const pv = ter === -1 ? 1 - pn - pf : pf, pd = 1 - pn - pv;
+  const pc = x => Math.round(100 * x) + '\u00a0%';
+  document.getElementById('res').innerHTML = `<div class="v" style="width:${100 * pv}%">${pv > .1 ? pc(pv) : ''}</div><div class="n" style="width:${100 * pn}%">${pn > .1 ? pc(pn) : ''}</div><div class="d" style="width:${100 * pd}%">${pd > .1 ? pc(pd) : ''}</div>`;
+  document.getElementById('resl').innerHTML = `<span>Victoire ${A[0]} · ${pc(pv)}</span><span>Nul · ${pc(pn)}</span><span>Victoire ${Bc[0]} · ${pc(pd)}</span>`;
+  const g = (A[2] - Bc[2]) + (ter === 0 ? 0 : ter * FD.terrain);
+  document.getElementById('ec').innerHTML = cA.value === cB.value ? 'Choisissez deux clubs différents.' : `Écart attendu : <b>${g >= 0 ? '+' : '−'}${dec(Math.abs(g), 2)} but</b> pour ${g >= 0 ? A[0] : Bc[0]}${ter ? ', avantage du terrain compris (' + dec(FD.terrain, 2) + ' but)' : ''}.`;
+}
+cA.onchange = cB.onchange = t3;
+document.querySelectorAll('#f3 button').forEach(b => b.onclick = () => { document.querySelectorAll('#f3 button').forEach(x => x.classList.toggle('on', x === b)); ter = +b.dataset.v; t3(); });
+t3();
+})();
+</script>
+</body>
+</html>
