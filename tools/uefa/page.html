@@ -147,6 +147,9 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 .gaz .gdate{font:600 11px "IBM Plex Mono",monospace; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
 .gaz .gtitre{font-family:'Newsreader',serif; font-weight:600; font-size:clamp(22px,3vw,30px); line-height:1.15; margin:6px 0 10px; color:var(--ink)}
 .gaz .gchapo{font-size:16px; line-height:1.55; margin:0 0 16px; color:var(--ink)}
+/* encadré « nouveau modèle », une seule fois : première gazette après la bascule (12/11/2026) */
+.gaz .gnew{margin:0 0 16px; padding:9px 13px; border-left:3px solid var(--fr); background:var(--fr-soft); font-size:14.5px; line-height:1.5; color:var(--ink)}
+.gaz .gnew .nw{display:inline-block; font:700 9px "IBM Plex Mono",monospace; letter-spacing:.06em; background:var(--fr); color:var(--surface); border-radius:2px; padding:1px 4px 0; margin-right:6px; vertical-align:1px}
 .gaz .gh{font:600 11px "IBM Plex Mono",monospace; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); margin:4px 0 8px}
 .gaz .gp{font-size:14.5px; line-height:1.6; margin:0 0 10px; color:var(--ink-2)}
 .gaz .gfaits{margin:0 0 14px; padding-left:18px; font-size:14.5px; line-height:1.6; color:var(--ink-2)}
@@ -191,6 +194,13 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
    débordent de la colonne fixe, sur des rangées sans chiffres */
 #box2b .ya2b{overflow:visible}
 #box2b .rc{font:9.5px "IBM Plex Mono",monospace; fill:var(--ink-3)}
+#box2b .rk{font:700 9.5px "IBM Plex Mono",monospace; fill:var(--ink)}
+#box2b .ru{font-weight:400; fill:var(--ink-3)}
+/* ordinateur, quand il y a la place à gauche des chiffres : rendu tableau (GT, 12/11) */
+#box2b .t5t{font:700 14px Carlito,Calibri,sans-serif; fill:var(--fr)}
+#box2b .t5o{font:13px Carlito,Calibri,sans-serif; fill:var(--ink-3)}
+#box2b .t5c{font:700 13px Carlito,Calibri,sans-serif; fill:var(--ink)}
+#chart2b .pp.gd{font-size:13px} #chart2b .pp.gd.act{font-weight:700}
 #box2b .nw{fill:var(--fr)} #box2b .nwt{font:700 7.5px "IBM Plex Mono",monospace; fill:var(--surface); letter-spacing:.06em}
 #chart2b .arrete{fill:var(--ink-3); opacity:.16}
 #chart2b .fut{opacity:.38}
@@ -209,7 +219,6 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 #tip2b table.t5 td:first-child{font:12.5px Carlito,sans-serif; color:var(--ink-2)}
 #tip2b table.t5 tr + tr td{border-top:1px solid var(--rule-soft)}
 #tip2b table.t5 tr.act td{color:var(--ink); font-weight:700}
-#tip2b table.t5 tr.act td:nth-child(2){color:var(--fr)}
 #tip2b table.t5 td.na{text-align:left; font:12px Carlito,sans-serif; color:var(--ink-3)}
 #tip2b .nw{display:inline-block; font:700 8px "IBM Plex Mono",monospace; letter-spacing:.06em; background:var(--fr); color:var(--surface); border-radius:2px; padding:1px 3px 0; margin-left:5px; vertical-align:1px}
 #tip2b .ft{font-size:11.5px; color:var(--ink-3); margin-top:6px; max-width:300px; line-height:1.3}
@@ -1139,7 +1148,7 @@ footer .legal{margin-top:3px; font-size:11px}
     <p><b>Le calcul.</b> Coefficient de saison = points des clubs ÷ clubs engagés. Classement = somme des cinq dernières saisons. Qualifications : victoire 1, nul 0,5. Phase de ligue : victoire 2, nul 1. Bonus : participation (6 points par club de C1), classement de la phase de ligue, tours de la phase finale.</p>
     <p><b>Les conventions.</b> Les points d'un club comptent dans sa compétition actuelle (reversé de C1 en C3 : il compte en C3). Un club n'est éliminé qu'à sa dernière défaite, toutes compétitions confondues.</p>
     <p><b>La projection.</b> Modèle maison, 200 000 saisons simulées. La recette reste en cuisine.</p>
-    <p><b>Les sources.</b> <a href="https://www.5-jahres-wertung.de/" target="_blank" rel="noopener">5-jahres-wertung.de</a>, relu chaque matin et chaque soir de match : classement, coefficients, bilan de chaque club. Wikipédia (en) : matchs, affiches et tableaux de confrontations, pour les dates et le parcours club par club. Chiffres non officiels : l'UEFA fait foi. Chaque publication est vérifiée et bloquée au moindre écart.</p>
+    <p><b>Les sources.</b> <a href="https://www.5-jahres-wertung.de/" target="_blank" rel="noopener">5-jahres-wertung.de</a>, relu chaque matin et chaque soir de match : classement, coefficients, bilan de chaque club. Wikipédia (en) : matchs, affiches et tableaux de confrontations, pour les dates et le parcours club par club ; résultats des championnats des dix premières nations, relus chaque lundi, pour la force de chaque club. Chiffres non officiels : l'UEFA fait foi. Chaque publication est vérifiée et bloquée au moindre écart.</p>
   </div>
 </section>
 
@@ -3247,7 +3256,9 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
     const ph = MOB(), boxW = box.clientWidth || 1000, mL = ph ? 50 : 54, cw = ph ? 36 : Math.max(32, (boxW - mL - 8) / n);
     const Wd = mL + cw * n + 8, mT = 30, pB = ph ? 270 : 330;
     const yD = pB + 18, yM = pB + 31, yR = [pB + 52, pB + 70, pB + 88], avecP = cur().has('FRA') && (P5.some(v => v != null) || P5C.some(v => v != null)), avec2 = avecP && deux,
-      yP = avec2 ? pB + 140 : pB + 116, yP2 = pB + 171, y5 = pB + 97, Ht = pB + (avecP ? (avec2 ? 180 : 124) : 98);
+      i0 = WK.findIndex((k, i) => P5[i] != null || P5C[i] != null), xe = mL + cw * i0 - 12,
+      lg = avec2 && !ph && i0 >= 0 && xe >= 190,   // ordinateur : les noms tiennent devant les premiers chiffres
+      yP = lg ? pB + 146 : avec2 ? pB + 140 : pB + 116, yP2 = lg ? pB + 172 : pB + 171, y5 = pB + 97, Ht = pB + (avecP ? (avec2 ? (lg ? 186 : 180) : 124) : 98);
     const X = i => mL + cw * (i + .5);
     const tf = T.FRA, S = [...cur()].sort((a, b) => (a === 'FRA') - (b === 'FRA')), ser = {};
     S.forEach(c => { ser[c] = T[c].map((v, i) => v == null ? null : mode === 'cum' ? v - base(c) : v - tf[i]); });
@@ -3266,10 +3277,16 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
     for (let v = Math.ceil(lo / st) * st; v <= hi; v += st) { const z = Math.abs(v) < 1e-9;
       g += `<line x1="${mL}" x2="${mL + cw * n}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--rule)" stroke-width="${z ? 1.4 : .6}" ${z ? '' : 'stroke-dasharray="2 3"'}/>`;
       yl += `<text x="${mL - 8}" y="${Y(v) + 4}" text-anchor="end" class="ax">${(mode === 'gap' && v > 0 ? '+' : '') + nf(z ? 0 : v, st < 1 ? 1 : 0)}</text>`; }
-    if (avecP) yl += avec2
-      ? `<line x1="8" x2="${mL}" y1="${y5}" y2="${y5}" stroke="var(--rule)"/><text x="8" y="${pB + 111}" class="rh" style="fill:var(--fr)">France top\u00a05 l'été prochain\u00a0?</text>`
+    const T5 = `France top\u00a05 l'été prochain\u00a0?<tspan class="ru"> · en\u00a0%</tspan>`;
+    if (lg) {   // titre à gauche, noms sur la ligne de leurs chiffres, filets entre les lignes
+      yl += `<text x="8" y="${pB + 121}" class="t5t">${T5}</text>`;
+      g += `<text x="${xe}" y="${yP + 1}" text-anchor="end" class="t5o">modèle originel</text>`
+        + `<text x="${xe - 33}" y="${yP2 + 1}" text-anchor="end" class="t5c">modèle force des clubs</text><rect class="nw" x="${xe - 27}" y="${yP2 - 9}" width="27" height="12" rx="2"/><text class="nwt" x="${xe - 13.5}" y="${yP2 + 0.5}" text-anchor="middle" style="font-size:8.5px">NEW</text>`;
+      [yP - 17, yP2 - 17, yP2 + 8].forEach(y => { g += `<line x1="${mL}" x2="${mL + cw * n}" y1="${y}" y2="${y}" stroke="var(--rule-soft)"/>`; yl += `<line x1="8" x2="${mL}" y1="${y}" y2="${y}" stroke="var(--rule-soft)"/>`; }); }
+    else if (avecP) yl += avec2
+      ? `<line x1="8" x2="${mL}" y1="${y5}" y2="${y5}" stroke="var(--rule)"/><text x="8" y="${pB + 111}" class="rh" style="fill:var(--fr)">${T5}</text>`
         + `<text x="8" y="${yP - 14}" class="rc">modèle originel</text>`
-        + `<text x="8" y="${yP2 - 14}" class="rs">modèle force des clubs</text><rect class="nw" x="139" y="${yP2 - 22}" width="25" height="10.5" rx="2"/><text class="nwt" x="151.5" y="${yP2 - 14}" text-anchor="middle">NEW</text>`
+        + `<text x="8" y="${yP2 - 14}" class="rk">modèle force des clubs</text><rect class="nw" x="139" y="${yP2 - 22}" width="25" height="10.5" rx="2"/><text class="nwt" x="151.5" y="${yP2 - 14}" text-anchor="middle">NEW</text>`
       : `<text x="${mL - 8}" y="${yP - 6}" text-anchor="end" class="rh" style="fill:var(--fr)">France</text><text x="${mL - 8}" y="${yP + 5}" text-anchor="end" class="rh" style="fill:var(--ink-2)">top\u00a05</text>`;
     CO.forEach((c, r) => yl += `<text x="${mL - 8}" y="${yR[r]}" text-anchor="end" class="rh" style="fill:var(${CV[r]})">${c}</text>`);
     let mo = -1;
@@ -3281,11 +3298,11 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
       for (let co = 0; co < 3; co++) if (co in k.p)
         g += `<g class="pa${cl}"><circle cx="${x - cw / 2 + 6}" cy="${yR[co] - 3.6}" r="3" fill="var(${CV[co]})"/><text x="${x - cw / 2 + 11}" y="${yR[co]}" class="pj">${k.p[co]}</text></g>`;
       if (avecP && P5[i] != null) { const pv = i ? P5[i - 1] : null, dl = pv == null ? 0 : P5[i] - pv;
-        g += `<text x="${x}" y="${yP}" text-anchor="middle" class="pp${cl}${dl <= -.005 ? ' bas' : dl >= .005 ? ' haut' : ''}">${pc(P5[i]).replace('\u00a0%', '')}</text>`; }
+        g += `<text x="${x}" y="${yP}" text-anchor="middle" class="pp${cl}${lg ? ' gd' : ''}${dl <= -.005 ? ' bas' : dl >= .005 ? ' haut' : ''}">${pc(P5[i]).replace('\u00a0%', '')}</text>`; }
       /* ligne « nations » arrêtée : cases grisées après la bascule, pour dire la discontinuité */
-      if (avec2 && i > iB) g += `<rect x="${x - cw / 2 + 4}" y="${yP - 10}" width="${cw - 8}" height="13" rx="2" class="arrete"><title>Modèle originel remplacé par la force des clubs (semaine du ${dLong(WK[iB])})</title></rect>`;
+      if (avec2 && i > iB) g += `<rect x="${x - cw / 2 + 4}" y="${yP - (lg ? 11 : 10)}" width="${cw - 8}" height="${lg ? 15 : 13}" rx="2" class="arrete"><title>Modèle originel remplacé par la force des clubs (semaine du ${dLong(WK[iB])})</title></rect>`;
       if (avec2 && P5C[i] != null) { const pv = i > iB ? P5C[i - 1] : null, dl = pv == null ? 0 : P5C[i] - pv;
-        g += `<text x="${x}" y="${yP2}" text-anchor="middle" class="pp${cl}${dl <= -.005 ? ' bas' : dl >= .005 ? ' haut' : ''}">${pc(P5C[i]).replace('\u00a0%', '')}</text>`; }
+        g += `<text x="${x}" y="${yP2}" text-anchor="middle" class="pp${cl}${lg ? ' gd act' : ''}${dl <= -.005 ? ' bas' : dl >= .005 ? ' haut' : ''}">${pc(P5C[i]).replace('\u00a0%', '')}</text>`; }
       if (i) { const gap = Math.round((dd(k.w) - dd(WK[i - 1].w)) / 6048e5) - 1;
         if (gap > 0) { const xb = mL + cw * i;
           g += `<line x1="${xb}" x2="${xb}" y1="${mT + 18}" y2="${pB}" stroke="var(--ink-3)" stroke-width=".8" stroke-dasharray="1 4" opacity=".7"/>`
@@ -3428,6 +3445,7 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
     if (i === lastW) return typeof PRJ !== 'undefined' && PRJ ? { rg: PRJ.rgFR, med: Object.fromEntries(Object.entries((PRJ.q || {}).tir || {}).map(([c, v]) => [c, v[2]])) } : null;
     return (P.c && P.c[w]) || sN; };
   const top5 = p => p && Array.isArray(p.rg) ? p.rg.slice(0, 5).reduce((x, y) => x + y, 0) : null;
+  const BASC_G = WK.findIndex(k => k.w === '2026-11-02');   // même semaine que BASC du bloc 2b
   const proj = (p, c) => p && p.med && p.med[c] != null && BY[c] ? BY[c].y[0] + BY[c].y[1] + BY[c].y[2] + BY[c].y[3] + p.med[c] : null;
   /* tous les matchs de la saison jusqu'à une date, vus de chaque club (pour les records) */
   const vue = (m, dom) => { const n = dom ? m[4] : m[6], c = dom ? m[5] : m[7], o = dom ? m[6] : m[4], oc = dom ? m[7] : m[5];
@@ -3471,7 +3489,10 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
     const bilTxt = t => { const p = []; if (t[0]) p.push(`${t[0]} victoire${t[0] > 1 ? 's' : ''}`); if (t[1]) p.push(`${t[1]} nul${t[1] > 1 ? 's' : ''}`);
       if (t[2]) p.push(`${t[2]} défaite${t[2] > 1 ? 's' : ''}`); return p.length > 1 ? p.slice(0, -1).join(', ') + ' et ' + p[p.length - 1] : p[0] || 'pas de match'; };
     const ec = (c, j) => T.FRA[j] - T[c][j];
-    const P1 = ps(i), P0 = ps(i - 1), pr = (() => { const p = ps(i - 1); return p && Array.isArray(p.pr) ? p.pr : null; })();
+    /* première gazette après la bascule : « avant » = la semaine de bascule recalculée avec
+       la force des clubs (PSEM.c), pour ne pas comparer deux modèles entre eux */
+    const wP = WK[i - 1].w, PSc = typeof PSEM !== 'undefined' && PSEM && PSEM.c ? PSEM.c : {}, apresB = BASC_G >= 0 && i > BASC_G;
+    const P1 = ps(i), P0 = apresB && PSc[wP] ? PSc[wP] : ps(i - 1), pr = P0 && Array.isArray(P0.pr) ? P0.pr : null;
     const ep = (c, P) => { const a = proj(P, 'FRA'), b = proj(P, c); return a != null && b != null ? a - b : null; };
     const e0 = ec(R, i - 1), e1 = ec(R, i), q0 = ep(R, P0), q1 = ep(R, P1), t0 = top5(P0), t1 = top5(P1);
     /* le verdict */
@@ -3536,13 +3557,20 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
         + `<td>${c === 'FRA' || eq == null ? '' : sg(-eq)}</td></tr>`; };
     const tab = `<div class="gtw"><table class="gtab"><thead><tr><th></th><th>Nation</th><th>Total</th><th>Semaine</th><th>Écart FR</th><th>Projeté</th><th>Évol.</th><th>Écart FR projeté</th></tr></thead><tbody>`
       + LE.slice(0, 8).map(ligne).join('') + `</tbody></table></div>`;
+    /* le changement de modèle, raconté une fois, dans la première gazette qui l'utilise */
+    const nouveau = (() => { if (BASC_G < 0 || i !== BASC_G + 1) return '';
+      const wB = WK[BASC_G].w, sN = typeof PSEM !== 'undefined' && PSEM && PSEM.s ? PSEM.s[wB] : null, tN = top5(sN), tC = top5(PSc[wB]);
+      const kB = WK[BASC_G], dB = dd(kB.d0), fB = dd(kB.d1), lb = `${dB.getUTCDate()}–${fB.getUTCDate()} ${MOC[fB.getUTCMonth()]}`;
+      return `<p class="gnew"><span class="nw">NEW</span><b>La projection change de moteur.</b> Depuis la semaine du ${lb}, chaque club des dix premières nations a sa propre force, mesurée sur trois ans de championnat et de coupes d'Europe ; avant, il prenait celle de son pays. `
+        + (tN != null && tC != null ? `Sur cette semaine-là, les chances de la France de finir dans les cinq premières passent de ${pc(tN)} avec l'ancien modèle à <b>${pc(tC)}</b> avec le nouveau, rien qu'avec ce changement. ` : '')
+        + `Tous les chiffres projetés de cette gazette viennent du nouveau modèle.</p>`; })();
     const A0 = dd(k.d0), B0 = dd(k.d1);
     const per = A0.getUTCMonth() === B0.getUTCMonth() ? `du ${A0.getUTCDate()} au ${B0.getUTCDate()} ${MOIS[B0.getUTCMonth()]}` : `du ${A0.getUTCDate()} ${MOIS[A0.getUTCMonth()]} au ${B0.getUTCDate()} ${MOIS[B0.getUTCMonth()]}`;
     const brut = h => h.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
     const desc = (() => { const t = brut(chapo); if (t.length <= 158) return t; const c = t.slice(0, 157); return c.slice(0, c.lastIndexOf(' ')) + '…'; })();
     return { slug: k.d1, d0: k.d0, d1: k.d1, titre, desc, per: `Semaine ${per} ${B0.getUTCFullYear()}`, lab: `${A0.getUTCDate()}${A0.getUTCMonth() === B0.getUTCMonth() ? '' : ' ' + MOC[A0.getUTCMonth()]} – ${B0.getUTCDate()} ${MOC[B0.getUTCMonth()]}`,
       html: `<div class="gdate">Semaine ${per} ${B0.getUTCFullYear()}${k.ph === 1 ? ' · barrages de qualification' : ''}</div>`
-        + `<h4 class="gtitre">${titre}</h4><p class="gchapo">${chapo}</p>`
+        + `<h4 class="gtitre">${titre}</h4><p class="gchapo">${chapo}</p>` + nouveau
         + (notes.length || faits.length ? `<h5 class="gh">Ce qui a compté</h5>` + notes.map(t => `<p class="gp">${t}</p>`).join('')
           + (faits.length ? `<ul class="gfaits">${faits.map(f => `<li>${f.txt}.</li>`).join('')}</ul>` : '') : '')
         + `<p class="gp">${voisins}${enjeu ? ' ' + enjeu : ''}</p>` + tab
