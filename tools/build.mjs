@@ -192,6 +192,9 @@ function semaineEU(src) {
 function buildUefa() {
   let src = read('tools/uefa/page.html');
   src = src.replace(/\/\*SEM_START\*\/[\s\S]*?\/\*SEM_END\*\//, () => `/*SEM_START*/const SEM = ${JSON.stringify(semaineEU(src))};/*SEM_END*/`);
+  /* force par club (C03) : tools/uefa/force-clubs.json, écrit chaque semaine par le robot ; absente = force des nations */
+  if (fs.existsSync(path.join(ROOT, 'tools/uefa/force-clubs.json')))
+    src = src.replace(/\/\*FORCE_START\*\/[\s\S]*?\/\*FORCE_END\*\//, () => `/*FORCE_START*/const FORCE = ${read('tools/uefa/force-clubs.json').trim()};/*FORCE_END*/`);
   src = src.replace(/\/\*AFF_START\*\/[\s\S]*?\/\*AFF_END\*\//, () => `/*AFF_START*/const AFF = ${JSON.stringify(affichesFR(src))};/*AFF_END*/`);
   { const pf = phaseFinale(src);
     src = src.replace(/\/\*KOV_START\*\/[\s\S]*?\/\*KOV_END\*\//, () => `/*KOV_START*/const KOV = ${JSON.stringify(pf.kov)};/*KOV_END*/`)
