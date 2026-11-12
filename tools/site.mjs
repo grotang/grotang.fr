@@ -25,6 +25,8 @@
    dès la deuxième page, elle devient un menu déroulant, sans rien d'autre à
    changer.
 
+   `nouveau` : étiquette « new » dans le menu (et un point sur la rubrique) ; à retirer
+   quand la page n'est plus une nouveauté.
    `aVenir` : page annoncée mais pas encore construite. Le build fabrique une
    page d'attente (titre, deux lignes, « à venir »), marquée « bientôt » dans le
    menu, en noindex et hors du sitemap : Google ne la voit pas tant qu'elle est
@@ -35,7 +37,7 @@
    jour où la vraie page sort, l'adresse de l'aperçu part dans RELAIS. */
 export const PAGES = [
   { key: 'uefa',   url: '/football-coefficient-uefa/',   titre: 'Coefficient UEFA',         rubrique: ['Football'] },
-  { key: 'force',  url: '/football-force-des-clubs/',   titre: 'Force des clubs',          rubrique: ['Football'] },
+  { key: 'force',  url: '/football-force-des-clubs/',   titre: 'Force des clubs',          rubrique: ['Football'], nouveau: true },
   { key: 'joueurs', url: '/football-joueurs-decisifs/',  titre: 'Joueurs décisifs',         rubrique: ['Football'],
     aVenir: { h1: 'Les joueurs les plus décisifs',
       texte: "Un but à la 68e qui débloque le 2-1 en finale de Ligue des champions ne vaut pas une passe décisive dans un 6-0 au premier tour d'une coupe nationale. Cette page classera les joueurs, saison par saison, selon ce que leurs actions ont réellement changé au résultat — et selon l'enjeu du match.",

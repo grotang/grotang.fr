@@ -252,6 +252,15 @@ html{scroll-padding-top:58px}
 @media (prefers-reduced-motion:reduce){.gnav a.gn-prev,.gnav a.gn-prev span{transition:none}}
 .gn-soon{margin-left:7px;font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
   color:var(--ink-3);border:1px solid var(--rule);border-radius:4px;padding:1px 4px;vertical-align:1px}
+/* « new » : page récente (nouveau: true dans site.mjs, 13/11/2026). Étiquette jaune canari
+   de l'icône, légèrement de travers, fixe ; un point jaune sur la rubrique invite à l'ouvrir. */
+.gn-new{display:inline-block;margin-left:8px;padding:1px 6px 2px;border-radius:4px;background:#FFD400;color:#0F141D;
+  font-family:Newsreader,Georgia,serif;font-style:italic;font-weight:700;font-size:11.5px;line-height:1.2;letter-spacing:.02em;
+  transform:rotate(-3deg);box-shadow:1.5px 1.5px 0 #0F141D;vertical-align:1px}
+.gn-new::after{content:"✦";margin-left:3px;font-style:normal;font-size:9px;color:#1F5FD1}
+.gn-new-pt{display:inline-block;width:7px;height:7px;border-radius:50%;background:#FFD400;box-shadow:0 0 0 1.5px #0F141D;
+  margin-left:5px;vertical-align:5px}
+:root[data-theme="dark"] .gn-new{box-shadow:1.5px 1.5px 0 #000} :root[data-theme="dark"] .gn-new-pt{box-shadow:0 0 0 1.5px #000}
 .gn-grp{display:flex;flex-direction:column;gap:1px;padding-top:4px}
 .gn-grp + .gn-grp,.gn-panel > a + .gn-grp{border-top:1px solid var(--rule-soft);margin-top:4px}
 .gn-grp-t{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:4px 10px 2px}
@@ -296,7 +305,7 @@ const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(
 /* Page annoncée : « bientôt » ; si un aperçu existe déjà, le bouton noir
    « Preview » de la page d'attente, qui mène droit à l'aperçu (13/11/2026). */
 const lien = (p, current, label = p.titre) => {
-  const a = `<a href="${p.url}"${p.key === current ? ' aria-current="page"' : ''}>${esc(label)}${p.aVenir && !p.aVenir.apercu ? '<span class="gn-soon">bientôt</span>' : ''}</a>`;
+  const a = `<a href="${p.url}"${p.key === current ? ' aria-current="page"' : ''}>${esc(label)}${p.aVenir && !p.aVenir.apercu ? '<span class="gn-soon">bientôt</span>' : ''}${p.nouveau ? '<span class="gn-new">new</span>' : ''}</a>`;
   return p.aVenir?.apercu ? `<span class="gn-ligne">${a}<a class="gn-prev" href="${p.aVenir.apercu}">Preview<span aria-hidden="true">→</span></a></span>` : a;
 };
 const toutes = r => r.pages.concat(...r.sous.map(toutes));
@@ -306,7 +315,7 @@ function rubrique(r, current) {
   const ici = pp.some(p => p.key === current) || (current === 'gazette' && pp.some(p => p.key === 'uefa'));
   const groupe = (s, niv) => `<div class="gn-grp"><span class="gn-grp-t">${esc(s.nom)}</span>`
     + s.pages.map(p => lien(p, current)).join('') + s.sous.map(x => groupe(x, niv + 1)).join('') + '</div>';
-  return `<details class="gn-dd"><summary${ici ? ' class="gn-ici"' : ''}>${esc(r.nom)}</summary><div class="gn-panel">`
+  return `<details class="gn-dd"><summary${ici ? ' class="gn-ici"' : ''}>${esc(r.nom)}${pp.some(p => p.nouveau) ? '<i class="gn-new-pt" aria-hidden="true"></i>' : ''}</summary><div class="gn-panel">`
     + r.pages.map(p => lien(p, current) + (p.key === 'uefa' ? sousGazette(current) : '')).join('') + r.sous.map(s => groupe(s, 1)).join('') + '</div></details>';
 }
 
