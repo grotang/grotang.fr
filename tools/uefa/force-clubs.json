@@ -1,0 +1,385 @@
+{
+"date": "2026-11-12",
+"echelle": 1.157,
+"avantage_terrain": 0.312,
+"clubs": {
+"AA Gent": 1.145,
+"AC Milan": 1.5949,
+"AEK Athens": 1.1882,
+"AFC Bournemouth": 2.4453,
+"AS Monaco": 1.7789,
+"AS Roma": 1.912,
+"AZ Alkmaar": 1.1645,
+"Ajax Amsterdam": 1.4468,
+"Arsenal FC": 3.0887,
+"Aston Villa": 2.4711,
+"Atalanta Bergamo": 1.6297,
+"Atletico Madrid": 2.3018,
+"Bayer Leverkusen": 2.0198,
+"Besiktas Istanbul": 1.1628,
+"Borussia Dortmund": 2.0633,
+"Brighton & Hove Albion": 2.3567,
+"Como 1907": 2.1415,
+"Crystal Palace": 1.7549,
+"FC Barcelona": 2.8703,
+"FC Bayern München": 2.9791,
+"FC Brügge": 1.8769,
+"FC Inter Mailand": 2.3024,
+"FC Liverpool": 2.5702,
+"FC Porto": 1.9007,
+"FC Twente Enschede": 1.2675,
+"FC Villarreal": 1.4799,
+"Fenerbahce Istanbul": 1.5156,
+"Feyenoord": 1.2432,
+"Galatasaray": 1.6554,
+"Getafe CF": 0.9586,
+"Istanbul Basaksehir": 0.7795,
+"Juventus Turin": 1.8824,
+"Lille OSC": 1.4404,
+"Manchester City": 2.6248,
+"Manchester United": 2.1366,
+"NEC Nijmegen": 0.9132,
+"Napoli": 1.5257,
+"OFI Heraklion": 0.6476,
+"Olympiakos Piraeus": 1.4944,
+"Olympique Lyonnais": 1.5901,
+"Olympique de Marseille": 1.4932,
+"PAOK Thessaloniki": 1.159,
+"PSV Eindhoven": 1.8742,
+"Panathinaikos Athen": 1.1305,
+"Paris Saint-Germain": 3.0633,
+"RB Leipzig": 1.6138,
+"RC Celta": 1.2895,
+"RC Lens": 1.2734,
+"RSC Anderlecht": 1.311,
+"Real Betis": 1.6384,
+"Real Madrid": 2.7056,
+"Real Sociedad": 1.5823,
+"SC Freiburg": 1.5905,
+"SC Uniao Torreense": 0.6254,
+"SL Benfica": 2.1388,
+"Sporting Braga": 1.3923,
+"Sporting CP": 2.1049,
+"Stade Rennais": 1.3849,
+"Sunderland AFC": 1.5912,
+"TSG 1899 Hoffenheim": 1.3353,
+"Trabzonspor": 1.0659,
+"Union Saint-Gilloise": 1.7567,
+"VV St. Truiden": 0.9578,
+"VfB Stuttgart": 1.6407
+},
+"nations": {
+"ALB": 0.1184,
+"AND": -0.5107,
+"ARM": -0.02,
+"AUT": 0.6551,
+"AZE": 0.6283,
+"BEL": 0.7963,
+"BIH": -0.0105,
+"BLR": -0.0994,
+"BUL": 0.4537,
+"CRO": 0.7793,
+"CYP": 0.7288,
+"CZE": 0.8262,
+"DEN": 1.07,
+"ENG": 1.9593,
+"ESP": 1.2858,
+"EST": -0.5367,
+"FIN": -0.0071,
+"FRA": 1.1027,
+"FRO": -0.4921,
+"GEO": -0.7364,
+"GER": 1.2538,
+"GIB": -0.629,
+"GRE": 0.3803,
+"HUN": 0.9659,
+"IRL": -0.1114,
+"ISL": -0.1835,
+"ISR": 0.381,
+"ITA": 1.197,
+"KAZ": -0.1444,
+"KOS": -0.4391,
+"LIE": 0.1651,
+"LTU": -0.7989,
+"LUX": -0.8968,
+"LVA": 0.1707,
+"MDA": -0.7865,
+"MKD": -0.3445,
+"MLT": -0.9879,
+"MNE": -0.982,
+"NED": 0.5066,
+"NIR": -1.0488,
+"NOR": 1.2314,
+"POL": 0.8094,
+"POR": 0.7558,
+"ROU": 0.5038,
+"SCO": 0.457,
+"SMR": -1.58,
+"SRB": 0.3773,
+"SUI": 0.6598,
+"SVK": 0.0705,
+"SVN": 0.21,
+"SWE": 0.5018,
+"TUR": 0.4543,
+"UKR": 0.7572,
+"WAL": -1.1991
+},
+"notes": [
+[
+"Arsenal FC",
+100.0
+],
+[
+"Paris Saint-Germain",
+99.0
+],
+[
+"FC Bayern München",
+95.6
+],
+[
+"FC Barcelona",
+91.1
+],
+[
+"Real Madrid",
+84.4
+],
+[
+"Manchester City",
+81.2
+],
+[
+"FC Liverpool",
+79.0
+],
+[
+"Aston Villa",
+74.9
+],
+[
+"AFC Bournemouth",
+73.9
+],
+[
+"Brighton & Hove Albion",
+70.3
+],
+[
+"FC Inter Mailand",
+68.1
+],
+[
+"Atletico Madrid",
+68.1
+],
+[
+"Como 1907",
+61.5
+],
+[
+"SL Benfica",
+61.4
+],
+[
+"Manchester United",
+61.3
+],
+[
+"Sporting CP",
+60.1
+],
+[
+"Borussia Dortmund",
+58.4
+],
+[
+"Bayer Leverkusen",
+56.6
+],
+[
+"AS Roma",
+52.2
+],
+[
+"FC Porto",
+51.8
+],
+[
+"Juventus Turin",
+51.0
+],
+[
+"FC Brügge",
+50.8
+],
+[
+"PSV Eindhoven",
+50.7
+],
+[
+"AS Monaco",
+46.8
+],
+[
+"Union Saint-Gilloise",
+45.9
+],
+[
+"Crystal Palace",
+45.9
+],
+[
+"Galatasaray",
+41.8
+],
+[
+"VfB Stuttgart",
+41.2
+],
+[
+"Real Betis",
+41.1
+],
+[
+"Atalanta Bergamo",
+40.8
+],
+[
+"RB Leipzig",
+40.1
+],
+[
+"AC Milan",
+39.4
+],
+[
+"Olympique Lyonnais",
+39.2
+],
+[
+"SC Freiburg",
+39.2
+],
+[
+"Sunderland AFC",
+39.2
+],
+[
+"Real Sociedad",
+38.8
+],
+[
+"Napoli",
+36.5
+],
+[
+"Fenerbahce Istanbul",
+36.1
+],
+[
+"Olympiakos Piraeus",
+35.3
+],
+[
+"Olympique de Marseille",
+35.2
+],
+[
+"FC Villarreal",
+34.7
+],
+[
+"Ajax Amsterdam",
+33.3
+],
+[
+"Lille OSC",
+33.1
+],
+[
+"Sporting Braga",
+31.1
+],
+[
+"Stade Rennais",
+30.8
+],
+[
+"TSG 1899 Hoffenheim",
+28.8
+],
+[
+"RSC Anderlecht",
+27.8
+],
+[
+"RC Celta",
+27.0
+],
+[
+"RC Lens",
+26.3
+],
+[
+"FC Twente Enschede",
+26.1
+],
+[
+"Feyenoord",
+25.1
+],
+[
+"AEK Athens",
+22.8
+],
+[
+"AZ Alkmaar",
+21.9
+],
+[
+"Besiktas Istanbul",
+21.8
+],
+[
+"PAOK Thessaloniki",
+21.7
+],
+[
+"AA Gent",
+21.1
+],
+[
+"Panathinaikos Athen",
+20.5
+],
+[
+"Trabzonspor",
+17.9
+],
+[
+"VV St. Truiden",
+13.5
+],
+[
+"Getafe CF",
+13.5
+],
+[
+"NEC Nijmegen",
+11.7
+],
+[
+"Istanbul Basaksehir",
+6.3
+],
+[
+"OFI Heraklion",
+0.9
+],
+[
+"SC Uniao Torreense",
+0.0
+]
+]
+}

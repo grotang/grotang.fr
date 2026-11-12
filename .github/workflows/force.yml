@@ -1,0 +1,76 @@
+name: Force des clubs
+
+# FORCE DES CLUBS (chantier C03, 12/11/2026) — une fois par semaine.
+#
+# Relit sur Wikipédia les grilles de résultats des 10 championnats des 10
+# premières nations, date les nouveaux résultats à la semaine (archive
+# tools/uefa/archive/championnats.json), reprend les matchs européens de la page,
+# recalcule la force de chaque club et écrit tools/uefa/force-clubs.json.
+# La projection du coefficient UEFA s'en sert : un club des 10 premières nations
+# porte SA force, plus celle de son championnat.
+#
+# Le lundi matin : les championnats ont joué le week-end. Cron ne parle qu'UTC :
+#   41 6 UTC → 08 h 41 été · 07 h 41 hiver. La minute n'est jamais 00.
+#
+# Garde-fous (dans le script) : une ligue illisible, des résultats perdus, ou un
+# club engagé sans force → échec, rien n'est écrit, GitHub envoie son e-mail, et
+# le site garde les forces de la semaine précédente.
+#
+# Après dépôt, on relance « Rafraîchissement UEFA » avec la case force : c'est lui
+# qui refait la projection (200 000 saisons) avec les nouvelles forces, la teste
+# et publie. Un push du robot ne réveille pas les autres workflows (voir uefa.yml) :
+# d'où l'appel explicite, et le droit `actions: write`.
+on:
+  schedule:
+    - cron: '41 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: uefa-refresh        # même file que les rafraîchissements UEFA : jamais deux en même temps
+  cancel-in-progress: false
+
+jobs:
+  force:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # La page construite contient le calendrier européen de la saison (bloc SEM).
+      - name: Fabriquer la page
+        run: node tools/build.mjs
+
+      - name: Calculer la force des clubs
+        run: python3 tools/uefa/force-clubs.py
+
+      - name: Déposer si quelque chose a changé
+        id: depot
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- tools/uefa/force-clubs.json tools/uefa/archive/championnats.json tools/uefa/force-noms.json; then
+            echo "Rien à déposer."
+            exit 0
+          fi
+          git config user.name  "grotang.fr (robot)"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/uefa/force-clubs.json tools/uefa/archive/championnats.json tools/uefa/force-noms.json
+          git commit -m "Force des clubs : semaine du $(date -u +%d/%m)"
+          git push || { git pull --rebase && git push; }
+          echo "deploy=true" >> "$GITHUB_OUTPUT"
+
+      - name: Refaire la projection et publier
+        if: steps.depot.outputs.deploy == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run uefa.yml --ref main -f force=true

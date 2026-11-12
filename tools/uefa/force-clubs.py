@@ -1,0 +1,241 @@
+# -*- coding: utf-8 -*-
+"""FORCE DES CLUBS — robot hebdomadaire (chantier C03, 12/11/2026).
+
+    python3 tools/uefa/force-clubs.py            (après node tools/build.mjs)
+
+Ce que fait le script, dans l'ordre :
+  1. relit sur Wikipédia (API REST, page rendue) les grilles de résultats des
+     10 championnats des 10 premières nations, saison en cours + 3 précédentes ;
+  2. tient l'archive tools/uefa/archive/championnats.json : chaque résultat y
+     garde la date de la semaine où il est apparu (les grilles n'ont pas de
+     dates). Saisons passées : 15 janvier ; premier passage sur la saison en
+     cours : milieu de la période déjà jouée ;
+  3. prend les matchs européens : saisons closes dans public/…/saisons.json,
+     saison en cours dans la page construite (bloc SEM) ;
+  4. calcule la force de chaque club (moindres carrés pondérés, voir
+     « Claude outputs/elo/force-clubs-modele-v1.pdf ») ;
+  5. écrit tools/uefa/force-clubs.json, que build.mjs injecte dans la page
+     (bloc FORCE) et que la projection utilise.
+
+Réglages décidés avec GT le 08/11/2026 ; échelle calée par le backtest du
+12/11/2026 (apprentissage 2024/25, validation 2025/26 et 2026/27).
+Python standard uniquement (aucune dépendance à installer).
+
+Garde-fous : si une ligue ne se lit pas, ou perd des résultats par rapport à
+l'archive, ou si un club des 10 nations engagé cette saison n'a pas de force,
+le script s'arrête en erreur SANS rien écrire : le site garde les forces de la
+semaine précédente.
+"""
+import datetime as dt, difflib, html.parser, json, math, os, re, sys, time, unicodedata, urllib.parse, urllib.request
+
+ICI = os.path.dirname(os.path.abspath(__file__))
+RACINE = os.path.dirname(os.path.dirname(ICI))
+ARCHIVE = os.path.join(ICI, 'archive', 'championnats.json')
+SORTIE = os.path.join(ICI, 'force-clubs.json')
+NOMS = os.path.join(ICI, 'force-noms.json')
+SAISONS_EU = os.environ.get('FORCE_SAISONS', os.path.join(RACINE, 'public', 'football-coefficient-uefa', 'saisons.json'))
+PAGE = os.environ.get('FORCE_PAGE', os.path.join(RACINE, 'public', 'football-coefficient-uefa', 'index.html'))
+AUJ = dt.date.fromisoformat(os.environ['FORCE_DATE']) if os.environ.get('FORCE_DATE') else dt.date.today()
+
+# ---- réglages (GT, 08/11/2026) ------------------------------------------------
+DEMI_VIE, FENETRE, PLAFOND, LAMBDA, BONUS_TAB = 365.0, 3 * 365, 3, 4.0, 0.5
+ECHELLE = 1.157     # 1 but d'écart de force = 1,157 unité du moteur de projection (backtest du 12/11/2026)
+LIGUES = {'ENG': 'Premier League', 'ITA': 'Serie A', 'ESP': 'La Liga', 'GER': 'Bundesliga', 'FRA': 'Ligue 1',
+          'POR': 'Primeira Liga', 'BEL': 'Belgian Pro League', 'NED': 'Eredivisie', 'TUR': 'Süper Lig', 'GRE': 'Super League Greece'}
+AUTRES_TITRES = {'Belgian Pro League': ['Belgian First Division A']}
+DIX = list(LIGUES)
+# finales européennes nulles décidées aux tirs au but (le vainqueur n'est pas dans les données)
+FINALES_TAB = {('2026-05-30', 'Paris Saint-Germain FC')}
+UA = {'User-Agent': 'grotang.fr-force-clubs/1.0 (+https://grotang.fr)'}
+
+def poids_age(jours): return 0.0 if jours > FENETRE or jours < 0 else 0.5 ** (jours / DEMI_VIE)
+def poids_europe(etape): return 2.0 if isinstance(etape, str) else 3.0 if etape < 8 else 4.0
+def canon(x): return re.sub(r'\s+', ' ', x.replace('.', '')).strip()
+def stop(msg): print('ÉCHEC :', msg); sys.exit(1)
+
+# ---- 1. lecture des grilles Wikipédia -------------------------------------------
+class Grilles(html.parser.HTMLParser):
+    """Tableaux « Home \\ Away » d'une page : [(équipe ligne, équipe colonne, score)]."""
+    def __init__(self):
+        super().__init__(); self.tables = []; self.pile = []
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if tag == 'table': self.pile.append({'lignes': [], 'texte': []})
+        elif not self.pile: return
+        t = self.pile[-1]
+        if tag == 'tr': t['lignes'].append([])
+        elif tag in ('td', 'th') and t['lignes']: t['lignes'][-1].append({'texte': '', 'titre': None})
+        elif tag == 'a' and t['lignes'] and t['lignes'][-1] and a.get('title') and t['lignes'][-1][-1]['titre'] is None:
+            t['lignes'][-1][-1]['titre'] = a['title']
+    def handle_endtag(self, tag):
+        if tag == 'table' and self.pile:
+            t = self.pile.pop(); self.tables.append(t)
+    def handle_data(self, data):
+        if not self.pile: return
+        t = self.pile[-1]; t['texte'].append(data)
+        if t['lignes'] and t['lignes'][-1]: t['lignes'][-1][-1]['texte'] += data
+
+def page(titre):
+    u = 'https://en.wikipedia.org/api/rest_v1/page/html/' + urllib.parse.quote(titre.replace(' ', '_'))
+    for essai in range(3):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=40) as r: return r.read().decode('utf-8')
+        except urllib.error.HTTPError as e:
+            if e.code == 404: return None
+            time.sleep(5 * (essai + 1))
+        except Exception: time.sleep(5 * (essai + 1))
+    return None
+
+def grilles_saison(lg, saison):
+    for titre in [f'{saison} {lg}'] + [f'{saison} {x}' for x in AUTRES_TITRES.get(lg, [])]:
+        h = page(titre)
+        if h is None: continue
+        p = Grilles(); p.feed(h); out = []; g = 0
+        for gi, t in enumerate([t for t in p.tables if re.search(r'Home\s*\\\s*Away', ''.join(t['texte']))]):
+            corps = [l for l in t['lignes'][1:] if l]
+            equipes = [(c[0]['titre'] or c[0]['texte']).strip() for c in corps]
+            for i, l in enumerate(corps):
+                for j, c in enumerate(l[1:]):
+                    m = re.match(r'^\s*(\d+)\s*[–-]\s*(\d+)\s*$', c['texte'])
+                    if m and j < len(equipes) and j != i: out.append([gi, canon(equipes[i]), canon(equipes[j]), int(m[1]), int(m[2])])
+        return titre, out
+    return None, None
+
+def saison_de(d): return d.year if d.month >= 7 else d.year - 1
+def libelle(y): return f'{y}–{str(y + 1)[2:]}'
+
+y_cours = saison_de(AUJ)
+SAISONS = [libelle(y) for y in range(y_cours - 3, y_cours + 1)]
+archive = json.load(open(ARCHIVE, encoding='utf-8')) if os.path.exists(ARCHIVE) else []
+deja = {(r[0], r[1], r[2], r[3], r[4]): r for r in archive}
+neuf, total = 0, {}
+for nat, lg in LIGUES.items():
+    for sa in SAISONS:
+        titre, L = grilles_saison(lg, sa)
+        y0 = int(sa[:4])
+        if L is None:
+            if y0 == y_cours and AUJ < dt.date(y0, 8, 20): continue      # championnat pas encore commencé
+            stop(f'{lg} {sa} : page introuvable ou illisible')
+        avant = sum(1 for k in deja if k[0] == nat and k[1] == sa)
+        if len(L) < avant: stop(f'{titre} : {len(L)} résultats lus, {avant} dans l\'archive')
+        total[(nat, sa)] = len(L)
+        if y0 < y_cours: date = dt.date(y0 + 1, 1, 15)
+        elif not any(k[0] == nat and k[1] == sa for k in deja):            # premier passage sur la saison en cours
+            date = dt.date(y0, 8, 1) + (AUJ - dt.date(y0, 8, 1)) / 2
+        else: date = AUJ - dt.timedelta(days=3)                            # nouveau cette semaine
+        for gi, h, a, bh, ba in L:
+            k = (nat, sa, gi, h, a)
+            if k in deja: deja[k][5], deja[k][6] = bh, ba
+            else: deja[k] = [nat, sa, gi, h, a, bh, ba, date.isoformat()]; neuf += 1
+        time.sleep(1)
+garde = libelle(y_cours - 3)
+archive = sorted([r for r in deja.values() if r[1] >= garde], key=lambda r: (r[0], r[1], r[7], r[3]))
+print(f'championnats : {len(archive)} résultats, dont {neuf} nouveaux')
+
+# ---- 2. matchs européens --------------------------------------------------------
+S = json.load(open(SAISONS_EU, encoding='utf-8'))
+EU = [m for k in sorted(S) for m in S[k]['SEM']]
+src = open(PAGE, encoding='utf-8').read()
+mm = re.search(r'/\*SEM_START\*/const SEM = (\[.*?\]);/\*SEM_END\*/', src, re.S)
+if not mm: stop('bloc SEM introuvable dans la page construite')
+SEM = json.loads(mm.group(1)); EU += SEM
+EU = [m for m in EU if m[8] is not None and (AUJ - dt.date.fromisoformat(m[0])).days <= FENETRE + 400]
+
+# noms européens -> noms Wikipédia (fichier tenu à jour ; nouveaux clubs : rapprochement automatique)
+noms = json.load(open(NOMS, encoding='utf-8')) if os.path.exists(NOMS) else {}
+par_nat = {}
+for r in archive: par_nat.setdefault(r[0], set()).update([r[3], r[4]])
+def norme(s):
+    s = unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode().lower()
+    s = re.sub(r'\b(fc|cf|ac|sc|as|ss|ssc|afc|vfb|vfl|tsg|sv|sl|sk|fk|kv|krc|rsc|rc|ogc|aj|og|ud|cd|rcd|bv|club|de|del|la|le|d|ev|calcio|hotspur|united|city|football)\b', '', s)
+    return re.sub(r'[^a-z0-9]', '', s)
+nouveaux_noms = []
+def nom(n, nat):
+    if nat not in DIX: return 'NAT:' + nat
+    if n in noms: return noms[n]
+    cands = par_nat.get(nat, set()); nn = norme(n)
+    if not cands: return n
+    sc, w = max((difflib.SequenceMatcher(None, nn, norme(w)).ratio() + (0.3 if nn and (nn in norme(w) or norme(w) in nn) else 0), w) for w in cands)
+    if sc >= 0.9: noms[n] = w; nouveaux_noms.append(f'{n} -> {w} ({sc:.2f})'); return w
+    return n                                    # pas trouvé : le club n'aura que ses matchs européens
+sai = lambda d: int(d[:4]) if d[5:7] >= '06' else int(d[:4]) - 1
+ordre = lambda et: (-11 if et == 'qp' else int(et[1:]) - 10) if isinstance(et, str) else et
+plus_loin, duels, bonus = {}, {}, {}
+for m in EU:
+    for c in (m[4], m[6]): plus_loin.setdefault((sai(m[0]), m[2], c), []).append(ordre(m[3]))
+for i, m in enumerate(EU):
+    if isinstance(m[3], int) and m[3] < 8: continue
+    duels.setdefault((sai(m[0]), m[2], str(m[3]), frozenset((m[4], m[6]))), []).append(i)
+for k, L in duels.items():
+    agg = {}
+    for i in L: m = EU[i]; agg[m[4]] = agg.get(m[4], 0) + m[8]; agg[m[6]] = agg.get(m[6], 0) + m[9]
+    if len(agg) != 2 or len(set(agg.values())) != 1: continue
+    der = max(L, key=lambda i: EU[i][0]); m = EU[der]
+    if m[3] == 12: g = next((c for c in (m[4], m[6]) if (m[0], c) in FINALES_TAB), None)
+    else: g = next((c for c in agg if any(o > ordre(m[3]) for o in plus_loin.get((k[0], k[1], c), []))), None)
+    if g: bonus[der] = BONUS_TAB if g == m[4] else -BONUS_TAB
+
+# ---- 3. les matchs, pondérés ----------------------------------------------------
+M = []
+for nat, sa, gi, h, a, bh, ba, d in archive:
+    w = poids_age((AUJ - dt.date.fromisoformat(d)).days)
+    if w > 0: M.append((h, a, max(-PLAFOND, min(PLAFOND, bh - ba)), w, 1, nat, nat))
+for i, m in enumerate(EU):
+    w = poids_age((AUJ - dt.date.fromisoformat(m[0])).days)
+    if w > 0:
+        M.append((nom(m[4], m[5]), nom(m[6], m[7]), max(-PLAFOND, min(PLAFOND, m[8] - m[9])) + bonus.get(i, 0),
+                  poids_europe(m[3]) * w, 0 if m[3] == 12 else 1, m[5], m[7]))
+
+# ---- 4. résolution : moindres carrés pondérés + retenue ---------------------------
+nat_de = {}
+for h, a, gd, w, dom, nh, na in M: nat_de.setdefault(h, nh); nat_de.setdefault(a, na)
+eq = sorted(nat_de); idx = {e: i for i, e in enumerate(eq)}
+li = {n: len(eq) + k for k, n in enumerate(DIX)}; H = len(eq) + len(DIX); P = H + 1
+A = [[0.0] * P for _ in range(P)]; b = [0.0] * P
+for h, a, gd, w, dom, nh, na in M:
+    x = {}
+    for e, s in ((h, 1), (a, -1)):
+        x[idx[e]] = x.get(idx[e], 0) + s
+        if nat_de[e] in li: x[li[nat_de[e]]] = x.get(li[nat_de[e]], 0) + s
+    if dom: x[H] = 1
+    for i, vi in x.items():
+        b[i] += w * vi * gd
+        for j, vj in x.items(): A[i][j] += w * vi * vj
+for i in range(len(eq)): A[i][i] += LAMBDA
+for i in range(len(eq), H): A[i][i] += 0.01
+# élimination de Gauss (la matrice est symétrique définie positive)
+for c in range(P):
+    piv = A[c][c]
+    for r in range(c + 1, P):
+        f = A[r][c] / piv
+        if f:
+            Ar, Ac = A[r], A[c]
+            for j in range(c, P): Ar[j] -= f * Ac[j]
+            b[r] -= f * b[c]
+beta = [0.0] * P
+for c in range(P - 1, -1, -1):
+    beta[c] = (b[c] - sum(A[c][j] * beta[j] for j in range(c + 1, P))) / A[c][c]
+force = {e: beta[idx[e]] + (beta[li[nat_de[e]]] if nat_de[e] in li else 0) for e in eq}
+
+# ---- 5. sortie : clubs engagés cette saison (noms de la source) + nations ---------
+clubs, manque = {}, []
+for m in SEM:
+    for n, c in ((m[4], m[5]), (m[6], m[7])):
+        if c in DIX:
+            k = nom(n, c)
+            if k in force: clubs[n] = round(force[k], 4)
+            else: manque.append(n)
+if manque: stop('clubs sans force : ' + ', '.join(sorted(set(manque))))
+nations = {e[4:]: round(v, 4) for e, v in force.items() if e.startswith('NAT:')}
+for c in DIX:
+    v = [force[k] for k in force if nat_de.get(k) == c]; nations[c] = round(sum(v) / len(v), 4)
+f = list(clubs.values()); lo, hi = min(f), max(f)
+notes = sorted([[n, round(100 * (v - lo) / (hi - lo), 1)] for n, v in clubs.items()], key=lambda x: -x[1])
+json.dump({'date': AUJ.isoformat(), 'echelle': ECHELLE, 'avantage_terrain': round(beta[H], 3),
+           'clubs': dict(sorted(clubs.items())), 'nations': dict(sorted(nations.items())), 'notes': notes},
+          open(SORTIE, 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
+json.dump(archive, open(ARCHIVE, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+json.dump(dict(sorted(noms.items())), open(NOMS, 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
+print(f'{len(M)} matchs, {len(eq)} équipes, avantage du terrain {beta[H]:.2f} but')
+print('top 5 :', ', '.join(f'{n} {v}' for n, v in notes[:5]))
+if nouveaux_noms: print('noms rapprochés automatiquement :', '; '.join(nouveaux_noms))
