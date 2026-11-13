@@ -420,7 +420,9 @@ section > .famille + .panel{margin-top:22px}
 .tipsem .p1n2 .lab{position:relative; height:17px; margin-top:3px; font:11px "IBM Plex Mono",monospace; color:var(--ink-3)}
 .tipsem .p1n2 .lab span{position:absolute; top:0; transform:translateX(-50%); white-space:nowrap}
 .tipsem .p1n2 .lab b{font-weight:700; color:var(--ink)}
-.tipsem .p1n2 .lab i{display:inline-block; width:7px; height:7px; border-radius:2px; margin-right:4px; vertical-align:0}
+.tipsem .score .tw{position:relative; display:inline-block}
+.tipsem .score .pt{position:absolute; top:50%; width:10px; height:10px; border-radius:50%; transform:translateY(-50%)}
+.tipsem .score .t.h .pt{left:-17px} .tipsem .score .t:not(.h) .pt{right:-17px}
 .tipsem .p1n2 .lab em{font:12px Carlito,sans-serif; font-style:normal; color:var(--ink-2); margin-right:4px}
 .tipsem .xp{font-size:12px; color:var(--ink-2)} .tipsem .xp b{font-family:"IBM Plex Mono",monospace; color:var(--ink)}
 .tipcal{min-width:270px; max-width:min(400px, calc(100vw - 40px))}
@@ -6503,7 +6505,10 @@ document.getElementById('anomaly').innerHTML = anomalous.length
     const [m, home] = t.M[j], fo = c => c === t.c, k = m[2];
     const tete = `<div class="mh"><span class="kb" style="background:var(${KVAR[k]})">C${[1, 3, 4][k]}</span>${KN[k]} · ${etape(k, m[3])}</div>`
       + `<div class="when">${jourL(m[0])}${m[1] ? ' · ' + m[1].replace(':', 'h') : ''}${m[10] ? `<br><span class="rp">${reprog(m[0], m[1], m[10])}</span>` : ''}</div>`;
-    const eq = (n, c, h) => `<div class="t${h ? ' h' : ''}${fo(c) ? ' fo' : ''}">${court(n)}<u>${name(c)}</u></div>`;
+    /* match à venir avec probas : la couleur de chaque nation en pastille à côté de son club, reprise par la barre 1 · N · 2 */
+    const avP = !joue(m) && COURS && typeof m[3] === 'number' && vnd(k, m[4], m[6], home);
+    const cN = c => SLOT[c] ? `var(${SLOT[c]})` : 'var(--ink-3)', cH = cN(m[5]), cA = cN(m[7]) === cH ? cH + ';opacity:.55' : cN(m[7]);
+    const eq = (n, c, h) => `<div class="t${h ? ' h' : ''}${fo(c) ? ' fo' : ''}">${avP ? `<span class="tw"><i class="pt" style="background:${h ? cH : cA}"></i>` : ''}${court(n)}<u>${name(c)}</u>${avP ? '</span>' : ''}</div>`;
     const sc = joue(m) ? `<div class="s">${m[8]}<span style="color:var(--ink-3);margin:0 4px">–</span>${m[9]}</div>` : `<div class="s f">${m[1] ? m[1].replace(':', 'h') : 'à venir'}</div>`;
     let v = '';
     if (joue(m)) { const r = res(m, home), x = pts(m, home), lab = { v: 'Victoire', n: 'Nul', d: 'Défaite' }[r], bg = { v: 'var(--good)', n: '#8B95A3', d: 'var(--bad)' }[r];
@@ -6513,12 +6518,11 @@ document.getElementById('anomaly').innerHTML = anomalous.length
       if (!P) v = `<div class="verdict"><span class="pill" style="background:var(--ink-3)">À venir</span><span>${typeof m[3] === 'string' ? '' : 'victoire = +2 pts, nul = +1'}</span></div>`;
       else { /* barre 1 · N · 2 : domicile à gauche, nul au milieu, extérieur à droite (GT, 13/11) ;
            chaque nation dans sa couleur, une nation hors des 8 premières en gris foncé */
-        const pD = home ? P.v : P.d, pX = home ? P.d : P.v, cD = SLOT[m[5]] ? `var(${SLOT[m[5]]})` : 'var(--ink-3)', cX0 = SLOT[m[7]] ? `var(${SLOT[m[7]]})` : 'var(--ink-3)';
-        const S = [[pD, cD, court(m[4])], [P.n, 'var(--nl)', null], [pX, cX0, court(m[6])]], cX = cX0 === cD ? cX0 + ';opacity:.55' : cX0;
-        S[2][1] = cX; let x0 = 0; const c = S.map(([q]) => { const m0 = (x0 + q / 2) * 100; x0 += q; return m0; });
+        const pD = home ? P.v : P.d, pX = home ? P.d : P.v;
+        const S = [[pD, cH, court(m[4])], [P.n, 'var(--nl)', null], [pX, cA, court(m[6])]]; let x0 = 0; const c = S.map(([q]) => { const m0 = (x0 + q / 2) * 100; x0 += q; return m0; });
         const xp = 2 * P.v + P.n, qui = court(home ? m[4] : m[6]);
         v = `<div class="verdict" style="display:block"><div class="p1n2"><div class="bar">${S.map(([q, col]) => `<i style="width:${(q * 100).toFixed(1)}%;background:${col}"></i>`).join('')}</div>`
-          + `<div class="lab">${S.map(([q, col, nom], i) => `<span data-c="${c[i].toFixed(1)}" style="left:${c[i].toFixed(1)}%">${nom ? `<i style="background:${col}"></i><em>${nom}</em><b>${pcP(q)}</b>` : `N ${pcP(q)}`}</span>`).join('')}</div></div>`
+          + `<div class="lab">${S.map(([q, col, nom], i) => `<span data-c="${c[i].toFixed(1)}" style="left:${c[i].toFixed(1)}%">${nom ? `<b>${pcP(q)}</b>` : pcP(q)}</span>`).join('')}</div></div>`
           + `<div class="xp">Points attendus pour ${qui} : <b>${nf(xp, 1)}</b> sur 2${t.div ? ` · soit <b>+${nfx(xp / t.div)}</b> pour ${name(t.c)}` : ''}</div></div>`; } }
     return tete + `<div class="score">${eq(m[4], m[5], true)}${sc}${eq(m[6], m[7], false)}</div>` + v;
   }
