@@ -49,7 +49,7 @@ PAGE = os.environ.get('FORCE_PAGE', os.path.join(RACINE, 'public', 'football-coe
 AUJ = dt.date.fromisoformat(os.environ['FORCE_DATE']) if os.environ.get('FORCE_DATE') else dt.date.today()
 
 # ---- réglages (GT, 08/11/2026) ------------------------------------------------
-DEMI_VIE, FENETRE, PLAFOND, LAMBDA, BONUS_TAB = 365.0, 3 * 365, 3, 4.0, 0.5
+FENETRE, PLAFOND, LAMBDA, BONUS_TAB = 3 * 365, 3, 4.0, 0.5    # FENETRE : seulement pour compter les matchs européens des autres nations (3 ans)
 ECHELLE = 1.157     # 1 but d'écart de force = 1,157 unité du moteur de projection (backtest du 12/11/2026)
 # INDICE (GT, 12/11/2026) : 100 = le club moyen de la phase de ligue de la saison (moyenne des 108 clubs
 # des trois coupes, force propre ou, à défaut, celle de sa nation) ; 40 points = 1 but d'écart sur terrain
@@ -71,7 +71,24 @@ DIX = list(LIGUES)
 FINALES_TAB = {('2026-05-30', 'Paris Saint-Germain FC')}
 UA = {'User-Agent': 'grotang.fr-force-clubs/1.0 (+https://grotang.fr)'}
 
-def poids_age(jours): return 0.0 if jours > FENETRE or jours < 0 else 0.5 ** (jours / DEMI_VIE)
+# PONDÉRATION PAR SAISON (GT, 13/11/2026 ; remplace la demi-vie d'un an au jour près, qui avait une
+# falaise à 3 ans et faisait sortir d'un bloc chaque saison de championnat le 15 janvier).
+# Le niveau d'un club change surtout à l'intersaison : on pondère par SAISON. Parts de chaque saison
+# selon l'avancement p de la saison en cours (début / milieu / fin) :
+#     saison en cours S : 0 % / 30 % / 60 %      S-1 : 60 / 45 / 30 %
+#     S-2 : 30 / 20 / 10 %                        S-3 : 10 / 5 / 0 %      (au-delà : 0)
+# Une part se répartit entre les matchs joués de la saison (poids d'un match = part ÷ matchs joués) :
+# en unités de « part par match d'une saison complète », un match de la saison en cours pèse toujours
+# 0,6 (sa part vaut 0,6 × p), ceux des saisons passées suivent l'interpolation de facteur(). Le bout
+# de chaque ligne est le début de la suivante (fin de S = début de S+1) : rien ne saute au 1er juillet.
+# p = part des matchs de saison régulière déjà joués, ligue par ligue (championnat) ; pour un match
+# européen, la moyenne des 10 ligues. Backtest (Claude outputs/elo/2026.11.13 test saisons.txt).
+def saison_match(d): return d.year if d.month >= 7 else d.year - 1
+def facteur(k, p):
+    if k == 0: return 0.6
+    pts = {1: (0.6, 0.45, 0.30), 2: (0.30, 0.20, 0.10), 3: (0.10, 0.05, 0.0)}.get(k)
+    if not pts: return 0.0
+    return pts[0] + (pts[1] - pts[0]) * p / 0.5 if p <= 0.5 else pts[1] + (pts[2] - pts[1]) * (p - 0.5) / 0.5
 # poids d'un match européen (GT, 12/11/2026 ; backtest neutre : log-loss 0,9526 contre 0,9524) :
 # qualifications ×1,5 ; phase de groupes / de ligue ×3 ; barrages KO ×3, 8es ×4, quarts ×5, demies ×6, finale ×8
 def poids_europe(etape): return 1.5 if isinstance(etape, str) else 3.0 if etape < 8 else {8: 3.0, 9: 4.0, 10: 5.0, 11: 6.0}.get(etape, 8.0)
@@ -228,12 +245,20 @@ for k, L in duels.items():
     if g: bonus[der] = BONUS_TAB if g == m[4] else -BONUS_TAB
 
 # ---- 3. les matchs, pondérés ----------------------------------------------------
+# avancement de la saison en cours, ligue par ligue : matchs de saison régulière (grille 0) joués ÷ n × (n − 1)
+sa_cours = libelle(y_cours); avancement = {}
+for nat in LIGUES:
+    reg = [r for r in archive if r[0] == nat and r[1] == sa_cours and r[2] == 0]
+    n = len({e for r in reg for e in (r[3], r[4])})
+    avancement[nat] = min(1.0, len(reg) / (n * (n - 1))) if n > 1 else 0.0
+p_europe = sum(avancement.values()) / len(avancement)
 M = []
 for nat, sa, gi, h, a, bh, ba, d in archive:
-    w = poids_age((AUJ - dt.date.fromisoformat(d)).days)
+    w = facteur(y_cours - int(sa[:4]), avancement[nat])
     if w > 0: M.append((h, a, max(-PLAFOND, min(PLAFOND, bh - ba)), w, 1, nat, nat))
 for i, m in enumerate(EU):
-    w = poids_age((AUJ - dt.date.fromisoformat(m[0])).days)
+    w = facteur(y_cours - saison_match(dt.date.fromisoformat(m[0])), p_europe)
+    if dt.date.fromisoformat(m[0]) > AUJ: w = 0
     if w > 0:
         M.append((nom(m[4], m[5]), nom(m[6], m[7]), max(-PLAFOND, min(PLAFOND, m[8] - m[9])) + bonus.get(i, 0),
                   poids_europe(m[3]) * w, 0 if m[3] == 12 else 1, m[5], m[7]))
@@ -334,7 +359,7 @@ if len(phase_ligue) < 100: alerte(f'phase de ligue : {len(phase_ligue)} clubs tr
 BASE_INDICE = round(sum(fl) / len(fl), 4) if fl else 0.0
 indice = lambda v: round(100 + POINTS_PAR_BUT * (v - BASE_INDICE), 1)
 json.dump({'date': AUJ.isoformat(), 'alertes': ALERTES, 'fraicheur': fraicheur, 'echelle': ECHELLE, 'avantage_terrain': round(beta[H], 3),
-           'base_indice': BASE_INDICE, 'points_par_but': POINTS_PAR_BUT,
+           'base_indice': BASE_INDICE, 'points_par_but': POINTS_PAR_BUT, 'avancement': {k: round(v, 3) for k, v in avancement.items()},
            'clubs': dict(sorted(clubs.items())), 'nations': dict(sorted(nations.items())),
            'championnats': championnats, 'promus': sorted(promus), 'seuil_hors10': SEUIL_HORS10, 'hors10': hors10},
           open(SORTIE, 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
@@ -346,5 +371,6 @@ histo = dict(sorted(histo.items())[-60:])
 json.dump(histo, open(HISTO, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'), sort_keys=True)
 json.dump(dict(sorted(noms.items())), open(NOMS, 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
 print(f'{len(M)} matchs, {len(eq)} équipes, avantage du terrain {beta[H]:.2f} but')
+print('avancement de la saison :', ', '.join(f'{k} {v:.0%}' for k, v in avancement.items()))
 print('top 5 (indice) :', ', '.join(f'{n} {indice(v)}' for n, nat, v in championnats[:5]), f'· {len(championnats)} clubs, {len(promus)} promus, {len(hors10)} clubs d\'autres nations')
 if nouveaux_noms: print('noms rapprochés automatiquement :', '; '.join(nouveaux_noms))

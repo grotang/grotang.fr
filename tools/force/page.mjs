@@ -90,7 +90,7 @@ export function buildForce() {
     ordre: DIX, top8: ['FRA', ...(D.nations || []).slice(0, 8).map(n => n.c).filter(c => c !== 'FRA')].slice(0, 8), clubs, contingents, ligue, comparateur, defaut: [nomW('Paris Saint-Germain FC'), nomW('Arsenal FC')] };
 
   const titre = 'La force des clubs de football européens : classement et indice chaque semaine';
-  const desc = `Le niveau réel de ${clubs.length} clubs européens, mesuré sur trois saisons de championnat et de coupes d'Europe. Mis à jour chaque lundi.`;
+  const desc = `Le niveau réel de ${clubs.length} clubs européens, mesuré sur quatre saisons de championnat et de coupes d'Europe. Mis à jour chaque lundi.`;
   const jsonld = JSON.stringify({
     '@context': 'https://schema.org', '@type': 'Dataset', name: titre, description: desc, url: abs(KEY),
     inLanguage: 'fr', isAccessibleForFree: true, dateModified: FC.date,
