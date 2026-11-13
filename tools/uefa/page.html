@@ -4777,7 +4777,11 @@ const legende = segs => segs.map(s =>
      BETA mesuré 1,05 (fourchette plausible 0,90 – 1,20) → 1,10 retenu (ancien 1,15) ;
      GAMMA mesuré 0,70 (0,40 – 1,00) → 0,70 (ancien 1,10 : la phase finale, entre bons
      clubs, dépend peu du niveau du pays). Valeurs à recaler avec la force par club. */
-  const BETA = 1.10, GAMMA = 0.70, PNUL = 0.20;   /* PNUL : 0,24 jusqu'au 23/10/2026 ; 0,20 = taux de nuls de l'archive (1 656 matchs de phase de groupes / de ligue, 2021–2026) */
+  /* GAMMA = BETA depuis le 13/11/2026 (C01, backtest de saison 2024/25-2025/26 avec la force
+     des clubs utilisée telle quelle) : estimé 1,08 sur 270 manches de phase finale (IC95
+     0,67-1,52) ; prévisions de fin de saison 2 % meilleures qu'avec 0,70. Une seule formule
+     pour tous les matchs. Le 0,70 d'avant était calé sur la force des nations. */
+  const BETA = 1.10, GAMMA = 1.10, PNUL = 0.20;   /* PNUL : 0,24 jusqu'au 23/10/2026 ; 0,20 = taux de nuls de l'archive (1 656 matchs de phase de groupes / de ligue, 2021–2026) */
   /* HOME — avantage du terrain en phase de ligue (moteur calendrier). Calé sur
      les 1 656 matchs de phase de groupes / de ligue de l'archive (2021/22 à
      2025/26) : domicile 49,2 %, nul 20,1 %, extérieur 30,7 %. Hors nuls, le
@@ -5162,7 +5166,11 @@ const legende = segs => segs.map(s =>
         const alea = cl.map(() => rnd());
         const ord = [...cl.keys()].sort((a, b) => (pts[b] - pts[a]) || (alea[a] - alea[b]));
         if (CAL) { const nC = cl.length; ord.forEach((i, r) => { RANG[k][i * nC + r]++; PTSM[k][i] += pts[i]; }); }
-        ord.forEach((i, r) => { const v = rankBonus(k, r + 1); addL(i, v); ctrl.rb[k] += v; });
+        /* Bonus de classement : seulement si la phase de ligue de la compétition n'est pas
+           finie. Finie, la source l'a déjà crédité (colonne bonus) : le rajouter le comptait
+           deux fois (C01, 13/11/2026 ; C4 dès le 17/12, C1 et C3 fin janvier). */
+        if (!CAL || CAL[k].live.length) ord.forEach((i, r) => { const v = rankBonus(k, r + 1); addL(i, v); ctrl.rb[k] += v; });
+        else ctrl.rb[k] += [75, 75, 42][k];   // contrôle de conservation : déjà dans les points réels
         /* Un duel de phase finale : les manches sont jouées, chacune distribue ses
            deux points, et le qualifié est celui qui en a pris le plus (à égalité :
            prolongation / tirs au but, penchés vers le plus fort). Rien n'est plaqué
