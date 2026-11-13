@@ -3297,7 +3297,9 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
       if (A.getUTCMonth() !== mo) { mo = A.getUTCMonth(); g += `<text x="${x - cw / 2 + 3}" y="${yM}" class="dm${cl}">${MO[mo]}</text>`;
         if (i) g += `<line x1="${x - cw / 2}" x2="${x - cw / 2}" y1="${pB + 6}" y2="${yM + 2}" stroke="var(--rule)"/>`; }
       for (let co = 0; co < 3; co++) if (co in k.p)
-        g += `<g class="pa${cl}"><circle cx="${x - cw / 2 + 6}" cy="${yR[co] - 3.6}" r="3" fill="var(${CV[co]})"/><text x="${x - cw / 2 + 11}" y="${yR[co]}" class="pj">${k.p[co]}</text></g>`;
+        { /* pastille + étiquette centrées dans la colonne (GT, 13/11) : Plex Mono 10,5 px = 6,3 px par caractère */
+          const tw = [...k.p[co]].length * 6.3, x0 = x - (tw + 8) / 2;
+          g += `<g class="pa${cl}"><circle cx="${x0 + 3}" cy="${yR[co] - 3.6}" r="3" fill="var(${CV[co]})"/><text x="${x0 + 8}" y="${yR[co]}" class="pj">${k.p[co]}</text></g>`; }
       if (avecP && P5[i] != null) { const pv = i ? P5[i - 1] : null, dl = pv == null ? 0 : P5[i] - pv;
         g += `<text x="${x}" y="${yP}" text-anchor="middle" class="pp${cl}${lg ? ' gd' : ''}${dl <= -.005 ? ' bas' : dl >= .005 ? ' haut' : ''}">${pc(P5[i]).replace('\u00a0%', '')}</text>`; }
       /* ligne « nations » arrêtée : cases grisées après la bascule, pour dire la discontinuité */
