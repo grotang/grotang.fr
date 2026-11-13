@@ -28,6 +28,14 @@ a{color:var(--fr)}
 .seg button:last-child{border-right:0}
 .seg button.on{background:var(--ink);color:var(--surface);font-weight:700}
 select.sel{font:inherit;font-size:13.5px;padding:5px 8px;border:1px solid var(--rule);border-radius:3px;background:var(--surface);color:var(--ink);max-width:100%}
+/* filtres du bloc 1 (13/11) : « Clubs » à gauche, « Nation » à droite, même ligne ; au téléphone,
+   les deux côte à côte, libellé au-dessus, commandes de 38 px (gabarit des autres pages du site) */
+.f1{justify-content:space-between}
+.f1 .grp{display:flex;align-items:center;gap:8px;min-width:0}
+.f1 .grp.dr{margin-left:auto}
+.f1 .seg button,.f1 select.sel{height:32px}
+.f1 select.sel{min-width:150px}
+.seg .ct{display:none}
 /* bloc 1 · le classement */
 table.cl{width:100%;border-collapse:collapse;font-size:14px}
 table.cl th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;text-align:left;padding:0 6px 6px;border-bottom:1px solid var(--rule)}
@@ -93,6 +101,12 @@ td.td.up{color:var(--good)} td.td.dn{color:var(--bad)}
   .nation .long{display:none} .nation .court{display:inline} .nation i{margin-right:4px}
   #b2{--gauche:86px!important} .ln .nm{font-size:12.5px} .ln .nm small{font-size:10.5px} .piste .et{font-size:10px}
   .duel{grid-template-columns:1fr} .duel .vs{display:none}
+  .f1{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:end}
+  .f1 .grp{flex-direction:column;align-items:stretch;gap:4px}
+  .f1 .grp.dr{margin-left:0}
+  .f1 .seg button,.f1 select.sel{height:38px;font-size:14px}
+  .f1 select.sel{min-width:0;width:100%}
+  .seg .lg{display:none} .seg .ct{display:inline}
 }
 </style>
 </head>
@@ -106,9 +120,9 @@ td.td.up{color:var(--good)} td.td.dn{color:var(--bad)}
   <section class="bloc" id="classement">
     <h2><span class="no-bloc">1</span>Le classement</h2>
     <p class="recit"><span id="r1">Les 30 clubs les plus forts.</span> Un club à 140 bat le club européen moyen d'un but en moyenne ; à 180, de deux buts.</p>
-    <div class="filtres">
-      <span class="lb">Clubs</span><span class="seg" id="f1"><button class="on" data-v="tous">Tous</button><button data-v="eu">Engagés en Europe</button></span>
-      <span class="lb">Nation</span><select class="sel" id="f1n" aria-label="Nation"></select>
+    <div class="filtres f1">
+      <div class="grp"><span class="lb">Clubs</span><span class="seg" id="f1"><button class="on" data-v="tous">Tous</button><button data-v="eu"><span class="lg">Engagés en Europe</span><span class="ct">En Europe</span></button></span></div>
+      <div class="grp dr"><label class="lb" for="f1n">Nation</label><select class="sel" id="f1n"></select></div>
     </div>
     <table class="cl"><thead><tr><th></th><th>Club</th><th>Nation</th><th>Coupe</th><th style="text-align:right">Indice</th><th class="bar"></th><th class="but" style="text-align:right">Face au club moyen</th><th style="text-align:right">Sem.</th></tr></thead><tbody id="t1"></tbody></table>
     <p class="pied" id="p1"></p>
