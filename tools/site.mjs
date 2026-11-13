@@ -25,8 +25,10 @@
    dès la deuxième page, elle devient un menu déroulant, sans rien d'autre à
    changer.
 
-   `nouveau` : étiquette « new » dans le menu (et un point sur la rubrique) ; à retirer
-   quand la page n'est plus une nouveauté.
+   `nouveau` : date de PREMIÈRE PUBLICATION de la page (AAAA-MM-JJ). Étiquette « new »
+   dans le menu (et un point sur la rubrique) pendant un mois, puis elle disparaît
+   toute seule : le build ne l'écrit plus, et d'ici le build suivant un petit script
+   l'enlève chez le lecteur à la date prévue (data-fin). Rien à retirer à la main.
    `aVenir` : page annoncée mais pas encore construite. Le build fabrique une
    page d'attente (titre, deux lignes, « à venir »), marquée « bientôt » dans le
    menu, en noindex et hors du sitemap : Google ne la voit pas tant qu'elle est
@@ -37,7 +39,7 @@
    jour où la vraie page sort, l'adresse de l'aperçu part dans RELAIS. */
 export const PAGES = [
   { key: 'uefa',   url: '/football-coefficient-uefa/',   titre: 'Coefficient UEFA',         rubrique: ['Football'] },
-  { key: 'force',  url: '/football-force-des-clubs/',   titre: 'Force des clubs',          rubrique: ['Football'], nouveau: true },
+  { key: 'force',  url: '/football-force-des-clubs/',   titre: 'Force des clubs',          rubrique: ['Football'], nouveau: '2026-11-13' },
   { key: 'joueurs', url: '/football-joueurs-decisifs/',  titre: 'Joueurs décisifs',         rubrique: ['Football'],
     aVenir: { h1: 'Les joueurs les plus décisifs',
       texte: "Un but à la 68e qui débloque le 2-1 en finale de Ligue des champions ne vaut pas une passe décisive dans un 6-0 au premier tour d'une coupe nationale. Cette page classera les joueurs, saison par saison, selon ce que leurs actions ont réellement changé au résultat — et selon l'enjeu du match.",
@@ -90,6 +92,14 @@ export const GAZETTE = '/football-gazette-uefa/';
 
 export const DOMAINE = 'https://grotang.fr';
 
+/* « new » : jusqu'au même jour du mois suivant (13/11 → 13/12), date de Paris. */
+export const finNouveau = p => { if (!p.nouveau) return null;
+  const [a, m, j] = p.nouveau.split('-').map(Number), d = new Date(Date.UTC(a, m, j));
+  if (d.getUTCDate() !== j) d.setUTCDate(0);   // 31/01 → 28 ou 29/02
+  return d.toISOString().slice(0, 10); };
+export const aujourdhui = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(new Date());
+export const estNouveau = (p, jour = aujourdhui()) => !!p.nouveau && jour < finNouveau(p);
+
 export const page = key => {
   const p = PAGES.find(x => x.key === key);
   if (!p) throw new Error(`registre : page inconnue « ${key} » (tools/site.mjs)`);
@@ -111,6 +121,7 @@ export const fichier = u => u.replace(/^\//, '') + 'index.html';
     if (vues.has(p.url)) throw new Error(`registre : adresse en double « ${p.url} »`);
     vues.add(p.url);
     if (!p.rubrique?.length) throw new Error(`registre : « ${p.key} » sans rubrique`);
+    if (p.nouveau !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(p.nouveau)) throw new Error(`registre : « ${p.key} » nouveau doit être la date de première publication AAAA-MM-JJ`);
     const ap = p.aVenir?.apercu;
     if (ap) {
       if (!/^\/[a-z0-9-]+\/$/.test(ap) || !ap.startsWith(p.url.slice(0, -1))) throw new Error(`registre : aperçu mal formé « ${ap} »`);

@@ -15,7 +15,7 @@
    du premier écran sont préchargés ; les autres (latin étendu, chasse fixe) ne
    viennent que si un caractère les demande. */
 import fs from 'node:fs';
-import { arbre, url, RUBRIQUES_A_VENIR, GAZETTE } from './site.mjs';
+import { arbre, url, RUBRIQUES_A_VENIR, GAZETTE, estNouveau, finNouveau } from './site.mjs';
 
 /* LA GAZETTE DANS LE MENU (06/11/2026, maquette B choisie par GT) : une ligne en
    retrait sous « Coefficient UEFA », qui mène à la DERNIÈRE gazette, avec sa date
@@ -120,6 +120,9 @@ export const THEME_BOOT = `<script>(function(){try{if(localStorage.getItem('grot
    l'autre. L'évènement permet aux pages qui dessinent en JS (graphiques UEFA,
    carte de chaleur tennis) de se redessiner aux nouvelles couleurs. */
 export const THEME_JS = `<script>(function(){
+  /* « new » périmé (data-fin, date de Paris) : retiré même si le site n'a pas été refabriqué depuis */
+  try{var auj=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris'}).format(new Date());
+    document.querySelectorAll('.gnav [data-fin]').forEach(function(e){ if(auj>=e.getAttribute('data-fin')) e.remove(); });}catch(e){}
   var dd=document.querySelectorAll('.gn-dd');
   var bar=document.querySelector('.gnav');
   /* place le panneau : sous sa rubrique, poussé vers la gauche s'il sortait
@@ -229,7 +232,10 @@ html{scroll-padding-top:58px}
   background:var(--surface);border-left:1px solid var(--rule);border-top:1px solid var(--rule);transform:rotate(45deg)}
 .gn-panel.gn-flip{left:auto;right:-9px}
 .gnav .gn-panel a{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:9px 12px;border-radius:7px;color:var(--ink-2)}
-.gnav .gn-panel a[aria-current="page"]::after{content:"";margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--fr)}
+/* une seule colonne d'étiquettes à droite (date, new, bientôt, Preview), le point de
+   la page en cours juste après son nom (13/11/2026) */
+.gnav .gn-panel .gn-new,.gnav .gn-panel .gn-soon,.gnav .gn-panel .gn-date{margin-left:auto;order:2}
+.gnav .gn-panel a[aria-current="page"]::after{order:1;content:"";margin-left:8px;width:6px;height:6px;border-radius:50%;background:var(--fr)}
 .gnav .gn-panel a.gn-sub{position:relative;padding-left:30px;font-size:13px}
 .gnav .gn-panel a.gn-sub::before{content:"";position:absolute;left:16px;top:6px;height:calc(50% - 6px);width:7px;border-left:1.5px solid var(--rule);border-bottom:1.5px solid var(--rule);border-bottom-left-radius:4px}
 .gnav .gn-panel .gn-date{margin-left:auto;font:600 10px "IBM Plex Mono",monospace;letter-spacing:.04em;padding:2px 6px;border-radius:4px;background:var(--fr-soft);color:var(--fr);white-space:nowrap}
@@ -243,7 +249,7 @@ html{scroll-padding-top:58px}
 /* page en cours : toute la ligne est surlignée, pas seulement le nom */
 .gnav .gn-panel .gn-ligne:has(> a[aria-current="page"]){border-radius:7px;background:color-mix(in srgb,var(--fr) 12%,transparent)}
 .gnav .gn-panel .gn-ligne > a[aria-current="page"]{background:none}
-.gnav .gn-panel a.gn-prev,.gnav nav a.gn-prev{flex:none;display:inline-flex;align-items:center;gap:6px;padding:4px 11px 4px 12px;margin-right:4px;border-radius:999px;
+.gnav .gn-panel a.gn-prev,.gnav nav a.gn-prev{flex:none;display:inline-flex;align-items:center;gap:6px;padding:4px 11px 4px 12px;margin-right:12px;border-radius:999px;
   background:var(--ink);color:var(--surface);font-size:12px;font-weight:700;line-height:1.2;box-shadow:var(--shadow);transition:background .15s}
 .gnav .gn-panel a.gn-prev span{transition:transform .15s}
 .gnav .gn-panel a.gn-prev:hover,.gnav nav a.gn-prev:hover{background:var(--fr);color:var(--surface)}
@@ -305,7 +311,7 @@ const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(
 /* Page annoncée : « bientôt » ; si un aperçu existe déjà, le bouton noir
    « Preview » de la page d'attente, qui mène droit à l'aperçu (13/11/2026). */
 const lien = (p, current, label = p.titre) => {
-  const a = `<a href="${p.url}"${p.key === current ? ' aria-current="page"' : ''}>${esc(label)}${p.aVenir && !p.aVenir.apercu ? '<span class="gn-soon">bientôt</span>' : ''}${p.nouveau ? '<span class="gn-new">new</span>' : ''}</a>`;
+  const a = `<a href="${p.url}"${p.key === current ? ' aria-current="page"' : ''}>${esc(label)}${p.aVenir && !p.aVenir.apercu ? '<span class="gn-soon">bientôt</span>' : ''}${estNouveau(p) ? `<span class="gn-new" data-fin="${finNouveau(p)}">new</span>` : ''}</a>`;
   return p.aVenir?.apercu ? `<span class="gn-ligne">${a}<a class="gn-prev" href="${p.aVenir.apercu}">Preview<span aria-hidden="true">→</span></a></span>` : a;
 };
 const toutes = r => r.pages.concat(...r.sous.map(toutes));
@@ -315,7 +321,7 @@ function rubrique(r, current) {
   const ici = pp.some(p => p.key === current) || (current === 'gazette' && pp.some(p => p.key === 'uefa'));
   const groupe = (s, niv) => `<div class="gn-grp"><span class="gn-grp-t">${esc(s.nom)}</span>`
     + s.pages.map(p => lien(p, current)).join('') + s.sous.map(x => groupe(x, niv + 1)).join('') + '</div>';
-  return `<details class="gn-dd"><summary${ici ? ' class="gn-ici"' : ''}>${esc(r.nom)}${pp.some(p => p.nouveau) ? '<i class="gn-new-pt" aria-hidden="true"></i>' : ''}</summary><div class="gn-panel">`
+  return `<details class="gn-dd"><summary${ici ? ' class="gn-ici"' : ''}>${esc(r.nom)}${pp.some(p => estNouveau(p)) ? `<i class="gn-new-pt" aria-hidden="true" data-fin="${pp.filter(p => estNouveau(p)).map(finNouveau).sort().pop()}"></i>` : ''}</summary><div class="gn-panel">`
     + r.pages.map(p => lien(p, current) + (p.key === 'uefa' ? sousGazette(current) : '')).join('') + r.sous.map(s => groupe(s, 1)).join('') + '</div></details>';
 }
 
