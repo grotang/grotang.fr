@@ -51,10 +51,18 @@ AUJ = dt.date.fromisoformat(os.environ['FORCE_DATE']) if os.environ.get('FORCE_D
 # ---- réglages (GT, 08/11/2026) ------------------------------------------------
 DEMI_VIE, FENETRE, PLAFOND, LAMBDA, BONUS_TAB = 365.0, 3 * 365, 3, 4.0, 0.5
 ECHELLE = 1.157     # 1 but d'écart de force = 1,157 unité du moteur de projection (backtest du 12/11/2026)
-# INDICE (GT, 12/11/2026) : 100 = le club moyen de la phase de ligue 2026/27 (moyenne des 108 clubs
-# des trois coupes, force propre ou, à défaut, celle de sa nation), GELÉ pour la saison : 1,192 but
-# (modèle du 13/11). 40 points = 1 but d'écart sur terrain neutre.
-BASE_INDICE, POINTS_PAR_BUT = 1.192, 40
+# INDICE (GT, 12/11/2026) : 100 = le club moyen de la phase de ligue de la saison (moyenne des 108 clubs
+# des trois coupes, force propre ou, à défaut, celle de sa nation) ; 40 points = 1 but d'écart sur terrain
+# neutre. Ce qui est GELÉ, c'est la LISTE des 108 clubs, pas une valeur en buts : le modèle ne mesure que
+# des écarts, son zéro est arbitraire et se déplace d'un bloc quand on change sa structure (+0,95 but pour
+# tous les clubs le 13/11 en ajoutant les clubs des autres nations). Rapporté aux mêmes 108 clubs, l'indice
+# d'un club ne bouge que si sa force bouge par rapport à eux. Calculé à chaque passage (BASE ci-dessous).
+POINTS_PAR_BUT = 40
+# CLUBS DES AUTRES NATIONS (GT, 13/11/2026) : hors des 10 nations, un club a sa propre force s'il a joué
+# au moins SEUIL_HORS10 matchs européens dans la fenêtre (3 ans), sinon il prend celle de sa nation.
+# Backtest (Claude outputs/elo/2026.11.13 test clubs hors 10 nations seuil.txt) : seuil 25 -> log-loss
+# 0,9488 contre 0,9525, au prix d'un léger recul sur les duels entre clubs des 10 nations (0,9132 contre 0,9107).
+SEUIL_HORS10 = 25
 LIGUES = {'ENG': 'Premier League', 'ITA': 'Serie A', 'ESP': 'La Liga', 'GER': 'Bundesliga', 'FRA': 'Ligue 1',
           'POR': 'Primeira Liga', 'BEL': 'Belgian Pro League', 'NED': 'Eredivisie', 'TUR': 'Süper Lig', 'GRE': 'Super League Greece'}
 AUTRES_TITRES = {'Belgian Pro League': ['Belgian First Division A']}
@@ -189,8 +197,13 @@ def norme(s):
     s = re.sub(r'\b(fc|cf|ac|sc|as|ss|ssc|afc|vfb|vfl|tsg|sv|sl|sk|fk|kv|krc|rsc|rc|ogc|aj|og|ud|cd|rcd|bv|club|de|del|la|le|d|ev|calcio|hotspur|united|city|football)\b', '', s)
     return re.sub(r'[^a-z0-9]', '', s)
 nouveaux_noms = []
+nb_eu = {}                                      # matchs européens de chaque club hors des 10 nations, dans la fenêtre
+for m in EU:
+    if 0 <= (AUJ - dt.date.fromisoformat(m[0])).days <= FENETRE:
+        for n, c in ((m[4], m[5]), (m[6], m[7])):
+            if c not in DIX: nb_eu[n] = nb_eu.get(n, 0) + 1
 def nom(n, nat):
-    if nat not in DIX: return 'NAT:' + nat
+    if nat not in DIX: return ('EU:' + n) if nb_eu.get(n, 0) >= SEUIL_HORS10 else 'NAT:' + nat
     if n in noms: return noms[n]
     cands = par_nat.get(nat, set()); nn = norme(n)
     if not cands: return n
@@ -229,7 +242,8 @@ for i, m in enumerate(EU):
 nat_de = {}
 for h, a, gd, w, dom, nh, na in M: nat_de.setdefault(h, nh); nat_de.setdefault(a, na)
 eq = sorted(nat_de); idx = {e: i for i, e in enumerate(eq)}
-li = {n: len(eq) + k for k, n in enumerate(DIX)}; H = len(eq) + len(DIX); P = H + 1
+LIG = DIX + sorted({nat_de[e] for e in eq if e.startswith('EU:')})    # niveau de ligue : les 10 + les nations qui ont des clubs « EU: »
+li = {n: len(eq) + k for k, n in enumerate(LIG)}; H = len(eq) + len(LIG); P = H + 1
 A = [[0.0] * P for _ in range(P)]; b = [0.0] * P
 for h, a, gd, w, dom, nh, na in M:
     x = {}
@@ -293,33 +307,44 @@ force = {e: beta[idx[e]] + (beta[li[nat_de[e]]] if nat_de[e] in li else 0) for e
 clubs, manque = {}, []
 for m in SEM:
     for n, c in ((m[4], m[5]), (m[6], m[7])):
+        k = nom(n, c)
         if c in DIX:
-            k = nom(n, c)
             if k in force: clubs[n] = round(force[k], 4)
             else: manque.append(n)
+        elif k.startswith('EU:') and k in force: clubs[n] = round(force[k], 4)
 if manque: alerte('clubs sans force propre (ils prennent celle de leur nation) : ' + ', '.join(sorted(set(manque))))
 nations = {e[4:]: round(v, 4) for e, v in force.items() if e.startswith('NAT:')}
 for c in DIX:
     v = [force[k] for k in force if nat_de.get(k) == c]; nations[c] = round(sum(v) / len(v), 4)
+for c in LIG:                                   # nation dont tous les clubs passés par l'Europe ont une force propre
+    if c not in nations: nations[c] = round(beta[li[c]], 4)
+# clubs des autres nations à force propre : [nom de la source, nation, force, matchs européens sur 3 ans]
+hors10 = sorted([[e[3:], nat_de[e], round(force[e], 4), nb_eu.get(e[3:], 0)] for e in force if e.startswith('EU:')], key=lambda x: -x[2])
 # les clubs de 1re division de la saison (la dernière saison lue de chaque ligue), pour la page
 # /football-force-des-clubs/ : [nom Wikipédia, nation, force en buts], du plus fort au plus faible
 derniere = {}
 for nat, sa, gi, h, a, bh, ba, d in archive: derniere[nat] = max(derniere.get(nat, ''), sa)
 champ = {(nat, e) for nat, sa, gi, h, a, bh, ba, d in archive if sa == derniere[nat] for e in (h, a)}
 championnats = sorted([[e, nat, round(force[e], 4)] for nat, e in champ if e in force], key=lambda x: -x[2])
+# base de l'indice : les clubs de la phase de ligue de la saison en cours (étapes 0 à 7 du calendrier SEM)
+phase_ligue = {(n, c) for m in SEM if isinstance(m[3], int) and m[3] < 8 and sai(m[0]) == y_cours for n, c in ((m[4], m[5]), (m[6], m[7]))}
+fl = [force.get(nom(n, c), nations.get(c)) for n, c in phase_ligue]
+fl = [v for v in fl if v is not None]
+if len(phase_ligue) < 100: alerte(f'phase de ligue : {len(phase_ligue)} clubs trouvés (108 attendus) pour la base de l\'indice')
+BASE_INDICE = round(sum(fl) / len(fl), 4) if fl else 0.0
 indice = lambda v: round(100 + POINTS_PAR_BUT * (v - BASE_INDICE), 1)
 json.dump({'date': AUJ.isoformat(), 'alertes': ALERTES, 'fraicheur': fraicheur, 'echelle': ECHELLE, 'avantage_terrain': round(beta[H], 3),
            'base_indice': BASE_INDICE, 'points_par_but': POINTS_PAR_BUT,
            'clubs': dict(sorted(clubs.items())), 'nations': dict(sorted(nations.items())),
-           'championnats': championnats, 'promus': sorted(promus)},
+           'championnats': championnats, 'promus': sorted(promus), 'seuil_hors10': SEUIL_HORS10, 'hors10': hors10},
           open(SORTIE, 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
 json.dump(archive, open(ARCHIVE, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
 # historique : une entrée par semaine (le lundi), réécrite si le robot repasse dans la semaine
 histo = json.load(open(HISTO, encoding='utf-8')) if os.path.exists(HISTO) else {}
-histo[(AUJ - dt.timedelta(days=AUJ.weekday())).isoformat()] = {e: indice(v) for e, nat, v in championnats}
+histo[(AUJ - dt.timedelta(days=AUJ.weekday())).isoformat()] = {**{e: indice(v) for e, nat, v in championnats}, **{'EU:' + e: indice(v) for e, nat, v, k in hors10}}
 histo = dict(sorted(histo.items())[-60:])
 json.dump(histo, open(HISTO, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'), sort_keys=True)
 json.dump(dict(sorted(noms.items())), open(NOMS, 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
 print(f'{len(M)} matchs, {len(eq)} équipes, avantage du terrain {beta[H]:.2f} but')
-print('top 5 (indice) :', ', '.join(f'{n} {indice(v)}' for n, nat, v in championnats[:5]), f'· {len(championnats)} clubs, {len(promus)} promus')
+print('top 5 (indice) :', ', '.join(f'{n} {indice(v)}' for n, nat, v in championnats[:5]), f'· {len(championnats)} clubs, {len(promus)} promus, {len(hors10)} clubs d\'autres nations')
 if nouveaux_noms: print('noms rapprochés automatiquement :', '; '.join(nouveaux_noms))

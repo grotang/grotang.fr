@@ -55,6 +55,7 @@ export function buildForce() {
   const D = JSON.parse(entre(src, '/*DATA_START*/const D = ', ';/*DATA_END*/'));
   const P = JSON.parse(entre(src, '/*PRJ_START*/const PRJ = ', ';/*PRJ_END*/'));
   const NOMCLUB = JSON.parse(entre(src, '/*NOMS_START*/const NOMCLUB = ', ';/*NOMS_END*/') || '{}');
+  const FRNAME = (() => { const m = /const FRNAME = (\{[^\n]*?\});/.exec(src); return m ? Function(`return (${m[1]});`)() : {}; })();
 
   const B = FC.base_indice, K = FC.points_par_but;
   const ix = f => Math.round((100 + K * (f - B)) * 10) / 10;
@@ -69,23 +70,27 @@ export function buildForce() {
   /* semaine en cours et précédente dans l'historique */
   const sems = Object.keys(H).sort(), semCour = sems.at(-1), semPrec = sems.length > 1 ? sems.at(-2) : null;
   const promus = new Set(FC.promus || []);
-  const clubs = FC.championnats.map(([w, nat, f], i) => {
-    const e = effW[w];
-    const av = semPrec && H[semPrec][w] != null ? H[semPrec][w] : null;
-    return { rang: i + 1, nom: nomW(w), nat, ix: ix(f), coupe: e ? e.coupe : null, promu: promus.has(w) || undefined, av };
-  });
+  /* clubs des autres nations à force propre (≥ seuil de matchs européens, 13/11/2026) : coupe lue dans D.eff */
+  const effS = {}; for (const [c, L] of Object.entries(D.eff || {})) if (!DIX.includes(c)) for (const r of L) effS[r[0]] = COUPE[r[1]];
+  const avant = k => semPrec && H[semPrec][k] != null ? H[semPrec][k] : null;
+  const clubs = [
+    ...FC.championnats.map(([w, nat, f]) => ({ f, nom: nomW(w), nat, ix: ix(f), coupe: effW[w] ? effW[w].coupe : null, promu: promus.has(w) || undefined, av: avant(w) })),
+    ...(FC.hors10 || []).map(([s, nat, f, k]) => ({ f, nom: fr(s), nat, ix: ix(f), coupe: effS[s] || null, eu: k, av: avant('EU:' + s) })),
+  ].sort((a, b) => b.f - a.f).map((c, i) => { delete c.f; return { rang: i + 1, ...c }; });
   const forceDe = (w, e) => FC.clubs[e.s] ?? FC.nations[e.nat];
   const contingents = Object.entries(effW).map(([w, e]) => ({ nom: nomW(w), nat: e.nat, coupe: e.coupe, pts: e.pts, lp: lp.has(e.s), ix: ix(forceDe(w, e)) }));
   const ligue = {}; for (const c of DIX) { const v = FC.championnats.filter(x => x[1] === c).map(x => x[2]); if (v.length) ligue[c] = ix(v.reduce((a, b) => a + b, 0) / v.length); }
   const dans = new Set(FC.championnats.map(x => x[0]));
   const comparateur = [...FC.championnats.map(([w, nat, f]) => [nomW(w), nat, f]),
-    ...Object.entries(effW).filter(([w, e]) => !dans.has(w) && FC.clubs[e.s] != null).map(([w, e]) => [nomW(w), e.nat, FC.clubs[e.s]])]
+    ...Object.entries(effW).filter(([w, e]) => !dans.has(w) && FC.clubs[e.s] != null).map(([w, e]) => [nomW(w), e.nat, FC.clubs[e.s]]),
+    ...(FC.hors10 || []).map(([s, nat, f]) => [fr(s), nat, f])]
     .sort((a, b) => a[0].localeCompare(b[0], 'fr'));
   const FD = { date: FC.date, semPrec, pts_but: K, echelle: FC.echelle, terrain: Math.round(FC.avantage_terrain * 100) / 100,
+    nnoms: Object.fromEntries([...new Set((FC.hors10 || []).map(x => x[1]))].map(c => [c, FRNAME[c] || c])), seuil: FC.seuil_hors10 || null, nb10: FC.championnats.length,
     ordre: DIX, top8: ['FRA', ...(D.nations || []).slice(0, 8).map(n => n.c).filter(c => c !== 'FRA')].slice(0, 8), clubs, contingents, ligue, comparateur, defaut: [nomW('Paris Saint-Germain FC'), nomW('Arsenal FC')] };
 
   const titre = 'La force des clubs de football européens : classement et indice chaque semaine';
-  const desc = `Le niveau réel de ${clubs.length} clubs des 10 premiers championnats européens, mesuré sur trois saisons de championnat et de coupes d'Europe. Mis à jour chaque lundi.`;
+  const desc = `Le niveau réel de ${clubs.length} clubs européens, mesuré sur trois saisons de championnat et de coupes d'Europe. Mis à jour chaque lundi.`;
   const jsonld = JSON.stringify({
     '@context': 'https://schema.org', '@type': 'Dataset', name: titre, description: desc, url: abs(KEY),
     inLanguage: 'fr', isAccessibleForFree: true, dateModified: FC.date,

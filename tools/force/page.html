@@ -140,7 +140,7 @@ td.td.up{color:var(--good)} td.td.dn{color:var(--bad)}
 <script>
 (function(){
 /*DATA_START*/const FD = null;/*DATA_END*/
-const NOMS = {ENG:'Angleterre',ITA:'Italie',ESP:'Espagne',GER:'Allemagne',FRA:'France',POR:'Portugal',BEL:'Belgique',NED:'Pays-Bas',TUR:'Turquie',GRE:'Grèce'};
+const NOMS = {ENG:'Angleterre',ITA:'Italie',ESP:'Espagne',GER:'Allemagne',FRA:'France',POR:'Portugal',BEL:'Belgique',NED:'Pays-Bas',TUR:'Turquie',GRE:'Grèce', ...FD.nnoms};
 const ORDRE = FD.ordre;
 const SLOT = {}; FD.top8.forEach((c, i) => SLOT[c] = '--n' + (i + 1));
 const kNom = c => c === 'FRA' ? 'var(--fr)' : SLOT[c] ? `var(${SLOT[c]})` : 'var(--ink-3)';
@@ -150,20 +150,20 @@ const butsTxt = ix => { const g = (ix - 100) / FD.pts_but; return (g >= 0 ? '+' 
 const cp = c => c ? `<i class="cp ${c}">${c}</i>` : '<i class="cp non">—</i>';
 const MAXI = 190, MINI = 40, pos = ix => Math.max(0, Math.min(100, (ix - MINI) / (MAXI - MINI) * 100));
 const dJ = FD.date.split('-').reverse().join('/');
-document.getElementById('maj').innerHTML = `Données au <b>${dJ}</b> · mise à jour chaque lundi · ${FD.clubs.length} clubs notés : les championnats des 10 premières nations du coefficient UEFA`;
+document.getElementById('maj').innerHTML = `Données au <b>${dJ}</b> · mise à jour chaque lundi · ${FD.clubs.length} clubs notés : les ${FD.nb10} clubs des championnats des 10 premières nations du coefficient UEFA${FD.clubs.length > FD.nb10 ? ` et les ${FD.clubs.length - FD.nb10} clubs des autres nations qui ont joué au moins ${FD.seuil} matchs européens en trois saisons` : ''}`;
 /* bloc 1 */
 const s1 = document.getElementById('f1n');
-s1.innerHTML = '<option value="">Toutes</option>' + ORDRE.map(c => `<option value="${c}">${NOMS[c]}</option>`).join('');
+s1.innerHTML = '<option value="">Toutes</option>' + ORDRE.map(c => `<option value="${c}">${NOMS[c]}</option>`).join('') + (FD.clubs.length > FD.nb10 ? '<option value="autres">Autres nations</option>' : '');
 let m1 = 'tous';
 const sem = c => { if (c.av == null) return '<td class="td">·</td>'; const d = c.ix - c.av; if (Math.abs(d) < 0.5) return '<td class="td">=</td>'; return `<td class="td ${d > 0 ? 'up' : 'dn'}">${d > 0 ? '▲' : '▼'} ${dec(Math.abs(d), 0)}</td>`; };
 function t1(){
   const n = s1.value;
-  let L = FD.clubs.filter(c => (!n || c.nat === n) && (m1 === 'tous' || c.coupe));
+  let L = FD.clubs.filter(c => (!n || (n === 'autres' ? c.eu : c.nat === n)) && (m1 === 'tous' || c.coupe));
   if (!n) L = L.slice(0, 30);
   const ADJ = {ENG:'anglais',ITA:'italiens',ESP:'espagnols',GER:'allemands',FRA:'français',POR:'portugais',BEL:'belges',NED:'néerlandais',TUR:'turcs',GRE:'grecs'};
   const DE = {ENG:"d'Angleterre",ITA:"d'Italie",ESP:"d'Espagne",GER:"d'Allemagne",FRA:'de France',POR:'du Portugal',BEL:'de Belgique',NED:'des Pays-Bas',TUR:'de Turquie',GRE:'de Grèce'};
-  document.getElementById('r1').textContent = n ? `Les ${L.length} clubs ${m1 === 'eu' ? ADJ[n] + ' engagés en Europe' : 'du championnat ' + DE[n]}.` : `Les 30 clubs les plus forts${m1 === 'eu' ? ' parmi les engagés en Europe' : ''}.`;
-  document.getElementById('t1').innerHTML = L.map(c => `<tr class="${c.nat === 'FRA' ? 'fr' : ''}"><td class="rg">${c.rang}</td><td class="club">${c.nom}${c.promu ? '<span class="promu" title="Promu cette saison : son point de départ est le niveau moyen des promus de sa ligue">promu</span>' : ''}</td><td class="nation" style="${styleNom(c.nat)}"><i style="background:${kNom(c.nat)}"></i><span class="long">${NOMS[c.nat]}</span><span class="court">${c.nat}</span></td><td>${cp(c.coupe)}</td><td class="ix">${Math.round(c.ix)}</td><td class="bar"><div class="barre"><i style="width:${pos(c.ix)}%;--nc:${kNom(c.nat)}"></i><b style="left:${pos(100)}%"></b></div></td><td class="but">${butsTxt(c.ix)}</td>${sem(c)}</tr>`).join('');
+  document.getElementById('r1').textContent = n === 'autres' ? `Les ${L.length} clubs des autres nations${m1 === 'eu' ? ' engagés en Europe' : ''}, notés sur leurs seuls matchs européens.` : n ? `Les ${L.length} clubs ${m1 === 'eu' ? ADJ[n] + ' engagés en Europe' : 'du championnat ' + DE[n]}.` : `Les 30 clubs les plus forts${m1 === 'eu' ? ' parmi les engagés en Europe' : ''}.`;
+  document.getElementById('t1').innerHTML = L.map(c => `<tr class="${c.nat === 'FRA' ? 'fr' : ''}"><td class="rg">${c.rang}</td><td class="club">${c.nom}${c.promu ? '<span class="promu" title="Promu cette saison : son point de départ est le niveau moyen des promus de sa ligue">promu</span>' : ''}${c.eu && n !== 'autres' ? `<span class="promu" title="Force tirée de ses ${c.eu} matchs européens des trois dernières saisons : son championnat n'est pas suivi">Europe seulement</span>` : ''}</td><td class="nation" style="${styleNom(c.nat)}"><i style="background:${kNom(c.nat)}"></i><span class="long">${NOMS[c.nat]}</span><span class="court">${c.nat}</span></td><td>${cp(c.coupe)}</td><td class="ix">${Math.round(c.ix)}</td><td class="bar"><div class="barre"><i style="width:${pos(c.ix)}%;--nc:${kNom(c.nat)}"></i><b style="left:${pos(100)}%"></b></div></td><td class="but">${butsTxt(c.ix)}</td>${sem(c)}</tr>`).join('');
 }
 document.querySelectorAll('#f1 button').forEach(b => b.onclick = () => { document.querySelectorAll('#f1 button').forEach(x => x.classList.toggle('on', x === b)); m1 = b.dataset.v; t1(); });
 s1.onchange = t1; t1();
