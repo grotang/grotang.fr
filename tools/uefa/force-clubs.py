@@ -92,6 +92,14 @@ def facteur(k, p):
 # poids d'un match européen (GT, 12/11/2026 ; backtest neutre : log-loss 0,9526 contre 0,9524) :
 # qualifications ×1,5 ; phase de groupes / de ligue ×3 ; barrages KO ×3, 8es ×4, quarts ×5, demies ×6, finale ×8
 def poids_europe(etape): return 1.5 if isinstance(etape, str) else 3.0 if etape < 8 else {8: 3.0, 9: 4.0, 10: 5.0, 11: 6.0}.get(etape, 8.0)
+# poids de la COMPÉTITION (GT, 13/11/2026), en plus du poids du tour : la C1 est le sommet, et sa phase
+# finale montre la vraie hiérarchie (les clubs y jouent à pleine puissance ; la phase de ligue sert surtout
+# à se qualifier). C1 ×1,5 ; phase finale de C1 (barrages KO → finale) ×1,5 de plus, soit ×2,25 ; C3 et C4 ×1.
+# Backtest (Claude outputs/elo/2026.11.13 test poids C1.txt) : phase finale 0,9879 contre 0,9953 et
+# janvier-mai 0,9449 contre 0,9503 (meilleur dans 97-98 % des tirages), total inchangé (0,9481).
+def poids_competition(comp, etape):
+    if comp != 0: return 1.0
+    return 1.5 * (1.5 if isinstance(etape, int) and etape >= 8 else 1.0)
 def canon(x): return re.sub(r'\s+', ' ', x.replace('.', '')).strip()
 # Un club dont Wikipédia change le nom d'une saison à l'autre deviendrait deux clubs (et un faux
 # promu). Ancien nom -> nom retenu ; appliqué aux grilles lues ET à l'archive. Vérifié le 13/11/2026 :
@@ -261,7 +269,7 @@ for i, m in enumerate(EU):
     if dt.date.fromisoformat(m[0]) > AUJ: w = 0
     if w > 0:
         M.append((nom(m[4], m[5]), nom(m[6], m[7]), max(-PLAFOND, min(PLAFOND, m[8] - m[9])) + bonus.get(i, 0),
-                  poids_europe(m[3]) * w, 0 if m[3] == 12 else 1, m[5], m[7]))
+                  poids_europe(m[3]) * poids_competition(m[2], m[3]) * w, 0 if m[3] == 12 else 1, m[5], m[7]))
 
 # ---- 4. résolution : moindres carrés pondérés + retenue ---------------------------
 nat_de = {}
