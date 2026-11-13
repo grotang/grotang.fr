@@ -27,6 +27,23 @@ const entre = (src, a, b) => { const i = src.indexOf(a); if (i < 0) return null;
 const DIX = ['ENG', 'ITA', 'ESP', 'GER', 'FRA', 'POR', 'BEL', 'NED', 'TUR', 'GRE'];
 
 /* nom affiché d'un club connu seulement par son nom Wikipédia (club sans match européen) */
+/* noms français des clubs sans passé européen récent (absents de NOMCLUB), relus un par un le 13/11/2026 */
+const NOMS_FR = {
+  'Paris FC': 'Paris FC', 'Frosinone Calcio': 'Frosinone', 'SV Elversberg': 'Elversberg', 'Deportivo de A Coruña': 'Deportivo La Corogne',
+  'Amed SFK': 'Amedspor', 'US Sassuolo Calcio': 'Sassuolo', 'Cagliari Calcio': 'Cagliari', 'Udinese Calcio': 'Udinese', 'Parma Calcio 1913': 'Parme',
+  'US Lecce': 'Lecce', 'SC Paderborn 07': 'Paderborn', 'Hamburger SV': 'Hambourg', 'Le Havre AC': 'Le Havre', 'ES Troyes AC': 'Troyes',
+  'AC Monza': 'Monza', 'Venezia FC': 'Venise', 'SV Werder Bremen': 'Werder Brême', 'FC Augsburg': 'Augsbourg', 'Levante UD': 'Levante',
+  'RCD Espanyol': 'Espanyol', 'Racing de Santander': 'Racing Santander', 'AJ Auxerre': 'Auxerre', 'Angers SCO': 'Angers',
+  'GD Estoril Praia': 'Estoril', 'CD Santa Clara': 'Santa Clara', 'CD Nacional': 'Nacional', 'CF Estrela da Amadora': 'Estrela da Amadora',
+  'Casa Pia AC': 'Casa Pia', 'CS Marítimo': 'Marítimo', 'FC Arouca': 'Arouca', 'Gil Vicente FC': 'Gil Vicente', 'KV Mechelen': 'Malines',
+  'KVC Westerlo': 'Westerlo', 'Oud-Heverlee Leuven': 'OH Louvain', 'SV Zulte Waregem': 'Zulte Waregem', 'RAAL La Louvière': 'La Louvière',
+  'SK Beveren': 'Beveren', 'KV Kortrijk': 'Courtrai', 'Lommel SK': 'Lommel', 'SC Heerenveen': 'Heerenveen', 'FC Utrecht': 'Utrecht',
+  'SC Telstar': 'Telstar', 'SC Cambuur': 'Cambuur', 'Excelsior Rotterdam': 'Excelsior', 'Willem II (football club)': 'Willem II',
+  'Iraklis FC (Thessaloniki)': 'Iraklis Salonique', 'Kalamata FC': 'Kalamata', 'AE Kifisia FC': 'Kifisia', 'Asteras Tripolis FC': 'Asteras Tripolis',
+  'Panetolikos FC': 'Panetolikos', 'Volos FC': 'Volos', 'Atromitos FC': 'Atromitos', 'Levadiakos FC': 'Levadiakos', 'Aris Thessaloniki FC': 'Aris Salonique',
+  'Çorum FK': 'Çorum', 'Erzurumspor FK': 'Erzurumspor', 'Gaziantep FK': 'Gaziantep', 'Kasımpaşa SK': 'Kasımpaşa', 'Göztepe SK': 'Göztepe',
+  'Le Mans FC': 'Le Mans', 'Toulouse FC': 'Toulouse FC', 'Málaga CF': 'Málaga', 'RC Strasbourg Alsace': 'RC Strasbourg', 'Genoa CFC': 'Genoa',
+};
 const propre = w => w.replace(/\s*\([^)]*\)/g, '').replace(/\s+(FC|F\.C\.|CF|SFK|FK|JK|SK|BC|AFC)$/, '').replace(/^(FC|AFC|1 FC|1 FSV)\s+/, '').trim();
 
 export function buildForce() {
@@ -41,30 +58,31 @@ export function buildForce() {
 
   const B = FC.base_indice, K = FC.points_par_but;
   const ix = f => Math.round((100 + K * (f - B)) * 10) / 10;
-  const source = {}; for (const [s, w] of Object.entries(NOMS_WIKI)) if (!(w in source)) source[w] = s;   // Wikipédia -> source
   const fr = s => NOMCLUB[s] || s;
   /* engagés en Europe cette saison (10 nations) : coupe atteinte et points de coefficient (D.eff),
-     présence en phase de ligue (PRJ.clubs) */
-  const COUPE = ['C1', 'C3', 'C4'], eff = {}, lp = new Set((P.clubs || []).map(c => c[0]));
-  for (const c of DIX) for (const r of (D.eff || {})[c] || []) eff[r[0]] = { nat: c, coupe: COUPE[r[1]], pts: r[3] };
-
+     présence en phase de ligue (PRJ.clubs). Rangés par nom WIKIPÉDIA : la source a parfois deux
+     graphies pour un même club (« Olympique Lyon » et « Olympique Lyonnais »), toutes deux
+     rattachées au même nom dans force-noms.json — on part donc toujours de la graphie de D.eff. */
+  const COUPE = ['C1', 'C3', 'C4'], effW = {}, lp = new Set((P.clubs || []).map(c => c[0]));
+  for (const c of DIX) for (const r of (D.eff || {})[c] || []) effW[NOMS_WIKI[r[0]] ?? r[0]] = { s: r[0], nat: c, coupe: COUPE[r[1]], pts: r[3] };
+  const nomW = w => NOMS_FR[w] || (effW[w] && fr(effW[w].s)) || (NOMCLUB[Object.keys(NOMS_WIKI).find(k => NOMS_WIKI[k] === w && NOMCLUB[k])]) || propre(w);
   /* semaine en cours et précédente dans l'historique */
   const sems = Object.keys(H).sort(), semCour = sems.at(-1), semPrec = sems.length > 1 ? sems.at(-2) : null;
   const promus = new Set(FC.promus || []);
   const clubs = FC.championnats.map(([w, nat, f], i) => {
-    const s = source[w], e = s && eff[s];
+    const e = effW[w];
     const av = semPrec && H[semPrec][w] != null ? H[semPrec][w] : null;
-    return { rang: i + 1, nom: s ? fr(s) : propre(w), nat, ix: ix(f), coupe: e ? e.coupe : null, promu: promus.has(w) || undefined, av };
+    return { rang: i + 1, nom: nomW(w), nat, ix: ix(f), coupe: e ? e.coupe : null, promu: promus.has(w) || undefined, av };
   });
-  const contingents = Object.entries(eff).map(([s, e]) => ({ nom: fr(s), nat: e.nat, coupe: e.coupe, pts: e.pts, lp: lp.has(s),
-    ix: ix(FC.clubs[s] ?? FC.nations[e.nat]) }));
+  const forceDe = (w, e) => FC.clubs[e.s] ?? FC.nations[e.nat];
+  const contingents = Object.entries(effW).map(([w, e]) => ({ nom: nomW(w), nat: e.nat, coupe: e.coupe, pts: e.pts, lp: lp.has(e.s), ix: ix(forceDe(w, e)) }));
   const ligue = {}; for (const c of DIX) { const v = FC.championnats.filter(x => x[1] === c).map(x => x[2]); if (v.length) ligue[c] = ix(v.reduce((a, b) => a + b, 0) / v.length); }
-  const dans = new Set(clubs.map(c => c.nom));
-  const comparateur = [...FC.championnats.map(([w, nat, f]) => [source[w] ? fr(source[w]) : propre(w), nat, f]),
-    ...Object.entries(eff).filter(([s]) => !dans.has(fr(s)) && FC.clubs[s] != null).map(([s, e]) => [fr(s), e.nat, FC.clubs[s]])]
+  const dans = new Set(FC.championnats.map(x => x[0]));
+  const comparateur = [...FC.championnats.map(([w, nat, f]) => [nomW(w), nat, f]),
+    ...Object.entries(effW).filter(([w, e]) => !dans.has(w) && FC.clubs[e.s] != null).map(([w, e]) => [nomW(w), e.nat, FC.clubs[e.s]])]
     .sort((a, b) => a[0].localeCompare(b[0], 'fr'));
   const FD = { date: FC.date, semPrec, pts_but: K, echelle: FC.echelle, terrain: Math.round(FC.avantage_terrain * 100) / 100,
-    ordre: DIX, top8: ['FRA', ...(D.nations || []).slice(0, 8).map(n => n.c).filter(c => c !== 'FRA')].slice(0, 8), clubs, contingents, ligue, comparateur, defaut: [fr('Paris Saint-Germain'), fr('Arsenal FC')] };
+    ordre: DIX, top8: ['FRA', ...(D.nations || []).slice(0, 8).map(n => n.c).filter(c => c !== 'FRA')].slice(0, 8), clubs, contingents, ligue, comparateur, defaut: [nomW('Paris Saint-Germain FC'), nomW('Arsenal FC')] };
 
   const titre = 'La force des clubs de football européens : classement et indice chaque semaine';
   const desc = `Le niveau réel de ${clubs.length} clubs des 10 premiers championnats européens, mesuré sur trois saisons de championnat et de coupes d'Europe. Mis à jour chaque lundi.`;

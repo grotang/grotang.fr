@@ -105,7 +105,7 @@ td.td.up{color:var(--good)} td.td.dn{color:var(--bad)}
 
   <section class="bloc" id="classement">
     <h2><span class="no-bloc">1</span>Le classement</h2>
-    <p class="recit">Les 30 clubs les plus forts. Un club à 140 bat le club européen moyen d'un but en moyenne ; à 180, de deux buts.</p>
+    <p class="recit"><span id="r1">Les 30 clubs les plus forts.</span> Un club à 140 bat le club européen moyen d'un but en moyenne ; à 180, de deux buts.</p>
     <div class="filtres">
       <span class="lb">Clubs</span><span class="seg" id="f1"><button class="on" data-v="tous">Tous</button><button data-v="eu">Engagés en Europe</button></span>
       <span class="lb">Nation</span><select class="sel" id="f1n" aria-label="Nation"></select>
@@ -132,7 +132,7 @@ td.td.up{color:var(--good)} td.td.dn{color:var(--bad)}
     <div class="filtres"><span class="lb">Terrain</span><span class="seg" id="f3"><button data-v="1" class="on">Chez A</button><button data-v="0">Neutre</button><button data-v="-1">Chez B</button></span></div>
     <div class="res" id="res"></div><div class="res-leg" id="resl"></div>
     <p class="ecart" id="ec"></p>
-    <p class="pied">Sur les matchs européens de 2025/26 et 2026/27, que le modèle n'avait pas vus, le favori désigné a gagné 62 % des duels entre clubs des 10 premières nations. Un match reste un match.</p>
+    <p class="pied">Sur les matchs européens de 2025/26 et 2026/27, que le modèle n'avait pas vus, le favori désigné a gagné 61 % des duels entre clubs des 10 premières nations. Un match reste un match.</p>
   </section>
   <div class="bulle" id="bulle"></div>
 <!--PIED-->
@@ -160,6 +160,9 @@ function t1(){
   const n = s1.value;
   let L = FD.clubs.filter(c => (!n || c.nat === n) && (m1 === 'tous' || c.coupe));
   if (!n) L = L.slice(0, 30);
+  const ADJ = {ENG:'anglais',ITA:'italiens',ESP:'espagnols',GER:'allemands',FRA:'français',POR:'portugais',BEL:'belges',NED:'néerlandais',TUR:'turcs',GRE:'grecs'};
+  const DE = {ENG:"d'Angleterre",ITA:"d'Italie",ESP:"d'Espagne",GER:"d'Allemagne",FRA:'de France',POR:'du Portugal',BEL:'de Belgique',NED:'des Pays-Bas',TUR:'de Turquie',GRE:'de Grèce'};
+  document.getElementById('r1').textContent = n ? `Les ${L.length} clubs ${m1 === 'eu' ? ADJ[n] + ' engagés en Europe' : 'du championnat ' + DE[n]}.` : `Les 30 clubs les plus forts${m1 === 'eu' ? ' parmi les engagés en Europe' : ''}.`;
   document.getElementById('t1').innerHTML = L.map(c => `<tr class="${c.nat === 'FRA' ? 'fr' : ''}"><td class="rg">${c.rang}</td><td class="club">${c.nom}${c.promu ? '<span class="promu" title="Promu cette saison : son point de départ est le niveau moyen des promus de sa ligue">promu</span>' : ''}</td><td class="nation" style="${styleNom(c.nat)}"><i style="background:${kNom(c.nat)}"></i><span class="long">${NOMS[c.nat]}</span><span class="court">${c.nat}</span></td><td>${cp(c.coupe)}</td><td class="ix">${Math.round(c.ix)}</td><td class="bar"><div class="barre"><i style="width:${pos(c.ix)}%;--nc:${kNom(c.nat)}"></i><b style="left:${pos(100)}%"></b></div></td><td class="but">${butsTxt(c.ix)}</td>${sem(c)}</tr>`).join('');
 }
 document.querySelectorAll('#f1 button').forEach(b => b.onclick = () => { document.querySelectorAll('#f1 button').forEach(x => x.classList.toggle('on', x === b)); m1 = b.dataset.v; t1(); });
