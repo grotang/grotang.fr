@@ -178,7 +178,7 @@ table.g tr:hover td{background:var(--surface-2)}
 table.g tr.fr:hover td{background:color-mix(in srgb,var(--fr-soft) 80%,var(--fr))}
 .plus{font:600 13px Carlito,sans-serif;color:var(--ink-2);margin-top:10px;cursor:pointer}
 table.g .co,table.g .cox{display:none}
-@media (max-width:560px){table.g .lo{display:none} table.g .co{display:inline} table.g .cox{display:table-cell} table.g .mob{display:none} table.g td.p{width:34px} table.g td.cl{max-width:104px;overflow:hidden;text-overflow:ellipsis} table.g th{letter-spacing:0} table.g{font-size:13px} table.g td.cl u{display:none} table.g td,table.g th{padding-left:4px;padding-right:4px} table.g .pf1,table.g tr.grp th.pf{padding-left:7px}}
+/* téléphone : le tableau complet, toutes colonnes, qui défile à l'horizontale ; le club reste collé à gauche (GT, 15/11/2026) */
 /* France */
 .hist .ct{font:700 13px Carlito,sans-serif;margin-bottom:8px}
 .hist .r{display:grid;grid-template-columns:86px 1fr 46px;align-items:center;gap:8px;margin:3px 0;font:13px Carlito,sans-serif;color:var(--ink-2)}
@@ -254,7 +254,7 @@ table.g i.cp{display:inline-block;min-width:24px;text-align:center;font:600 10.5
 :root[data-theme="dark"] table.g i.cp{color:#0B0F14}
 table.g td.vide{text-align:left;color:var(--ink-3);padding:14px 6px}
 /* téléphone : la nation passe en carré devant le club (la colonne ne tient pas), noms longs coupés */
-@media (max-width:560px){table.g td.rg,table.g th.rg,table.g td.nation,table.g th.nat{display:none} table.g td.club i.sq{display:inline-block} table.g td.club .nm{display:inline-block;max-width:calc(100% - 16px);overflow:hidden;text-overflow:ellipsis;vertical-align:bottom} table.g tr.grp{display:none} table.g{table-layout:fixed} table.g th.clh{width:34%} table.g th.cph{width:13%} table.g td.club{overflow:hidden;white-space:nowrap} table.g th{letter-spacing:0;padding-left:2px;padding-right:2px} table.g td{padding-left:2px;padding-right:2px}}
+@media (max-width:560px){.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -12px;padding:0 12px} table.g{min-width:820px;font-size:13.5px} table.g td.club,table.g th.clh{position:sticky;left:0;z-index:2;background:var(--surface);box-shadow:inset -1px 0 0 var(--rule-soft)} table.g tr.fr td.club{background:var(--fr-soft)} table.g td.rg,table.g th.rg{display:none} table.g td.nation{width:1%} table.g th.clh,table.g td.club{width:118px;max-width:118px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 /* bloc 2 : survol */
 .sw{position:relative}
 .sw .fp{transition:opacity .12s}
