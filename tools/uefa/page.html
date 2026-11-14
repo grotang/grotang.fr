@@ -2063,7 +2063,7 @@ const pcP = x => x >= .995 ? '>99%' : x < .005 ? '<1%' : Math.round(x * 100) + '
   function contenu(t){
     const P = pk(), { CAL, KO, QUAL, AFF } = P;
     const [ks, js] = t.split(':'), k = +ks, L = AFF[t] || [];
-    kP = P === CUR_P && js[0] !== 'q' && +js < 8 ? k : null;   // probas : saison en cours, phase de ligue
+    kP = P === CUR_P && js[0] !== 'q' ? k : null;   // probas : saison en cours, phase de ligue et phase finale (C25)
     let titre, quand, a = null, r = null, futur, legs = null, vide;
     if (js[0] === 'q') { const [lab, a1, r1] = QUAL[k][+js.slice(1)]; a = a1; r = r1;
       titre = QLABL[lab]; quand = `${frDate(a)} et ${frDate(r)}`; futur = !passe(a);
@@ -3219,9 +3219,12 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
   const PRJc = typeof PRJ !== 'undefined' && PRJ ? PRJ : null, prjClubs = !!(PRJc && PRJc.modele === 'clubs');
   const PSx = typeof PSEM !== 'undefined' && PSEM ? PSEM : {};
   const deux = iB >= 0 && iB <= lastW && (prjClubs || !!(PSx.c && Object.keys(PSx.c).length));
+  /* saisons suivantes (C25, 14/11/2026) : la bascule n'est pas dans la saison, toutes
+     les semaines sont au modèle des clubs (PSEM.c, voir projette.mjs) : une seule ligne */
+  const serie = iB < 0 && prjClubs ? PSx.c : PSx.s;
   const P5 = WK.map((k, i) => i > lastW || (deux && i > iB) ? null
     : i === lastW && !deux ? top5(PRJc && PRJc.rgFR)
-    : top5(PSx.s && PSx.s[k.w]));
+    : top5(serie && serie[k.w]));
   const P5C = WK.map((k, i) => !deux || i < iB || i > lastW ? null
     : i === lastW ? (prjClubs ? top5(PRJc.rgFR) : null) : top5(PSx.c && PSx.c[k.w]));
   /* détail pour l'infobulle : rangs 5e/6e et coefficient de saison médian de la France */
@@ -4930,7 +4933,7 @@ const legende = segs => segs.map(s =>
       if (typeof SEM === 'undefined' || !SEM.length) return null;
       const E = D.eff || {}, out = [];
       for (let k = 0; k < 3; k++) {
-        const FX = SEM.filter(m => m[2] === k && typeof m[3] === 'number');
+        const FX = SEM.filter(m => m[2] === k && typeof m[3] === 'number' && m[3] < 8);   // phase de ligue seule (j 0-7 ; 8-12 = phase finale)
         if (FX.length !== 18 * JTOT[k]) return null;
         const idx = new Map(), clubs = [];
         const ajoute = (n, c) => { if (!idx.has(n)) { idx.set(n, clubs.length); clubs.push({ n, c }); } };
@@ -4943,6 +4946,14 @@ const legende = segs => segs.map(s =>
         /* points DU CLASSEMENT : barème UEFA de la phase de ligue, 3 la victoire,
            1 le nul (le coefficient, lui, compte 2 et 1) */
         clubs.forEach((x, i) => { const r = ligne(x); if (r) real[i] = 3 * r[7] + r[8]; });
+        /* le bilan de la source compte AUSSI les matchs de phase finale (C25, 14/11/2026) :
+           au-delà des journées de ligue, on relit les points de ligue sur les scores
+           Wikipédia, sinon un barragiste qualifié passerait devant un club du top 8 */
+        const fx0 = FX.map(m => ({ h: idx.get(m[4]), a: idx.get(m[6]), sc: m[8] != null ? [m[8], m[9]] : null }));
+        clubs.forEach((x, i) => { const r = ligne(x); if (!r || r[7] + r[8] + r[9] <= JTOT[k]) return;
+          const L = fx0.filter(f => f.h === i || f.a === i);
+          if (L.length !== JTOT[k] || L.some(f => !f.sc)) return;
+          real[i] = L.reduce((a, f) => { const [g1, g2] = f.h === i ? f.sc : [f.sc[1], f.sc[0]]; return a + (g1 > g2 ? 3 : g1 === g2 ? 1 : 0); }, 0); });
         const fx = FX.map(m => ({ h: idx.get(m[4]), a: idx.get(m[6]), t: kickM(m), sc: m[8] != null ? [m[8], m[9]] : null, remH: false, remA: false }));
         const parClub = clubs.map(() => []);
         fx.forEach((f, j) => { parClub[f.h].push(j); parClub[f.a].push(j); });
@@ -4959,7 +4970,42 @@ const legende = segs => segs.map(s =>
         }));
         const pos = clubs.map(x => { const i = (E[x.c] || []).findIndex(r => r[0] === x.n && r[1] === k); return i < 0 ? 99 : i; });
         const live = fx.filter(f => f.remH || f.remA);
-        out.push({ clubs, cl: clubs.map(x => x.c), pos, real, live, rest: live.reduce((a, f) => a + f.remH + f.remA, 0) });
+        /* PHASE FINALE CONNUE (C25, 14/11/2026). Le robot lit les pages Wikipédia de la
+           phase finale (tours j = 8 barrages, 9 huitièmes, 10 quarts, 11 demies, 12 finale) :
+           dès qu'un tour est tiré, ses affiches sont dans SEM, et ses scores au fil des
+           matchs. Un tour n'est pris que COMPLET (8, 8, 4, 2, 1 duels ; 2 manches, 1 en
+           finale ; chaque club une fois, tous reconnus) ; sinon il reste simulé.
+           Qualifié d'un duel joué : score cumulé (prolongation comprise) ; à égalité
+           (tirs au but, que Wikipédia note à part), le club présent au tour suivant,
+           sinon celui que la source ne marque pas éliminé, sinon inconnu (tiré au sort). */
+        const ko = {};
+        if (!live.length) {
+          for (let st = 8; st <= 12; st++) {
+            const NT = [8, 8, 4, 2, 1][st - 8], NL = st === 12 ? 1 : 2, T = new Map();
+            let ok = true;
+            for (const m of SEM.filter(m => m[2] === k && m[3] === st).sort((p, q) => kickM(p) - kickM(q))) {
+              const h = idx.get(m[4]), a = idx.get(m[6]);
+              if (h == null || a == null || h === a) { ok = false; break; }
+              const cle = Math.min(h, a) + '-' + Math.max(h, a);
+              if (!T.has(cle)) T.set(cle, { a: h, b: a, legs: [] });
+              T.get(cle).legs.push({ h, x: a, t: kickM(m), sc: m[8] != null && m[9] != null ? [m[8], m[9]] : null });
+            }
+            const L = [...T.values()], vus = new Set(L.flatMap(x => [x.a, x.b]));
+            if (!ok || L.length !== NT || vus.size !== 2 * NT || L.some(x => x.legs.length !== NL)) continue;
+            ko[st] = L;
+          }
+          for (let st = 8; st <= 12; st++) for (const T of ko[st] || []) {
+            T.fin = T.legs.every(g => g.sc);
+            if (!T.fin) continue;
+            const ga = T.legs.reduce((s, g) => s + (g.h === T.a ? g.sc[0] - g.sc[1] : g.sc[1] - g.sc[0]), 0);
+            if (ga) { T.w = ga > 0 ? T.a : T.b; continue; }
+            const suiv = ko[st + 1] && ko[st + 1].find(x => [T.a, T.b].some(i => i === x.a || i === x.b));
+            if (suiv) { T.w = [T.a, T.b].find(i => i === suiv.a || i === suiv.b); continue; }
+            const ea = (ligne(clubs[T.a]) || [])[2], eb = (ligne(clubs[T.b]) || [])[2];
+            T.w = ea === 1 && eb !== 1 ? T.b : eb === 1 && ea !== 1 ? T.a : null;
+          }
+        }
+        out.push({ clubs, cl: clubs.map(x => x.c), pos, real, live, ko, rest: live.reduce((a, f) => a + f.remH + f.remA, 0) });
       }
       return out;
     })();
@@ -4983,7 +5029,7 @@ const legende = segs => segs.map(s =>
     if (typeof SEM !== 'undefined' && SEM.length) {
       const kick = m => { const [y, mo, d] = m[0].split('-').map(Number), [h, mi] = (m[1] || '21:00').split(':').map(Number); return new Date(y, mo - 1, d, h, mi); };
       for (let k = 0; k < 3; k++) {
-        const F = SEM.filter(m => m[2] === k && typeof m[3] === 'number');
+        const F = SEM.filter(m => m[2] === k && typeof m[3] === 'number' && m[3] < 8);
         if (F.length !== 18 * JTOT[k]) continue;                      // calendrier incomplet : pas de contrôle
         const sur = F.filter(m => kick(m) > ASOF).length;
         const flou = F.filter(m => kick(m) <= ASOF && kick(m).getTime() + 135 * 60e3 > ASOF.getTime()).length;
@@ -5191,7 +5237,6 @@ const legende = segs => segs.map(s =>
           add(a, sa); add(b, sb); ctrl.koM[k] += sa + sb;
           return sa > sb ? a : sb > sa ? b : (rnd() < sig(GAMMA * (se[a] - se[b])) ? a : b);
         };
-        const bonusTour = L => L.forEach(i => { add(i, KOBON[k]); ctrl.ko[k] += KOBON[k]; });
         /* LE TABLEAU UEFA (format 2024/25 ->), fixé par le classement de la phase de
            ligue (depuis le 23/10/2026 ; avant, duels tirés au hasard) :
            - barrages : 9e-10e contre 23e-24e, 11e-12e contre 21e-22e, 13e-14e contre
@@ -5202,30 +5247,89 @@ const legende = segs => segs.map(s =>
            - le 1er et le 2e sont dans deux moitiés différentes, de même que 3e/4e,
              5e/6e, 7e/8e ; en quarts, le duel de la tête 1-2 retrouve celui de la tête
              7-8, et celui de la tête 3-4 celui de la tête 5-6 ; puis demies dans chaque
-             moitié, finale (un seul match). */
-        const R = r => ord[r - 1];
+             moitié, finale (un seul match).
+           PHASE FINALE RÉELLE (C25, 14/11/2026) : chaque tour tiré remplace le tour
+           simulé (CAL[k].ko). Manche jouée : ses points sont déjà dans les chiffres de
+           la source, on ne les recrédite pas (le contrôle les compte quand même) ; duel
+           fini : le vrai qualifié passe. Bonus de tour : déjà crédité par la source dès
+           que la qualification est acquise (top 8 : fin de la phase de ligue ; sinon
+           duel précédent fini), donc pas rajouté. Hypothèse à vérifier fin janvier (K10). */
+        const KOR = CAL ? CAL[k].ko : {}, ligueFinie = !!CAL && !CAL[k].live.length;
+        const reel = new Map();                                       // club → qualification déjà acquise ?
+        const bonusTour = L => L.forEach(i => { if (!reel.get(i)) add(i, KOBON[k]); ctrl.ko[k] += KOBON[k]; });
+        /* marge d'une victoire : P(au moins m buts d'écart) = 0,42^(m-1) (1 : 58 %, 2 : 24 %, 3+ : 18 %) */
+        const marge = () => { let m = 1; while (rnd() < 0.42) m++; return m; };
+        /* un duel, réel (T) ou non ; rend le qualifié et note s'il est déjà acquis */
+        const tour = (a, b, manches, T) => {
+          if (!T || !T.legs.some(g => g.sc)) { const w = duel(a, b, manches); reel.set(w, false); return w; }
+          let ga = 0;                                                  // écart de buts cumulé, vu de a
+          for (const g of T.legs) {
+            const aDom = g.h === a;
+            if (g.sc) { ga += aDom ? g.sc[0] - g.sc[1] : g.sc[1] - g.sc[0]; ctrl.koM[k] += 2; continue; }
+            const dl = se[a] - se[b], pn = pnul(dl), pa = (1 - pn) * sig(BETA * dl + (aDom ? HOME : -HOME)), u = rnd();
+            if (u < pa) { add(a, 2); ga += marge(); } else if (u < pa + pn) { add(a, 1); add(b, 1); } else { add(b, 2); ga -= marge(); }
+            ctrl.koM[k] += 2;
+          }
+          const w = T.fin && T.w != null ? T.w : ga > 0 ? a : ga < 0 ? b : (rnd() < sig(GAMMA * (se[a] - se[b])) ? a : b);
+          reel.set(w, !!T.fin); return w;
+        };
+        /* les 8 premiers : une fois les barrages tirés, ce sont les 8 clubs hors barrages
+           les mieux classés (à égalité de points, le tirage au sort du classement simulé
+           pouvait sinon envoyer en barrage un club qualifié d'office) */
+        let ordK = ord;
+        if (KOR[8]) { const inB = new Set(KOR[8].flatMap(x => [x.a, x.b])), tetes = new Set(KOR[8].map(x => x.legs[1].h)), hors = ord.filter(i => !inB.has(i));
+          ordK = [...hors.slice(0, 8), ...ord.filter(i => tetes.has(i)), ...ord.filter(i => inB.has(i) && !tetes.has(i)), ...hors.slice(8)]; }
+        const R = r => ordK[r - 1];
         const deux = (x, y) => rnd() < 0.5 ? [x, y] : [y, x];
+        const melange = L => { const v = L.slice(); for (let i = v.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [v[i], v[j]] = [v[j], v[i]]; } return v; };
         const BLOCS = [[9, 10, 23, 24], [11, 12, 21, 22], [13, 14, 19, 20], [15, 16, 17, 18]];
-        const qualifies = BLOCS.map(([s1, s2, u1, u2]) => { const [ua, ub] = deux(R(u1), R(u2)); return [duel(R(s1), ua, 2), duel(R(s2), ub, 2)]; });
+        /* barrages : la tête de série reçoit au retour ; les duels réels sont rangés
+           dans les blocs selon le rang de leur tête de série */
+        let qualifies;
+        if (KOR[8]) { const rk = new Map(ordK.map((i, r) => [i, r])), T8 = [...KOR[8]].sort((x, y) => rk.get(x.legs[1].h) - rk.get(y.legs[1].h));
+          qualifies = [0, 1, 2, 3].map(bl => [0, 1].map(j => { const T = T8[2 * bl + j], s = T.legs[1].h; return tour(s, s === T.a ? T.b : T.a, 2, T); })); }
+        else qualifies = BLOCS.map(([s1, s2, u1, u2]) => { const [ua, ub] = deux(R(u1), R(u2)); return [tour(R(s1), ua, 2), tour(R(s2), ub, 2)]; });
+        ordK.slice(0, 8).forEach(i => reel.set(i, ligueFinie));
         /* têtes de série 1-2 / 3-4 / 5-6 / 7-8 et leur bloc de barragistes */
         const TETES = [[1, 2, 3], [3, 4, 2], [5, 6, 1], [7, 8, 0]];
-        const moitie = [[], []];                                     // par moitié : [duel tête 1-2, 3-4, 5-6, 7-8]
-        const huitiemes = TETES.map(([t1, t2, b]) => { const [w1, w2] = deux(qualifies[b][0], qualifies[b][1]);
-          const h = rnd() < 0.5 ? 0 : 1; return { h, paires: [[R(t1), w1], [R(t2), w2]] }; });
-        bonusTour(ord.slice(0, 8).concat(qualifies.flat()));         // les 16 clubs des 8es
-        const v8 = huitiemes.map(x => x.paires.map(([a, b]) => duel(a, b, 2)));
-        /* moitiés : la tête impaire (1, 3, 5, 7) va dans la moitié h, la paire dans l'autre */
-        const place = (ti, w) => { const x = huitiemes[ti]; moitie[w === 0 ? x.h : 1 - x.h][ti] = v8[ti][w]; };
-        for (let ti = 0; ti < 4; ti++) { place(ti, 0); place(ti, 1); }
-        const demis = [];
-        for (const M of moitie) {
-          bonusTour([M[0], M[3], M[1], M[2]]);
-          const q1 = duel(M[0], M[3], 2), q2 = duel(M[1], M[2], 2);   // 1-2 contre 7-8, 3-4 contre 5-6
-          demis.push([q1, q2]);
+        let huitiemes = null;
+        if (KOR[9]) {                                                 // 8es tirés : chaque duel a une tête de série
+          const top = new Map(ordK.slice(0, 8).map((i, r) => [i, r])), parT = [[], [], [], []];
+          for (const T of KOR[9]) { const s = top.has(T.a) ? T.a : T.b, o = s === T.a ? T.b : T.a;
+            if (!top.has(s) || top.has(o)) { huitiemes = null; break; }
+            parT[top.get(s) >> 1].push([s, o, T]); huitiemes = parT; }
+          if (huitiemes) huitiemes = parT.map(paires => ({ h: rnd() < 0.5 ? 0 : 1, paires: paires.sort((x, y) => top.get(x[0]) - top.get(y[0])) }));
+          if (huitiemes) for (const x of huitiemes) for (const [, o] of x.paires) if (!reel.has(o)) reel.set(o, true);
         }
-        const finalistes = demis.map(([a, b]) => { bonusTour([a, b]); return duel(a, b, 2); });
-        bonusTour(finalistes);
-        duel(finalistes[0], finalistes[1], 1);
+        if (!huitiemes) huitiemes = TETES.map(([t1, t2, bl]) => { const [w1, w2] = deux(qualifies[bl][0], qualifies[bl][1]);
+          return { h: rnd() < 0.5 ? 0 : 1, paires: [[R(t1), w1, null], [R(t2), w2, null]] }; });
+        const tiDe = new Map();                                       // club → duel de tête 0 (1-2) … 3 (7-8)
+        huitiemes.forEach((x, ti) => x.paires.forEach(([a, b]) => { tiDe.set(a, ti); tiDe.set(b, ti); }));
+        bonusTour(huitiemes.flatMap(x => x.paires.flatMap(([a, b]) => [a, b])));   // les 16 clubs des 8es
+        const v8 = huitiemes.map(x => x.paires.map(([a, b, T]) => tour(a, b, 2, T)));
+        /* quarts, rangés par moitié : [1-2 contre 7-8, 3-4 contre 5-6] × 2. Moitiés
+           tirées au sort tant que le tableau réel n'est pas connu. */
+        let quarts;
+        if (KOR[10]) {
+          const typ = T => Math.min(tiDe.get(T.a) ?? 9, tiDe.get(T.b) ?? 9), A = KOR[10].filter(T => typ(T) === 0), B = KOR[10].filter(T => typ(T) === 1);
+          const L = A.length === 2 && B.length === 2 ? (rnd() < 0.5 ? [A[0], B[0], A[1], B[1]] : [A[0], B[1], A[1], B[0]]) : melange(KOR[10]);
+          quarts = L.map(T => [T.a, T.b, T]);
+        } else {
+          const moitie = [[], []];
+          huitiemes.forEach((x, ti) => { moitie[x.h][ti] = v8[ti][0]; moitie[1 - x.h][ti] = v8[ti][1]; });
+          quarts = moitie.flatMap(M => [[M[0], M[3], null], [M[1], M[2], null]]);
+        }
+        quarts.forEach(([a, b]) => [a, b].forEach(i => { if (!reel.has(i)) reel.set(i, true); }));
+        bonusTour(quarts.flatMap(([a, b]) => [a, b]));
+        const v4 = quarts.map(([a, b, T]) => tour(a, b, 2, T));
+        const demis = KOR[11] ? KOR[11].map(T => [T.a, T.b, T]) : [[v4[0], v4[1], null], [v4[2], v4[3], null]];
+        demis.forEach(([a, b]) => [a, b].forEach(i => { if (!reel.has(i)) reel.set(i, true); }));
+        bonusTour(demis.flatMap(([a, b]) => [a, b]));
+        const v2 = demis.map(([a, b, T]) => tour(a, b, 2, T));
+        const fin = KOR[12] ? [KOR[12][0].a, KOR[12][0].b, KOR[12][0]] : [v2[0], v2[1], null];
+        [fin[0], fin[1]].forEach(i => { if (!reel.has(i)) reel.set(i, true); });
+        bonusTour([fin[0], fin[1]]);
+        tour(fin[0], fin[1], 1, fin[2]);
       }
       for (const c of codes) {
         ligue[c][s] = (BY[c].tp + (gainL[c] || 0)) / engages(BY[c]);
@@ -5253,6 +5357,11 @@ const legende = segs => segs.map(s =>
         const C = CAL[k], se = FC ? Array.from(F[k]) : C.clubs.map((_, i) => { const q = Math.min(0.99, Math.max(0.01, P0[k][i] / (1 - PNUL))); return Math.log(q / (1 - q)) / BETA; });
         for (const g of C.live) { const dl = se[g.h] - se[g.a], pn = pnul(dl), ph = (1 - pn) * sig(BETA * dl + HOME);
           pronos.push({ k, dom: C.clubs[g.h].n, ext: C.clubs[g.a].n, t: g.t, p: [+ph.toFixed(3), +pn.toFixed(3), +(1 - pn - ph).toFixed(3)] }); }
+        /* manches de phase finale déjà tirées, pas encore jouées : même formule que la
+           phase de ligue (avantage du terrain), sans lui pour la finale (terrain neutre) */
+        for (const st in C.ko) for (const T of C.ko[st]) for (const g of T.legs) { if (g.sc) continue;
+          const dl = se[g.h] - se[g.x], pn = pnul(dl), ph = (1 - pn) * sig(BETA * dl + (+st === 12 ? 0 : HOME));
+          pronos.push({ k, j: +st, dom: C.clubs[g.h].n, ext: C.clubs[g.x].n, t: g.t, p: [+ph.toFixed(3), +pn.toFixed(3), +(1 - pn - ph).toFixed(3)] }); }
       }
     }
     const rangs = CAL ? CAL.map((C, k) => C.clubs.map((x, i) => ({ k, n: x.n, c: x.c, pts: PTSM[k][i] / NSIM, p: Array.from(RANG[k].subarray(i * 36, i * 36 + 36), v => v / NSIM) }))).flat() : [];

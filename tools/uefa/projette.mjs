@@ -158,7 +158,11 @@ async function historique(nav, info) {
     const needC = forceActif && k.w >= BASCULE && k.i < info.lastW && !(avant.c && avant.c[k.w]);
     if (!needN && !needC) continue;
     const cut = k.d1;
-    const SEM = S0.map(m => ligue(m) && m[0] > cut ? [...m.slice(0, 8), null, null, ...m.slice(10)] : m);
+    /* phase finale (j 8-12) postérieure à la semaine : retirée, pas seulement vidée de ses
+       scores (C25, 14/11/2026) ; le moteur s'en sert désormais, la semaine rembobinée
+       ne doit pas connaître un tirage qui n'avait pas eu lieu */
+    const SEM = S0.filter(m => !(typeof m[3] === 'number' && m[3] >= 8 && m[0] > cut))
+      .map(m => ligue(m) && m[0] > cut ? [...m.slice(0, 8), null, null, ...m.slice(10)] : m);
     const passes = S0.filter(m => ligue(m) && m[0] <= cut);
     if (passes.some(m => m[8] == null)) { console.log(`historique ${k.w} : scores manquants, semaine sautee`); continue; }
     const D = JSON.parse(JSON.stringify(D0)), bil = {};
