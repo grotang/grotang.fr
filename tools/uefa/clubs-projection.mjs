@@ -299,9 +299,17 @@ table.g td.vide{text-align:left;color:var(--ink-3);padding:14px 6px}
 .fcu{font-size:11.5px;color:var(--ink-3);margin-top:22px;text-align:center}
 table.g a.phl{color:inherit;text-decoration:none;border-bottom:1px dotted var(--ink-3)}
 table.g a.phl:hover{color:var(--fr);border-color:var(--fr)}
-/* filtre seul (bloc favoris) : à droite sur tous les écrans */
+/* filtres sur téléphone (GT, 15/11/2026) : la coupe à gauche, la nation TOUJOURS à droite,
+   sur 30 % de la largeur au plus ; libellé au-dessus, commandes plus fines */
 .f1.seul{display:flex;justify-content:flex-end}
-@media (max-width:640px){.f1.seul .grp.dr{width:55%}}
+@media (max-width:640px){
+  .f1,.f1.seul{display:flex;flex-wrap:nowrap;justify-content:space-between;align-items:flex-end;gap:10px}
+  .f1 .grp{flex-direction:column;align-items:flex-start;gap:4px}
+  .f1 .grp.dr{margin-left:auto;align-items:stretch;width:30%;max-width:30%;flex:0 0 30%}
+  .f1 .grp.dr .lb{text-align:right}
+  .f1 select.sel{width:100%;min-width:0;height:34px;font-size:13px;padding:0 4px}
+  .f1 .seg button{height:34px;font-size:13px;padding:0 10px}
+}
 </style>
 </head>
 <body>
