@@ -9,6 +9,7 @@
  * lissées, survol, tableau triable phase de ligue / phase finale, bloc France).
  * Backtest au club : Claude outputs/c01/clubs_ko.py (2024/25 et 2025/26 rejouées).
  */
+import fs from 'node:fs';
 import { nav, navCSS, FAVICON, FONTS, TOKENS, THEME_BOOT, THEME_JS, ANALYTICS, PIED } from '../chrome.mjs';
 import { CLUBS_PRJ, CACHEES, DOMAINE } from '../site.mjs';
 
@@ -35,7 +36,12 @@ export function buildClubsProjection(src) {
   for (const L of comp) L.sort((a, b) => b.p[5] - a.p[5] || b.p[1] - a.p[1]);
   const H = Object.fromEntries(Object.entries(P.france || {}).map(([h, L]) => [h, Object.fromEntries(L.map((v, i) => [i, v]))]));
   const maj = String(P.maj || D.meta.lastUpdated || '').split(' ')[0];
-  const DATA = JSON.stringify({ comp, H, nat: FRNAME, slot, maj, n: P.n || 0 });
+  /* bloc 3 : l'archive semaine par semaine (projette.mjs), saison en cours ; à défaut, le seul point du jour */
+  let arch = {}; try { arch = JSON.parse(fs.readFileSync(new URL('./archive/clubs-semaines.json', import.meta.url), 'utf8'))[D.meta.season] || {}; } catch (e) { arch = {}; }
+  let sem = Object.keys(arch).sort().map(w => ({ d: arch[w].d1 || w, t: Object.fromEntries(arch[w].ko.map(c => [nom(c[0]), c[7]])) }));
+  if (!sem.length) { const [jj, mm, aa] = maj.split('/'); sem = [{ d: `${aa}-${mm}-${jj}`, t: Object.fromEntries((P.clubsKO || []).map(c => [nom(c[0]), c[7]])) }]; }
+  const finales = [...src.matchAll(/\['F','(\d{4}-\d\d-\d\d)'\]/g)].slice(0, 3).map(m => m[1]);
+  const DATA = JSON.stringify({ comp, H, nat: FRNAME, slot, maj, n: P.n || 0, evo: { sem, fin: finales.length === 3 ? finales : [0, 1, 2].map(() => sem[sem.length - 1].d) } });
   const u = CLUBS_PRJ.url;
   const fav = comp.map(L => L[0]).filter(Boolean);
   const pc = x => Math.round(x * 100) + ' %';
@@ -162,6 +168,11 @@ table.g .co,table.g .cox{display:none}
 .ch.hov .vl{opacity:.15}.ch.hov .vl.on{opacity:1}
 table.g td.cl .kc{font:700 9.5px Carlito,sans-serif;color:#fff;border-radius:999px;padding:1px 6px;margin-left:7px;vertical-align:1px}
 :root[data-theme="dark"] table.g td.cl .kc{color:#0B0F14}
+.sw svg,.ev svg{width:100%;height:auto;display:block}
+.lbs{font:11.5px Carlito,sans-serif;fill:var(--ink-2);paint-order:stroke;stroke:var(--surface);stroke-width:3px;stroke-linejoin:round}
+.lbs.fr{fill:var(--fr);font-weight:700}
+.lbs tspan{stroke-width:3px}
+.evn{font-size:12.5px;color:var(--ink-3);margin:8px 0 0}
 </style>
 </head>
 <body>
@@ -177,9 +188,15 @@ ${pret ? `<div class="hero" id="hero"></div>
   <div class="comp" id="comp"></div>
   <div class="ch" id="ch"></div>
 </div></section>
-<section class="blk"><h2><span class="no">2</span>Club par club</h2>
+<section class="blk"><h2><span class="no">2</span>Les favoris, coupe par coupe</h2>
+<p class="sous">Chaque point est un club, placé selon sa chance de titre.</p>
+<div class="pan"><div class="sw" id="sw"></div></div></section>
+<section class="blk"><h2><span class="no">3</span>Semaine après semaine</h2>
+<p class="sous">Chance de titre à la fin de chaque semaine européenne.</p>
+<div class="pan"><div class="comp" id="compE"></div><div class="ev" id="ev"></div><p class="evn" id="evn"></p></div></section>
+<section class="blk"><h2><span class="no">4</span>Club par club</h2>
 <div class="pan"><div class="comp" id="compT"></div><div class="tw" id="tab"></div></div></section>
-<section class="blk"><h2><span class="no">3</span>Et la France ?</h2>
+<section class="blk"><h2><span class="no">5</span>Et la France ?</h2>
 <div class="pan"><div class="frg" id="frg"></div></div></section>
 <p class="maj" style="margin-top:14px" id="maj"></p>
 <p class="note"><a href="/football-coefficient-uefa/#projection">Comment c'est calculé</a> · <a href="${CACHEES.clubsFR}">Phase de ligue : la fourchette de rang de chaque club</a></p>` : `<p class="note">Projection en cours de calcul : revenez après le prochain passage du robot.</p>`}
@@ -291,6 +308,58 @@ course(); tableau(); addEventListener('resize', () => course());
     return \`<div class="r\${v === m ? '' : ' m'}"><span>\${lab(n)}</span><div style="width:\${v / m * 100}%"></div><b>\${pcs(v)}</b></div>\`; }).join('');
   document.getElementById('frg').innerHTML = \`<div class="hist"><div class="ct">Combien de clubs français en quarts ?</div>\${rows(H.q, n => n + (n > 1 ? ' clubs' : ' club'), 5)}</div>\`
     + \`<div class="hist"><div class="ct">Combien de coupes pour la France ?</div>\${rows(H.w, n => n === 0 ? 'aucune' : n + (n > 1 ? ' coupes' : ' coupe'), 3)}<div class="ct" style="margin-top:14px">Combien de finalistes français ?</div>\${rows(H.f, n => n === 0 ? 'aucun' : String(n), 3)}</div>\`; }
+/* bloc 2 : les favoris, coupe par coupe. Chaque point est un club, placé selon sa chance de
+   titre sur une échelle logarithmique (0,1 % à 50 %) : les petites chances restent lisibles. */
+function favoris() {
+  const box = document.getElementById('sw'), W = box.clientWidth, mob = W < 560, H = 3 * 120 + 40, l = mob ? 22 : 110, r = mob ? 26 : 20;
+  const lx = v => Math.log10(Math.max(v, .001)), x = v => l + (lx(v) + 3) / (Math.log10(.5) + 3) * (W - l - r);
+  let s = \`<svg viewBox="0 0 \${W} \${H}">\`;
+  for (const v of [.001, .01, .05, .1, .25, .5]) s += \`<line x1="\${x(v)}" x2="\${x(v)}" y1="8" y2="\${H - 26}" stroke="var(--rule-soft)"/><text x="\${x(v)}" y="\${H - 8}" text-anchor="middle" font-size="11" fill="var(--ink-3)">\${v < .01 ? '0,1' : Math.round(v * 100)} %</text>\`;
+  DATA.comp.forEach((Lc, k) => { const y0 = 20 + k * 120 + 50;
+    s += \`<text x="0" y="\${y0 - 40}" font-size="13" font-weight="700" fill="var(\${CV[k]})">\${CN[k]}</text>\`;
+    const pts = [...Lc].filter(c => c.p[5] >= .001).sort((a, b) => b.p[5] - a.p[5]).map(c => ({ c, x: x(c.p[5]), y: y0 })), nul = Lc.length - pts.length;
+    if (nul && !mob) s += \`<text x="\${x(.001) - 8}" y="\${y0 + 4}" text-anchor="end" font-size="11" fill="var(--ink-3)">\${nul} à moins de 0,1 %</text>\`;
+    /* empilement : un point qui en chevauche un autre se décale au-dessus ou en dessous */
+    const pos = []; for (const p of pts) { let d = 0, ok = false; while (!ok) { ok = true; for (const q of pos) if (Math.abs(q.x - p.x) < 9 && Math.abs(q.y - (y0 + d)) < 9) { ok = false; break; } if (!ok) d = d > 0 ? -d : -d + 9; } p.y = y0 + d; pos.push(p); }
+    for (const p of pos) { const fr = p.c.c === 'FRA'; s += \`<circle cx="\${p.x}" cy="\${p.y}" r="\${fr ? 5.5 : 4.3}" fill="\${teinte(p.c)}" stroke="\${fr ? 'var(--ink)' : 'var(--surface)'}" stroke-width="\${fr ? 1.4 : 1}"><title>\${p.c.n} (\${NATN[p.c.c] || p.c.c}) · titre \${pcs(p.c.p[5])} · finale \${pcs(p.c.p[4])}</title></circle>\`; }
+    const lab = pos.filter((p, i) => i < 3 || (p.c.c === 'FRA' && p.c.p[5] >= .005));
+    const DY = [-12, 20, -26, 34, -40, 48]; lab.forEach((p, i) => { const fr = p.c.c === 'FRA'; s += \`<text class="lbs \${fr ? 'fr' : ''}" x="\${p.x}" y="\${y0 + DY[i % DY.length]}" text-anchor="middle">\${p.c.n} \${pcs(p.c.p[5])}</text>\`; });
+  });
+  box.innerHTML = s + '</svg>';
+}
+/* bloc 3 : l'évolution, semaine après semaine (archive tenue par le robot depuis le 14/11/2026) :
+   chance de titre de chaque club à la fin de chaque semaine européenne, jusqu'à la finale */
+let KE = 0;
+function evolution() {
+  boutons('compE', KE, false, k => { KE = k; evolution(); });
+  const E = DATA.evo, box = document.getElementById('ev'), W = box.clientWidth, mob = W < 560, H = mob ? 280 : 330, l = 34, r = mob ? 96 : 150, t = 14, b = 30;
+  const S = E.sem, fin = E.fin[KE], j = d => new Date(d + 'T12:00:00Z').getTime(), d0 = j(S[0].d), d1 = j(fin);
+  const x = d => l + (j(d) - d0) / Math.max(1, d1 - d0) * (W - l - r);
+  const Lc = DATA.comp[KE], derniers = S[S.length - 1].t;
+  const vis = [...Lc.slice(0, mob ? 5 : 6), ...Lc.slice(mob ? 5 : 6).filter(c => c.c === 'FRA' && c.p[5] >= .01)];
+  const mx = Math.max(.05, ...vis.flatMap(c => S.map(w => w.t[c.n] || 0))), top = Math.ceil(mx * 1.15 * 20) / 20, y = v => t + (1 - v / top) * (H - t - b);
+  let s = \`<svg viewBox="0 0 \${W} \${H}">\`;
+  for (let v = 0; v <= top + 1e-9; v += top > .3 ? .1 : .05) s += \`<line x1="\${l}" x2="\${W - r}" y1="\${y(v)}" y2="\${y(v)}" stroke="var(--rule-soft)"/><text x="\${l - 6}" y="\${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--ink-3)">\${Math.round(v * 100)}\${v === 0 ? '' : ' %'}</text>\`;
+  /* mois sur l'axe, et la date de la finale */
+  const M = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+  for (let a = new Date(d0), n = 0; a.getTime() <= d1 && n < 14; n++) { a = new Date(Date.UTC(a.getUTCFullYear(), a.getUTCMonth() + (n ? 1 : 0), 1));
+    if (a.getTime() < d0) continue; const xi = x(a.toISOString().slice(0, 10)); if (xi > W - r - 20) break;
+    s += \`<line x1="\${xi}" x2="\${xi}" y1="\${t}" y2="\${H - b}" stroke="var(--rule-soft)" stroke-dasharray="2 3"/><text x="\${xi + 4}" y="\${H - 10}" font-size="11" fill="var(--ink-3)">\${M[a.getUTCMonth()]}</text>\`; }
+  s += \`<text x="\${x(fin)}" y="\${H - 10}" text-anchor="end" font-size="11" font-weight="700" fill="var(--ink-2)">finale</text><line x1="\${x(fin)}" x2="\${x(fin)}" y1="\${t}" y2="\${H - b}" stroke="var(--ink-3)" stroke-width="1"/>\`;
+  const xd = x(S[S.length - 1].d);
+  s += \`<rect x="\${xd}" y="\${t}" width="\${Math.max(0, x(fin) - xd)}" height="\${H - t - b}" fill="var(--surface-2)" opacity=".6"/><text x="\${(xd + x(fin)) / 2}" y="\${t + 16}" text-anchor="middle" font-size="11" fill="var(--ink-3)">à venir</text>\`;
+  const lab = [];
+  for (const c of [...vis].reverse()) { const tc = teinte(c), fr = c.c === 'FRA', P = S.map(w => [x(w.d), y(w.t[c.n] || 0), w]);
+    if (P.length > 1) s += \`<polyline fill="none" points="\${P.map(q => q[0] + ',' + q[1]).join(' ')}" stroke="\${tc}" stroke-width="\${fr ? 2.6 : 1.8}" stroke-linejoin="round"/>\`;
+    s += P.map(([px, py, w]) => \`<circle cx="\${px}" cy="\${py}" r="\${P.length > 1 ? 2.6 : 4}" fill="\${tc}"><title>\${c.n} · \${pcs(w.t[c.n] || 0)} au \${w.d.split('-').reverse().slice(0, 2).join('/')}</title></circle>\`).join('');
+    lab.push({ c, y: P[P.length - 1][1], v: derniers[c.n] || 0 }); }
+  lab.sort((a, b) => a.y - b.y); for (let i = 1; i < lab.length; i++) lab[i].y = Math.max(lab[i].y, lab[i - 1].y + 14);
+  const bas = H - b - 2; if (lab.length && lab[lab.length - 1].y > bas) { lab[lab.length - 1].y = bas; for (let i = lab.length - 2; i >= 0; i--) lab[i].y = Math.min(lab[i].y, lab[i + 1].y - 14); }
+  for (const o of lab) s += \`<text class="lbs \${o.c.c === 'FRA' ? 'fr' : ''}" x="\${xd + 9}" y="\${o.y + 4}" font-size="12">\${o.c.n} <tspan font-weight="700">\${pcs(o.v)}</tspan></text>\`;
+  box.innerHTML = s + '</svg>';
+  document.getElementById('evn').textContent = S.length < 2 ? \`Premier point le \${S[0].d.split('-').reverse().slice(0, 2).join('/')} : un point s'ajoute après chaque semaine européenne.\` : '';
+}
+favoris(); evolution(); addEventListener('resize', () => { favoris(); evolution(); });
 </script>` : ''}
 ${THEME_JS}
 ${ANALYTICS}

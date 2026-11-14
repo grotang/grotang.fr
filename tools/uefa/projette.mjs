@@ -82,6 +82,28 @@ if (cal.bloque.length) {
 }
 if (fs.existsSync(DRAPEAU)) fs.unlinkSync(DRAPEAU);
 
+/* SUIVI SEMAINE APRÈS SEMAINE (C29, 14/11/2026, idée de GT) : à chaque passage, les
+   chances de chaque club (top 24, 8es, quarts, demies, finale, titre) sont rangées dans
+   tools/uefa/archive/clubs-semaines.json sous la semaine européenne en cours. La semaine
+   est réécrite à chaque passage tant qu'elle dure ; close, elle garde son dernier état.
+   Pas de rembobinage : on ne garde que ce que le modèle disait vraiment à la date (les
+   forces changent chaque lundi). Seuls les clubs qui ont au moins 0,1 % d'atteindre les
+   8es sont gardés (~70, ~3 Ko par semaine). Jamais bloquant. */
+try {
+  if (Array.isArray(R.clubsKO) && R.clubsKO.length) {
+    const F = path.join(RACINE, 'tools/uefa/archive/clubs-semaines.json');
+    let A = {}; try { A = JSON.parse(fs.readFileSync(F, 'utf8')); } catch (e) { A = {}; }
+    const saison = await page.evaluate(() => (typeof D !== 'undefined' && D.meta && D.meta.season) || null);
+    const k = INFO && INFO.weeks && INFO.weeks[INFO.lastW];
+    if (saison && k) {
+      const S = A[saison] = A[saison] || {};
+      S[k.w] = { maj: R.maj, d1: k.d1, ko: R.clubsKO.filter(c => c[3] >= .001).map(c => [c[0], c[1], ...c.slice(2).map(v => +v.toFixed(4))]) };
+      fs.writeFileSync(F, JSON.stringify(A).replace(/"(20\d\d-\d\d-\d\d)":/g, '\n"$1":') + '\n');
+      console.log(`suivi des clubs : semaine du ${k.w} enregistrée (${S[k.w].ko.length} clubs, ${Object.keys(S).length} semaines en ${saison})`);
+    }
+  }
+} catch (e) { console.log('suivi des clubs non enregistré :', e.message); }
+
 let PS = null;
 try { if (INFO) PS = await historique(nav, INFO); } catch (e) { console.log('historique en echec, valeurs precedentes gardees :', e.message); }
 await nav.close();
