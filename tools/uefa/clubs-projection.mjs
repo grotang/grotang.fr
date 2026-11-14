@@ -74,13 +74,6 @@ h1{font:700 clamp(26px,4vw,38px)/1.15 Newsreader,Georgia,serif;letter-spacing:-.
 
 h1{margin-bottom:6px}
 .lede{font-size:17px;max-width:62ch}
-.hero{margin:18px 0 6px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px}
-.hero .big{font:700 clamp(46px,7vw,64px)/1 Carlito,sans-serif;color:var(--fr);letter-spacing:-.02em}
-.hero .t{font:600 clamp(17px,2vw,20px)/1.3 Carlito,sans-serif;color:var(--ink);max-width:30ch}
-.pills{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 26px}
-.pills span{font:13px Carlito,sans-serif;color:var(--ink-2);border:1px solid var(--rule);border-radius:999px;padding:4px 10px;background:var(--surface)}
-.pills b{color:var(--ink)}
-.pills i{font-style:normal;font:600 10px 'IBM Plex Mono',monospace;color:var(--ink-3);margin-left:4px}
 h2{font:700 20px Carlito,sans-serif;margin:30px 0 10px}
 .comp{display:flex;gap:4px;margin:0 0 14px;flex-wrap:wrap}
 .comp button{font:600 13px Carlito,sans-serif;padding:6px 13px;border-radius:999px;border:1px solid var(--rule);background:var(--surface);color:var(--ink-2);cursor:pointer}
@@ -147,6 +140,28 @@ table.g .co,table.g .cox{display:none}
 .hist .r b{color:var(--ink);text-align:right}
 .note{font-size:13px}
 
+.hero{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px 22px;margin:20px 0 6px;padding:16px 22px;background:var(--surface);border:1px solid var(--rule);border-left:4px solid var(--fr);border-radius:3px}
+.hero .hn{font:700 clamp(46px,6.5vw,62px)/1 Carlito,sans-serif;color:var(--fr);letter-spacing:-.02em;white-space:nowrap}
+.hero .hn small{font-size:.5em;margin-left:3px;vertical-align:.55em}
+.hero .ht > b{display:block;font:600 clamp(16px,1.9vw,19px)/1.3 Carlito,sans-serif;color:var(--ink);max-width:40ch}
+.hero .hn{grid-row:span 2}
+.hero .ht{align-self:end}
+.hero .pills{display:flex;gap:6px;flex-wrap:wrap;align-self:start;margin-top:2px}
+.hero .pills span{font:13px Carlito,sans-serif;color:var(--ink-2);border:1px solid var(--rule);border-radius:999px;padding:3px 10px;background:var(--surface-2)}
+.hero .pills b{color:var(--ink)}
+.hero .pills i{font-style:normal;font:600 10px 'IBM Plex Mono',monospace;color:var(--ink-3);margin-left:4px}
+@media (max-width:560px){.hero{gap:8px 14px;padding:14px 14px}.hero .hn{grid-row:auto}.hero .ht{align-self:center}.hero .pills{grid-column:1 / -1}}
+.blk{margin-top:30px}
+.blk h2{font:700 20px Carlito,sans-serif;margin:0 0 4px;display:flex;align-items:center}
+.blk h2 .no{font:700 11px Carlito,sans-serif;letter-spacing:.06em;color:var(--surface);background:var(--ink);padding:2px 7px;border-radius:2px;margin-right:10px}
+.blk .sous{color:var(--ink-2);font-size:14px;margin:0 0 10px}
+.blk > .pan{margin-top:10px}
+.ch .mk{pointer-events:none}
+.ch.hov .mk{opacity:.12}.ch.hov .mk.on{opacity:1}
+.ch .vl{font:700 11px Carlito,sans-serif;pointer-events:none;paint-order:stroke;stroke:var(--surface);stroke-width:3px;stroke-linejoin:round}
+.ch.hov .vl{opacity:.15}.ch.hov .vl.on{opacity:1}
+table.g td.cl .kc{font:700 9.5px Carlito,sans-serif;color:#fff;border-radius:999px;padding:1px 6px;margin-left:7px;vertical-align:1px}
+:root[data-theme="dark"] table.g td.cl .kc{color:#0B0F14}
 </style>
 </head>
 <body>
@@ -156,68 +171,71 @@ ${nav(CLUBS_PRJ.key)}
 <h1>Qui va gagner les coupes d'Europe ?</h1>
 <p class="lede">Ligue des champions, Ligue Europa, Ligue Conférence : la chance de chaque club, tour après tour, jusqu'au trophée.</p>
 ${pret ? `<div class="hero" id="hero"></div>
-<div class="pills" id="pills"></div>
+<section class="blk"><h2><span class="no">1</span>La course au trophée</h2>
+<p class="sous">Chance d'être encore en lice, tour après tour.</p>
 <div class="pan">
   <div class="comp" id="comp"></div>
   <div class="ch" id="ch"></div>
-</div>
-<h2>Club par club</h2>
-<div class="pan"><div class="tw" id="tab"></div></div>
-<h2>Et la France ?</h2>
-<div class="pan"><div class="frg" id="frg"></div></div>
+</div></section>
+<section class="blk"><h2><span class="no">2</span>Club par club</h2>
+<div class="pan"><div class="comp" id="compT"></div><div class="tw" id="tab"></div></div></section>
+<section class="blk"><h2><span class="no">3</span>Et la France ?</h2>
+<div class="pan"><div class="frg" id="frg"></div></div></section>
 <p class="maj" style="margin-top:14px" id="maj"></p>
 <p class="note"><a href="/football-coefficient-uefa/#projection">Comment c'est calculé</a> · <a href="${CACHEES.clubsFR}">Phase de ligue : la fourchette de rang de chaque club</a></p>` : `<p class="note">Projection en cours de calcul : revenez après le prochain passage du robot.</p>`}
 ${PIED}
 </main>
 ${pret ? `<script>
-
 const DATA = ${DATA};
 const SLOT = DATA.slot;
 const col = c => \`var(\${SLOT[c] || '--ink-3'})\`;
 /* deux clubs d'une même nation : même famille de couleur, teinte différente (le 1er de la
    nation garde la couleur pleine, les suivants alternent plus sombre / plus clair) */
 const MIX = [['--ink', 30], ['--surface', 42], ['--ink', 52], ['--surface', 62], ['--ink', 66]];
-let RN = new Map();
+const RN = new Map();
+DATA.comp.forEach(L => { const vu = {}; [...L].sort((a, b) => b.p[5] - a.p[5] || b.p[1] - a.p[1]).forEach(c => RN.set(c.n, vu[c.c] = (vu[c.c] ?? -1) + 1)); });
 const teinte = c => { const j = RN.get(c.n) || 0, b = col(c.c); if (!j) return b; const [w, p] = MIX[(j - 1) % MIX.length]; return \`color-mix(in oklab, \${b} \${100 - p}%, var(\${w}))\`; };
-const CN = ['Ligue des champions','Ligue Europa','Ligue Conférence'], CV = ['--c1','--c3','--c4'], CK = ['C1','C3','C4'];
-const TOURS = ['Top 24','8es','Quarts','Demies','Finale','Titre'];
+const CN = ['Ligue des champions', 'Ligue Europa', 'Ligue Conférence'], CV = ['--c1', '--c3', '--c4'], CK = ['C1', 'C3', 'C4'];
+const TOURS = ['Top 24', '8es', 'Quarts', 'Demies', 'Finale', 'Titre'];
 const pc = x => x >= .995 ? '>99' : x < .005 ? (x > 0 ? '<1' : '0') : String(Math.round(x * 100));
 const pcs = x => pc(x) + ' %';
 const NATN = DATA.nat;
-let K = 0;
+DATA.comp.forEach((L, k) => L.forEach(c => c.k = k));
+let K = 0, KT = 0;
 document.getElementById('maj').textContent = \`\${DATA.n.toLocaleString('fr-FR')} saisons simulées · données du \${DATA.maj} · mise à jour après chaque soir de match\`;
-/* intro */
+/* en-tête : la chance qu'un club français gagne une coupe, et les clubs qui la portent */
 { const H = DATA.H, au1 = 1 - (H.w[0] || 0);
-  const fr = DATA.comp.flatMap((L, k) => L.filter(x => x.c === 'FRA').map(x => ({ ...x, k }))).sort((a, b) => b.p[5] - a.p[5]);
-  document.getElementById('hero').innerHTML = \`<span class="big">\${Math.round(au1 * 100)} %</span><span class="t">de chances qu'un club français soulève une coupe d'Europe cette saison</span>\`;
-  document.getElementById('pills').innerHTML = fr.filter(x => x.p[5] >= .01).map(x => \`<span><b>\${x.n}</b> \${pcs(x.p[5])}<i>\${CK[x.k]}</i></span>\`).join(''); }
-/* sélecteur */
-function comp() { document.getElementById('comp').innerHTML = CN.map((n, k) => \`<button class="\${k === K ? 'on' : ''}" style="\${k === K ? \`background:var(\${CV[k]})\` : ''}" onclick="K=\${k};tout()"><span class="lo">\${n}</span><span class="co">\${CK[k]}</span></button>\`).join(''); }
-/* courbe lissée : spline monotone (Fritsch–Carlson), ne dépasse jamais ses points */
-function lisse(P) {
-  const n = P.length, d = [], m = [];
-  for (let i = 0; i < n - 1; i++) d.push((P[i + 1][1] - P[i][1]) / (P[i + 1][0] - P[i][0]));
-  m[0] = d[0]; m[n - 1] = d[n - 2];
-  for (let i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
-  for (let i = 0; i < n - 1; i++) { if (d[i] === 0) { m[i] = m[i + 1] = 0; continue; }
-    const a = m[i] / d[i], b = m[i + 1] / d[i], s = a * a + b * b; if (s > 9) { const t = 3 / Math.sqrt(s); m[i] = t * a * d[i]; m[i + 1] = t * b * d[i]; } }
-  let s = \`M\${P[0][0]},\${P[0][1]}\`;
-  for (let i = 0; i < n - 1; i++) { const h = (P[i + 1][0] - P[i][0]) / 3;
-    s += \` C\${P[i][0] + h},\${P[i][1] + m[i] * h} \${P[i + 1][0] - h},\${P[i + 1][1] - m[i + 1] * h} \${P[i + 1][0]},\${P[i + 1][1]}\`; }
-  return s;
+  const fr = DATA.comp.flat().filter(x => x.c === 'FRA' && x.p[5] >= .01).sort((a, b) => b.p[5] - a.p[5]);
+  document.getElementById('hero').innerHTML = \`<div class="hn">\${Math.round(au1 * 100)}<small>%</small></div>\`
+    + \`<div class="ht"><b>de chances qu'un club français soulève une coupe d'Europe cette saison</b></div>\`
+    + \`<div class="pills">\${fr.map(x => \`<span><b>\${x.n}</b> \${pcs(x.p[5])}<i>\${CK[x.k]}</i></span>\`).join('')}</div>\`; }
+/* sélecteurs de compétition (bloc 1 et bloc 2, chacun le sien) */
+function boutons(id, cur, tous, fn) {
+  const L = CN.map((n, k) => [k, n, CK[k]]); if (tous) L.push([3, 'Toutes', 'Toutes']);
+  const el = document.getElementById(id);
+  el.innerHTML = L.map(([k, n, c]) => \`<button class="\${k === cur ? 'on' : ''}" style="\${k === cur ? \`background:\${k < 3 ? \`var(\${CV[k]})\` : 'var(--ink)'}\` : ''}" data-k="\${k}"><span class="lo">\${n}</span><span class="co">\${c}</span></button>\`).join('');
+  el.onclick = e => { const b = e.target.closest('button'); if (b) fn(+b.dataset.k); };
 }
+/* bloc 1 : la course. Lignes droites d'un tour à l'autre, une marque discrète à chaque
+   tour ; le favori porte ses chances au-dessus de sa courbe. */
 function course() {
+  boutons('comp', K, false, k => { K = k; course(); });
   const box = document.getElementById('ch'), Wd = box.clientWidth, mob = Wd < 560;
-  const W = Wd, H = mob ? 330 : 400, l = 30, r = mob ? 96 : 150, t = 12, b = 30;
+  const W = Wd, H = mob ? 330 : 410, l = 30, r = mob ? 96 : 150, t = 26, b = 30;
   const L = DATA.comp[K], x = i => l + i * (W - l - r) / 5, y = v => t + (1 - v) * (H - t - b);
   const vis = new Set([...L.slice(0, mob ? 5 : 7), ...L.filter(c => c.c === 'FRA' && c.p[1] >= .2)].map(c => c.n));
+  const pts = c => c.p.map((v, i) => \`\${x(i)},\${y(v)}\`).join(' ');
   let s = \`<svg viewBox="0 0 \${W} \${H}" id="sv">\`;
   for (const v of [0, .25, .5, .75, 1]) s += \`<line x1="\${l}" x2="\${x(5)}" y1="\${y(v)}" y2="\${y(v)}" stroke="var(--rule-soft)"/><text x="\${l - 6}" y="\${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--ink-3)">\${v * 100}\${v === 1 ? ' %' : ''}</text>\`;
   TOURS.forEach((n, i) => s += \`<line x1="\${x(i)}" x2="\${x(i)}" y1="\${t}" y2="\${H - b}" stroke="var(--rule-soft)" stroke-dasharray="\${i ? '2 3' : ''}"/><text x="\${x(i)}" y="\${H - 10}" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink-2)">\${mob && n.length > 6 ? n.slice(0, 4) + '.' : n}</text>\`);
-  const ordre = [...L].sort((a, b) => (vis.has(a.n) - vis.has(b.n)) || (a.c === 'FRA') - (b.c === 'FRA'));
-  for (const c of ordre) { const P = c.p.map((v, i) => [x(i), y(v)]), on = vis.has(c.n), fr = c.c === 'FRA';
-    s += \`<path class="ln \${on ? '' : 'fond'}" data-n="\${c.n}" d="\${lisse(P)}" stroke="\${on ? teinte(c) : ''}" stroke-width="\${on ? (fr ? 2.6 : 1.8) : 1}"/>\`;
-    s += c.p.map((v, i) => \`<circle class="dot" data-n="\${c.n}" cx="\${x(i)}" cy="\${y(v)}" r="3.2" fill="var(--surface)" stroke="\${teinte(c)}" stroke-width="2"/>\`).join(''); }
+  const rg = c => (vis.has(c.n) ? 1 : 0) + (c.c === 'FRA' ? 1 : 0) + (c === L[0] ? 2 : 0), ordre = [...L].sort((a, b) => rg(a) - rg(b));
+  for (const c of ordre) { const on = vis.has(c.n), fr = c.c === 'FRA', tc = teinte(c);
+    s += \`<polyline class="ln \${on ? '' : 'fond'}" data-n="\${c.n}" points="\${pts(c)}" stroke="\${on ? tc : ''}" stroke-width="\${on ? (fr ? 2.6 : 1.8) : 1}" stroke-linejoin="round"/>\`;
+    if (on) s += c.p.map((v, i) => \`<circle class="mk" data-n="\${c.n}" cx="\${x(i)}" cy="\${y(v)}" r="2.3" fill="\${tc}"/>\`).join('');
+    s += c.p.map((v, i) => \`<circle class="dot" data-n="\${c.n}" cx="\${x(i)}" cy="\${y(v)}" r="3.6" fill="var(--surface)" stroke="\${tc}" stroke-width="2"/>\`).join(''); }
+  /* le favori : ses chances, tour par tour, au-dessus de sa courbe */
+  const F = L[0];
+  s += F.p.map((v, i) => i === 0 || i === 5 ? '' : \`<text class="vl" data-n="\${F.n}" x="\${x(i)}" y="\${y(v) - 9}" text-anchor="middle" fill="\${teinte(F)}">\${pcs(v)}</text>\`).join('');
   const lab = L.filter(c => vis.has(c.n)).map(c => ({ c, y: y(c.p[5]) })).sort((a, b) => a.y - b.y);
   for (let i = 1; i < lab.length; i++) lab[i].y = Math.max(lab[i].y, lab[i - 1].y + 14);
   const bas = H - b - 2; if (lab.length && lab[lab.length - 1].y > bas) { lab[lab.length - 1].y = bas; for (let i = lab.length - 2; i >= 0; i--) lab[i].y = Math.min(lab[i].y, lab[i + 1].y - 14); }
@@ -240,39 +258,39 @@ function course() {
     if (mx < l - 4 || mx > x(5) + 4) return cache();
     const f = Math.min(4.999, Math.max(0, (mx - l) / ((W - l - r) / 5))), i = Math.floor(f), u = f - i;
     let best = null, bd = 18;
-    for (const c of L) { const v = c.p[i] + (c.p[i + 1] - c.p[i]) * (u * u * (3 - 2 * u)), dd = Math.abs(y(v) - my); if (dd < bd) { bd = dd; best = c.n; } }
+    for (const c of L) { const v = c.p[i] + (c.p[i + 1] - c.p[i]) * u, dd = Math.abs(y(v) - my); if (dd < bd) { bd = dd; best = c.n; } }
     best ? montre(best, ev) : cache(); });
   sv.addEventListener('mouseleave', cache);
 }
-/* tableau triable */
+/* bloc 2 : tableau triable, filtre par compétition (ou les trois) */
 const COLS = [
-  { k: 'n', t: 'Club', l: 1, g: 0 }, { k: 'bi', t: 'Bilan', g: 0, mob: 1 }, { k: 'top8', t: 'Top 8', c: 'T8', g: 0, p: 1 }, { k: 0, t: 'Top 24', g: 0, p: 1, mob: 1 },
-  { k: 1, t: '8es', g: 1, p: 1 }, { k: 2, t: 'Quarts', c: '1/4', g: 1, p: 1 }, { k: 3, t: 'Demies', c: '1/2', g: 1, p: 1 }, { k: 4, t: 'Finale', c: 'F', g: 1, p: 1 }, { k: 5, t: 'Titre', g: 1, p: 1 }];
+  { k: 'n', t: 'Club', l: 1 }, { k: 'bi', t: 'Bilan', mob: 1 }, { k: 'top8', t: 'Top 8', c: 'T8', p: 1 }, { k: 0, t: 'Top 24', p: 1, mob: 1 },
+  { k: 1, t: '8es', p: 1 }, { k: 2, t: 'Quarts', c: '1/4', p: 1 }, { k: 3, t: 'Demies', c: '1/2', p: 1 }, { k: 4, t: 'Finale', c: 'F', p: 1 }, { k: 5, t: 'Titre', p: 1 }];
 let TRI = { k: 5, s: -1 }, TOUS = false;
 const val = (c, k) => k === 'n' ? c.n : k === 'bi' ? 3 * c.v[0] + c.v[1] + c.v[0] / 100 : k === 'top8' ? c.top8 : c.p[k];
 const cell = (v, k) => \`<span class="v\${v < .005 ? ' z' : ''}">\${pc(v)}</span><span class="bar"><s style="width:\${Math.max(v * 100, v > 0 ? 3 : 0)}%;background:var(\${CV[k]})"></s></span>\`;
 function tableau() {
-  const L = [...DATA.comp[K]].sort((a, b) => { const A = val(a, TRI.k), B = val(b, TRI.k); return (typeof A === 'string' ? A.localeCompare(B) : A - B) * TRI.s || b.p[5] - a.p[5]; });
-  const R = TOUS ? L : L.slice(0, 16);
-  let h = \`<table class="g"><tr class="grp"><th colspan="2" class="l mob">\${CN[K]}</th><th class="l cox">\${CK[K]}</th><th colspan="2" class="mob">Phase de ligue</th><th class="cox">Ligue</th><th colspan="5" class="pf"><span class="lo">Phase finale · chance d'atteindre</span><span class="co">Phase finale</span></th></tr><tr>\`
+  boutons('compT', KT, true, k => { KT = k; TOUS = false; tableau(); });
+  const base = KT === 3 ? DATA.comp.flat() : DATA.comp[KT];
+  const L = [...base].sort((a, b) => { const A = val(a, TRI.k), B = val(b, TRI.k); return (typeof A === 'string' ? A.localeCompare(B) : A - B) * TRI.s || b.p[5] - a.p[5]; });
+  const R = TOUS ? L : L.slice(0, 16), nom = KT === 3 ? 'Les trois coupes' : CN[KT], court = KT === 3 ? 'Toutes' : CK[KT];
+  let h = \`<table class="g"><tr class="grp"><th colspan="2" class="l mob">\${nom}</th><th class="l cox">\${court}</th><th colspan="2" class="mob">Phase de ligue</th><th class="cox">Ligue</th><th colspan="5" class="pf"><span class="lo">Phase finale · chance d'atteindre</span><span class="co">Phase finale</span></th></tr><tr>\`
     + COLS.map((c, i) => \`<th data-i="\${i}" class="\${c.l ? 'l ' : ''}\${c.mob ? 'mob ' : ''}\${c.k === 1 ? 'pf1 ' : ''}\${TRI.k === c.k ? 'tri' : ''}">\${c.c ? \`<span class="lo">\${c.t}</span><span class="co">\${c.c}</span>\` : c.t}<span class="ar">\${TRI.k === c.k ? (TRI.s < 0 ? '↓' : '↑') : ''}</span></th>\`).join('') + '</tr>';
-  h += R.map(c => \`<tr class="\${c.c === 'FRA' ? 'fr' : ''}"><td class="cl l"><i style="background:\${teinte(c)}"></i>\${c.n}<u>\${c.c}</u></td><td class="bi mob">\${c.v.join('-')}</td>\`
-    + \`<td class="p">\${cell(c.top8, K)}</td><td class="p mob">\${cell(c.p[0], K)}</td>\`
-    + [1, 2, 3, 4, 5].map(i => \`<td class="p\${i === 1 ? ' pf1' : ''}">\${cell(c.p[i], K)}</td>\`).join('') + '</tr>').join('');
+  h += R.map(c => \`<tr class="\${c.c === 'FRA' ? 'fr' : ''}"><td class="cl l"><i style="background:\${teinte(c)}"></i>\${c.n}<u>\${c.c}</u>\${KT === 3 ? \`<span class="kc" style="background:var(\${CV[c.k]})">\${CK[c.k]}</span>\` : ''}</td><td class="bi mob">\${c.v.join('-')}</td>\`
+    + \`<td class="p">\${cell(c.top8, c.k)}</td><td class="p mob">\${cell(c.p[0], c.k)}</td>\`
+    + [1, 2, 3, 4, 5].map(i => \`<td class="p\${i === 1 ? ' pf1' : ''}">\${cell(c.p[i], c.k)}</td>\`).join('') + '</tr>').join('');
   h += '</table>' + (L.length > 16 ? \`<div class="plus" id="plus">\${TOUS ? '▴ réduire' : \`▾ les \${L.length} clubs\`}</div>\` : '');
   const T = document.getElementById('tab'); T.innerHTML = h;
   T.querySelectorAll('th[data-i]').forEach(th => th.onclick = () => { const c = COLS[+th.dataset.i]; TRI = { k: c.k, s: TRI.k === c.k ? -TRI.s : (c.k === 'n' ? 1 : -1) }; tableau(); });
   const p = document.getElementById('plus'); if (p) p.onclick = () => { TOUS = !TOUS; tableau(); };
 }
-function tout() { const vu = {}; RN = new Map(); [...DATA.comp[K]].sort((a, b) => b.p[5] - a.p[5] || b.p[1] - a.p[1]).forEach(c => { RN.set(c.n, vu[c.c] = (vu[c.c] ?? -1) + 1); }); comp(); course(); tableau(); }
-tout(); addEventListener('resize', () => course());
-/* France */
+course(); tableau(); addEventListener('resize', () => course());
+/* bloc 3 : la France, toutes coupes confondues, dans la même saison simulée */
 { const H = DATA.H, rows = (o, lab, max) => Object.keys(o).map(Number).sort((a, b) => a - b).filter(n => n <= max).map(n => {
     const v = o[n] || 0, m = Object.keys(o).reduce((a, k) => Math.max(a, o[k]), 0);
     return \`<div class="r\${v === m ? '' : ' m'}"><span>\${lab(n)}</span><div style="width:\${v / m * 100}%"></div><b>\${pcs(v)}</b></div>\`; }).join('');
   document.getElementById('frg').innerHTML = \`<div class="hist"><div class="ct">Combien de clubs français en quarts ?</div>\${rows(H.q, n => n + (n > 1 ? ' clubs' : ' club'), 5)}</div>\`
     + \`<div class="hist"><div class="ct">Combien de coupes pour la France ?</div>\${rows(H.w, n => n === 0 ? 'aucune' : n + (n > 1 ? ' coupes' : ' coupe'), 3)}<div class="ct" style="margin-top:14px">Combien de finalistes français ?</div>\${rows(H.f, n => n === 0 ? 'aucun' : String(n), 3)}</div>\`; }
-
 </script>` : ''}
 ${THEME_JS}
 ${ANALYTICS}
