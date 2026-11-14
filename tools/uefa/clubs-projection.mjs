@@ -41,7 +41,7 @@ export function buildClubsProjection(src) {
   let sem = Object.keys(arch).sort().map(w => ({ d: arch[w].d1 || w, t: Object.fromEntries(arch[w].ko.map(c => [nom(c[0]), c[7]])) }));
   if (!sem.length) { const [jj, mm, aa] = maj.split('/'); sem = [{ d: `${aa}-${mm}-${jj}`, t: Object.fromEntries((P.clubsKO || []).map(c => [nom(c[0]), c[7]])) }]; }
   const finales = [...src.matchAll(/\['F','(\d{4}-\d\d-\d\d)'\]/g)].slice(0, 3).map(m => m[1]);
-  const DATA = JSON.stringify({ comp, H, nat: FRNAME, slot, maj, n: P.n || 0, evo: { sem, fin: finales.length === 3 ? finales : [0, 1, 2].map(() => sem[sem.length - 1].d) } });
+  const DATA = JSON.stringify({ comp, H, nat: FRNAME, slot, maj, n: P.n || 0, ordre: [...(D.nations || [])].sort((a, b) => a.r - b.r).map(n => n.c), evo: { sem, fin: finales.length === 3 ? finales : [0, 1, 2].map(() => sem[sem.length - 1].d) } });
   const u = CLUBS_PRJ.url;
   const fav = comp.map(L => L[0]).filter(Boolean);
   const pc = x => Math.round(x * 100) + ' %';
@@ -173,6 +173,47 @@ table.g td.cl .kc{font:700 9.5px Carlito,sans-serif;color:#fff;border-radius:999
 .lbs.fr{fill:var(--fr);font-weight:700}
 .lbs tspan{stroke-width:3px}
 .evn{font-size:12.5px;color:var(--ink-3);margin:8px 0 0}
+/* titres DANS les blocs, filtres coupe à gauche / nation à droite : gabarit des pages
+   Coefficient UEFA et Force des clubs (GT, 14/11/2026) */
+.blk{margin-top:16px}
+.ptitle{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 9px;margin-bottom:4px}
+.ptitle .no{font:700 11px Carlito,sans-serif;letter-spacing:.06em;color:var(--surface);background:var(--ink);border-radius:2px;padding:2px 6px;flex:none}
+.ptitle h3{font:600 17.5px/1.25 Carlito,sans-serif;letter-spacing:-.008em;margin:0}
+@media (max-width:680px){.ptitle h3{flex:1 1 12em;min-width:0}}
+.psous{font-size:13px;color:var(--ink-3);margin:0 0 12px}
+.ptitle + .f1,.ptitle + .frg{margin-top:12px}
+.f1{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:0 0 14px}
+.f1 .grp{display:flex;align-items:center;gap:8px;min-width:0}
+.f1 .grp.dr{margin-left:auto}
+.f1 .lb{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.seg button{font:inherit;font-size:13px;height:32px;padding:0 11px;border:0;background:var(--surface);color:var(--ink-2);cursor:pointer;border-right:1px solid var(--rule)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--ink);color:var(--surface);font-weight:700}
+.seg .co{display:none}
+select.sel{font:inherit;font-size:13.5px;height:32px;padding:0 8px;border:1px solid var(--rule);border-radius:3px;background:var(--surface);color:var(--ink);min-width:150px;max-width:100%}
+@media (max-width:640px){
+  .f1{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:end}
+  .f1 .grp{flex-direction:column;align-items:stretch;gap:4px}
+  .f1 .grp.dr{margin-left:0}
+  .seg button,select.sel{height:38px;font-size:14px}
+  select.sel{min-width:0;width:100%}
+  .seg .lo{display:none} .seg .co{display:inline}
+}
+/* bloc 4 : les trois premières colonnes comme la page Force des clubs */
+table.g th{font:600 11px Carlito,sans-serif;letter-spacing:.1em}
+table.g td.rg{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-3);width:28px;text-align:right;padding-right:4px}
+table.g th.rg{cursor:default}
+table.g td.club{font-weight:600;text-align:left;color:var(--ink)}
+table.g td.club i.sq{display:none;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:0}
+table.g td.nation{white-space:nowrap;font-size:13.5px;text-align:left}
+table.g td.nation i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:7px;vertical-align:0}
+table.g .court{display:none;font-family:'IBM Plex Mono',monospace;font-size:11.5px}
+table.g i.cp{display:inline-block;min-width:24px;text-align:center;font:600 10.5px 'IBM Plex Mono',monospace;color:#fff;border-radius:2px;padding:1px 4px;font-style:normal}
+:root[data-theme="dark"] table.g i.cp{color:#0B0F14}
+table.g td.vide{text-align:left;color:var(--ink-3);padding:14px 6px}
+/* téléphone : la nation passe en carré devant le club (la colonne ne tient pas), noms longs coupés */
+@media (max-width:560px){table.g td.rg,table.g th.rg,table.g td.nation,table.g th.nat{display:none} table.g td.club i.sq{display:inline-block} table.g td.club .nm{display:inline-block;max-width:calc(100% - 16px);overflow:hidden;text-overflow:ellipsis;vertical-align:bottom} table.g tr.grp{display:none} table.g{table-layout:fixed} table.g th.clh{width:34%} table.g th.cph{width:13%} table.g td.club{overflow:hidden;white-space:nowrap} table.g th{letter-spacing:0;padding-left:2px;padding-right:2px} table.g td{padding-left:2px;padding-right:2px}}
 </style>
 </head>
 <body>
@@ -182,22 +223,32 @@ ${nav(CLUBS_PRJ.key)}
 <h1>Qui va gagner les coupes d'Europe ?</h1>
 <p class="lede">Ligue des champions, Ligue Europa, Ligue Conférence : la chance de chaque club, tour après tour, jusqu'au trophée.</p>
 ${pret ? `<div class="hero" id="hero"></div>
-<section class="blk"><h2><span class="no">1</span>La course au trophée</h2>
-<p class="sous">Chance d'être encore en lice, tour après tour.</p>
-<div class="pan">
-  <div class="comp" id="comp"></div>
+<section class="blk"><div class="pan">
+  <div class="ptitle"><span class="no">1</span><h3>La course au trophée</h3></div>
+  <p class="psous">Chance d'être encore en lice, tour après tour.</p>
+  <div class="f1"><div class="grp"><span class="lb">Coupe</span><span class="seg" id="comp" role="group" aria-label="Coupe"></span></div><div class="grp dr"><label class="lb" for="natC">Nation</label><select class="sel" id="natC"></select></div></div>
   <div class="ch" id="ch"></div>
 </div></section>
-<section class="blk"><h2><span class="no">2</span>Les favoris, coupe par coupe</h2>
-<p class="sous">Chaque point est un club, placé selon sa chance de titre.</p>
-<div class="pan"><div class="sw" id="sw"></div></div></section>
-<section class="blk"><h2><span class="no">3</span>Semaine après semaine</h2>
-<p class="sous">Chance de titre à la fin de chaque semaine européenne.</p>
-<div class="pan"><div class="comp" id="compE"></div><div class="ev" id="ev"></div><p class="evn" id="evn"></p></div></section>
-<section class="blk"><h2><span class="no">4</span>Club par club</h2>
-<div class="pan"><div class="comp" id="compT"></div><div class="tw" id="tab"></div></div></section>
-<section class="blk"><h2><span class="no">5</span>Et la France ?</h2>
-<div class="pan"><div class="frg" id="frg"></div></div></section>
+<section class="blk"><div class="pan">
+  <div class="ptitle"><span class="no">2</span><h3>Les favoris, coupe par coupe</h3></div>
+  <p class="psous">Chaque point est un club, placé selon sa chance de titre.</p>
+  <div class="sw" id="sw"></div>
+</div></section>
+<section class="blk"><div class="pan">
+  <div class="ptitle"><span class="no">3</span><h3>Semaine après semaine</h3></div>
+  <p class="psous">Chance de titre à la fin de chaque semaine européenne.</p>
+  <div class="f1"><div class="grp"><span class="lb">Coupe</span><span class="seg" id="compE" role="group" aria-label="Coupe"></span></div><div class="grp dr"><label class="lb" for="natE">Nation</label><select class="sel" id="natE"></select></div></div>
+  <div class="ev" id="ev"></div><p class="evn" id="evn"></p>
+</div></section>
+<section class="blk"><div class="pan">
+  <div class="ptitle"><span class="no">4</span><h3>Club par club</h3></div>
+  <div class="f1"><div class="grp"><span class="lb">Coupe</span><span class="seg" id="compT" role="group" aria-label="Coupe"></span></div><div class="grp dr"><label class="lb" for="natT">Nation</label><select class="sel" id="natT"></select></div></div>
+  <div class="tw" id="tab"></div>
+</div></section>
+<section class="blk"><div class="pan">
+  <div class="ptitle"><span class="no">5</span><h3>Et la France ?</h3></div>
+  <div class="frg" id="frg"></div>
+</div></section>
 <p class="maj" style="margin-top:14px" id="maj"></p>
 <p class="note"><a href="/football-coefficient-uefa/#projection">Comment c'est calculé</a> · <a href="${CACHEES.clubsFR}">Phase de ligue : la fourchette de rang de chaque club</a></p>` : `<p class="note">Projection en cours de calcul : revenez après le prochain passage du robot.</p>`}
 ${PIED}
@@ -206,19 +257,16 @@ ${pret ? `<script>
 const DATA = ${DATA};
 const SLOT = DATA.slot;
 const col = c => \`var(\${SLOT[c] || '--ink-3'})\`;
-/* deux clubs d'une même nation : même famille de couleur, teinte différente (le 1er de la
-   nation garde la couleur pleine, les suivants alternent plus sombre / plus clair) */
-const MIX = [['--ink', 30], ['--surface', 42], ['--ink', 52], ['--surface', 62], ['--ink', 66]];
-const RN = new Map();
-DATA.comp.forEach(L => { const vu = {}; [...L].sort((a, b) => b.p[5] - a.p[5] || b.p[1] - a.p[1]).forEach(c => RN.set(c.n, vu[c.c] = (vu[c.c] ?? -1) + 1)); });
-const teinte = c => { const j = RN.get(c.n) || 0, b = col(c.c); if (!j) return b; const [w, p] = MIX[(j - 1) % MIX.length]; return \`color-mix(in oklab, \${b} \${100 - p}%, var(\${w}))\`; };
+/* une seule couleur par nation, partout (GT, 14/11/2026) : la France en bleu, le top 8 dans ses
+   couleurs, les autres en gris */
+const teinte = c => c.c === 'FRA' ? 'var(--fr)' : col(c.c);
 const CN = ['Ligue des champions', 'Ligue Europa', 'Ligue Conférence'], CV = ['--c1', '--c3', '--c4'], CK = ['C1', 'C3', 'C4'];
 const TOURS = ['Top 24', '8es', 'Quarts', 'Demies', 'Finale', 'Titre'];
 const pc = x => x >= .995 ? '>99' : x < .005 ? (x > 0 ? '<1' : '0') : String(Math.round(x * 100));
 const pcs = x => pc(x) + ' %';
 const NATN = DATA.nat;
 DATA.comp.forEach((L, k) => L.forEach(c => c.k = k));
-let K = 0, KT = 0;
+let K = 0, KT = 0, NC = '', NT = '', NE = '';
 document.getElementById('maj').textContent = \`\${DATA.n.toLocaleString('fr-FR')} saisons simulées · données du \${DATA.maj} · mise à jour après chaque soir de match\`;
 /* en-tête : la chance qu'un club français gagne une coupe, et les clubs qui la portent */
 { const H = DATA.H, au1 = 1 - (H.w[0] || 0);
@@ -226,32 +274,40 @@ document.getElementById('maj').textContent = \`\${DATA.n.toLocaleString('fr-FR')
   document.getElementById('hero').innerHTML = \`<div class="hn">\${Math.round(au1 * 100)}<small>%</small></div>\`
     + \`<div class="ht"><b>de chances qu'un club français soulève une coupe d'Europe cette saison</b></div>\`
     + \`<div class="pills">\${fr.map(x => \`<span><b>\${x.n}</b> \${pcs(x.p[5])}<i>\${CK[x.k]}</i></span>\`).join('')}</div>\`; }
-/* sélecteurs de compétition (bloc 1 et bloc 2, chacun le sien) */
+/* sélecteurs : la coupe à gauche (boutons), la nation à droite (liste), même gabarit que
+   la page Force des clubs ; chaque bloc a les siens */
 function boutons(id, cur, tous, fn) {
   const L = CN.map((n, k) => [k, n, CK[k]]); if (tous) L.push([3, 'Toutes', 'Toutes']);
   const el = document.getElementById(id);
-  el.innerHTML = L.map(([k, n, c]) => \`<button class="\${k === cur ? 'on' : ''}" style="\${k === cur ? \`background:\${k < 3 ? \`var(\${CV[k]})\` : 'var(--ink)'}\` : ''}" data-k="\${k}"><span class="lo">\${n}</span><span class="co">\${c}</span></button>\`).join('');
+  el.innerHTML = L.map(([k, n, c]) => \`<button type="button" class="\${k === cur ? 'on' : ''}" aria-pressed="\${k === cur}" data-k="\${k}"><span class="lo">\${n}</span><span class="co">\${c}</span></button>\`).join('');
   el.onclick = e => { const b = e.target.closest('button'); if (b) fn(+b.dataset.k); };
 }
+function nations(id, cur, clubs, fn) {
+  const avec = new Set(clubs.map(c => c.c)), el = document.getElementById(id);
+  el.innerHTML = '<option value="">Toutes</option>' + DATA.ordre.filter(c => avec.has(c)).map(c => \`<option value="\${c}"\${c === cur ? ' selected' : ''}>\${NATN[c] || c}</option>\`).join('');
+  el.onchange = () => fn(el.value);
+}
+const nomNat = c => \`<span style="color:\${c === 'FRA' ? 'var(--fr)' : col(c)};font-weight:\${c === 'FRA' ? 700 : 600}">\${NATN[c] || c}</span>\`;
 /* bloc 1 : la course. Lignes droites d'un tour à l'autre, une marque discrète à chaque
    tour ; le favori porte ses chances au-dessus de sa courbe. */
 function course() {
-  boutons('comp', K, false, k => { K = k; course(); });
+  boutons('comp', K, false, k => { K = k; if (NC && !DATA.comp[k].some(c => c.c === NC)) NC = ''; course(); });
+  nations('natC', NC, DATA.comp[K], v => { NC = v; course(); });
   const box = document.getElementById('ch'), Wd = box.clientWidth, mob = Wd < 560;
   const W = Wd, H = mob ? 330 : 410, l = 30, r = mob ? 96 : 150, t = 26, b = 30;
   const L = DATA.comp[K], x = i => l + i * (W - l - r) / 5, y = v => t + (1 - v) * (H - t - b);
-  const vis = new Set([...L.slice(0, mob ? 5 : 7), ...L.filter(c => c.c === 'FRA' && c.p[1] >= .2)].map(c => c.n));
+  /* une nation choisie : tous ses clubs en couleur ; sinon les favoris et les clubs français */
+  const vis = new Set((NC ? L.filter(c => c.c === NC) : [...L.slice(0, mob ? 5 : 7), ...L.filter(c => c.c === 'FRA' && c.p[1] >= .2)]).map(c => c.n));
   const pts = c => c.p.map((v, i) => \`\${x(i)},\${y(v)}\`).join(' ');
   let s = \`<svg viewBox="0 0 \${W} \${H}" id="sv">\`;
   for (const v of [0, .25, .5, .75, 1]) s += \`<line x1="\${l}" x2="\${x(5)}" y1="\${y(v)}" y2="\${y(v)}" stroke="var(--rule-soft)"/><text x="\${l - 6}" y="\${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--ink-3)">\${v * 100}\${v === 1 ? ' %' : ''}</text>\`;
   TOURS.forEach((n, i) => s += \`<line x1="\${x(i)}" x2="\${x(i)}" y1="\${t}" y2="\${H - b}" stroke="var(--rule-soft)" stroke-dasharray="\${i ? '2 3' : ''}"/><text x="\${x(i)}" y="\${H - 10}" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink-2)">\${mob && n.length > 6 ? n.slice(0, 4) + '.' : n}</text>\`);
-  const rg = c => (vis.has(c.n) ? 1 : 0) + (c.c === 'FRA' ? 1 : 0) + (c === L[0] ? 2 : 0), ordre = [...L].sort((a, b) => rg(a) - rg(b));
+  const F = L.find(c => vis.has(c.n)) || L[0], rg = c => (vis.has(c.n) ? 1 : 0) + (c.c === 'FRA' ? 1 : 0) + (c === F ? 2 : 0), ordre = [...L].sort((a, b) => rg(a) - rg(b));
   for (const c of ordre) { const on = vis.has(c.n), fr = c.c === 'FRA', tc = teinte(c);
     s += \`<polyline class="ln \${on ? '' : 'fond'}" data-n="\${c.n}" points="\${pts(c)}" stroke="\${on ? tc : ''}" stroke-width="\${on ? (fr ? 2.6 : 1.8) : 1}" stroke-linejoin="round"/>\`;
     if (on) s += c.p.map((v, i) => \`<circle class="mk" data-n="\${c.n}" cx="\${x(i)}" cy="\${y(v)}" r="2.3" fill="\${tc}"/>\`).join('');
     s += c.p.map((v, i) => \`<circle class="dot" data-n="\${c.n}" cx="\${x(i)}" cy="\${y(v)}" r="3.6" fill="var(--surface)" stroke="\${tc}" stroke-width="2"/>\`).join(''); }
   /* le favori : ses chances, tour par tour, au-dessus de sa courbe */
-  const F = L[0];
   s += F.p.map((v, i) => i === 0 || i === 5 ? '' : \`<text class="vl" data-n="\${F.n}" x="\${x(i)}" y="\${y(v) - 9}" text-anchor="middle" fill="\${teinte(F)}">\${pcs(v)}</text>\`).join('');
   const lab = L.filter(c => vis.has(c.n)).map(c => ({ c, y: y(c.p[5]) })).sort((a, b) => a.y - b.y);
   for (let i = 1; i < lab.length; i++) lab[i].y = Math.max(lab[i].y, lab[i - 1].y + 14);
@@ -280,25 +336,33 @@ function course() {
   sv.addEventListener('mouseleave', cache);
 }
 /* bloc 2 : tableau triable, filtre par compétition (ou les trois) */
-const COLS = [
-  { k: 'n', t: 'Club', l: 1 }, { k: 'bi', t: 'Bilan', mob: 1 }, { k: 'top8', t: 'Top 8', c: 'T8', p: 1 }, { k: 0, t: 'Top 24', p: 1, mob: 1 },
+const COLS0 = [
+  { k: 'rg', t: '', nt: 1 }, { k: 'n', t: 'Club', l: 1 }, { k: 'nat', t: 'Nation', l: 1 }, { k: 'cp', t: 'Coupe', l: 1, tous: 1 }, { k: 'bi', t: 'Bilan', mob: 1 },
+  { k: 'top8', t: 'Top 8', c: 'T8', p: 1 }, { k: 0, t: 'Top 24', p: 1, mob: 1 },
   { k: 1, t: '8es', p: 1 }, { k: 2, t: 'Quarts', c: '1/4', p: 1 }, { k: 3, t: 'Demies', c: '1/2', p: 1 }, { k: 4, t: 'Finale', c: 'F', p: 1 }, { k: 5, t: 'Titre', p: 1 }];
 let TRI = { k: 5, s: -1 }, TOUS = false;
-const val = (c, k) => k === 'n' ? c.n : k === 'bi' ? 3 * c.v[0] + c.v[1] + c.v[0] / 100 : k === 'top8' ? c.top8 : c.p[k];
+const val = (c, k) => k === 'n' ? c.n : k === 'nat' ? (NATN[c.c] || c.c) : k === 'cp' ? c.k : k === 'bi' ? 3 * c.v[0] + c.v[1] + c.v[0] / 100 : k === 'top8' ? c.top8 : c.p[k];
 const cell = (v, k) => \`<span class="v\${v < .005 ? ' z' : ''}">\${pc(v)}</span><span class="bar"><s style="width:\${Math.max(v * 100, v > 0 ? 3 : 0)}%;background:var(\${CV[k]})"></s></span>\`;
+/* bloc 4 : tableau triable ; filtres coupe (ou les trois) et nation. Les trois premières
+   colonnes reprennent celles de la page Force des clubs (rang, club, nation en couleur). */
 function tableau() {
-  boutons('compT', KT, true, k => { KT = k; TOUS = false; tableau(); });
+  boutons('compT', KT, true, k => { KT = k; TOUS = false; if (NT && k < 3 && !DATA.comp[k].some(c => c.c === NT)) NT = ''; tableau(); });
   const base = KT === 3 ? DATA.comp.flat() : DATA.comp[KT];
-  const L = [...base].sort((a, b) => { const A = val(a, TRI.k), B = val(b, TRI.k); return (typeof A === 'string' ? A.localeCompare(B) : A - B) * TRI.s || b.p[5] - a.p[5]; });
-  const R = TOUS ? L : L.slice(0, 16), nom = KT === 3 ? 'Les trois coupes' : CN[KT], court = KT === 3 ? 'Toutes' : CK[KT];
-  let h = \`<table class="g"><tr class="grp"><th colspan="2" class="l mob">\${nom}</th><th class="l cox">\${court}</th><th colspan="2" class="mob">Phase de ligue</th><th class="cox">Ligue</th><th colspan="5" class="pf"><span class="lo">Phase finale · chance d'atteindre</span><span class="co">Phase finale</span></th></tr><tr>\`
-    + COLS.map((c, i) => \`<th data-i="\${i}" class="\${c.l ? 'l ' : ''}\${c.mob ? 'mob ' : ''}\${c.k === 1 ? 'pf1 ' : ''}\${TRI.k === c.k ? 'tri' : ''}">\${c.c ? \`<span class="lo">\${c.t}</span><span class="co">\${c.c}</span>\` : c.t}<span class="ar">\${TRI.k === c.k ? (TRI.s < 0 ? '↓' : '↑') : ''}</span></th>\`).join('') + '</tr>';
-  h += R.map(c => \`<tr class="\${c.c === 'FRA' ? 'fr' : ''}"><td class="cl l"><i style="background:\${teinte(c)}"></i>\${c.n}<u>\${c.c}</u>\${KT === 3 ? \`<span class="kc" style="background:var(\${CV[c.k]})">\${CK[c.k]}</span>\` : ''}</td><td class="bi mob">\${c.v.join('-')}</td>\`
-    + \`<td class="p">\${cell(c.top8, c.k)}</td><td class="p mob">\${cell(c.p[0], c.k)}</td>\`
+  nations('natT', NT, base, v => { NT = v; TOUS = false; tableau(); });
+  const COLS = COLS0.filter(c => !c.tous || KT === 3);
+  const L = base.filter(c => !NT || c.c === NT).sort((a, b) => { const A = val(a, TRI.k), B = val(b, TRI.k); return (typeof A === 'string' ? A.localeCompare(B, 'fr') : A - B) * TRI.s || b.p[5] - a.p[5]; });
+  const R = TOUS ? L : L.slice(0, 16), g1 = COLS.findIndex(c => c.k === 'top8');
+  let h = \`<table class="g"><tr class="grp"><th colspan="\${g1}" class="l"></th><th colspan="2" class="mob">Phase de ligue</th><th class="cox">Ligue</th><th colspan="5" class="pf"><span class="lo">Phase finale · chance d'atteindre</span><span class="co">Phase finale</span></th></tr><tr>\`
+    + COLS.map((c, i) => \`<th data-i="\${i}" class="\${c.l ? 'l ' : ''}\${c.mob ? 'mob ' : ''}\${c.k === 'rg' ? 'rg ' : ''}\${c.k === 'nat' ? 'nat ' : ''}\${c.k === 'n' ? 'clh ' : ''}\${c.k === 'cp' ? 'cph ' : ''}\${c.k === 1 ? 'pf1 ' : ''}\${TRI.k === c.k ? 'tri' : ''}">\${c.c ? \`<span class="lo">\${c.t}</span><span class="co">\${c.c}</span>\` : c.t}<span class="ar">\${TRI.k === c.k ? (TRI.s < 0 ? '↓' : '↑') : ''}</span></th>\`).join('') + '</tr>';
+  h += R.map((c, i) => \`<tr class="\${c.c === 'FRA' ? 'fr' : ''}"><td class="rg">\${i + 1}</td><td class="club l"><i class="sq" style="background:\${teinte(c)}"></i><span class="nm">\${c.n}</span></td>\`
+    + \`<td class="nation l"><i style="background:\${teinte(c)}"></i>\${nomNat(c.c).replace('>' + (NATN[c.c] || c.c) + '<', \`><span class="long">\${NATN[c.c] || c.c}</span><span class="court">\${c.c}</span><\`)}</td>\`
+    + (KT === 3 ? \`<td class="l"><i class="cp" style="background:var(\${CV[c.k]})">\${CK[c.k]}</i></td>\` : '')
+    + \`<td class="bi mob">\${c.v.join('-')}</td><td class="p">\${cell(c.top8, c.k)}</td><td class="p mob">\${cell(c.p[0], c.k)}</td>\`
     + [1, 2, 3, 4, 5].map(i => \`<td class="p\${i === 1 ? ' pf1' : ''}">\${cell(c.p[i], c.k)}</td>\`).join('') + '</tr>').join('');
+  if (!R.length) h += \`<tr><td colspan="\${COLS.length}" class="vide">Aucun club de cette nation dans cette coupe.</td></tr>\`;
   h += '</table>' + (L.length > 16 ? \`<div class="plus" id="plus">\${TOUS ? '▴ réduire' : \`▾ les \${L.length} clubs\`}</div>\` : '');
   const T = document.getElementById('tab'); T.innerHTML = h;
-  T.querySelectorAll('th[data-i]').forEach(th => th.onclick = () => { const c = COLS[+th.dataset.i]; TRI = { k: c.k, s: TRI.k === c.k ? -TRI.s : (c.k === 'n' ? 1 : -1) }; tableau(); });
+  T.querySelectorAll('th[data-i]:not(.rg)').forEach(th => th.onclick = () => { const c = COLS[+th.dataset.i]; TRI = { k: c.k, s: TRI.k === c.k ? -TRI.s : (c.k === 'n' ? 1 : -1) }; tableau(); });
   const p = document.getElementById('plus'); if (p) p.onclick = () => { TOUS = !TOUS; tableau(); };
 }
 course(); tableau(); addEventListener('resize', () => course());
@@ -331,12 +395,13 @@ function favoris() {
    chance de titre de chaque club à la fin de chaque semaine européenne, jusqu'à la finale */
 let KE = 0;
 function evolution() {
-  boutons('compE', KE, false, k => { KE = k; evolution(); });
+  boutons('compE', KE, false, k => { KE = k; if (NE && !DATA.comp[k].some(c => c.c === NE)) NE = ''; evolution(); });
+  nations('natE', NE, DATA.comp[KE], v => { NE = v; evolution(); });
   const E = DATA.evo, box = document.getElementById('ev'), W = box.clientWidth, mob = W < 560, H = mob ? 280 : 330, l = 34, r = mob ? 96 : 150, t = 14, b = 30;
   const S = E.sem, fin = E.fin[KE], j = d => new Date(d + 'T12:00:00Z').getTime(), d0 = j(S[0].d), d1 = j(fin);
   const x = d => l + (j(d) - d0) / Math.max(1, d1 - d0) * (W - l - r);
   const Lc = DATA.comp[KE], derniers = S[S.length - 1].t;
-  const vis = [...Lc.slice(0, mob ? 5 : 6), ...Lc.slice(mob ? 5 : 6).filter(c => c.c === 'FRA' && c.p[5] >= .01)];
+  const vis = NE ? Lc.filter(c => c.c === NE).slice(0, 8) : [...Lc.slice(0, mob ? 5 : 6), ...Lc.slice(mob ? 5 : 6).filter(c => c.c === 'FRA' && c.p[5] >= .01)];
   const mx = Math.max(.05, ...vis.flatMap(c => S.map(w => w.t[c.n] || 0))), top = Math.ceil(mx * 1.15 * 20) / 20, y = v => t + (1 - v / top) * (H - t - b);
   let s = \`<svg viewBox="0 0 \${W} \${H}">\`;
   for (let v = 0; v <= top + 1e-9; v += top > .3 ? .1 : .05) s += \`<line x1="\${l}" x2="\${W - r}" y1="\${y(v)}" y2="\${y(v)}" stroke="var(--rule-soft)"/><text x="\${l - 6}" y="\${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--ink-3)">\${Math.round(v * 100)}\${v === 0 ? '' : ' %'}</text>\`;
