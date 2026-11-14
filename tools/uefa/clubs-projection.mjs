@@ -29,6 +29,13 @@ export function buildClubsProjection(src) {
   const nat = {}, bil = {}, t8 = {};
   for (const [c, L] of Object.entries(D.eff || {})) for (const r of L) { nat[r[0] + '|' + r[1]] = c; bil[r[0] + '|' + r[1]] = [r[7] || 0, r[8] || 0, r[9] || 0]; }
   for (const c of P.clubs || []) t8[c[0] + '|' + c[2]] = c[9];
+  /* bilan de la PHASE DE LIGUE, relu sur les scores du calendrier (SEM) : celui de la source
+     compte aussi la phase finale dès février. À défaut de calendrier, celui de la source. */
+  try { const SEM = JSON.parse(entre(src, '/*SEM_START*/const SEM = ', ';/*SEM_END*/') || '[]'), lig = {};
+    for (const m of SEM) { if (typeof m[3] !== 'number' || m[3] > 7 || m[8] == null || m[9] == null) continue;
+      for (const [n, a, b] of [[m[4], m[8], m[9]], [m[6], m[9], m[8]]]) { const t = lig[n + '|' + m[2]] = lig[n + '|' + m[2]] || [0, 0, 0]; t[a > b ? 0 : a === b ? 1 : 2]++; } }
+    if (Object.keys(lig).length) for (const cle in bil) bil[cle] = lig[cle] || [0, 0, 0];
+  } catch (e) { /* bilan de la source */ }
   const pret = Array.isArray(P.clubsKO) && P.clubsKO.length;
   const comp = [[], [], []];
   for (const x of P.clubsKO || []) { const cle = x[0] + '|' + x[1];
@@ -42,6 +49,42 @@ export function buildClubsProjection(src) {
   if (!sem.length) { const [jj, mm, aa] = maj.split('/'); sem = [{ d: `${aa}-${mm}-${jj}`, t: Object.fromEntries((P.clubsKO || []).map(c => [nom(c[0]), c[7]])) }]; }
   const finales = [...src.matchAll(/\['F','(\d{4}-\d\d-\d\d)'\]/g)].slice(0, 3).map(m => m[1]);
   const DATA = JSON.stringify({ comp, H, nat: FRNAME, slot, maj, n: P.n || 0, ordre: [...(D.nations || [])].sort((a, b) => a.r - b.r).map(n => n.c), evo: { sem, fin: finales.length === 3 ? finales : [0, 1, 2].map(() => sem[sem.length - 1].d) } });
+  /* les blocs, numérotés dans l'ordre d'affichage. « Semaine après semaine » passe après le
+     tableau tant qu'il a moins de trois semaines (une courbe d'un point n'apprend rien),
+     puis remonte tout seul en 3e position. */
+  const filtres = (c, n) => `<div class="f1"><div class="grp"><span class="lb">Coupe</span><span class="seg" id="${c}" role="group" aria-label="Coupe"></span></div><div class="grp dr"><label class="lb" for="${n}">Nation</label><select class="sel" id="${n}"></select></div></div>`;
+  const BL = {
+    course: `<h3>La course au trophée</h3></div>
+  <p class="psous">Chance d'être encore en lice, tour après tour.</p>
+  ${filtres('comp', 'natC')}
+  <div class="ch" id="ch"></div>`,
+    favoris: `<h3>Les favoris, coupe par coupe</h3></div>
+  <p class="psous">Chaque point est un club, placé selon sa chance de titre.</p>
+  <div class="sw" id="sw"></div>`,
+    evo: `<h3>Semaine après semaine</h3></div>
+  <p class="psous">Chance de titre à la fin de chaque semaine européenne.</p>
+  ${filtres('compE', 'natE')}
+  <div class="ev" id="ev"></div><p class="evn" id="evn"></p>`,
+    table: `<h3>Club par club</h3></div>
+  ${filtres('compT', 'natT')}
+  <div class="tw" id="tab"></div>`,
+    france: `<h3>Et la France ?</h3></div>
+  <div class="frg" id="frg"></div>`,
+  };
+  const ordreB = sem.length < 3 ? ['course', 'favoris', 'table', 'evo', 'france'] : ['course', 'favoris', 'evo', 'table', 'france'];
+  const blocs = ordreB.map((b, i) => `<section class="blk"><div class="pan">
+  <div class="ptitle"><span class="no">${i + 1}</span>${BL[b]}
+</div></section>`).join('\n')
+    + `
+<section class="blk" id="methode"><div class="pan">
+  <div class="ptitle"><h3>Comment c'est calculé</h3></div>
+  <div class="meth">
+  <p>La force de chaque club vient de ses matchs européens et de championnat des trois dernières saisons, les plus récents comptant le plus. Elle donne, pour chaque match restant, une chance de victoire, de nul et de défaite, avec l'avantage du terrain.</p>
+  <p>On joue la fin de la phase de ligue, puis la phase finale, dans le vrai tableau dès qu'il est tiré, ${(P.n || 0).toLocaleString('fr-FR')} fois. Chaque chance affichée est la part de ces saisons où le club atteint le tour.</p>
+  <p>Vérifié sur les deux saisons passées, rejouées depuis chaque lundi de phase de ligue : un club annoncé à 37 % d'atteindre les quarts y est arrivé 37 % du temps, à 17 % : 12 %. Les grands favoris ont plutôt fait mieux qu'annoncé : 60 % annoncés pour les quarts, 72 % arrivés.</p>
+  <p>Pas encore vérifiable : la chance de titre, six vainqueurs en deux saisons, c'est trop peu. Le poids de l'écart de niveau en phase finale est en cours de mesure sur vingt-cinq saisons de Ligue des champions.</p>
+  </div>
+</div></section>`;
   const u = CLUBS_PRJ.url;
   const fav = comp.map(L => L[0]).filter(Boolean);
   const pc = x => Math.round(x * 100) + ' %';
@@ -230,6 +273,8 @@ table.g td.vide{text-align:left;color:var(--ink-3);padding:14px 6px}
 .tipf .tg .tsur{font-size:12px;color:var(--ink-3);margin-left:auto}
 .tipf .tpar{font:700 10.5px Carlito,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:2px}
 .tipf .tf{font-size:11.5px;color:var(--ink-3);margin-top:6px}
+.meth p{font-size:14px;color:var(--ink-2);margin:0 0 8px;max-width:84ch;line-height:1.55}
+.meth p:last-child{margin-bottom:0}
 </style>
 </head>
 <body>
@@ -239,34 +284,9 @@ ${nav(CLUBS_PRJ.key)}
 <h1>Qui va gagner les coupes d'Europe ?</h1>
 <p class="lede">Ligue des champions, Ligue Europa, Ligue Conférence : la chance de chaque club, tour après tour, jusqu'au trophée.</p>
 ${pret ? `<div class="hero" id="hero"></div>
-<section class="blk"><div class="pan">
-  <div class="ptitle"><span class="no">1</span><h3>La course au trophée</h3></div>
-  <p class="psous">Chance d'être encore en lice, tour après tour.</p>
-  <div class="f1"><div class="grp"><span class="lb">Coupe</span><span class="seg" id="comp" role="group" aria-label="Coupe"></span></div><div class="grp dr"><label class="lb" for="natC">Nation</label><select class="sel" id="natC"></select></div></div>
-  <div class="ch" id="ch"></div>
-</div></section>
-<section class="blk"><div class="pan">
-  <div class="ptitle"><span class="no">2</span><h3>Les favoris, coupe par coupe</h3></div>
-  <p class="psous">Chaque point est un club, placé selon sa chance de titre.</p>
-  <div class="sw" id="sw"></div>
-</div></section>
-<section class="blk"><div class="pan">
-  <div class="ptitle"><span class="no">3</span><h3>Semaine après semaine</h3></div>
-  <p class="psous">Chance de titre à la fin de chaque semaine européenne.</p>
-  <div class="f1"><div class="grp"><span class="lb">Coupe</span><span class="seg" id="compE" role="group" aria-label="Coupe"></span></div><div class="grp dr"><label class="lb" for="natE">Nation</label><select class="sel" id="natE"></select></div></div>
-  <div class="ev" id="ev"></div><p class="evn" id="evn"></p>
-</div></section>
-<section class="blk"><div class="pan">
-  <div class="ptitle"><span class="no">4</span><h3>Club par club</h3></div>
-  <div class="f1"><div class="grp"><span class="lb">Coupe</span><span class="seg" id="compT" role="group" aria-label="Coupe"></span></div><div class="grp dr"><label class="lb" for="natT">Nation</label><select class="sel" id="natT"></select></div></div>
-  <div class="tw" id="tab"></div>
-</div></section>
-<section class="blk"><div class="pan">
-  <div class="ptitle"><span class="no">5</span><h3>Et la France ?</h3></div>
-  <div class="frg" id="frg"></div>
-</div></section>
+${blocs}
 <p class="maj" style="margin-top:14px" id="maj"></p>
-<p class="note"><a href="/football-coefficient-uefa/#projection">Comment c'est calculé</a> · <a href="${CACHEES.clubsFR}">Phase de ligue : la fourchette de rang de chaque club</a></p>` : `<p class="note">Projection en cours de calcul : revenez après le prochain passage du robot.</p>`}
+<p class="note"><a href="#methode">Comment c'est calculé</a> · <a href="/football-coefficient-uefa/">Le coefficient UEFA des nations</a> · <a href="${CACHEES.clubsFR}">Phase de ligue : la fourchette de rang de chaque club</a></p>` : `<p class="note">Projection en cours de calcul : revenez après le prochain passage du robot.</p>`}
 ${PIED}
 </main>
 ${pret ? `<script>
@@ -310,12 +330,12 @@ function course() {
   boutons('comp', K, false, k => { K = k; if (NC && !DATA.comp[k].some(c => c.c === NC)) NC = ''; course(); });
   nations('natC', NC, DATA.comp[K], v => { NC = v; course(); });
   const box = document.getElementById('ch'), Wd = box.clientWidth, mob = Wd < 560;
-  const W = Wd, H = mob ? 330 : 410, l = 30, r = mob ? 96 : 150, t = 26, b = 30;
+  const W = Wd, H = mob ? 330 : 410, l = 30, r = mob ? 116 : 150, t = 26, b = 30;
   const L = DATA.comp[K], x = i => l + i * (W - l - r) / 5, y = v => t + (1 - v) * (H - t - b);
   /* une nation choisie : tous ses clubs en couleur ; sinon les favoris et les clubs français */
   const vis = new Set((NC ? L.filter(c => c.c === NC) : [...L.slice(0, mob ? 5 : 7), ...L.filter(c => c.c === 'FRA' && c.p[1] >= .2)]).map(c => c.n));
   const pts = c => c.p.map((v, i) => \`\${x(i)},\${y(v)}\`).join(' ');
-  let s = \`<svg viewBox="0 0 \${W} \${H}" id="sv">\`;
+  let s = \`<svg viewBox="0 0 \${W} \${H}" id="sv" role="img" aria-label="\${CN[K]}, chance d'atteindre chaque tour : \${L.slice(0, 3).map(c => \`\${c.n} \${pcs(c.p[5])} de titre\`).join(', ')}">\`;
   for (const v of [0, .25, .5, .75, 1]) s += \`<line x1="\${l}" x2="\${x(5)}" y1="\${y(v)}" y2="\${y(v)}" stroke="var(--rule-soft)"/><text x="\${l - 6}" y="\${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--ink-3)">\${v * 100}\${v === 1 ? ' %' : ''}</text>\`;
   TOURS.forEach((n, i) => s += \`<line x1="\${x(i)}" x2="\${x(i)}" y1="\${t}" y2="\${H - b}" stroke="var(--rule-soft)" stroke-dasharray="\${i ? '2 3' : ''}"/><text x="\${x(i)}" y="\${H - 10}" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink-2)">\${mob && n.length > 6 ? n.slice(0, 4) + '.' : n}</text>\`);
   const F = L.find(c => vis.has(c.n)) || L[0], rg = c => (vis.has(c.n) ? 1 : 0) + (c.c === 'FRA' ? 1 : 0) + (c === F ? 2 : 0), ordre = [...L].sort((a, b) => rg(a) - rg(b));
@@ -349,7 +369,11 @@ function course() {
     let best = null, bd = 18;
     for (const c of L) { const v = c.p[i] + (c.p[i + 1] - c.p[i]) * u, dd = Math.abs(y(v) - my); if (dd < bd) { bd = dd; best = c.n; } }
     best ? montre(best, ev) : cache(); });
-  sv.addEventListener('mouseleave', cache);
+  sv.addEventListener('click', ev => sv.dispatchEvent(new MouseEvent('mousemove', { clientX: ev.clientX, clientY: ev.clientY })));   // téléphone : le toucher fait le survol
+  /* au doigt, le navigateur envoie « quitté » juste après le toucher : on l'ignore, et un toucher hors du graphique ferme la bulle */
+  let touche = false; sv.addEventListener('touchstart', () => { touche = true; }, { passive: true });
+  sv.addEventListener('mouseleave', () => { if (!touche) cache(); });
+  document.addEventListener('click', ev => { if (touche && !box.contains(ev.target)) cache(); });
 }
 /* bloc 2 : tableau triable, filtre par compétition (ou les trois) */
 const COLS0 = [
@@ -386,7 +410,7 @@ course(); tableau(); addEventListener('resize', () => course());
 { const H = DATA.H, rows = (o, lab, max) => Object.keys(o).map(Number).sort((a, b) => a - b).filter(n => n <= max).map(n => {
     const v = o[n] || 0, m = Object.keys(o).reduce((a, k) => Math.max(a, o[k]), 0);
     return \`<div class="r\${v === m ? '' : ' m'}"><span>\${lab(n)}</span><div style="width:\${v / m * 100}%"></div><b>\${pcs(v)}</b></div>\`; }).join('');
-  document.getElementById('frg').innerHTML = \`<div class="hist"><div class="ct">Combien de clubs français en quarts ?</div>\${rows(H.q, n => n + (n > 1 ? ' clubs' : ' club'), 5)}</div>\`
+  document.getElementById('frg').innerHTML = \`<div class="hist"><div class="ct">Combien de clubs français en quarts ?</div>\${rows(H.q, n => n + (n > 1 ? ' clubs' : ' club'), 5)}<div class="ct" style="margin-top:14px">Combien en demies ?</div>\${rows(H.d, n => n + (n > 1 ? ' clubs' : ' club'), 4)}</div>\`
     + \`<div class="hist"><div class="ct">Combien de coupes pour la France ?</div>\${rows(H.w, n => n === 0 ? 'aucune' : n + (n > 1 ? ' coupes' : ' coupe'), 3)}<div class="ct" style="margin-top:14px">Combien de finalistes français ?</div>\${rows(H.f, n => n === 0 ? 'aucun' : String(n), 3)}</div>\`; }
 /* bloc 2 : les favoris, coupe par coupe. Chaque point est un club, placé selon sa chance de
    titre sur une échelle logarithmique (0,1 % à 50 %) : les petites chances restent lisibles.
@@ -395,7 +419,7 @@ course(); tableau(); addEventListener('resize', () => course());
 function favoris() {
   const box = document.getElementById('sw'), W = box.clientWidth, mob = W < 560, H = 3 * 120 + 40, l = mob ? 22 : 110, r = mob ? 26 : 20;
   const lx = v => Math.log10(Math.max(v, .001)), x = v => l + (lx(v) + 3) / (Math.log10(.5) + 3) * (W - l - r);
-  let s = \`<svg viewBox="0 0 \${W} \${H}" id="svf">\`;
+  let s = \`<svg viewBox="0 0 \${W} \${H}" id="svf" role="img" aria-label="Chance de titre, favori de chaque coupe : \${DATA.comp.map((L, k) => \`\${CN[k]} \${L[0].n} \${pcs(L[0].p[5])}\`).join(', ')}">\`;
   for (const v of [.001, .01, .05, .1, .25, .5]) s += \`<line x1="\${x(v)}" x2="\${x(v)}" y1="8" y2="\${H - 26}" stroke="var(--rule-soft)"/><text x="\${x(v)}" y="\${H - 8}" text-anchor="middle" font-size="11" fill="var(--ink-3)">\${v < .01 ? '0,1' : Math.round(v * 100)} %</text>\`;
   s += \`<line id="gd" x1="0" x2="0" y1="0" y2="\${H - 26}" stroke="var(--ink-3)" stroke-dasharray="3 3" visibility="hidden"/>\`;
   const tous = [];
@@ -407,7 +431,7 @@ function favoris() {
     const pos = []; for (const p of pts) { let d = 0, ok = false; while (!ok) { ok = true; for (const q of pos) if (Math.abs(q.x - p.x) < 9 && Math.abs(q.y - (y0 + d)) < 9) { ok = false; break; } if (!ok) d = d > 0 ? -d : -d + 9; } p.y = y0 + d; pos.push(p); }
     for (const p of pos) { const fr = p.c.c === 'FRA'; tous.push(p);
       s += \`<circle class="fp" data-n="\${p.c.n}" cx="\${p.x}" cy="\${p.y}" r="\${fr ? 5.5 : 4.3}" fill="\${teinte(p.c)}" stroke="\${fr ? 'var(--ink)' : 'var(--surface)'}" stroke-width="\${fr ? 1.4 : 1}"/>\`; }
-    const lab = pos.filter((p, i) => i < 3 || (p.c.c === 'FRA' && p.c.p[5] >= .005));
+    const lab = pos.filter((p, i) => mob ? (i === 0 || (p.c.c === 'FRA' && p.c.p[5] >= .03)) : (i < 3 || (p.c.c === 'FRA' && p.c.p[5] >= .005)));
     const DY = [-12, 20, -26, 34, -40, 48]; lab.forEach((p, i) => { const fr = p.c.c === 'FRA'; s += \`<text class="lbs \${fr ? 'fr' : ''}" data-n="\${p.c.n}" x="\${p.x}" y="\${y0 + DY[i % DY.length]}" text-anchor="middle">\${p.c.n} \${pcs(p.c.p[5])}</text>\`; });
   });
   s += \`<circle id="hl" r="9" fill="none" stroke-width="2.5" visibility="hidden"/>\`;
@@ -435,7 +459,10 @@ function favoris() {
     let best = null, bd = 16; for (const p of tous) { const d = Math.hypot(p.x - mx, p.y - my); if (d < bd) { bd = d; best = p; } } return best; };
   sv.addEventListener('mousemove', ev => { const p = proche(ev); p ? montre(p, ev) : cache(); });
   sv.addEventListener('click', ev => { const p = proche(ev); p ? montre(p, ev) : cache(); });
-  sv.addEventListener('mouseleave', cache);
+  /* au doigt, le navigateur envoie « quitté » juste après le toucher : on l'ignore, et un toucher hors du graphique ferme la bulle */
+  let touche = false; sv.addEventListener('touchstart', () => { touche = true; }, { passive: true });
+  sv.addEventListener('mouseleave', () => { if (!touche) cache(); });
+  document.addEventListener('click', ev => { if (touche && !box.contains(ev.target)) cache(); });
 }
 /* bloc 3 : l'évolution, semaine après semaine (archive tenue par le robot depuis le 14/11/2026) :
    chance de titre de chaque club à la fin de chaque semaine européenne, jusqu'à la finale */
@@ -449,12 +476,12 @@ function evolution() {
   const Lc = DATA.comp[KE], derniers = S[S.length - 1].t;
   const vis = NE ? Lc.filter(c => c.c === NE).slice(0, 8) : [...Lc.slice(0, mob ? 5 : 6), ...Lc.slice(mob ? 5 : 6).filter(c => c.c === 'FRA' && c.p[5] >= .01)];
   const mx = Math.max(.05, ...vis.flatMap(c => S.map(w => w.t[c.n] || 0))), top = Math.ceil(mx * 1.15 * 20) / 20, y = v => t + (1 - v / top) * (H - t - b);
-  let s = \`<svg viewBox="0 0 \${W} \${H}">\`;
+  let s = \`<svg viewBox="0 0 \${W} \${H}" role="img" aria-label="\${CN[KE]}, chance de titre à la fin de chaque semaine européenne (\${S.length} semaine\${S.length > 1 ? 's' : ''} relevée\${S.length > 1 ? 's' : ''})">\`;
   for (let v = 0; v <= top + 1e-9; v += top > .3 ? .1 : .05) s += \`<line x1="\${l}" x2="\${W - r}" y1="\${y(v)}" y2="\${y(v)}" stroke="var(--rule-soft)"/><text x="\${l - 6}" y="\${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--ink-3)">\${Math.round(v * 100)}\${v === 0 ? '' : ' %'}</text>\`;
   /* mois sur l'axe, et la date de la finale */
   const M = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
   for (let a = new Date(d0), n = 0; a.getTime() <= d1 && n < 14; n++) { a = new Date(Date.UTC(a.getUTCFullYear(), a.getUTCMonth() + (n ? 1 : 0), 1));
-    if (a.getTime() < d0) continue; const xi = x(a.toISOString().slice(0, 10)); if (xi > W - r - 20) break;
+    if (a.getTime() < d0 || (mob && n % 2 === 0)) continue; const xi = x(a.toISOString().slice(0, 10)); if (xi > x(fin) - 34) break;
     s += \`<line x1="\${xi}" x2="\${xi}" y1="\${t}" y2="\${H - b}" stroke="var(--rule-soft)" stroke-dasharray="2 3"/><text x="\${xi + 4}" y="\${H - 10}" font-size="11" fill="var(--ink-3)">\${M[a.getUTCMonth()]}</text>\`; }
   s += \`<text x="\${x(fin)}" y="\${H - 10}" text-anchor="end" font-size="11" font-weight="700" fill="var(--ink-2)">finale</text><line x1="\${x(fin)}" x2="\${x(fin)}" y1="\${t}" y2="\${H - b}" stroke="var(--ink-3)" stroke-width="1"/>\`;
   const xd = x(S[S.length - 1].d);

@@ -111,7 +111,7 @@ ${nav('uefa')}
   <p class="leg"><span><i class="z" style="width:22px;height:10px;background:color-mix(in srgb,var(--good) 24%,var(--surface))"></i>qualifié : 8es directs (1–8), barrages (9–24)</span><span><i class="z" style="width:22px;height:10px;background:color-mix(in srgb,var(--bad) 17%,var(--surface));box-shadow:inset 2px 0 0 var(--bad)"></i>éliminé (25–36)</span><span><i class="d"></i>rang médian</span><span><i class="b"></i>une chance sur deux</span><span><i class="w"></i>neuf sur dix</span></p>
   <div id="vue"></div>
 </div>
-<p class="note">Une tendance, pas un pronostic. Le modèle donne à chaque club la force de sa nation (au coefficient à cinq ans), un peu plus ou un peu moins selon son rang dans le contingent, et ne retient que les victoires, nuls et défaites : un 9-1 et un 1-0 pèsent pareil. À égalité de points, il tire au sort : la différence de buts, qui départage dans le vrai classement, il ne la connaît pas. Méthode complète : <a href="/football-coefficient-uefa/#projection">la projection du coefficient UEFA</a>.</p>
+<p class="note">Chaque match restant est joué avec la force de ses deux clubs (leurs matchs européens et de championnat des trois dernières saisons) et l'avantage du terrain. À égalité de points, le modèle tire au sort : la différence de buts, qui départage dans le vrai classement, il ne la connaît pas. La suite, jusqu'au trophée : <a href="/football-clubs-projection-uefa/">Qui va gagner les coupes d'Europe ?</a></p>
 ${PIED}
 </main>
 <script>
