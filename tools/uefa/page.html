@@ -184,6 +184,8 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 #chart2b .el{font:600 12px "IBM Plex Mono",monospace; paint-order:stroke; stroke:var(--surface); stroke-width:3px}
 #chart2b .dj{font:600 10.5px "IBM Plex Mono",monospace; fill:var(--ink); letter-spacing:-.4px}
 #chart2b .dm{font:10.5px "IBM Plex Mono",monospace; fill:var(--ink-3)}
+#chart2b .dm.mo{font-weight:600; fill:var(--ink-2)} #chart2b .dm.mo.fut{fill:var(--ink-3)}
+#chart2b .msep{stroke:var(--ink-3); stroke-width:1; opacity:.55}
 #chart2b .pj{font:10.5px "IBM Plex Mono",monospace; fill:var(--ink-2)}
 #chart2b .pz{font:9.5px "IBM Plex Mono",monospace; fill:var(--ink-3); paint-order:stroke; stroke:var(--surface); stroke-width:4px}
 #chart2b .pp{font:600 10.5px "IBM Plex Mono",monospace; fill:var(--ink)}
@@ -3325,8 +3327,15 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
     WK.forEach((k, i) => { const x = X(i), cl = i > lastW ? ' fut' : i === lastW ? ' cur' : '', A = dd(k.d0), B = dd(k.d1);
       if (i === lastW) g += `<rect x="${x - cw / 2 + 1.5}" y="${pB + 4}" width="${cw - 3}" height="${Ht - pB - 4}" rx="5" class="curbg"/>`;
       g += `<text x="${x}" y="${yD}" text-anchor="middle" class="dj${cl}">${A.getUTCMonth() === B.getUTCMonth() && k.d0 !== k.d1 ? A.getUTCDate() + '–' + B.getUTCDate() : A.getUTCDate()}</text>`;
-      if (A.getUTCMonth() !== mo) { mo = A.getUTCMonth(); g += `<text x="${x - cw / 2 + 3}" y="${yM}" class="dm${cl}">${MO[mo]}</text>`;
-        if (i) g += `<line x1="${x - cw / 2}" x2="${x - cw / 2}" y1="${pB + 6}" y2="${yM + 2}" stroke="var(--rule)"/>`; }
+      /* Mois (GT, 14/11/2026) : au téléphone, sous chaque date, centré (le graphe défile, le
+         mois reste lisible partout) ; sur ordinateur, une fois, centré sous toutes ses
+         semaines, entre deux traits plus marqués qui descendent jusqu'aux pastilles. */
+      if (ph) g += `<text x="${x}" y="${yM}" text-anchor="middle" class="dm${cl}">${MO[A.getUTCMonth()]}</text>`;
+      if (A.getUTCMonth() !== mo) { mo = A.getUTCMonth();
+        if (!ph) { let j = i; while (j + 1 < n && dd(WK[j + 1].d0).getUTCMonth() === mo) j++;
+          g += `<text x="${(X(i) + X(j)) / 2}" y="${yM}" text-anchor="middle" class="dm mo${i > lastW ? ' fut' : ''}">${MO[mo]}</text>`; }
+        if (i) g += ph ? `<line x1="${x - cw / 2}" x2="${x - cw / 2}" y1="${pB + 6}" y2="${yM + 2}" stroke="var(--rule)"/>`
+                       : `<line x1="${x - cw / 2}" x2="${x - cw / 2}" y1="${pB + 6}" y2="${yR[2] + 5}" class="msep"/>`; }
       for (let co = 0; co < 3; co++) if (co in k.p)
         { /* pastille + étiquette centrées dans la colonne (GT, 13/11) : Plex Mono 10,5 px = 6,3 px par caractère */
           const tw = [...k.p[co]].length * 6.3, x0 = x - (tw + 8) / 2;
