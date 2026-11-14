@@ -214,6 +214,22 @@ table.g i.cp{display:inline-block;min-width:24px;text-align:center;font:600 10.5
 table.g td.vide{text-align:left;color:var(--ink-3);padding:14px 6px}
 /* téléphone : la nation passe en carré devant le club (la colonne ne tient pas), noms longs coupés */
 @media (max-width:560px){table.g td.rg,table.g th.rg,table.g td.nation,table.g th.nat{display:none} table.g td.club i.sq{display:inline-block} table.g td.club .nm{display:inline-block;max-width:calc(100% - 16px);overflow:hidden;text-overflow:ellipsis;vertical-align:bottom} table.g tr.grp{display:none} table.g{table-layout:fixed} table.g th.clh{width:34%} table.g th.cph{width:13%} table.g td.club{overflow:hidden;white-space:nowrap} table.g th{letter-spacing:0;padding-left:2px;padding-right:2px} table.g td{padding-left:2px;padding-right:2px}}
+/* bloc 2 : survol */
+.sw{position:relative}
+.sw .fp{transition:opacity .12s}
+.sw.hov .fp{opacity:.22}.sw.hov .fp.on{opacity:1}
+.sw.hov .lbs{opacity:.2}.sw.hov .lbs.on{opacity:1}
+.tipf{min-width:236px}
+.tipf .tt .cp{font:600 10px 'IBM Plex Mono',monospace;color:#fff;border-radius:2px;padding:1px 5px;margin-left:auto;font-style:normal}
+:root[data-theme="dark"] .tipf .tt .cp{color:#0B0F14}
+.tipf .tt{gap:7px}
+.tipf .ts{margin-bottom:8px}
+.tipf .tg{display:flex;align-items:baseline;gap:8px;padding:6px 0 8px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin-bottom:6px}
+.tipf .tg .tl{font:700 10.5px Carlito,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.tipf .tg b{font:700 30px/1 Carlito,sans-serif;letter-spacing:-.01em}
+.tipf .tg .tsur{font-size:12px;color:var(--ink-3);margin-left:auto}
+.tipf .tpar{font:700 10.5px Carlito,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:2px}
+.tipf .tf{font-size:11.5px;color:var(--ink-3);margin-top:6px}
 </style>
 </head>
 <body>
@@ -373,23 +389,53 @@ course(); tableau(); addEventListener('resize', () => course());
   document.getElementById('frg').innerHTML = \`<div class="hist"><div class="ct">Combien de clubs français en quarts ?</div>\${rows(H.q, n => n + (n > 1 ? ' clubs' : ' club'), 5)}</div>\`
     + \`<div class="hist"><div class="ct">Combien de coupes pour la France ?</div>\${rows(H.w, n => n === 0 ? 'aucune' : n + (n > 1 ? ' coupes' : ' coupe'), 3)}<div class="ct" style="margin-top:14px">Combien de finalistes français ?</div>\${rows(H.f, n => n === 0 ? 'aucun' : String(n), 3)}</div>\`; }
 /* bloc 2 : les favoris, coupe par coupe. Chaque point est un club, placé selon sa chance de
-   titre sur une échelle logarithmique (0,1 % à 50 %) : les petites chances restent lisibles. */
+   titre sur une échelle logarithmique (0,1 % à 50 %) : les petites chances restent lisibles.
+   Survol (ou toucher) : le club ressort, les autres s'effacent, un trait descend jusqu'à
+   l'axe ; la bulle met la chance de titre en grand, puis le parcours tour par tour. */
 function favoris() {
   const box = document.getElementById('sw'), W = box.clientWidth, mob = W < 560, H = 3 * 120 + 40, l = mob ? 22 : 110, r = mob ? 26 : 20;
   const lx = v => Math.log10(Math.max(v, .001)), x = v => l + (lx(v) + 3) / (Math.log10(.5) + 3) * (W - l - r);
-  let s = \`<svg viewBox="0 0 \${W} \${H}">\`;
+  let s = \`<svg viewBox="0 0 \${W} \${H}" id="svf">\`;
   for (const v of [.001, .01, .05, .1, .25, .5]) s += \`<line x1="\${x(v)}" x2="\${x(v)}" y1="8" y2="\${H - 26}" stroke="var(--rule-soft)"/><text x="\${x(v)}" y="\${H - 8}" text-anchor="middle" font-size="11" fill="var(--ink-3)">\${v < .01 ? '0,1' : Math.round(v * 100)} %</text>\`;
+  s += \`<line id="gd" x1="0" x2="0" y1="0" y2="\${H - 26}" stroke="var(--ink-3)" stroke-dasharray="3 3" visibility="hidden"/>\`;
+  const tous = [];
   DATA.comp.forEach((Lc, k) => { const y0 = 20 + k * 120 + 50;
     s += \`<text x="0" y="\${y0 - 40}" font-size="13" font-weight="700" fill="var(\${CV[k]})">\${CN[k]}</text>\`;
-    const pts = [...Lc].filter(c => c.p[5] >= .001).sort((a, b) => b.p[5] - a.p[5]).map(c => ({ c, x: x(c.p[5]), y: y0 })), nul = Lc.length - pts.length;
+    const pts = [...Lc].filter(c => c.p[5] >= .001).sort((a, b) => b.p[5] - a.p[5]).map((c, i) => ({ c, k, rang: i + 1, x: x(c.p[5]), y: y0 })), nul = Lc.length - pts.length;
     if (nul && !mob) s += \`<text x="\${x(.001) - 8}" y="\${y0 + 4}" text-anchor="end" font-size="11" fill="var(--ink-3)">\${nul} à moins de 0,1 %</text>\`;
     /* empilement : un point qui en chevauche un autre se décale au-dessus ou en dessous */
     const pos = []; for (const p of pts) { let d = 0, ok = false; while (!ok) { ok = true; for (const q of pos) if (Math.abs(q.x - p.x) < 9 && Math.abs(q.y - (y0 + d)) < 9) { ok = false; break; } if (!ok) d = d > 0 ? -d : -d + 9; } p.y = y0 + d; pos.push(p); }
-    for (const p of pos) { const fr = p.c.c === 'FRA'; s += \`<circle cx="\${p.x}" cy="\${p.y}" r="\${fr ? 5.5 : 4.3}" fill="\${teinte(p.c)}" stroke="\${fr ? 'var(--ink)' : 'var(--surface)'}" stroke-width="\${fr ? 1.4 : 1}"><title>\${p.c.n} (\${NATN[p.c.c] || p.c.c}) · titre \${pcs(p.c.p[5])} · finale \${pcs(p.c.p[4])}</title></circle>\`; }
+    for (const p of pos) { const fr = p.c.c === 'FRA'; tous.push(p);
+      s += \`<circle class="fp" data-n="\${p.c.n}" cx="\${p.x}" cy="\${p.y}" r="\${fr ? 5.5 : 4.3}" fill="\${teinte(p.c)}" stroke="\${fr ? 'var(--ink)' : 'var(--surface)'}" stroke-width="\${fr ? 1.4 : 1}"/>\`; }
     const lab = pos.filter((p, i) => i < 3 || (p.c.c === 'FRA' && p.c.p[5] >= .005));
-    const DY = [-12, 20, -26, 34, -40, 48]; lab.forEach((p, i) => { const fr = p.c.c === 'FRA'; s += \`<text class="lbs \${fr ? 'fr' : ''}" x="\${p.x}" y="\${y0 + DY[i % DY.length]}" text-anchor="middle">\${p.c.n} \${pcs(p.c.p[5])}</text>\`; });
+    const DY = [-12, 20, -26, 34, -40, 48]; lab.forEach((p, i) => { const fr = p.c.c === 'FRA'; s += \`<text class="lbs \${fr ? 'fr' : ''}" data-n="\${p.c.n}" x="\${p.x}" y="\${y0 + DY[i % DY.length]}" text-anchor="middle">\${p.c.n} \${pcs(p.c.p[5])}</text>\`; });
   });
-  box.innerHTML = s + '</svg>';
+  s += \`<circle id="hl" r="9" fill="none" stroke-width="2.5" visibility="hidden"/>\`;
+  box.innerHTML = s + '</svg><div class="tip tipf" id="tipf" hidden></div>';
+  const sv = box.querySelector('svg'), tip = box.querySelector('#tipf'), gd = sv.querySelector('#gd'), hl = sv.querySelector('#hl');
+  const sur = v => { if (v >= .5) return 'plus d\\'une chance sur deux'; const n = Math.round(1 / v); return n <= 1 ? '' : \`1 chance sur \${n.toLocaleString('fr-FR')}\`; };
+  const cache = () => { box.classList.remove('hov'); sv.querySelectorAll('.on').forEach(e => e.classList.remove('on')); gd.setAttribute('visibility', 'hidden'); hl.setAttribute('visibility', 'hidden'); tip.hidden = true; };
+  const montre = (p, ev) => {
+    const c = p.c, cc = teinte(c), kc = \`var(\${CV[p.k]})\`;
+    box.classList.add('hov'); sv.querySelectorAll('[data-n]').forEach(e => e.classList.toggle('on', e.dataset.n === c.n));
+    gd.setAttribute('x1', p.x); gd.setAttribute('x2', p.x); gd.setAttribute('y1', p.y + 9); gd.setAttribute('visibility', 'visible');
+    hl.setAttribute('cx', p.x); hl.setAttribute('cy', p.y); hl.setAttribute('stroke', cc); hl.setAttribute('visibility', 'visible');
+    tip.innerHTML = \`<div class="tt"><i style="background:\${cc}"></i>\${c.n}<em class="cp" style="background:\${kc}">\${CK[p.k]}</em></div>\`
+      + \`<div class="ts">\${nomNat(c.c)} · \${p.rang === 1 ? \`favori de la \${CN[p.k]}\` : \`\${p.rang}<sup>e</sup> favori de la \${CN[p.k]}\`}</div>\`
+      + \`<div class="tg"><span class="tl">Titre</span><b style="color:\${cc}">\${pcs(c.p[5])}</b><span class="tsur">\${sur(c.p[5])}</span></div>\`
+      + \`<div class="tpar">Le parcours</div>\`
+      + [0, 1, 2, 3, 4].map(i => \`<div class="r"><span>\${TOURS[i]}</span><u><s style="width:\${c.p[i] * 100}%;background:\${kc}"></s></u><b>\${pcs(c.p[i])}</b></div>\`).join('')
+      + \`<div class="tf">Bilan en phase de ligue : \${c.v.join('-')} · top 8 : \${pcs(c.top8)}</div>\`;
+    tip.hidden = false;
+    const R = box.getBoundingClientRect(), k = R.width / W, px0 = p.x * k, py0 = p.y * k, tw = tip.offsetWidth, th = tip.offsetHeight;
+    let px = px0 + 18, py = py0 - th / 2;
+    if (px + tw > R.width) px = px0 - tw - 18;
+    tip.style.left = Math.max(0, px) + 'px'; tip.style.top = Math.min(Math.max(0, py), R.height - th) + 'px'; };
+  const proche = ev => { const R = sv.getBoundingClientRect(), mx = (ev.clientX - R.left) * W / R.width, my = (ev.clientY - R.top) * H / R.height;
+    let best = null, bd = 16; for (const p of tous) { const d = Math.hypot(p.x - mx, p.y - my); if (d < bd) { bd = d; best = p; } } return best; };
+  sv.addEventListener('mousemove', ev => { const p = proche(ev); p ? montre(p, ev) : cache(); });
+  sv.addEventListener('click', ev => { const p = proche(ev); p ? montre(p, ev) : cache(); });
+  sv.addEventListener('mouseleave', cache);
 }
 /* bloc 3 : l'évolution, semaine après semaine (archive tenue par le robot depuis le 14/11/2026) :
    chance de titre de chaque club à la fin de chaque semaine européenne, jusqu'à la finale */
