@@ -60,6 +60,7 @@ export function buildClubsProjection(src) {
   <div class="ch" id="ch"></div>`,
     favoris: `<h3>Les favoris, coupe par coupe</h3></div>
   <p class="psous">Chaque point est un club, placé selon sa chance de titre.</p>
+  <div class="f1"><div class="grp dr"><label class="lb" for="natF">Nation</label><select class="sel" id="natF"></select></div></div>
   <div class="sw" id="sw"></div>`,
     evo: `<h3>Semaine après semaine</h3></div>
   <p class="psous">Chance de titre à la fin de chaque semaine européenne.</p>
@@ -160,6 +161,12 @@ table.g th.tri{color:var(--ink)}
 table.g th .ar{display:inline-block;width:9px;color:var(--ink-3)}
 table.g tr.grp th{cursor:default;border-bottom:0;padding:0 6px 2px;font-size:11px;color:var(--ink-2);text-align:left}
 table.g tr.grp th.pf{border-left:2px solid var(--rule);padding-left:12px}
+/* couleurs de phase (page UEFA) : ligue en bleu, phase finale en violet, en rappel discret */
+table.g tr.grp th.gl{box-shadow:inset 0 -2px 0 color-mix(in srgb,var(--fr) 55%,transparent);text-align:center}
+table.g tr.grp th.gl a.phl{color:color-mix(in srgb,var(--fr) 75%,var(--ink-2));border-bottom:0}
+table.g tr.grp th.pf{box-shadow:inset 0 -2px 0 color-mix(in srgb,var(--n7) 55%,transparent);color:color-mix(in srgb,var(--n7) 75%,var(--ink-2))}
+.sw .fp.fx{opacity:.18}.sw.hov .fp.fx{opacity:.12}.sw.hov .fp.fx.on,.sw.hov .fp.on{opacity:1}
+.lbs.sel{font-weight:700}
 table.g td{padding:5px 6px;border-bottom:1px solid var(--rule-soft);text-align:right;white-space:nowrap}
 table.g td.l{text-align:left}
 table.g .pf1{border-left:2px solid var(--rule);padding-left:12px}
@@ -254,7 +261,7 @@ table.g i.cp{display:inline-block;min-width:24px;text-align:center;font:600 10.5
 :root[data-theme="dark"] table.g i.cp{color:#0B0F14}
 table.g td.vide{text-align:left;color:var(--ink-3);padding:14px 6px}
 /* téléphone : la nation passe en carré devant le club (la colonne ne tient pas), noms longs coupés */
-@media (max-width:560px){.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -12px;padding:0 12px} table.g{min-width:820px;font-size:13.5px} table.g td.club,table.g th.clh{position:sticky;left:0;z-index:2;background:var(--surface);box-shadow:inset -1px 0 0 var(--rule-soft)} table.g tr.fr td.club{background:var(--fr-soft)} table.g td.rg,table.g th.rg{display:none} table.g td.nation{width:1%} table.g th.clh,table.g td.club{width:118px;max-width:118px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+@media (max-width:560px){.tw{overflow-x:auto;-webkit-overflow-scrolling:touch} table.g{width:max-content;min-width:100%;font-size:13.5px} table.g td.club,table.g th.clh,table.g th.gclub{position:sticky;left:0;z-index:2;background:var(--surface);box-shadow:inset -1px 0 0 var(--rule)} table.g tr.fr td.club{background:var(--fr-soft)} table.g td.rg,table.g th.rg{display:none} table.g th.clh,table.g td.club{max-width:118px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} table.g td.nation{padding-right:12px}}
 /* bloc 2 : survol */
 .sw{position:relative}
 .sw .fp{transition:opacity .12s}
@@ -356,6 +363,8 @@ function course() {
   for (const v of [0, .25, .5, .75, 1]) s += \`<line x1="\${l}" x2="\${x(5)}" y1="\${y(v)}" y2="\${y(v)}" stroke="var(--rule-soft)"/><text x="\${l - 6}" y="\${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--ink-3)">\${v * 100}\${v === 1 ? ' %' : ''}</text>\`;
   TOURS.forEach((n, i) => { const tx = \`<text x="\${x(i)}" y="\${H - 10}" text-anchor="middle" font-size="11.5" font-weight="600" fill="\${i ? 'var(--ink-2)' : 'var(--fr)'}"\${i ? '' : ' text-decoration="underline"'}>\${mob && n.length > 6 ? n.slice(0, 4) + '.' : n}</text>\`;
     s += \`<line x1="\${x(i)}" x2="\${x(i)}" y1="\${t}" y2="\${H - b}" stroke="var(--rule-soft)" stroke-dasharray="\${i ? '2 3' : ''}"/>\` + (i ? tx : \`<a href="\${DATA.phl}"><title>Phase de ligue : le rang final de chaque club</title>\${tx}</a>\`); });
+  /* rappel discret des couleurs de phase de la page UEFA : ligue en bleu, phase finale en violet */
+  { const xm = (x(0) + x(1)) / 2, yb = H - b + 3; s += \`<line x1="\${x(0)}" x2="\${xm - 2}" y1="\${yb}" y2="\${yb}" stroke="var(--fr)" stroke-width="3" stroke-linecap="round" opacity=".55"/><line x1="\${xm + 2}" x2="\${x(5)}" y1="\${yb}" y2="\${yb}" stroke="var(--n7)" stroke-width="3" stroke-linecap="round" opacity=".55"/>\`; }
   const F = L.find(c => vis.has(c.n)) || L[0], rg = c => (vis.has(c.n) ? 1 : 0) + (c.c === 'FRA' ? 1 : 0) + (c === F ? 2 : 0), ordre = [...L].sort((a, b) => rg(a) - rg(b));
   for (const c of ordre) { const on = vis.has(c.n), fr = c.c === 'FRA', tc = teinte(c);
     s += \`<polyline class="ln \${on ? '' : 'fond'}" data-n="\${c.n}" points="\${pts(c)}" stroke="\${on ? tc : ''}" stroke-width="\${on ? (fr ? 2.6 : 1.8) : 1}" stroke-linejoin="round"/>\`;
@@ -410,7 +419,7 @@ function tableau() {
   const COLS = COLS0.filter(c => !c.tous || KT === 3);
   const L = base.filter(c => !NT || c.c === NT).sort((a, b) => { const A = val(a, TRI.k), B = val(b, TRI.k); return (typeof A === 'string' ? A.localeCompare(B, 'fr') : A - B) * TRI.s || b.p[5] - a.p[5]; });
   const R = TOUS ? L : L.slice(0, 16), g1 = COLS.findIndex(c => c.k === 'top8');
-  let h = \`<table class="g"><tr class="grp"><th colspan="\${g1}" class="l"></th><th colspan="2" class="mob"><a class="phl" href="\${DATA.phl}" title="Le rang final de chaque club">Phase de ligue ↗</a></th><th class="cox">Ligue</th><th colspan="5" class="pf"><span class="lo">Phase finale · chance d'atteindre</span><span class="co">Phase finale</span></th></tr><tr>\`
+  let h = \`<table class="g"><tr class="grp"><th class="rg"></th><th class="l gclub"></th><th colspan="\${g1 - 2}"></th><th colspan="2" class="gl"><a class="phl" href="\${DATA.phl}" title="Le rang final de chaque club">Phase de ligue ↗</a></th><th colspan="5" class="pf">Phase finale · chance d'atteindre</th></tr><tr>\`
     + COLS.map((c, i) => \`<th data-i="\${i}" class="\${c.l ? 'l ' : ''}\${c.mob ? 'mob ' : ''}\${c.k === 'rg' ? 'rg ' : ''}\${c.k === 'nat' ? 'nat ' : ''}\${c.k === 'n' ? 'clh ' : ''}\${c.k === 'cp' ? 'cph ' : ''}\${c.k === 1 ? 'pf1 ' : ''}\${TRI.k === c.k ? 'tri' : ''}">\${c.c ? \`<span class="lo">\${c.t}</span><span class="co">\${c.c}</span>\` : c.t}<span class="ar">\${TRI.k === c.k ? (TRI.s < 0 ? '↓' : '↑') : ''}</span></th>\`).join('') + '</tr>';
   h += R.map((c, i) => \`<tr class="\${c.c === 'FRA' ? 'fr' : ''}"><td class="rg">\${i + 1}</td><td class="club l"><i class="sq" style="background:\${teinte(c)}"></i><span class="nm">\${c.n}</span></td>\`
     + \`<td class="nation l"><i style="background:\${teinte(c)}"></i>\${nomNat(c.c).replace('>' + (NATN[c.c] || c.c) + '<', \`><span class="long">\${NATN[c.c] || c.c}</span><span class="court">\${c.c}</span><\`)}</td>\`
@@ -443,7 +452,9 @@ course(); tableau(); addEventListener('resize', () => course());
    titre sur une échelle logarithmique (0,1 % à 50 %) : les petites chances restent lisibles.
    Survol (ou toucher) : le club ressort, les autres s'effacent, un trait descend jusqu'à
    l'axe ; la bulle met la chance de titre en grand, puis le parcours tour par tour. */
+let NF = '';
 function favoris() {
+  nations('natF', NF, DATA.comp.flat(), v => { NF = v; favoris(); });
   const box = document.getElementById('sw'), W = box.clientWidth, mob = W < 560, H = 3 * 120 + 40, l = mob ? 22 : 110, r = mob ? 26 : 20;
   const lx = v => Math.log10(Math.max(v, .001)), x = v => l + (lx(v) + 3) / (Math.log10(.5) + 3) * (W - l - r);
   let s = \`<svg viewBox="0 0 \${W} \${H}" id="svf" role="img" aria-label="Chance de titre, favori de chaque coupe : \${DATA.comp.map((L, k) => \`\${CN[k]} \${L[0].n} \${pcs(L[0].p[5])}\`).join(', ')}">\`;
@@ -456,10 +467,17 @@ function favoris() {
     if (nul && !mob) s += \`<text x="\${x(.001) - 8}" y="\${y0 + 4}" text-anchor="end" font-size="11" fill="var(--ink-3)">\${nul} à moins de 0,1 %</text>\`;
     /* empilement : un point qui en chevauche un autre se décale au-dessus ou en dessous */
     const pos = []; for (const p of pts) { let d = 0, ok = false; while (!ok) { ok = true; for (const q of pos) if (Math.abs(q.x - p.x) < 9 && Math.abs(q.y - (y0 + d)) < 9) { ok = false; break; } if (!ok) d = d > 0 ? -d : -d + 9; } p.y = y0 + d; pos.push(p); }
-    for (const p of pos) { const fr = p.c.c === 'FRA'; tous.push(p);
-      s += \`<circle class="fp" data-n="\${p.c.n}" cx="\${p.x}" cy="\${p.y}" r="\${fr ? 5.5 : 4.3}" fill="\${teinte(p.c)}" stroke="\${fr ? 'var(--ink)' : 'var(--surface)'}" stroke-width="\${fr ? 1.4 : 1}"/>\`; }
-    const lab = pos.filter((p, i) => mob ? (i === 0 || (p.c.c === 'FRA' && p.c.p[5] >= .03)) : (i < 3 || (p.c.c === 'FRA' && p.c.p[5] >= .005)));
-    const DY = [-12, 20, -26, 34, -40, 48]; lab.forEach((p, i) => { const fr = p.c.c === 'FRA'; s += \`<text class="lbs \${fr ? 'fr' : ''}" data-n="\${p.c.n}" x="\${p.x}" y="\${y0 + DY[i % DY.length]}" text-anchor="middle">\${p.c.n} \${pcs(p.c.p[5])}</text>\`; });
+    /* une nation choisie : ses clubs ressortent (plus gros, cerclés, tous nommés), les autres s'effacent */
+    for (const p of pos) { const fr = p.c.c === 'FRA', sel = NF && p.c.c === NF; tous.push(p);
+      s += \`<circle class="fp\${NF && !sel ? ' fx' : ''}" data-n="\${p.c.n}" cx="\${p.x}" cy="\${p.y}" r="\${sel ? 6.5 : fr ? 5.5 : 4.3}" fill="\${teinte(p.c)}" stroke="\${sel || fr ? 'var(--ink)' : 'var(--surface)'}" stroke-width="\${sel ? 1.8 : fr ? 1.4 : 1}"/>\`; }
+    const lab = NF ? pos.filter(p => p.c.c === NF) : pos.filter((p, i) => mob ? (i === 0 || (p.c.c === 'FRA' && p.c.p[5] >= .03)) : (i < 3 || (p.c.c === 'FRA' && p.c.p[5] >= .005)));
+    if (NF && !lab.length && Lc.some(c => c.c === NF)) s += \`<text x="\${x(.001) + 6}" y="\${y0 - 14}" font-size="11.5" fill="var(--ink-3)">\${NATN[NF] || NF} : moins de 0,1 % de chances</text>\`;
+    /* étiquettes : au-dessus ou en dessous du couloir, la première place libre (largeur estimée du texte) */
+    const DY = [-12, 20, -26, 34, -40, 48], prises = [];
+    lab.forEach(p => { const fr = p.c.c === 'FRA', sel = NF && p.c.c === NF, txt = \`\${p.c.n} \${pcs(p.c.p[5])}\`, lw = txt.length * 6.2 + 8;
+      const dy = DY.find(d => !prises.some(q => q.dy === d && Math.abs(q.x - p.x) < (q.lw + lw) / 2)) ?? DY[prises.length % DY.length];
+      prises.push({ x: p.x, dy, lw });
+      s += \`<text class="lbs \${fr ? 'fr' : ''}\${sel ? ' sel' : ''}" data-n="\${p.c.n}" x="\${p.x}" y="\${y0 + dy}" text-anchor="middle"\${sel ? \` style="fill:\${teinte(p.c)}"\` : ''}>\${txt}</text>\`; });
   });
   s += \`<circle id="hl" r="9" fill="none" stroke-width="2.5" visibility="hidden"/>\`;
   box.innerHTML = s + '</svg><div class="tip tipf" id="tipf" hidden></div>';
