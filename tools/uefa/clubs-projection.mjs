@@ -48,7 +48,7 @@ export function buildClubsProjection(src) {
   let sem = Object.keys(arch).sort().map(w => ({ d: arch[w].d1 || w, t: Object.fromEntries(arch[w].ko.map(c => [nom(c[0]), c[7]])) }));
   if (!sem.length) { const [jj, mm, aa] = maj.split('/'); sem = [{ d: `${aa}-${mm}-${jj}`, t: Object.fromEntries((P.clubsKO || []).map(c => [nom(c[0]), c[7]])) }]; }
   const finales = [...src.matchAll(/\['F','(\d{4}-\d\d-\d\d)'\]/g)].slice(0, 3).map(m => m[1]);
-  const DATA = JSON.stringify({ comp, H, nat: FRNAME, slot, maj, n: P.n || 0, ordre: [...(D.nations || [])].sort((a, b) => a.r - b.r).map(n => n.c), evo: { sem, fin: finales.length === 3 ? finales : [0, 1, 2].map(() => sem[sem.length - 1].d) } });
+  const DATA = JSON.stringify({ comp, H, nat: FRNAME, slot, maj, n: P.n || 0, phl: CACHEES.clubsFR, ordre: [...(D.nations || [])].sort((a, b) => a.r - b.r).map(n => n.c), evo: { sem, fin: finales.length === 3 ? finales : [0, 1, 2].map(() => sem[sem.length - 1].d) } });
   /* les blocs, numérotés dans l'ordre d'affichage. « Semaine après semaine » passe après le
      tableau tant qu'il a moins de trois semaines (une courbe d'un point n'apprend rien),
      puis remonte tout seul en 3e position. */
@@ -180,8 +180,6 @@ table.g tr.fr:hover td{background:color-mix(in srgb,var(--fr-soft) 80%,var(--fr)
 table.g .co,table.g .cox{display:none}
 @media (max-width:560px){table.g .lo{display:none} table.g .co{display:inline} table.g .cox{display:table-cell} table.g .mob{display:none} table.g td.p{width:34px} table.g td.cl{max-width:104px;overflow:hidden;text-overflow:ellipsis} table.g th{letter-spacing:0} table.g{font-size:13px} table.g td.cl u{display:none} table.g td,table.g th{padding-left:4px;padding-right:4px} table.g .pf1,table.g tr.grp th.pf{padding-left:7px}}
 /* France */
-.frg{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-@media (max-width:640px){.frg{grid-template-columns:1fr}}
 .hist .ct{font:700 13px Carlito,sans-serif;margin-bottom:8px}
 .hist .r{display:grid;grid-template-columns:86px 1fr 46px;align-items:center;gap:8px;margin:3px 0;font:13px Carlito,sans-serif;color:var(--ink-2)}
 .hist .r div{height:16px;background:var(--fr);border-radius:2px}
@@ -275,6 +273,25 @@ table.g td.vide{text-align:left;color:var(--ink-3);padding:14px 6px}
 .tipf .tf{font-size:11.5px;color:var(--ink-3);margin-top:6px}
 .meth p{font-size:14px;color:var(--ink-2);margin:0 0 8px;max-width:84ch;line-height:1.55}
 .meth p:last-child{margin-bottom:0}
+/* bloc 5 : quatre cartes (14/11/2026) */
+.frg{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media (max-width:900px){.frg{grid-template-columns:repeat(2,1fr)}}
+.fc{border:1px solid var(--rule);border-radius:3px;padding:12px 14px 10px;background:var(--surface);display:flex;flex-direction:column}
+.fct{font:700 11px Carlito,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.fck{display:flex;align-items:baseline;gap:7px;margin:4px 0 10px}
+.fck b{font:700 30px/1 Carlito,sans-serif;color:var(--fr);letter-spacing:-.01em;white-space:nowrap}
+@media (max-width:560px){.fck{flex-direction:column;gap:2px}.fck b{font-size:26px}.fc{padding:10px 10px 8px}}
+.fck span{font-size:12.5px;color:var(--ink-2)}
+.fcb{display:flex;align-items:flex-end;gap:6px;height:104px;border-bottom:1px solid var(--rule)}
+.fcb .col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative}
+.fcb .col i{display:block;width:100%;max-width:34px;background:color-mix(in srgb,var(--fr) 38%,var(--surface));border-radius:2px 2px 0 0}
+.fcb .col.top i{background:var(--fr)}
+.fcb .col em{font:600 11px Carlito,sans-serif;font-style:normal;color:var(--ink-2);margin-bottom:3px;white-space:nowrap}
+.fcb .col.top em{color:var(--ink);font-weight:700}
+.fcb .col span{position:absolute;bottom:-18px;font:600 12px 'IBM Plex Mono',monospace;color:var(--ink-2)}
+.fcu{font-size:11.5px;color:var(--ink-3);margin-top:22px;text-align:center}
+table.g a.phl{color:inherit;text-decoration:none;border-bottom:1px dotted var(--ink-3)}
+table.g a.phl:hover{color:var(--fr);border-color:var(--fr)}
 </style>
 </head>
 <body>
@@ -286,7 +303,7 @@ ${nav(CLUBS_PRJ.key)}
 ${pret ? `<div class="hero" id="hero"></div>
 ${blocs}
 <p class="maj" style="margin-top:14px" id="maj"></p>
-<p class="note"><a href="#methode">Comment c'est calculé</a> · <a href="/football-coefficient-uefa/">Le coefficient UEFA des nations</a> · <a href="${CACHEES.clubsFR}">Phase de ligue : la fourchette de rang de chaque club</a></p>` : `<p class="note">Projection en cours de calcul : revenez après le prochain passage du robot.</p>`}
+<p class="note"><a href="#methode">Comment c'est calculé</a> · <a href="/football-coefficient-uefa/">Le coefficient UEFA des nations</a> · <a href="${CACHEES.clubsFR}">Phase de ligue : le rang final de chaque club</a></p>` : `<p class="note">Projection en cours de calcul : revenez après le prochain passage du robot.</p>`}
 ${PIED}
 </main>
 ${pret ? `<script>
@@ -337,7 +354,8 @@ function course() {
   const pts = c => c.p.map((v, i) => \`\${x(i)},\${y(v)}\`).join(' ');
   let s = \`<svg viewBox="0 0 \${W} \${H}" id="sv" role="img" aria-label="\${CN[K]}, chance d'atteindre chaque tour : \${L.slice(0, 3).map(c => \`\${c.n} \${pcs(c.p[5])} de titre\`).join(', ')}">\`;
   for (const v of [0, .25, .5, .75, 1]) s += \`<line x1="\${l}" x2="\${x(5)}" y1="\${y(v)}" y2="\${y(v)}" stroke="var(--rule-soft)"/><text x="\${l - 6}" y="\${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--ink-3)">\${v * 100}\${v === 1 ? ' %' : ''}</text>\`;
-  TOURS.forEach((n, i) => s += \`<line x1="\${x(i)}" x2="\${x(i)}" y1="\${t}" y2="\${H - b}" stroke="var(--rule-soft)" stroke-dasharray="\${i ? '2 3' : ''}"/><text x="\${x(i)}" y="\${H - 10}" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink-2)">\${mob && n.length > 6 ? n.slice(0, 4) + '.' : n}</text>\`);
+  TOURS.forEach((n, i) => { const tx = \`<text x="\${x(i)}" y="\${H - 10}" text-anchor="middle" font-size="11.5" font-weight="600" fill="\${i ? 'var(--ink-2)' : 'var(--fr)'}"\${i ? '' : ' text-decoration="underline"'}>\${mob && n.length > 6 ? n.slice(0, 4) + '.' : n}</text>\`;
+    s += \`<line x1="\${x(i)}" x2="\${x(i)}" y1="\${t}" y2="\${H - b}" stroke="var(--rule-soft)" stroke-dasharray="\${i ? '2 3' : ''}"/>\` + (i ? tx : \`<a href="\${DATA.phl}"><title>Phase de ligue : le rang final de chaque club</title>\${tx}</a>\`); });
   const F = L.find(c => vis.has(c.n)) || L[0], rg = c => (vis.has(c.n) ? 1 : 0) + (c.c === 'FRA' ? 1 : 0) + (c === F ? 2 : 0), ordre = [...L].sort((a, b) => rg(a) - rg(b));
   for (const c of ordre) { const on = vis.has(c.n), fr = c.c === 'FRA', tc = teinte(c);
     s += \`<polyline class="ln \${on ? '' : 'fond'}" data-n="\${c.n}" points="\${pts(c)}" stroke="\${on ? tc : ''}" stroke-width="\${on ? (fr ? 2.6 : 1.8) : 1}" stroke-linejoin="round"/>\`;
@@ -392,7 +410,7 @@ function tableau() {
   const COLS = COLS0.filter(c => !c.tous || KT === 3);
   const L = base.filter(c => !NT || c.c === NT).sort((a, b) => { const A = val(a, TRI.k), B = val(b, TRI.k); return (typeof A === 'string' ? A.localeCompare(B, 'fr') : A - B) * TRI.s || b.p[5] - a.p[5]; });
   const R = TOUS ? L : L.slice(0, 16), g1 = COLS.findIndex(c => c.k === 'top8');
-  let h = \`<table class="g"><tr class="grp"><th colspan="\${g1}" class="l"></th><th colspan="2" class="mob">Phase de ligue</th><th class="cox">Ligue</th><th colspan="5" class="pf"><span class="lo">Phase finale · chance d'atteindre</span><span class="co">Phase finale</span></th></tr><tr>\`
+  let h = \`<table class="g"><tr class="grp"><th colspan="\${g1}" class="l"></th><th colspan="2" class="mob"><a class="phl" href="\${DATA.phl}" title="Le rang final de chaque club">Phase de ligue ↗</a></th><th class="cox">Ligue</th><th colspan="5" class="pf"><span class="lo">Phase finale · chance d'atteindre</span><span class="co">Phase finale</span></th></tr><tr>\`
     + COLS.map((c, i) => \`<th data-i="\${i}" class="\${c.l ? 'l ' : ''}\${c.mob ? 'mob ' : ''}\${c.k === 'rg' ? 'rg ' : ''}\${c.k === 'nat' ? 'nat ' : ''}\${c.k === 'n' ? 'clh ' : ''}\${c.k === 'cp' ? 'cph ' : ''}\${c.k === 1 ? 'pf1 ' : ''}\${TRI.k === c.k ? 'tri' : ''}">\${c.c ? \`<span class="lo">\${c.t}</span><span class="co">\${c.c}</span>\` : c.t}<span class="ar">\${TRI.k === c.k ? (TRI.s < 0 ? '↓' : '↑') : ''}</span></th>\`).join('') + '</tr>';
   h += R.map((c, i) => \`<tr class="\${c.c === 'FRA' ? 'fr' : ''}"><td class="rg">\${i + 1}</td><td class="club l"><i class="sq" style="background:\${teinte(c)}"></i><span class="nm">\${c.n}</span></td>\`
     + \`<td class="nation l"><i style="background:\${teinte(c)}"></i>\${nomNat(c.c).replace('>' + (NATN[c.c] || c.c) + '<', \`><span class="long">\${NATN[c.c] || c.c}</span><span class="court">\${c.c}</span><\`)}</td>\`
@@ -406,12 +424,21 @@ function tableau() {
   const p = document.getElementById('plus'); if (p) p.onclick = () => { TOUS = !TOUS; tableau(); };
 }
 course(); tableau(); addEventListener('resize', () => course());
-/* bloc 3 : la France, toutes coupes confondues, dans la même saison simulée */
-{ const H = DATA.H, rows = (o, lab, max) => Object.keys(o).map(Number).sort((a, b) => a - b).filter(n => n <= max).map(n => {
-    const v = o[n] || 0, m = Object.keys(o).reduce((a, k) => Math.max(a, o[k]), 0);
-    return \`<div class="r\${v === m ? '' : ' m'}"><span>\${lab(n)}</span><div style="width:\${v / m * 100}%"></div><b>\${pcs(v)}</b></div>\`; }).join('');
-  document.getElementById('frg').innerHTML = \`<div class="hist"><div class="ct">Combien de clubs français en quarts ?</div>\${rows(H.q, n => n + (n > 1 ? ' clubs' : ' club'), 5)}<div class="ct" style="margin-top:14px">Combien en demies ?</div>\${rows(H.d, n => n + (n > 1 ? ' clubs' : ' club'), 4)}</div>\`
-    + \`<div class="hist"><div class="ct">Combien de coupes pour la France ?</div>\${rows(H.w, n => n === 0 ? 'aucune' : n + (n > 1 ? ' coupes' : ' coupe'), 3)}<div class="ct" style="margin-top:14px">Combien de finalistes français ?</div>\${rows(H.f, n => n === 0 ? 'aucun' : String(n), 3)}</div>\`; }
+/* bloc 5 : la France, toutes coupes confondues, dans la même saison simulée. Quatre petites
+   cartes (quarts, demies, finale, coupes) : le chiffre clé en grand, puis la répartition en
+   colonnes, la plus probable en bleu plein. */
+{ const H = DATA.H;
+  const carte = (o, titre, cle, unite, max) => {
+    const ns = Object.keys(o).map(Number).filter(n => n <= max).sort((a, b) => a - b), m = Math.max(...ns.map(n => o[n] || 0));
+    const auMoins = 1 - (o[0] || 0);
+    return \`<div class="fc"><div class="fct">\${titre}</div><div class="fck"><b>\${pcs(auMoins)}</b><span>\${cle}</span></div>\`
+      + \`<div class="fcb">\${ns.map(n => { const v = o[n] || 0; return \`<div class="col\${v === m ? ' top' : ''}"><em>\${pcs(v)}</em><i style="height:\${Math.max(2, v / m * 100)}%"></i><span>\${n}\${n === max && n > 1 ? '+' : ''}</span></div>\`; }).join('')}</div>\`
+      + \`<div class="fcu">\${unite}</div></div>\`; };
+  const cumul = (o, max) => { const r = {}; for (const k in o) { const n = Math.min(+k, max); r[n] = (r[n] || 0) + o[k]; } return r; };
+  document.getElementById('frg').innerHTML = carte(cumul(H.q, 5), 'En quarts de finale', 'au moins un club', 'nombre de clubs français', 5)
+    + carte(cumul(H.d, 3), 'En demi-finale', 'au moins un club', 'nombre de clubs français', 3)
+    + carte(cumul(H.f, 2), 'En finale', 'au moins un club', 'nombre de finalistes français', 2)
+    + carte(cumul(H.w, 2), 'Avec le trophée', 'au moins une coupe', 'nombre de coupes gagnées', 2); }
 /* bloc 2 : les favoris, coupe par coupe. Chaque point est un club, placé selon sa chance de
    titre sur une échelle logarithmique (0,1 % à 50 %) : les petites chances restent lisibles.
    Survol (ou toucher) : le club ressort, les autres s'effacent, un trait descend jusqu'à

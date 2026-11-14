@@ -63,6 +63,7 @@ export const RELAIS = {
   '/budget-france/': '/france-comptes-publics/',        // le 31/10/2026, une heure
   '/budget-2027/':   '/france-simulateur-budget/',      // le 31/10/2026, une heure
   '/football-fc-nantes-histoire-wip/': '/football-fc-nantes-histoire/',   // aperçu du 05/11/2026
+  '/football-clubs-francais-phase-de-ligue/': '/football-clubs-projection-uefa-phase-ligue/',   // page cachée, renommée le 14/11/2026
 };
 
 /* Rubriques annoncées, sans aucune page encore : elles apparaissent dans le menu
@@ -80,7 +81,7 @@ export const RUBRIQUES_A_VENIR = ['Énergie'];
    PAGES ; le lien qui y mène écrit l'adresse en toutes lettres (bloc 2 de la
    page UEFA, `semLien`). */
 export const CACHEES = {
-  clubsFR: '/football-clubs-francais-phase-de-ligue/',
+  clubsFR: '/football-clubs-projection-uefa-phase-ligue/',   // renommée le 14/11/2026 (GT) ; l'ancienne adresse est dans RELAIS
 };
 
 /* LA GAZETTE (06/11/2026) : une page par semaine européenne, sous une adresse
