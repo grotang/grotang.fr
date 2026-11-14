@@ -60,7 +60,7 @@ export function buildClubsProjection(src) {
   <div class="ch" id="ch"></div>`,
     favoris: `<h3>Les favoris, coupe par coupe</h3></div>
   <p class="psous">Chaque point est un club, placé selon sa chance de titre.</p>
-  <div class="f1"><div class="grp dr"><label class="lb" for="natF">Nation</label><select class="sel" id="natF"></select></div></div>
+  <div class="f1 seul"><div class="grp dr"><label class="lb" for="natF">Nation</label><select class="sel" id="natF"></select></div></div>
   <div class="sw" id="sw"></div>`,
     evo: `<h3>Semaine après semaine</h3></div>
   <p class="psous">Chance de titre à la fin de chaque semaine européenne.</p>
@@ -299,6 +299,9 @@ table.g td.vide{text-align:left;color:var(--ink-3);padding:14px 6px}
 .fcu{font-size:11.5px;color:var(--ink-3);margin-top:22px;text-align:center}
 table.g a.phl{color:inherit;text-decoration:none;border-bottom:1px dotted var(--ink-3)}
 table.g a.phl:hover{color:var(--fr);border-color:var(--fr)}
+/* filtre seul (bloc favoris) : à droite sur tous les écrans */
+.f1.seul{display:flex;justify-content:flex-end}
+@media (max-width:640px){.f1.seul .grp.dr{width:55%}}
 </style>
 </head>
 <body>
