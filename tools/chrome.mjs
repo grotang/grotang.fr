@@ -239,7 +239,10 @@ html{scroll-padding-top:58px}
 .gnav .gn-panel .gn-new,.gnav .gn-panel .gn-soon,.gnav .gn-panel .gn-date{margin-left:auto;order:2}
 .gnav .gn-panel a[aria-current="page"]::after{order:1;content:"";margin-left:8px;width:6px;height:6px;border-radius:50%;background:var(--fr)}
 .gnav .gn-panel a.gn-sub{position:relative;padding-left:30px;font-size:13px}
-.gnav .gn-panel a.gn-sub::before{content:"";position:absolute;left:16px;top:6px;height:calc(50% - 6px);width:7px;border-left:1.5px solid var(--rule);border-bottom:1.5px solid var(--rule);border-bottom-left-radius:4px}
+/* traits de rattachement (GT, 14/11/2026 : plus nets) : un arbre continu, du titre
+   parent jusqu'à chaque ligne en retrait, 2 px, teinte de texte secondaire */
+.gnav .gn-panel a.gn-sub::before{content:"";position:absolute;left:17px;top:-3px;height:calc(50% + 3px);width:8px;border-left:2px solid color-mix(in srgb,var(--ink-3) 70%,transparent);border-bottom:2px solid color-mix(in srgb,var(--ink-3) 70%,transparent);border-bottom-left-radius:5px}
+.gnav .gn-panel a.gn-sub + a.gn-sub::before{top:calc(-50% - 1px);height:calc(100% + 1px)}
 .gnav .gn-panel .gn-date{margin-left:auto;font:600 10px "IBM Plex Mono",monospace;letter-spacing:.04em;padding:2px 6px;border-radius:4px;background:var(--fr-soft);color:var(--fr);white-space:nowrap}
 .gnav .gn-panel a.gn-sub[aria-current="page"]::after{margin-left:6px}
 /* fond : un clic à côté ferme le menu sans rien déclencher dessous (c'est un
