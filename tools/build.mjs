@@ -23,11 +23,12 @@ import { buildEco } from './eco/page.mjs';
 import { buildJoueurs } from './joueurs/page.mjs';
 import { buildNantes } from './nantes/page.mjs';
 import { buildClubsFR } from './uefa/clubs-fr.mjs';
+import { buildClubsProjection } from './uefa/clubs-projection.mjs';
 import { buildForce } from './force/page.mjs';
 import { buildGazettes } from './uefa/gazette-pages.mjs';
 import { nation } from './tennis/nations.mjs';
 import { compteParcours } from './tennis/wiki.mjs';
-import { PAGES, RELAIS, CACHEES, GAZETTE, DOMAINE, url, abs, fichier } from './site.mjs';
+import { PAGES, RELAIS, CACHEES, GAZETTE, CLUBS_PRJ, DOMAINE, url, abs, fichier } from './site.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
@@ -614,6 +615,8 @@ const APERCU_NANTES = PAGES.find(p => p.key === 'nantes').aVenir?.apercu;
 const nantes = await buildNantes(APERCU_NANTES ? { apercu: APERCU_NANTES } : {});
 /* page cachée (noindex, hors menu et sitemap) : probas de classement des clubs français, tirées de PRJ */
 const clubsFR = buildClubsFR(read('tools/uefa/page.html'));
+/* projection club par club (C29) : indexée, tirée de PRJ comme la page cachée */
+const clubsPrj = buildClubsProjection(read('tools/uefa/page.html'));
 /* Force des clubs (C23) : tools/force/page.mjs, depuis tools/uefa/force-clubs.json (robot force.yml) ;
    null si le fichier n'a pas encore les championnats -> page d'attente */
 const force = buildForce();
@@ -708,6 +711,7 @@ const sizes = {
   ...(joueurs ? { [fichier(APERCU_JOUEURS)]: write(fichier(APERCU_JOUEURS), joueurs.html) } : {}),
   [fichier(APERCU_NANTES || url('nantes'))]: write(fichier(APERCU_NANTES || url('nantes')), nantes.html),
   [fichier(CACHEES.clubsFR)]: write(fichier(CACHEES.clubsFR), clubsFR.html),
+  [fichier(CLUBS_PRJ.url)]: write(fichier(CLUBS_PRJ.url), clubsPrj.html),
   [fichier(url('force'))]: write(fichier(url('force')), force ? force.html : pageAVenir(FORCE_ATTENTE)),
   ...Object.fromEntries(Object.entries(GAZ.pages).map(([u, h]) => [fichier(u), write(fichier(u), h)])),
   ...Object.fromEntries(PAGES.filter(p => p.aVenir).map(p => [fichier(p.url), write(fichier(p.url), pageAVenir(p))])),
@@ -717,7 +721,7 @@ const sizes = {
   'robots.txt': write('robots.txt', ROBOTS),
   'favicon.svg': write('favicon.svg', FAVICON_SVG),
   'site.webmanifest': write('site.webmanifest', MANIFEST),
-  'sitemap.xml': write('sitemap.xml', sitemap({ uefa: majUefa, force: majForce, tennis: majTennis, eco: majEco, b27: majB27, nantes: majNantes, gazettes: datesGaz })),
+  'sitemap.xml': write('sitemap.xml', sitemap({ uefa: majUefa, force: majForce, tennis: majTennis, eco: majEco, b27: majB27, nantes: majNantes, gazettes: [[CLUBS_PRJ.url, majUefa], ...datesGaz] })),
 };
 
 for (const [f, n] of Object.entries(sizes)) console.log(String(n).padStart(7), f);

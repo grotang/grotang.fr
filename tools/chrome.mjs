@@ -15,7 +15,7 @@
    du premier écran sont préchargés ; les autres (latin étendu, chasse fixe) ne
    viennent que si un caractère les demande. */
 import fs from 'node:fs';
-import { arbre, url, RUBRIQUES_A_VENIR, GAZETTE, estNouveau, finNouveau } from './site.mjs';
+import { arbre, url, RUBRIQUES_A_VENIR, GAZETTE, CLUBS_PRJ, estNouveau, finNouveau } from './site.mjs';
 
 /* LA GAZETTE DANS LE MENU (06/11/2026, maquette B choisie par GT) : une ligne en
    retrait sous « Coefficient UEFA », qui mène à la DERNIÈRE gazette, avec sa date
@@ -26,6 +26,8 @@ const DERNIERE = (() => { try {
   const L = JSON.parse(fs.readFileSync(new URL('./uefa/archive/gazettes.json', import.meta.url), 'utf8')).liste || [];
   return L.length ? L.reduce((a, b) => (b.slug > a.slug ? b : a)) : null; } catch { return null; } })();
 const MOIS_C = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+/* même ligne en retrait pour la projection club par club (C29, 14/11/2026) */
+const sousClubs = current => `<a class="gn-sub" href="${CLUBS_PRJ.url}"${current === CLUBS_PRJ.key ? ' aria-current="page"' : ''}>${CLUBS_PRJ.titre}${estNouveau(CLUBS_PRJ) ? `<span class="gn-new" data-fin="${finNouveau(CLUBS_PRJ)}">new</span>` : ''}</a>`;
 const sousGazette = current => { if (!DERNIERE) return '';
   const [, m, j] = DERNIERE.slug.split('-').map(Number);
   return `<a class="gn-sub" href="${GAZETTE}${DERNIERE.slug}/" title="${String(DERNIERE.titre).replace(/"/g, '&quot;')}"${current === 'gazette' ? ' aria-current="page"' : ''}>La gazette de la semaine<span class="gn-date">${j} ${MOIS_C[m - 1]}</span></a>`; };
@@ -316,13 +318,13 @@ const lien = (p, current, label = p.titre) => {
 };
 const toutes = r => r.pages.concat(...r.sous.map(toutes));
 function rubrique(r, current) {
-  const pp = toutes(r);
-  if (pp.length === 1) return lien(pp[0], current, r.nom).replace('<a ', `<a title="${esc(pp[0].titre)}" `);
+  const pp0 = toutes(r), pp = pp0.some(p => p.key === 'uefa') ? [...pp0, CLUBS_PRJ] : pp0;   // la projection des clubs (ligne en retrait) compte pour la rubrique
+  if (pp0.length === 1) return lien(pp0[0], current, r.nom).replace('<a ', `<a title="${esc(pp0[0].titre)}" `);
   const ici = pp.some(p => p.key === current) || (current === 'gazette' && pp.some(p => p.key === 'uefa'));
   const groupe = (s, niv) => `<div class="gn-grp"><span class="gn-grp-t">${esc(s.nom)}</span>`
     + s.pages.map(p => lien(p, current)).join('') + s.sous.map(x => groupe(x, niv + 1)).join('') + '</div>';
   return `<details class="gn-dd"><summary${ici ? ' class="gn-ici"' : ''}>${esc(r.nom)}${pp.some(p => estNouveau(p)) ? `<i class="gn-new-pt" aria-hidden="true" data-fin="${pp.filter(p => estNouveau(p)).map(finNouveau).sort().pop()}"></i>` : ''}</summary><div class="gn-panel">`
-    + r.pages.map(p => lien(p, current) + (p.key === 'uefa' ? sousGazette(current) : '')).join('') + r.sous.map(s => groupe(s, 1)).join('') + '</div></details>';
+    + r.pages.map(p => lien(p, current) + (p.key === 'uefa' ? sousGazette(current) + sousClubs(current) : '')).join('') + r.sous.map(s => groupe(s, 1)).join('') + '</div></details>';
 }
 
 export function nav(current) {

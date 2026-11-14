@@ -90,6 +90,12 @@ export const CACHEES = {
    page UEFA). Fabriquées par tools/uefa/gazette-pages.mjs. */
 export const GAZETTE = '/football-gazette-uefa/';
 
+/* LA PROJECTION CLUB PAR CLUB (14/11/2026, C29) : « Qui va gagner les coupes d'Europe ? ».
+   Page indexée, dans le sitemap ; dans le menu, une ligne en retrait sous « Coefficient
+   UEFA », comme la gazette (choix de GT), avec l'étiquette « new » le premier mois.
+   Fabriquée par tools/uefa/clubs-projection.mjs. */
+export const CLUBS_PRJ = { key: 'clubsPrj', url: '/football-clubs-projection-uefa/', titre: 'Projection des clubs', nouveau: '2026-11-14' };
+
 export const DOMAINE = 'https://grotang.fr';
 
 /* « new » : jusqu'au même jour du mois suivant (13/11 → 13/12), date de Paris. */
@@ -136,6 +142,8 @@ export const fichier = u => u.replace(/^\//, '') + 'index.html';
   }
   if (!/^\/football-[a-z0-9-]+\/$/.test(GAZETTE) || vues.has(GAZETTE)) throw new Error(`registre : adresse de la gazette mal formée ou en double « ${GAZETTE} »`);
   vues.add(GAZETTE);
+  if (!/^\/football-[a-z0-9-]+\/$/.test(CLUBS_PRJ.url) || vues.has(CLUBS_PRJ.url)) throw new Error(`registre : adresse de la projection des clubs mal formée ou en double « ${CLUBS_PRJ.url} »`);
+  vues.add(CLUBS_PRJ.url);
   for (const [de, vers] of Object.entries(RELAIS)) {
     if (vues.has(de)) throw new Error(`registre : « ${de} » est à la fois une page et un relais`);
     if (!vues.has(vers)) throw new Error(`registre : le relais « ${de} » mène à « ${vers} », qui n'est pas une page`);
