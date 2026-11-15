@@ -1873,8 +1873,11 @@ function drawCal(){
      comme au bloc 2b (.msep) ; il passe derrière les cases (GT, 15/11) */
   const MN = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
   const mois = []; { const d = new Date(t0); while (d.getTime() < t1) { mois.push(d.getTime()); d.setMonth(d.getMonth() + 1); } }
-  mois.forEach((m, i) => { if (!i) return; const x = f1(xt(m));
-    s += `<line x1="${x}" y1="${yM + 2}" x2="${x}" y2="${yR + 3 * RH}" stroke="var(--ink-3)" stroke-width="1" opacity=".55"/>`; });
+  /* calé au demi-pixel : 1 unité = 1 px sur ordinateur, donc chaque trait tombe pile sur
+     une colonne de pixels et ils ont tous le même rendu (avant : x fractionnaire, certains
+     traits étalés sur deux colonnes, plus pâles — remarque de GT, 15/11) */
+  mois.forEach((m, i) => { if (!i) return; const x = Math.round(xt(m)) + .5;
+    s += `<line x1="${x}" y1="${yM + 2}" x2="${x}" y2="${yR + 3 * RH}" stroke="var(--ink-3)" stroke-width="1" opacity=".55" shape-rendering="crispEdges"/>`; });
   mois.forEach((m, i) => { const a = xt(m), b = xt(Math.min(i + 1 < mois.length ? mois[i + 1] : t1, t1));
     if (b - a >= 30) s += `<text x="${f1((a + b) / 2)}" y="${yM + 15}" text-anchor="middle" font-size="13" font-weight="700" style="fill:var(--ink)">${MN[new Date(m).getMonth()]}</text>`; });
   /* bandeaux de phase : du premier au dernier match de la phase, toutes compétitions
@@ -1901,8 +1904,8 @@ function drawCal(){
     s += `<text x="${f1(x)}" y="${yT + 14}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" font-weight="${t.q ? 400 : 600}" paint-order="stroke" stroke-width="3" style="fill:var(${t.q ? '--ink-3' : '--ink-2'});stroke:var(--surface)">${t.lab}</text>`; });
   /* lignes des trois coupes */
   [0,1,2].forEach(k => { const y0 = yR + k * RH, cy = y0 + RH / 2, c = `var(${KVAR[k]})`;
-    s += `<line x1="0" y1="${y0}" x2="${W}" y2="${y0}" stroke="var(--rule-soft)" stroke-width="1"/>`
-      +  `<rect x="0" y="${cy - 5.5}" width="11" height="11" rx="2" style="fill:${c}"/>`
+    /* pas de filet entre les coupes : plus léger, comme le 2b (GT, 15/11) */
+    s += `<rect x="0" y="${cy - 5.5}" width="11" height="11" rx="2" style="fill:${c}"/>`
       +  `<text x="18" y="${cy + 5}" font-size="14" font-weight="700" style="fill:var(--ink)">${KSHORT[k]}</text>`;
     const L = EV.filter(e => e.k === k);
     L.filter(e => e.txt === 'R').forEach(e => { const xa = X(e.a), xr = X(e.d);
