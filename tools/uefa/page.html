@@ -450,7 +450,6 @@ section > .famille + .panel{margin-top:22px}
         font-size:10.5px; font-weight:600; background:var(--surface-2); color:var(--ink-3); border:1px solid transparent}
 .calday.done{color:var(--surface)}
 .calday.next{border-color:var(--ink); color:var(--ink); font-weight:700}
-.calmeta{font-size:12.5px; color:var(--ink-2); margin:0 0 4px}
 
 /* ---------- barres classées ---------- */
 .bars{display:grid; gap:7px}
@@ -498,7 +497,6 @@ section > .famille + .panel{margin-top:22px}
 #bars{--res:46px}
 /* place réservée avant le dessin : la page ne saute pas au chargement */
 #cal:empty{aspect-ratio:1000/214}
-#calmeta:empty{min-height:1.6em}
 #bars:empty,#kbars:empty{min-height:220px}
 .barrow .tot{position:absolute; top:50%; transform:translateY(-50%); pointer-events:none;
   font:700 12.5px/1 "IBM Plex Mono",monospace; white-space:nowrap; letter-spacing:.01em;
@@ -944,8 +942,7 @@ footer .legal{margin-top:3px; font-size:11px}
      français, Les 55 associations. Les commentaires datés d'avant le 24/10 gardent
      l'ancienne numérotation. -->
     <div class="ptitle"><span class="no">1</span><h3>Où en est la saison</h3>
-      <span class="sub"><span class="ctl"><span class="seg" role="group" aria-label="Phase qualificative"><button type="button" id="cal-qual" aria-pressed="false">Afficher la phase qualificative</button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelCal" aria-label="Saison"></select></span></span></span></div>
-    <p class="calmeta" id="calmeta"></p>
+      <span class="sub"><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSelCal" aria-label="Saison"></select></span></span></span></div>
     <div class="calwrap"><div class="cal" id="cal"></div><div class="tip tipcal" id="tipCal" hidden></div></div>
   </div>
 
@@ -1756,11 +1753,6 @@ document.getElementById('stamp').innerHTML =
    occupaient la même colonne. On passe donc à un axe de temps réel, commun aux trois
    compétitions : c'est le décalage entre elles qui explique l'essentiel du bloc 2,
    et il devient visible d'un coup d'œil. */
-/* Le calendrier se redessine : un bouton ouvre la phase qualificative, ce qui
-   recule l'origine de l'axe au 7 juillet. Replié par défaut — les qualifications
-   sont finies depuis août, et les étaler en permanence tasserait la phase de
-   ligue, qui est ce qu'on vient lire. */
-let calQual = false;
 /* Saison montrée par les blocs 1 et 2 (sélecteur commun de la page). Les saisons
    closes viennent de saisons.json, chargé au premier choix d'une saison passée :
    calendrier, affiches françaises et semaine européenne, relevés sur Wikipédia et
@@ -1832,196 +1824,110 @@ function glisser(box, svg, largeur, epingle){
   else requestAnimationFrame(() => { if (box.scrollWidth > box.clientWidth + 4) indice(); });
 }
 function drawCal(){
-  const P = pk(), { CAL, KO, QUAL } = P, passee = P !== CUR_P;
-  const all = [0,1,2].flatMap(k => CAL[k].map(([iso]) => iso)).sort();
-  const q0 = [0,1,2].flatMap(k => QUAL[k].filter(Boolean).map(q => q[1])).sort()[0];
-  const ko0 = [0,1,2].map(k => KO[k][0][1]).sort()[0];
-  const KOL = [0,1,2].map(k => KO[k]).sort((a, b) => b.length - a.length)[0];   /* avant 2024, la C1 n'a pas de barrages KO */
-  const PH = P.grp ? 'Phase de groupes' : 'Phase de ligue';
-  /* KO et KOLAB sont définis plus haut, avec CAL : le tampon d'en-tête compte les
-     jours jusqu'au prochain match, et ce match peut être un tour à élimination
-     directe. Une seule table de dates pour toute la page. */
-  /* L'axe démarre au PREMIER JOUR DU MOIS du premier match, pas au premier match.
-     Avant, il démarrait au 8 septembre : le repère « sept. » était donc ancré au
-     bord gauche faute de place, et la pastille J1 de C1 tombait pile dessus. On
-     lisait « J1 = 1er septembre » alors qu'elle s'est jouée les 8, 9 et 10.
-     En calant l'origine sur le 1er du mois, chaque nom de mois retrouve sa
-     graduation exacte et chaque match sa vraie position dans le mois. Le prix est
-     une poignée de jours vides à gauche ; ça vaut mieux qu'une date fausse. */
-  const debut = dOf(calQual ? q0 : all[0]);
-  const t0 = new Date(debut.getFullYear(), debut.getMonth(), 1).getTime();
-  /* Un jour se dessine en son MILIEU (midi) : les pastilles étaient posées à minuit,
-     au bord gauche de leur jour, et le trait « aujourd'hui » au jour présent paraissait
-     en avance d'environ un jour le soir (remarque de GT, 04/11). Pastilles et trait
-     sont maintenant tous deux à midi ; les mois restent sur leur vrai bord (le 1er, 0 h). */
-  const MIDI = 432e5;
-  const t1 = Math.max(...[0,1,2].map(k => dOf(KO[k][KO[k].length-1][1]).getTime())) + MIDI;
-  const tLeague = dOf(all[all.length-1]).getTime();
-  const W = 1000, mL = 46, mR = 30, mT = 62, LANE = 36, H = mT + 3*LANE + 44;
-  const span = (t1 - t0) || 1;
-  const X = iso => mL + (W - mL - mR) * (dOf(iso).getTime() + MIDI - t0) / span;
-
-  /* repères de mois : le lecteur situe une journée sans lire une date */
-  const months = [];
-  { const d = new Date(t0);
-    while (d.getTime() <= t1) { months.push(new Date(d)); d.setMonth(d.getMonth() + 1); } }
-  const MN = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
-
-  let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">`;
-  /* Les mois portent tout le repérage : c'est par eux qu'on situe une journée
-     sans lire une date. Ils étaient en gris clair et maigre ; les voilà en
-     --ink-2 et demi-gras, la graduation qui les accompagne un cran plus nette. */
-  months.forEach(d => { const x = mL + (W-mL-mR)*(d.getTime()-t0)/span;
-    s += `<line x1="${x.toFixed(1)}" y1="${mT-22}" x2="${x.toFixed(1)}" y2="${mT+3*LANE-6}" stroke="var(--rule)" stroke-width="1" opacity=".75"/>`
-      +  `<text x="${(x+5).toFixed(1)}" y="${mT-28}" font-size="11.5" font-weight="600" fill="var(--ink-2)">${MN[d.getMonth()]}</text>`; });
-
-  /* la ligne d'aujourd'hui : la seule information vraiment datée du bloc */
-  const now = dOf(isoOf(TODAY)).getTime() + MIDI;   /* aujourd'hui, au milieu de sa journée, comme les pastilles */
-  if (now >= t0 && now <= t1) { const x = mL + (W-mL-mR)*(now-t0)/span;
-    s += `<line x1="${x.toFixed(1)}" y1="${mT-22}" x2="${x.toFixed(1)}" y2="${mT+3*LANE-2}" stroke="var(--fr)" stroke-width="1.5" stroke-dasharray="4 3"/>`
-      +  `<text x="${(x).toFixed(1)}" y="${mT+3*LANE+16}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--fr)">aujourd'hui</text>`; }
-
-  /* séparation ligue / élimination directe, et les noms de tour une seule fois en
-     en-tête : les répéter sur trois pistes serait illisible pour rien, les trois
-     compétitions jouant chaque tour à deux jours près. */
-  /* Deux mots posés de part et d'autre d'un trait, c'était un panneau de chantier.
-     Chaque phase est maintenant une zone nommée et bornée : un libellé, un filet
-     qui en montre l'étendue exacte. Le vocabulaire est celui du bloc 3 —
-     « phase de ligue » et « phase finale » — pour qu'on parle de la même chose
-     d'un bloc à l'autre. */
-  { const xa = (X(CAL[0][CAL[0].length-1][0]) + X(ko0)) / 2;
-    /* Les trois phases ne sont pas trois morceaux du même continuum : on ne passe
-       pas de juillet à septembre, on change de régime. Les qualifications sont
-       réservées aux mal classés, la phase de ligue met tout le monde ensemble, la
-       phase finale ne garde que les survivants. Ces bascules méritaient mieux
-       qu'un filet de 1 px : chaque phase reçoit son fond et sa frontière pleine
-       hauteur, et son nom sur une pastille pleine plutôt qu'en texte flottant. */
-    /* Premier essai : teinter le fond de chaque phase sur toute la hauteur. Raté —
-       le voile passait derrière les noms de mois, qui sont la clé de voûte de la
-       lecture, et tout le calendrier perdait en netteté. Le repère de phase est
-       donc remonté sur sa propre ligne, en haut : un bandeau coloré par phase,
-       le nom dedans. Rien ne recouvre plus la zone de données.
-       Les frontières, elles, restent tracées pleine hauteur : ce sont de vrais
-       changements de régime, pas des découpages décoratifs. */
-    const yBot = mT + 3*LANE - 4;
-    /* étiquettes : DA commune des bandeaux de phase (etiqPhase, 07/11/2026) */
-    const PN1 = PH_NOMS(P.grp);
-    const zone = (x1, x2, [noms, mois, teinte]) => {
-      const w = x2 - x1;
-      return etiqPhase(x1 + 1, w - 2, 4, 19, teinte, noms, mois)
-        + `<line x1="${x1.toFixed(1)}" y1="4" x2="${x1.toFixed(1)}" y2="${yBot}" stroke="var(--rule)" stroke-width="1"/>`
-        + `<line x1="${x2.toFixed(1)}" y1="4" x2="${x2.toFixed(1)}" y2="${yBot}" stroke="var(--rule)" stroke-width="1"/>`;
-    };
-    if (calQual) {
-      const xq = (X(QUAL[0][3][2]) + X(CAL[0][0][0])) / 2;
-      s += zone(mL, xq, PN1[0]) + zone(xq, xa, PN1[1]) + zone(xa, W - mR, PN1[2]);
-      /* mêmes étiquettes de tour qu'en phase finale, au même endroit, à la même
-         taille : c'est la cohérence qui fait qu'on lit les deux bouts de la
-         saison avec la même grille de lecture. */
-      QUAL[0].filter(Boolean).forEach(([lab, a, r]) => s += `<text x="${((X(a)+X(r))/2).toFixed(1)}" y="${mT-8}" text-anchor="middle" font-size="10" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${lab}</text>`);
-    } else s += zone(mL, xa, PN1[1]) + zone(xa, W - mR, PN1[2]);
-    /* les tours, au-dessus de leur zone : à deux jours près les trois compétitions
-       jouent ensemble, donc une seule série d'étiquettes suffit. */
-    /* Le libellé se centre sur la confrontation entière, pas sur son seul aller :
-       sinon il tire vers la gauche et ne désigne plus la capsule qu'il nomme. */
-    KOL.forEach(([lab, a, r]) => { const x = r ? (X(a)+X(r))/2 : X(a);
-      s += `<text x="${Math.min(x, W-mR).toFixed(1)}" y="${mT-8}" text-anchor="${x > W-mR-12 ? 'end':'middle'}" font-size="10" font-weight="600" font-family="IBM Plex Mono, monospace" fill="var(--ink-3)">${lab}</text>`; }); }
-
-  /* Une confrontation aller-retour se dessine en capsule : un fond arrondi qui
-     englobe les deux manches, puis les deux cercles reliés par-dessus.
-     Pourquoi : en phase finale, quatorze jours séparent deux tours contre sept
-     entre l'aller et le retour — les paires se détachent toutes seules. En
-     qualifications, les deux écarts valent sept jours (mesuré : 19 px contre
-     20 px), et les huit cercles d'une ligne formaient une chenille continue où
-     l'on ne distinguait plus les tours. L'axe est un axe de temps, on n'allait
-     pas l'étirer pour faire joli ; la capsule règle la lecture sans toucher aux
-     dates, et elle est appliquée aux deux bouts de la saison pour que la
-     grammaire reste la même. */
-  const capsule = (xa, xr, y, k, done) =>
-    `<rect x="${(xa-7).toFixed(1)}" y="${(y-9.5).toFixed(1)}" width="${(xr-xa+14).toFixed(1)}" height="19" rx="9.5"`
-    + ` fill="var(${KVAR[k]})" opacity="${done ? .08 : .05}"/>`;
-
+  const P = pk(), { CAL, KO, QUAL } = P, mob = MOB(), box = document.getElementById('cal');
+  /* Bloc 1, variante B v3 (GT, 15/11/2026). Toute la saison d'un seul tenant, des
+     qualifications de juillet à la finale : plus de bouton pour les déplier. L'axe est
+     un axe de temps strict — chaque case est centrée sur le jour exact de sa manche —
+     et les cases sont fines (18 px) pour que l'axe tienne sans tricher. Une manche =
+     une case : J1…J8 en phase de ligue, A et R (aller, retour) reliés par un trait pour
+     les tours aller-retour, F pour la finale. Les qualifications passent en retrait
+     (bandeau, cases et étiquettes plus pâles) : finies en août, elles situent la saison
+     sans voler la vedette. Sous les bandeaux de phase, la ligne des mois puis celle des
+     tours ; les traits de mois descendent jusqu'en bas, derrière les cases.
+     Desktop : le dessin est à la largeur réelle du bloc (1 unité = 1 px), donc les
+     cases et les textes gardent leur taille. Téléphone : même dessin, plus large, qui
+     défile au doigt, colonne C1 / C3 / C4 épinglée, ouvert centré sur aujourd'hui. */
+  const W = mob ? 1100 : Math.max(640, Math.round(box.clientWidth || 1000));
+  const G = 56, PAD = 10, CW = 18, CH = 20, RH = 32, yM = 30, yT = 50, yR = 72, H = yR + 3 * RH + 30;
+  const EV = [];
   [0,1,2].forEach(k => {
-    const y = mT + k*LANE + LANE/2;
-    const xEnd = X(KO[k][KO[k].length-1][1]);
-    /* Aller et retour reliés, cercle plein si joué : exactement la forme des tours
-       à élimination directe. Un tour de qualification EST un aller-retour — lui
-       donner une autre forme aurait inventé une différence qui n'existe pas. */
-    if (calQual) QUAL[k].forEach((q, qi) => { if (!q) return; const [lab, a, r] = q;
-      const xa2 = X(a), xr2 = X(r), da = passe(a), dr = passe(r);
-      s += `<g data-t="${k}:q${qi}">` + capsule(xa2, xr2, y, k, da)
-        +  `<line x1="${xa2.toFixed(1)}" y1="${y}" x2="${xr2.toFixed(1)}" y2="${y}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${da?.8:.4}"/>`
-        +  `<circle cx="${xa2.toFixed(1)}" cy="${y}" r="4.2" fill="${da?`var(${KVAR[k]})`:'var(--surface)'}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${da?1:.55}"/>`
-        +  `<circle cx="${xr2.toFixed(1)}" cy="${y}" r="4.2" fill="${dr?`var(${KVAR[k]})`:'var(--surface)'}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${dr?1:.55}"/>`
-        +  `<rect x="${(xa2-9).toFixed(1)}" y="${y-12}" width="${(xr2-xa2+18).toFixed(1)}" height="24" fill="transparent"/></g>`;
-    });
-    s += `<line x1="${mL}" y1="${y}" x2="${xEnd.toFixed(1)}" y2="${y}" stroke="var(--rule-soft)" stroke-width="1"/>`
-      +  `<rect x="0" y="${y-8}" width="11" height="11" rx="2" fill="var(${KVAR[k]})"/>`
-      +  `<text x="16" y="${y+4}" font-size="12.5" font-weight="700" fill="var(--ink-2)">${KSHORT[k]}</text>`;
-    CAL[k].forEach(([iso], idx) => {
-      const x = X(iso), done = passe(iso);
-      const isNext = !done && CAL[k].findIndex(([i2]) => !passe(i2)) === idx;
-      const w = 24, h = 19;
-      s += `<g data-t="${k}:${idx}">`
-        +  `<rect x="${(x-w/2).toFixed(1)}" y="${y-h/2}" width="${w}" height="${h}" rx="3"`
-        +  ` fill="${done ? `var(${KVAR[k]})` : 'var(--surface)'}" stroke="var(${KVAR[k]})" stroke-width="${isNext?2:1}"`
-        +  ` opacity="${done||isNext?1:.45}"/>`
-        +  `<text x="${x.toFixed(1)}" y="${y+4}" text-anchor="middle" font-size="10.5" font-weight="${isNext?'700':'600'}"`
-        +  ` font-family="IBM Plex Mono, monospace" fill="${done ? 'var(--surface)' : `var(${KVAR[k]})`}"`
-        +  ` opacity="${done||isNext?1:.7}">${idx+1}</text></g>`;
-    });
-
-    /* élimination directe : un aller, un retour, reliés. La finale est un match sec,
-       donc un losange plutôt qu'une paire — la forme dit la différence. */
-    KO[k].forEach(([lab, a, r, et], ki) => {
-      const xa = X(a), done = passe(a), tk = et ?? 8 + ki;
-      const op = done ? 1 : .55;
-      if (r) { const xr = X(r), dr = passe(r);
-        s += `<g data-t="${k}:${tk}">` + capsule(xa, xr, y, k, done)
-          +  `<line x1="${xa.toFixed(1)}" y1="${y}" x2="${xr.toFixed(1)}" y2="${y}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${op*.8}"/>`
-          +  `<circle cx="${xa.toFixed(1)}" cy="${y}" r="4.2" fill="${done?`var(${KVAR[k]})`:'var(--surface)'}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${op}"/>`
-          +  `<circle cx="${xr.toFixed(1)}" cy="${y}" r="4.2" fill="${dr?`var(${KVAR[k]})`:'var(--surface)'}" stroke="var(${KVAR[k]})" stroke-width="1.4" opacity="${dr?1:.55}"/>`
-          +  `<rect x="${(xa-9).toFixed(1)}" y="${y-12}" width="${(xr-xa+18).toFixed(1)}" height="24" fill="transparent"/></g>`;
-      } else {
-        s += `<g data-t="${k}:${tk}">`
-          +  `<path d="M ${xa.toFixed(1)} ${y-6.4} L ${(xa+6.4).toFixed(1)} ${y} L ${xa.toFixed(1)} ${y+6.4} L ${(xa-6.4).toFixed(1)} ${y} Z"`
-          +  ` fill="${done?`var(${KVAR[k]})`:'var(--surface)'}" stroke="var(${KVAR[k]})" stroke-width="1.6" opacity="${op}"/></g>`
-          +  `<text x="${(xa).toFixed(1)}" y="${y+19}" text-anchor="middle" font-size="8.5" font-weight="600" fill="var(--ink-3)">${String(dOf(a).getDate()).padStart(2,'0')}/${String(dOf(a).getMonth()+1).padStart(2,'0')}</text>`;
-      }
-    });
+    (QUAL[k] || []).forEach((q, qi) => { if (!q) return; const [lab, a, r] = q;
+      EV.push({ k, d: a, txt: 'A', ph: 'q', t: `${k}:q${qi}:0`, tour: lab, r });
+      EV.push({ k, d: r, txt: 'R', ph: 'q', t: `${k}:q${qi}:1`, tour: lab, a }); });
+    CAL[k].forEach(([iso], j) => EV.push({ k, d: iso, txt: 'J' + (j + 1), ph: 'l', t: `${k}:${j}` }));
+    KO[k].forEach(([lab, a, r, et], ki) => { const tk = et ?? 8 + ki;
+      if (!r) EV.push({ k, d: a, txt: 'F', ph: 'f', t: `${k}:${tk}`, tour: lab });
+      else { EV.push({ k, d: a, txt: 'A', ph: 'f', t: `${k}:${tk}:0`, tour: lab, r });
+             EV.push({ k, d: r, txt: 'R', ph: 'f', t: `${k}:${tk}:1`, tour: lab, a }); } });
   });
+  EV.forEach(e => e.joue = passe(e.d));
+  [0,1,2].forEach(k => { const n = EV.filter(e => e.k === k && !e.joue).sort((a, b) => a.d < b.d ? -1 : 1)[0]; if (n) n.prochain = true; });
+  /* Un jour se dessine en son MILIEU (midi), comme le trait « aujourd'hui » ; les mois
+     sur leur vrai bord (le 1er, 0 h). L'axe part du 1er du mois du premier match. */
+  const MIDI = 432e5, ts = EV.map(e => dOf(e.d).getTime());
+  const d0 = new Date(Math.min(...ts)), t0 = new Date(d0.getFullYear(), d0.getMonth(), 1).getTime();
+  const t1 = Math.max(...ts) + 8 * 864e5, span = t1 - t0;
+  const xt = t => G + PAD + (W - G - 2 * PAD) * (t - t0) / span, X = iso => xt(dOf(iso).getTime() + MIDI);
+  const f1 = v => v.toFixed(1);
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" preserveAspectRatio="xMinYMin meet" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">`;
+  /* traits de mois : appuyés dans la ligne des mois, puis plus discrets jusqu'en bas,
+     derrière les cases (ils « s'effacent » quand ils les croisent) */
+  const MN = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+  const mois = []; { const d = new Date(t0); while (d.getTime() < t1) { mois.push(d.getTime()); d.setMonth(d.getMonth() + 1); } }
+  mois.forEach((m, i) => { if (!i) return; const x = f1(xt(m));
+    s += `<line x1="${x}" y1="${yM + 2}" x2="${x}" y2="${yT}" stroke="var(--ink-3)" stroke-opacity=".7" stroke-width="1.5"/>`
+      +  `<line x1="${x}" y1="${yT}" x2="${x}" y2="${yR + 3 * RH}" stroke="var(--ink-3)" stroke-opacity=".38" stroke-width="1.5"/>`; });
+  mois.forEach((m, i) => { const a = xt(m), b = xt(Math.min(i + 1 < mois.length ? mois[i + 1] : t1, t1));
+    if (b - a >= 30) s += `<text x="${f1((a + b) / 2)}" y="${yM + 15}" text-anchor="middle" font-size="13" font-weight="700" style="fill:var(--ink)">${MN[new Date(m).getMonth()]}</text>`; });
+  /* bandeaux de phase : du premier au dernier match de la phase, toutes compétitions
+     confondues ; entre deux phases, du blanc. Pas de mois dans les titres. */
+  const PN = PH_NOMS(P.grp);
+  [['q', 0, '--n4', 20], ['l', 1, '--fr', 26], ['f', 2, '--n7', 26]].forEach(([ph, i, teinte, pc]) => {
+    const L = EV.filter(e => e.ph === ph).map(e => X(e.d)); if (!L.length) return;
+    const a = Math.min(...L) - CW / 2 - 3, w = Math.max(...L) - Math.min(...L) + CW + 6, noms = PN[i][0];
+    const lab = noms[0].length * 7 + 14 <= w ? noms[0] : noms[1].length * 7 + 14 <= w ? noms[1] : '';
+    s += `<rect x="${f1(a)}" y="0" width="${f1(w)}" height="24" rx="3" style="fill:color-mix(in srgb,var(${teinte}) ${pc}%,var(--surface))"/>`;
+    if (lab) s += `<text class="zlab" data-a="${f1(a)}" data-b="${f1(a + w)}" x="${f1(a + w / 2)}" y="16.5" text-anchor="middle" font-size="12.5" font-weight="700" style="fill:var(${ph === 'q' ? '--ink-3' : '--ink-2'})">${lab}</text>`;
+  });
+  /* tours : une étiquette par confrontation, centrée sur l'aller et le retour ; les trois
+     coupes jouent à deux jours près, donc une seule série suffit */
+  const T = [];
+  EV.filter(e => e.tour && e.txt !== 'R').forEach(e => { const xm = e.r ? (X(e.d) + X(e.r)) / 2 : X(e.d);
+    const lab = e.tour === 'PO' ? 'Bar.' : e.tour;
+    if (!T.some(t => t.lab === lab && Math.abs(t.x - xm) < 30)) T.push({ lab, x: xm, q: e.ph === 'q' }); });
+  /* deux tours trop proches (saisons où un tour s'étale sur trois semaines) : on les écarte */
+  T.sort((a, b) => a.x - b.x).forEach(t => t.w = t.lab.length * 6.6 + 6);
+  for (let i = 1; i < T.length; i++) { const d = T[i - 1].x + T[i - 1].w / 2 + 4 - (T[i].x - T[i].w / 2); if (d > 0) { T[i - 1].x -= d / 2; T[i].x += d / 2; } }
+  T.forEach(t => { const w = t.w, x = Math.min(t.x, W - w / 2);
+    s += `<rect x="${f1(x - w / 2)}" y="${yT + 2}" width="${f1(w)}" height="16" style="fill:var(--surface)"/>`
+      +  `<text x="${f1(x)}" y="${yT + 14}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" font-weight="${t.q ? 400 : 600}" style="fill:var(${t.q ? '--ink-3' : '--ink-2'})">${t.lab}</text>`; });
+  /* lignes des trois coupes */
+  [0,1,2].forEach(k => { const y0 = yR + k * RH, cy = y0 + RH / 2, c = `var(${KVAR[k]})`;
+    s += `<line x1="0" y1="${y0}" x2="${W}" y2="${y0}" stroke="var(--rule-soft)" stroke-width="1"/>`
+      +  `<rect x="0" y="${cy - 5.5}" width="11" height="11" rx="2" style="fill:${c}"/>`
+      +  `<text x="18" y="${cy + 5}" font-size="14" font-weight="700" style="fill:var(--ink)">${KSHORT[k]}</text>`;
+    const L = EV.filter(e => e.k === k);
+    L.filter(e => e.txt === 'R').forEach(e => { const xa = X(e.a), xr = X(e.d);
+      s += `<rect x="${f1(xa)}" y="${cy - 1}" width="${f1(xr - xa)}" height="2" rx="1" style="fill:${c}" opacity="${e.ph === 'q' ? .25 : .45}"/>`; });
+    L.forEach(e => { const x = X(e.d), y = cy - CH / 2, op = e.ph === 'q' ? (e.joue ? .5 : .6) : 1;
+      s += `<g data-t="${e.t}"${op < 1 ? ` opacity="${op}"` : ''}>`
+        + (e.prochain ? `<rect x="${f1(x - CW / 2 - 3)}" y="${y - 3}" width="${CW + 6}" height="${CH + 6}" rx="5" fill="none" style="stroke:${c}" stroke-width="1.5"/>` : '')
+        + `<rect x="${f1(x - CW / 2)}" y="${y}" width="${CW}" height="${CH}" rx="3" style="fill:${e.joue ? c : 'var(--surface)'}${e.joue ? '' : `;stroke:${c}`}" stroke-width="1.25"/>`
+        + `<text x="${f1(x)}" y="${cy + 3.8}" text-anchor="middle" font-size="10.5" font-weight="700" letter-spacing="-.04em" font-family="IBM Plex Mono, monospace" style="fill:${e.joue ? 'var(--surface)' : c}">${e.txt}</text></g>`; });
+  });
+  /* aujourd'hui : la seule information vraiment datée du bloc */
+  const now = dOf(isoOf(TODAY)).getTime() + MIDI, xn = now >= t0 && now <= t1 ? xt(now) : null;
+  if (xn != null) { const j = dOf(isoOf(TODAY)), lab = `aujourd'hui · ${j.getDate()} ${MN[j.getMonth()]}`, lw = lab.length * 6.2;
+    s += `<line x1="${f1(xn)}" y1="${yR}" x2="${f1(xn)}" y2="${yR + 3 * RH + 6}" stroke="var(--fr)" stroke-width="2" stroke-dasharray="4 3"/>`
+      +  `<text x="${f1(Math.max(G + lw / 2, Math.min(xn, W - lw / 2)))}" y="${yR + 3 * RH + 22}" text-anchor="middle" font-size="11.5" font-weight="700" style="fill:var(--fr)">${lab}</text>`; }
   s += `</svg>`;
-  document.getElementById('cal').innerHTML = s;
+  box.innerHTML = s;
   /* Téléphone (31/10, demande de GT) : la colonne C1 / C3 / C4 reste épinglée à
-     gauche quand on fait glisser, et la frise s'ouvre centrée sur aujourd'hui —
-     sans ça, en janvier, on arrivait sur septembre et la journée du jour était
-     hors champ. Saison close : on garde le début. */
-  { const b = document.getElementById('cal'); glisser(b, b.querySelector('svg'), 900, 44);
-    if (MOB() && b.classList.contains('glisse')) {
-      const k = 900 / W, xa = now >= t0 && now <= t1 ? mL + (W-mL-mR)*(now-t0)/span : null;
-      requestAnimationFrame(() => {
-        b.scrollLeft = xa == null ? 0 : Math.max(0, xa * k - b.clientWidth * .5);
-        /* le nom de chaque phase suit la partie visible de son bandeau : on sait
-           toujours dans quelle phase on est, même au milieu d'un long bandeau */
-        const zl = [...b.querySelectorAll('svg:not(.epingle) .zlab')];
-        (b.onscroll = () => { const g = b.scrollLeft / k + 44, d = (b.scrollLeft + b.clientWidth) / k;
-          zl.forEach(t => { const lo = Math.max(+t.dataset.a, g), hi = Math.min(+t.dataset.b, d);
-            t.setAttribute('x', ((lo + hi) / 2).toFixed(1)); t.style.visibility = hi - lo > 90 ? '' : 'hidden'; }); })();
-        const i = b.previousElementSibling;
-        if (i && i.classList.contains('glisse-indice'))
-          setTimeout(() => { i.classList.remove('vu'); i.textContent = TXT_GLISSE(b.scrollLeft > 0); }, 60);
-      });
-    } }
-
-  const st = k => { const done = CAL[k].filter(([iso]) => passe(iso)).length;
-    return done === 0 ? `<b>${KSHORT[k]}</b> commence le ${frDate(CAL[k][0][0])}`
-         : done === CAL[k].length ? `<b>${KSHORT[k]}</b> a fini sa phase de ligue`
-         : `<b>${KSHORT[k]}</b> en est à ${done}/${CAL[k].length}, prochaine le ${frDate(CAL[k][done][0])}`; };
-  const notyet = [0,1,2].filter(k => !passe(CAL[k][0][0]));
-  document.getElementById('calmeta').innerHTML = (passee
-    ? `Saison ${(SEAS.find(x => x[0] === calY) || [, calY])[1]}, terminée. `
-    : st(0) + ' · ' + st(1) + ' · ' + st(2) + '. ')
-    + `Finales : ${[0,1,2].map(k=>`${KSHORT[k]} le ${frDate(KO[k][KO[k].length-1][1])}`).join(', ')}.`;
+     gauche quand on fait glisser, et la frise s'ouvre centrée sur aujourd'hui.
+     Saison close : on garde le début. */
+  glisser(box, box.querySelector('svg'), W, G);
+  if (mob && box.classList.contains('glisse')) requestAnimationFrame(() => {
+    box.scrollLeft = xn == null ? 0 : Math.max(0, xn - box.clientWidth * .5);
+    /* le nom de chaque phase suit la partie visible de son bandeau */
+    const zl = [...box.querySelectorAll('svg:not(.epingle) .zlab')];
+    const Lz = zl.map(t => { try { return t.getComputedTextLength(); } catch (e) { return 80; } });
+    (box.onscroll = () => { const g = box.scrollLeft + G, d = box.scrollLeft + box.clientWidth;
+      zl.forEach((t, i) => { const lo = Math.max(+t.dataset.a, g), hi = Math.min(+t.dataset.b, d);
+        t.setAttribute('x', ((lo + hi) / 2).toFixed(1)); t.style.visibility = hi - lo >= Lz[i] + 10 ? '' : 'hidden'; }); })();
+    const i = box.previousElementSibling;
+    if (i && i.classList.contains('glisse-indice'))
+      setTimeout(() => { i.classList.remove('vu'); i.textContent = TXT_GLISSE(box.scrollLeft > 0); }, 60);
+  });
 }
 /* Survol d'une journée (ou d'un tour) : les matchs des clubs français de cette
    compétition, joués avec leur score et le résultat, à venir avec le jour et
@@ -2065,18 +1971,20 @@ const pcP = x => x >= .995 ? '>99%' : x < .005 ? '<1%' : Math.round(x * 100) + '
   };
   function contenu(t){
     const P = pk(), { CAL, KO, QUAL, AFF } = P;
-    const [ks, js] = t.split(':'), k = +ks, L = AFF[t] || [];
+    /* une case = une manche : clé « k:tour:0 » (aller) ou « k:tour:1 » (retour) */
+    const [ks, js, lg] = t.split(':'), k = +ks, leg = lg == null ? null : +lg, L0 = AFF[ks + ':' + js] || [];
+    let L = L0;
     kP = P === CUR_P && js[0] !== 'q' ? k : null;   // probas : saison en cours, phase de ligue et phase finale (C25)
     let titre, quand, a = null, r = null, futur, legs = null, vide;
-    if (js[0] === 'q') { const [lab, a1, r1] = QUAL[k][+js.slice(1)]; a = a1; r = r1;
-      titre = QLABL[lab]; quand = `${frDate(a)} et ${frDate(r)}`; futur = !passe(a);
-      legs = [[`Aller · ${frDate(a)}`, L.filter(m => m[0] === 0)], [`Retour · ${frDate(r)}`, L.filter(m => m[0] === 1)]];
+    if (js[0] === 'q') { const [lab, a1, r1] = QUAL[k][+js.slice(1)], dl = leg ? r1 : a1;
+      titre = `${QLABL[lab]} · ${leg ? 'retour' : 'aller'}`; quand = frDate(dl); futur = !passe(dl);
+      L = L0.filter(m => m[0] === leg);
       vide = 'Aucun club français à ce tour.'; }
     else if (+js < 8) { const j = +js; titre = `Journée ${j + 1}`; quand = CAL[k][j][1]; futur = !passe(CAL[k][j][0]);
       vide = aFr(k) && P === CUR_P ? 'Affiches pas encore publiées.' : `Aucun club français en ${KNAME[k].split(' · ')[1]}.`; }
     else { const [lab, a1, r1] = KO[k].find((x, i) => (x[3] ?? 8 + i) === +js); a = a1; r = r1; titre = KOLAB[lab] === 'Barrages' ? 'Barrages à élimination directe' : KOLAB[lab];
-      quand = r ? `${frDate(a)} et ${frDate(r)}` : frDate(a); futur = !passe(a);
-      if (r) legs = [[`Aller · ${frDate(a)}`, L.filter(m => m[0] < r)], [`Retour · ${frDate(r)}`, L.filter(m => m[0] >= r)]];
+      const dl = r && leg ? r : a; quand = frDate(dl); futur = !passe(dl);
+      if (r && leg != null) { titre += ` · ${leg ? 'retour' : 'aller'}`; L = L0.filter(m => leg ? m[0] >= r : m[0] < r); }
       vide = futur ? 'Affiches connues après le tirage.' : 'Aucun club français à ce tour.'; }
     if (P.grp && js[0] !== 'q' && +js < 8) titre += ' (phase de groupes)';
     let html = `<div class="th">${titre} · ${KNAME[k]}</div><div class="tsub">${quand}${futur ? ' · à venir' : ''}</div>`;
@@ -2101,12 +2009,8 @@ const pcP = x => x >= .995 ? '>99%' : x < .005 ? '<1%' : Math.round(x * 100) + '
   cal.addEventListener('mouseleave', () => { tip.hidden = true; cle = null; });
   document.addEventListener('click', ev => { if (!cal.contains(ev.target)) { tip.hidden = true; cle = null; } });
 })();
-document.getElementById('cal-qual').onclick = function(){
-  calQual = !calQual;
-  this.setAttribute('aria-pressed', calQual);
-  this.textContent = calQual ? 'Masquer la phase qualificative' : 'Afficher la phase qualificative';
-  drawCal();
-};
+/* desktop : le dessin suit la largeur du bloc */
+{ let lw = innerWidth, t; addEventListener('resize', () => { if (innerWidth === lw) return; lw = innerWidth; clearTimeout(t); t = setTimeout(drawCal, 150); }); }
 drawCal();
 
 </script>
