@@ -6699,4 +6699,32 @@ document.getElementById('anomaly').innerHTML = anomalous.length
     cacher(); dessine(); };
   dessine();
 })();
+/* Bulles de survol (GT, 15/11/2026) : on doit TOUJOURS voir ce qu'on survole. Chaque
+   bloc pose sa bulle à sa façon ; ce garde passe après (écouteur sur le document, donc
+   appelé en dernier) et vérifie qu'elle ne couvre ni le pointeur ni la petite forme
+   survolée (case, point, pastille). Si elle les couvre — typiquement en bout de
+   graphique, quand il n'y a plus de place à droite — elle passe au-dessus, ou
+   au-dessous s'il n'y a pas la place au-dessus (cadre qui défile compris). */
+(function(){
+  const zone = el => { let t = 0, b = innerHeight;
+    for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) { const cs = getComputedStyle(p);
+      if (/auto|scroll|hidden|clip/.test(cs.overflowY)) { const R = p.getBoundingClientRect(); t = Math.max(t, R.top); b = Math.min(b, R.bottom); } }
+    return { t, b }; };
+  const garde = ev => {
+    if (ev.clientX == null) return;
+    document.querySelectorAll('.tip').forEach(tip => {
+      if (tip.hidden || !tip.offsetParent) return;
+      const T = tip.getBoundingClientRect(), x = ev.clientX, y = ev.clientY;
+      let c = { l: x - 10, r: x + 10, t: y - 10, b: y + 10 };
+      const g = ev.target && ev.target.getBoundingClientRect ? ev.target.getBoundingClientRect() : null;
+      if (g && g.width > 0 && g.width < 80 && g.height < 60)
+        c = { l: Math.min(c.l, g.left - 4), r: Math.max(c.r, g.right + 4), t: Math.min(c.t, g.top - 4), b: Math.max(c.b, g.bottom + 4) };
+      if (T.right <= c.l || T.left >= c.r || T.bottom <= c.t || T.top >= c.b) return;
+      const Z = zone(tip), haut = c.t - 8 - T.height, bas = c.b + 8;
+      const cible = haut >= Z.t + 4 ? haut : bas + T.height <= Z.b - 4 ? bas : (c.t - Z.t > Z.b - c.b ? haut : bas);
+      tip.style.top = (parseFloat(getComputedStyle(tip).top) + cible - T.top) + 'px';
+    });
+  };
+  ['mousemove', 'mouseover', 'click'].forEach(t => document.addEventListener(t, garde));
+})();
 </script>
