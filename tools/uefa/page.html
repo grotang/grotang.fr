@@ -1920,10 +1920,10 @@ function drawCal(){
   });
   /* aujourd'hui : la seule information vraiment datée du bloc */
   const now = dOf(isoOf(TODAY)).getTime() + MIDI, xn = now >= t0 && now <= t1 ? xt(now) : null;
-  /* aujourd'hui, assumé (GT, 15/11) : trait plein et plus épais, du haut des lignes
+  /* aujourd'hui, assumé (GT, 15/11) : trait pointillé (GT le préfère au plein), du haut des lignes
      jusqu'au libellé, le mot en gras et la date centrée dessous */
   if (xn != null) { const j = dOf(isoOf(TODAY)), xl = f1(Math.max(G + 40, Math.min(xn, W - 40))), yb = yR + 3 * RH;
-    s += `<line x1="${f1(xn)}" y1="${yR - 3}" x2="${f1(xn)}" y2="${yb + 5}" stroke="var(--fr)" stroke-width="2.5" stroke-linecap="round"/>`
+    s += `<line x1="${f1(xn)}" y1="${yR - 3}" x2="${f1(xn)}" y2="${yb + 5}" stroke="var(--fr)" stroke-width="2" stroke-dasharray="4 3"/>`
       +  `<circle cx="${f1(xn)}" cy="${yR - 3}" r="3.5" style="fill:var(--fr)"/>`
       +  `<text x="${xl}" y="${yb + 21}" text-anchor="middle" font-size="12.5" font-weight="700" style="fill:var(--fr)">aujourd'hui</text>`
       +  `<text x="${xl}" y="${yb + 36}" text-anchor="middle" font-size="11.5" font-weight="600" style="fill:var(--fr)">${j.getDate()} ${MN[j.getMonth()]}</text>`; }
