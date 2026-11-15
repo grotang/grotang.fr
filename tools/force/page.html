@@ -91,7 +91,13 @@ td.td.up{color:var(--good)} td.td.dn{color:var(--bad)}
 .duel select{width:100%}
 .res{display:flex;height:46px;border-radius:3px;overflow:hidden;font-weight:700;font-size:15px}
 .res div{display:flex;align-items:center;justify-content:center;min-width:0;white-space:nowrap;overflow:hidden}
-.res .v{background:var(--fr);color:#fff} .res .n{background:color-mix(in srgb,var(--ink) 18%,var(--surface));color:var(--ink)} .res .d{background:var(--n2);color:#fff}
+.res .v,.res .d{background:var(--c);color:var(--t,#fff)} .res .n{background:color-mix(in srgb,var(--ink) 14%,var(--surface));color:var(--ink)}
+.res .d.pale{background:color-mix(in srgb,var(--c) 45%,var(--surface));color:var(--ink)}
+.res-leg b{font-weight:700}
+.f3{justify-content:space-between;flex-wrap:nowrap}
+.f3 .grp{display:flex;align-items:center;gap:8px}
+.rnd{font:inherit;font-size:13px;font-weight:600;padding:5px 12px;border:1px solid var(--rule);border-radius:3px;background:var(--surface);color:var(--ink);cursor:pointer}
+.rnd:hover{border-color:var(--ink-3)}
 .res-leg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12.5px;color:var(--ink-2);margin-top:6px}
 .res-leg span:nth-child(2){text-align:center} .res-leg span:nth-child(3){text-align:right}
 .ecart{font-size:15px;margin:14px 0 0}
@@ -101,6 +107,8 @@ td.td.up{color:var(--good)} td.td.dn{color:var(--bad)}
   .nation .long{display:none} .nation .court{display:inline} .nation i{margin-right:4px}
   #b2{--gauche:86px!important} .ln .nm{font-size:12.5px} .ln .nm small{font-size:10.5px} .piste .et{font-size:10px}
   .duel{grid-template-columns:1fr} .duel .vs{display:none}
+  .f3 .seg button,.rnd{height:38px} .rnd-t{display:none} .rnd{padding:5px 10px;font-size:17px}
+  .res-leg{grid-template-columns:1fr;gap:2px} .res-leg span{text-align:left!important}
   .f1{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:end}
   .f1 .grp{flex-direction:column;align-items:stretch;gap:4px}
   .f1 .grp.dr{margin-left:0}
@@ -143,7 +151,7 @@ td.td.up{color:var(--good)} td.td.dn{color:var(--bad)}
       <div class="vs">contre</div>
       <div><label for="cB">Club B</label><select class="sel" id="cB"></select></div>
     </div>
-    <div class="filtres"><span class="lb">Terrain</span><span class="seg" id="f3"><button data-v="1" class="on">Chez A</button><button data-v="0">Neutre</button><button data-v="-1">Chez B</button></span></div>
+    <div class="filtres f3"><span class="grp"><span class="lb">Terrain</span><span class="seg" id="f3"><button data-v="1">Chez A</button><button data-v="0" class="on">Neutre</button><button data-v="-1">Chez B</button></span></span><button type="button" class="rnd" id="rnd" title="Deux clubs engagés en Europe cette saison, de deux nations différentes, tirés au hasard" aria-label="Tirer deux clubs au hasard">🎲<span class="rnd-t"> Random</span></button></div>
     <div class="res" id="res"></div><div class="res-leg" id="resl"></div>
     <p class="ecart" id="ec"></p>
     <p class="pied">Sur les matchs européens de 2025/26 et 2026/27, que le modèle n'avait pas vus, le favori désigné a gagné 62 % des duels entre clubs des 10 premières nations. Un match reste un match.</p>
@@ -207,20 +215,35 @@ const opts = C.map((c, i) => `<option value="${i}">${c[0]} (${c[1]})</option>`).
 const cA = document.getElementById('cA'), cB = document.getElementById('cB');
 cA.innerHTML = opts; cB.innerHTML = opts;
 const idx = n => Math.max(0, C.findIndex(c => c[0] === n));
-cA.value = idx(FD.defaut[0]); cB.value = idx(FD.defaut[1]);
-let ter = 1;
+/* 🎲 : deux clubs engagés en Europe cette saison, de deux nations différentes (au chargement et au clic) */
+const EUR = FD.clubs.filter(c => c.coupe).map(c => C.findIndex(x => x[0] === c.nom)).filter(i => i >= 0);
+function tirage(){
+  const a = EUR[Math.floor(Math.random() * EUR.length)];
+  let b = a, n = 0; while ((b === a || C[b][1] === C[a][1]) && n++ < 50) b = EUR[Math.floor(Math.random() * EUR.length)];
+  cA.value = a; cB.value = b;
+}
+tirage();
+let ter = 0;
+/* couleur d'un club : celle de sa nation (8 premières, comme partout sur le site) ; sinon encre neutre.
+   Même couleur des deux côtés (même nation, ou deux nations sans couleur) : B en teinte pâle. */
+const TEXTE_SOMBRE = new Set(['--n4', '--n5']);
+const coul = c => c === 'FRA' ? '--fr' : SLOT[c] || null;
 function t3(){
   const A = C[cA.value], Bc = C[cB.value];
   const dl = FD.echelle * (A[2] - Bc[2]) * (ter === -1 ? -1 : 1), h = ter === 0 ? 0 : HOME;
   const pn = NUL_MAX * Math.exp(-NUL_PENTE * Math.abs(dl)), pf = (1 - pn) * sig(BETA * dl + h);
   const pv = ter === -1 ? 1 - pn - pf : pf, pd = 1 - pn - pv;
   const pc = x => Math.round(100 * x) + '\u00a0%';
-  document.getElementById('res').innerHTML = `<div class="v" style="width:${100 * pv}%">${pv > .1 ? pc(pv) : ''}</div><div class="n" style="width:${100 * pn}%">${pn > .1 ? pc(pn) : ''}</div><div class="d" style="width:${100 * pd}%">${pd > .1 ? pc(pd) : ''}</div>`;
-  document.getElementById('resl').innerHTML = `<span>Victoire ${A[0]} · ${pc(pv)}</span><span>Nul · ${pc(pn)}</span><span>Victoire ${Bc[0]} · ${pc(pd)}</span>`;
+  const ka = coul(A[1]), kb = coul(Bc[1]), va = ka ? `var(${ka})` : 'var(--ink)', vb = kb ? `var(${kb})` : 'var(--ink)';
+  const pale = va === vb, ta = !ka ? 'var(--surface)' : TEXTE_SOMBRE.has(ka) ? '#0F141D' : '#fff', tb = !kb ? 'var(--surface)' : TEXTE_SOMBRE.has(kb) ? '#0F141D' : '#fff';
+  document.getElementById('res').innerHTML = `<div class="v" style="width:${100 * pv}%;--c:${va};--t:${ta}">${pv > .1 ? pc(pv) : ''}</div><div class="n" style="width:${100 * pn}%">${pn > .1 ? pc(pn) : ''}</div><div class="d${pale ? ' pale' : ''}" style="width:${100 * pd}%;--c:${vb};--t:${tb}">${pd > .1 ? pc(pd) : ''}</div>`;
+  const nomC = (x, k) => `<b style="color:${k ? `color-mix(in srgb,var(${k}) 72%,var(--ink))` : 'var(--ink)'}">${x[0]}</b>`;
+  document.getElementById('resl').innerHTML = `<span>Victoire ${nomC(A, ka)} · ${pc(pv)}</span><span>Nul · ${pc(pn)}</span><span>Victoire ${nomC(Bc, kb)} · ${pc(pd)}</span>`;
   const g = (A[2] - Bc[2]) + (ter === 0 ? 0 : ter * FD.terrain);
   document.getElementById('ec').innerHTML = cA.value === cB.value ? 'Choisissez deux clubs différents.' : `Écart attendu : <b>${g >= 0 ? '+' : '−'}${dec(Math.abs(g), 2)} but</b> pour ${g >= 0 ? A[0] : Bc[0]}${ter ? ', avantage du terrain compris (' + dec(FD.terrain, 2) + ' but)' : ''}.`;
 }
 cA.onchange = cB.onchange = t3;
+document.getElementById('rnd').onclick = () => { tirage(); t3(); };
 document.querySelectorAll('#f3 button').forEach(b => b.onclick = () => { document.querySelectorAll('#f3 button').forEach(x => x.classList.toggle('on', x === b)); ter = +b.dataset.v; t3(); });
 t3();
 })();
