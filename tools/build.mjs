@@ -181,13 +181,18 @@ function semaineEU(src) {
     if (d) out.push(rp ? [d, h, k, j, nd, cd, ne, ce, gd, ge, rp] : [d, h, k, j, nd, cd, ne, ce, gd, ge]);
   const qm = /const QUAL = (\{[\s\S]*?\n\});/.exec(src), QUAL = qm ? Function(`return (${qm[1]});`)() : null;
   const fq = path.join(ROOT, `tools/uefa/wiki/matchs-${suf}.json`);
+  /* jour exact des matchs de qualification (la source des matchs d'été ne donne que la
+     manche) : wiki/jours-qualifs-AAAA-AA.json, [compétition, tour, domicile, extérieur, jour],
+     relevé sur les feuilles de match de Wikipédia (15/11/2026). Absent : jour officiel du tour. */
+  const fj = path.join(ROOT, `tools/uefa/wiki/jours-qualifs-${suf}.json`), JOUR = new Map();
+  if (fs.existsSync(fj)) for (const [k, q, dom, ext, d] of JSON.parse(fs.readFileSync(fj, 'utf8'))[m[1]] || []) JOUR.set(`${k}|${q}|${dom}|${ext}`, d);
   if (QUAL && fs.existsSync(fq)) { const Q = JSON.parse(fs.readFileSync(fq, 'utf8'));
     for (const [nat, clubs] of Object.entries(Q.c || {})) for (const [club, L] of Object.entries(clubs)) { const vu = {};
       for (const [r, k, o, gf, ga, dom] of L) { if (r > 3) continue;
         const leg = vu[r] = (vu[r] ?? -1) + 1; if (!dom) continue;
         const t = (QUAL[k] || [])[r]; if (!t) continue;
         const [on, oc] = Q.noms[o] || ['?', '?'];
-        out.push([t[1 + Math.min(leg, 1)], null, k, 'q' + r, club, nat, on, oc, gf, ga]); } } }
+        out.push([JOUR.get(`${k}|q${r}|${club}|${on}`) || t[1 + Math.min(leg, 1)], null, k, 'q' + r, club, nat, on, oc, gf, ga]); } } }
   out.sort((a, b) => String(a[0]).localeCompare(String(b[0])) || String(a[1]).localeCompare(String(b[1])) || a[2] - b[2]);
   return out;
 }
