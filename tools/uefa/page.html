@@ -439,7 +439,7 @@ section > .famille + .panel{margin-top:22px}
 .tipcal{min-width:270px; max-width:min(400px, calc(100vw - 40px))}
 .tipcal .lg{font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); margin:6px 0 2px}
 .tipcal .lg:first-of-type{margin-top:0}
-.tipcal .mt{display:grid; grid-template-columns:44px minmax(0,1fr) 44px minmax(0,1fr); align-items:center; gap:6px; line-height:1.75; font-size:12.5px}
+.tipcal .mt{display:grid; grid-template-columns:44px minmax(0,1fr) 44px minmax(0,1fr) auto; align-items:center; gap:6px; line-height:1.75; font-size:12.5px}
 .tipcal .mt .h{text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink-2)}
 .tipcal .mt .a{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink-2)}
 .tipcal .mt .fr{color:var(--fr); font-weight:700}
@@ -448,6 +448,7 @@ section > .famille + .panel{margin-top:22px}
 .tipcal .mt .sc.av{font-weight:500; color:var(--ink-3); font-size:11.5px}
 .tipcal .rp{font-size:11px; color:var(--c3); margin:-2px 0 4px 50px; font-weight:600}
 .tipsem .when .rp{color:var(--c3); font-weight:600}
+.tipcal .mt .jr{font:10.5px "IBM Plex Mono",monospace; color:var(--ink-3); white-space:nowrap; padding-left:6px}
 .tipcal .mt .q{font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-3); white-space:nowrap}
 .tipcal .mt .p{justify-self:start; width:20px; height:18px; border-radius:4px; display:grid; place-items:center; font-size:10.5px; font-weight:700; color:#fff}
 .tipcal .mt .p.v{background:var(--good)} .tipcal .mt .p.n{background:var(--ink-3)} .tipcal .mt .p.d{background:var(--bad)}
@@ -1421,6 +1422,19 @@ const QUAL = {
   2:[['Q1','2026-07-09','2026-07-16'],['Q2','2026-07-23','2026-07-30'],
      ['Q3','2026-08-06','2026-08-13'],['Bar.','2026-08-20','2026-08-27']]
 };
+/* Plages de dates des manches aller-retour (qualifications et phase finale), saison par
+   saison (GT, 15/11/2026 : « comme en phase de ligue », plutôt que le seul premier soir).
+   Source : tableau « Schedule » des pages Wikipédia EN de chaque coupe (calendrier officiel
+   UEFA), relevé le 15/11/2026. Trois manches élargies au jour réellement joué par certains
+   matchs, que le calendrier officiel ne prévoyait pas : C3 2021/22 3e tour retour (10 août)
+   et 8es aller (9 mars), C4 2023/24 demie retour (8 mai). Clé : « compétition:tour » comme
+   dans AFF ; valeur : [aller, retour] (finale : [jour]). */
+const PLAGES = {"2021":{"0:q0":["6–7 juil.","13–14 juil."],"0:q1":["20–21 juil.","27–28 juil."],"0:q2":["3–4 août","10 août"],"0:q3":["17–18 août","24–25 août"],"0:9":["15–16 et 22–23 févr.","8–9 et 15–16 mars"],"0:10":["5–6 avr.","12–13 avr."],"0:11":["26–27 avr.","3–4 mai"],"0:12":["28 mai"],"1:q2":["5 août","10 et 12 août"],"1:q3":["19 août","26 août"],"1:8":["17 févr.","24 févr."],"1:9":["9–10 mars","17 mars"],"1:10":["7 avr.","14 avr."],"1:11":["28 avr.","5 mai"],"1:12":["18 mai"],"2:q0":["8 juil.","15 juil."],"2:q1":["22 juil.","29 juil."],"2:q2":["5 août","12 août"],"2:q3":["19 août","26 août"],"2:8":["17 févr.","24 févr."],"2:9":["10 mars","17 mars"],"2:10":["7 avr.","14 avr."],"2:11":["28 avr.","5 mai"],"2:12":["25 mai"]},"2022":{"0:q0":["5–6 juil.","12–13 juil."],"0:q1":["19–20 juil.","26–27 juil."],"0:q2":["2–3 août","9 août"],"0:q3":["16–17 août","23–24 août"],"0:9":["14–15 et 21–22 févr.","7–8 et 14–15 mars"],"0:10":["11–12 avr.","18–19 avr."],"0:11":["9–10 mai","16–17 mai"],"0:12":["10 juin"],"1:q2":["4 août","11 août"],"1:q3":["18 août","25 août"],"1:8":["16 févr.","23 févr."],"1:9":["9 mars","16 mars"],"1:10":["13 avr.","20 avr."],"1:11":["11 mai","18 mai"],"1:12":["31 mai"],"2:q0":["7 juil.","14 juil."],"2:q1":["21 juil.","28 juil."],"2:q2":["4 août","11 août"],"2:q3":["18 août","25 août"],"2:8":["16 févr.","23 févr."],"2:9":["9 mars","16 mars"],"2:10":["13 avr.","20 avr."],"2:11":["11 mai","18 mai"],"2:12":["7 juin"]},"2023":{"0:q0":["11–12 juil.","18–19 juil."],"0:q1":["25–26 juil.","1er–2 août"],"0:q2":["8–9 août","15 août"],"0:q3":["22–23 août","29–30 août"],"0:9":["13–14 et 20–21 févr.","5–6 et 12–13 mars"],"0:10":["9–10 avr.","16–17 avr."],"0:11":["30 avr.–1er mai","7–8 mai"],"0:12":["1er juin"],"1:q2":["10 août","17 août"],"1:q3":["24 août","31 août"],"1:8":["15 févr.","22 févr."],"1:9":["7 mars","14 mars"],"1:10":["11 avr.","18 avr."],"1:11":["2 mai","9 mai"],"1:12":["22 mai"],"2:q0":["13 juil.","20 juil."],"2:q1":["27 juil.","3 août"],"2:q2":["10 août","17 août"],"2:q3":["24 août","31 août"],"2:8":["15 févr.","22 févr."],"2:9":["7 mars","14 mars"],"2:10":["11 avr.","18 avr."],"2:11":["2 mai","8–9 mai"],"2:12":["29 mai"]},"2024":{"0:q0":["9–10 juil.","16–17 juil."],"0:q1":["23–24 juil.","30–31 juil."],"0:q2":["6–7 août","13 août"],"0:q3":["20–21 août","27–28 août"],"0:8":["11–12 févr.","18–19 févr."],"0:9":["4–5 mars","11–12 mars"],"0:10":["8–9 avr.","15–16 avr."],"0:11":["29–30 avr.","6–7 mai"],"0:12":["31 mai"],"1:q0":["11 juil.","18 juil."],"1:q1":["25 juil.","1er août"],"1:q2":["8 août","15 août"],"1:q3":["22 août","29 août"],"1:8":["13 févr.","20 févr."],"1:9":["6 mars","13 mars"],"1:10":["10 avr.","17 avr."],"1:11":["1er mai","8 mai"],"1:12":["21 mai"],"2:q0":["11 juil.","18 juil."],"2:q1":["25 juil.","1er août"],"2:q2":["8 août","15 août"],"2:q3":["22 août","29 août"],"2:8":["13 févr.","20 févr."],"2:9":["6 mars","13 mars"],"2:10":["10 avr.","17 avr."],"2:11":["1er mai","8 mai"],"2:12":["28 mai"]},"2025":{"0:q0":["8–9 juil.","15–16 juil."],"0:q1":["22–23 juil.","29–30 juil."],"0:q2":["5–6 août","12 août"],"0:q3":["19–20 août","26–27 août"],"0:8":["17–18 févr.","24–25 févr."],"0:9":["10–11 mars","17–18 mars"],"0:10":["7–8 avr.","14–15 avr."],"0:11":["28–29 avr.","5–6 mai"],"0:12":["30 mai"],"1:q0":["10 juil.","17 juil."],"1:q1":["24 juil.","31 juil."],"1:q2":["7 août","14 août"],"1:q3":["21 août","28 août"],"1:8":["19 févr.","26 févr."],"1:9":["12 mars","19 mars"],"1:10":["9 avr.","16 avr."],"1:11":["30 avr.","7 mai"],"1:12":["20 mai"],"2:q0":["10 juil.","17 juil."],"2:q1":["24 juil.","31 juil."],"2:q2":["7 août","14 août"],"2:q3":["21 août","28 août"],"2:8":["19 févr.","26 févr."],"2:9":["12 mars","19 mars"],"2:10":["9 avr.","16 avr."],"2:11":["30 avr.","7 mai"],"2:12":["27 mai"]},"2026":{"0:q0":["7–8 juil.","14–15 juil."],"0:q1":["21–22 juil.","28–29 juil."],"0:q2":["4–5 août","11 août"],"0:q3":["18–19 août","25–26 août"],"0:8":["16–17 févr.","23–24 févr."],"0:9":["9–10 mars","16–17 mars"],"0:10":["6–7 avr.","13–14 avr."],"0:11":["27–28 avr.","4–5 mai"],"0:12":["5 juin"],"1:q0":["9 juil.","16 juil."],"1:q1":["23 juil.","30 juil."],"1:q2":["6 août","13 août"],"1:q3":["20 août","27 août"],"1:8":["18 févr.","25 févr."],"1:9":["11 mars","18 mars"],"1:10":["8 avr.","15 avr."],"1:11":["29 avr.","6 mai"],"1:12":["26 mai"],"2:q0":["9 juil.","16 juil."],"2:q1":["23 juil.","30 juil."],"2:q2":["6 août","13 août"],"2:q3":["20 août","27 août"],"2:8":["18 févr.","25 févr."],"2:9":["11 mars","18 mars"],"2:10":["8 avr.","15 avr."],"2:11":["29 avr.","6 mai"],"2:12":["2 juin"]}};
+/* Jour exact des matchs des clubs français en qualifications (les sources de matchs d'été
+   ne donnent que la manche) : [aller, retour], d'après les feuilles de match des pages
+   Wikipédia EN « qualifying » et « third and play-off round matches », relevées le
+   15/11/2026. Une saison nouvelle se complète à la main, sinon le jour ne s'affiche pas. */
+const JQ = {"2021":{"0:q2":["2021-08-03","2021-08-10"],"0:q3":["2021-08-17","2021-08-25"],"2:q3":["2021-08-19","2021-08-26"]},"2022":{"0:q2":["2022-08-02","2022-08-09"],"2:q3":["2022-08-18","2022-08-25"]},"2023":{"0:q2":["2023-08-09","2023-08-15"],"2:q3":["2023-08-24","2023-08-31"]},"2024":{"0:q2":["2024-08-06","2024-08-13"],"0:q3":["2024-08-20","2024-08-28"],"2:q3":["2024-08-22","2024-08-29"]},"2025":{"0:q2":["2025-08-06","2025-08-12"],"2:q3":["2025-08-21","2025-08-28"]},"2026":{"0:q2":["2026-08-04","2026-08-11"],"0:q3":["2026-08-18","2026-08-26"],"2:q3":["2026-08-20","2026-08-27"]}};
 const QLABL = {'Q1':'1er tour de qualification','Q2':'2e tour de qualification',
                'Q3':'3e tour de qualification','Bar.':'Barrages d\'accès'};
 const KOLAB = {PO:'Barrages', '8es':'8es de finale', '1/4':'Quarts', '1/2':'Demies', F:'Finale'};
@@ -1986,18 +2000,20 @@ const pcP = x => x >= .995 ? '>99%' : x < .005 ? '<1%' : Math.round(x * 100) + '
   const jour = iso => dOf(iso).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' });
   const aFr = k => { const { AFF } = pk(); return [0,1,2,3,4,5,6,7].some(j => (AFF[k + ':' + j] || []).length) || [0,1,2,3].some(q => (AFF[k + ':q' + q] || []).length); };
   let kP = null;   // compétition de l'infobulle en cours, pour retrouver les probas
-  const ligne = (m, quali) => {
+  /* jour exact du match, en fin de ligne, discret (GT, 15/11) ; en qualifications il vient de JQ */
+  const ligne = (m, quali, jq) => {
     const [d, h, nh, ch, na, ca, gh, ga] = m, joue = gh != null, fh = ch === 'FRA', fa = ca === 'FRA';
+    const jj = quali ? (jq && jq[m[0]]) : d;
     let gauche;
     if (joue) { const [p, c] = fh ? [gh, ga] : [ga, gh], r = p > c ? 'v' : p < c ? 'd' : 'n';
       gauche = fh && fa ? '<span class="q"></span>' : `<span class="p ${r}">${r.toUpperCase()}</span>`; }
-    else gauche = `<span class="q">${quali || !d ? '' : jour(d)}</span>`;
+    else gauche = `<span class="q"></span>`;
     const P = !joue && !quali && kP != null && fh !== fa ? vnd(kP, nh, na, fh) : null;
     const pa = P ? `<span class="ch" style="background:var(--good)" title="Victoire ${pcP(P.v)} · nul ${pcP(P.n)} · défaite ${pcP(P.d)}">${pcP(P.v)}</span>` : '';
     return `<div class="mt">${gauche}`
       + `<span class="h${fh ? ' fr' : ''}">${fh ? '' : `<u>${ch}</u>`}${nm(nh)}${fh ? pa : ''}</span>`
       + (joue ? `<span class="sc">${gh}–${ga}</span>` : `<span class="sc av">${h || 'à fixer'}</span>`)
-      + `<span class="a${fa ? ' fr' : ''}">${nm(na)}${fa ? pa : `<u>${ca}</u>`}</span></div>`
+      + `<span class="a${fa ? ' fr' : ''}">${nm(na)}${fa ? pa : `<u>${ca}</u>`}</span><span class="jr">${jj ? jour(jj) : ''}</span></div>`
       + (m[8] ? `<div class="rp">${reprog(m[0], m[1], m[8])}</div>` : '');
   };
   function contenu(t){
@@ -2008,24 +2024,26 @@ const pcP = x => x >= .995 ? '>99%' : x < .005 ? '<1%' : Math.round(x * 100) + '
       const n = CAL[k].length, j = CAL[k].filter(([iso]) => passe(iso)).length;
       return `<div class="th">${KNAME[k]}</div><div class="tsub">${q.length ? `Qualifications dès le ${frDate(q[0][1])} · ` : ''}${P.grp ? 'groupes' : 'phase de ligue'} en ${n} journées${P === CUR_P && j < n ? ` (${j} jouée${j > 1 ? 's' : ''})` : ''} · finale le ${frDate(fin)}</div>`; }
     let L = L0;
+    const sy = P === CUR_P ? String(dOf(CAL[0][0][0]).getFullYear()) : String(calY), PLs = PLAGES[sy] || {};
+    const plage = (i, iso) => (PLs[ks + ':' + js] || [])[i] || frDate(iso);
     kP = P === CUR_P && js[0] !== 'q' ? k : null;   // probas : saison en cours, phase de ligue et phase finale (C25)
     let titre, quand, a = null, r = null, futur, legs = null, vide;
     if (js[0] === 'q') { const [lab, a1, r1] = QUAL[k][+js.slice(1)], dl = leg ? r1 : a1;
-      titre = `${QLABL[lab]} · ${leg ? 'retour' : 'aller'}`; quand = frDate(dl); futur = !passe(dl);
+      titre = `${QLABL[lab]} · ${leg ? 'retour' : 'aller'}`; quand = plage(leg, dl); futur = !passe(dl);
       L = L0.filter(m => m[0] === leg);
       vide = 'Aucun club français à ce tour.'; }
     else if (+js < 8) { const j = +js; titre = `Journée ${j + 1}`; quand = CAL[k][j][1]; futur = !passe(CAL[k][j][0]);
       vide = aFr(k) && P === CUR_P ? 'Affiches pas encore publiées.' : `Aucun club français en ${KNAME[k].split(' · ')[1]}.`; }
     else { const [lab, a1, r1] = KO[k].find((x, i) => (x[3] ?? 8 + i) === +js); a = a1; r = r1; titre = KOLAB[lab] === 'Barrages' ? 'Barrages à élimination directe' : KOLAB[lab];
-      const dl = r && leg ? r : a; quand = frDate(dl); futur = !passe(dl);
+      const dl = r && leg ? r : a; quand = plage(r && leg ? 1 : 0, dl); futur = !passe(dl);
       if (r && leg != null) { titre += ` · ${leg ? 'retour' : 'aller'}`; L = L0.filter(m => leg ? m[0] >= r : m[0] < r); }
       vide = futur ? 'Affiches connues après le tirage.' : 'Aucun club français à ce tour.'; }
     if (P.grp && js[0] !== 'q' && +js < 8) titre += ' (phase de groupes)';
     let html = `<div class="th">${titre} · ${KNAME[k]}</div><div class="tsub">${quand}${futur ? ' · à venir' : ''}</div>`;
     if (!L.length) return html + `<div class="tfoot" style="margin-top:0;border:0;padding-top:0">${vide}</div>`;
-    const q = js[0] === 'q';
+    const q = js[0] === 'q', jq = q ? ((JQ[sy] || {})[ks + ':' + js] || null) : null;
     html += legs ? legs.filter(g => g[1].length).map(([lab, M]) => `<div class="lg">${lab}</div>` + M.map(m => ligne(m, q)).join('')).join('')
-                 : L.map(m => ligne(m, q)).join('');
+                 : L.map(m => ligne(m, q, jq)).join('');
     const b = [0, 0, 0]; L.forEach(m => { if (m[6] == null || (m[3] === 'FRA') === (m[5] === 'FRA')) return;
       const [p, c] = m[3] === 'FRA' ? [m[6], m[7]] : [m[7], m[6]]; b[p > c ? 0 : p === c ? 1 : 2]++; });
     if (b[0] + b[1] + b[2]) html += `<div class="tfoot">Bilan français : <b>${b[0]}</b> V · <b>${b[1]}</b> N · <b>${b[2]}</b> D</div>`;
