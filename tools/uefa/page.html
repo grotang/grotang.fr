@@ -1848,7 +1848,8 @@ function drawCal(){
      cases et les textes gardent leur taille. Téléphone : même dessin, plus large, qui
      défile au doigt, colonne C1 / C3 / C4 épinglée, ouvert centré sur aujourd'hui. */
   const W = mob ? 1100 : Math.max(640, Math.round(box.clientWidth || 1000));
-  const G = 56, PAD = 10, CW = 18, CH = 20, RH = 32, yM = 30, yT = 50, yR = 72, H = yR + 3 * RH + 44;
+  /* téléphone : colonne des coupes resserrée — pastille, sigle et marge plus petits (GT, 15/11) */
+  const G = mob ? 42 : 56, PAD = mob ? 6 : 10, SQ = mob ? 9 : 11, FS = mob ? 12.5 : 14, CW = 18, CH = 20, RH = 32, yM = 30, yT = 50, yR = 72, H = yR + 3 * RH + 44;
   const EV = [];
   [0,1,2].forEach(k => {
     (QUAL[k] || []).forEach((q, qi) => { if (!q) return; const [lab, a, r] = q;
@@ -1911,8 +1912,8 @@ function drawCal(){
     /* le sigle seul ne dit rien à qui ne suit pas les coupes : au survol (ou au doigt),
        le nom de la coupe et ses dates clés (GT, 15/11) */
     s += `<g data-t="${k}:c"><rect x="0" y="${cy - 12}" width="${G - 6}" height="24" fill="transparent"/>`
-      +  `<rect x="0" y="${cy - 5.5}" width="11" height="11" rx="2" style="fill:${c}"/>`
-      +  `<text x="18" y="${cy + 5}" font-size="14" font-weight="700" style="fill:var(--ink)">${KSHORT[k]}</text></g>`;
+      +  `<rect x="0" y="${cy - SQ / 2}" width="${SQ}" height="${SQ}" rx="2" style="fill:${c}"/>`
+      +  `<text x="${SQ + 5}" y="${cy + FS * .36}" font-size="${FS}" font-weight="700" style="fill:var(--ink)">${KSHORT[k]}</text></g>`;
     const L = EV.filter(e => e.k === k);
     /* rail : un trait fin dans la couleur de la coupe, de son premier à son dernier match,
        qui tient la ligne là où les cases sont rares (phase finale, téléphone) */
