@@ -169,11 +169,11 @@ table.g tr.grp th.pf{box-shadow:inset 0 -2px 0 color-mix(in srgb,var(--n7) 55%,t
 .sw .fp.fx{opacity:.18}.sw.hov .fp.fx{opacity:.12}.sw.hov .fp.fx.on,.sw.hov .fp.on{opacity:1}
 .lbs.sel{font-weight:700}
 /* bloc 2 : jusqu'à trois nations comparées, une pastille par nation (GT, 16/11) */
-.chf{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px 8px;margin:-6px 0 10px}
+.chf{display:grid;gap:6px;width:max-content;max-width:100%;margin:-6px 0 10px auto}   /* une nation par ligne, partout, pastilles de même largeur : chiffres alignés (GT, 16/11) */
 .chf:empty{display:none}
 .chn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);border-radius:999px;padding:3px 5px 3px 10px;font:600 12.5px Carlito,sans-serif;color:var(--ink);background:var(--surface);cursor:pointer;line-height:1.3}
 .chn i{width:9px;height:9px;border-radius:50%;flex:none}
-.chn .st{font-weight:400;color:var(--ink-2)}
+.chn .st{font-weight:400;color:var(--ink-2);margin-left:auto;padding-left:10px}
 .chn .st b{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink)}
 .chn .x{width:18px;height:18px;border-radius:50%;display:inline-grid;place-items:center;color:var(--ink-3);font-size:14px;line-height:1}
 .chn:hover .x{background:var(--rule-soft);color:var(--ink)}
