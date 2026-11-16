@@ -60,8 +60,8 @@ export function buildClubsProjection(src) {
   <div class="ch" id="ch"></div>`,
     favoris: `<h3>Les favoris, coupe par coupe</h3></div>
   <p class="psous">Chaque point est un club, placé selon sa chance de titre.</p>
-  <div class="f1 seul"><div class="grp dr"><label class="lb" for="natF">Nations</label><select class="sel" id="natF"></select></div></div>
-  <div class="chf" id="chf"></div>
+  <div class="f2"><div class="chf" id="chf"></div><div class="ctf"><label class="lb" for="natF">Nations</label><select class="sel" id="natF"></select>
+    <div class="acf"><button type="button" id="rndF" title="Trois nations tirées au hasard">⤨ Au hasard</button><button type="button" id="rstF" title="Revenir à toutes les nations">↺ Réinitialiser</button></div></div></div>
   <div class="sw" id="sw"></div>`,
     evo: `<h3>Semaine après semaine</h3></div>
   <p class="psous">Chance de titre à la fin de chaque semaine européenne.</p>
@@ -169,7 +169,16 @@ table.g tr.grp th.pf{box-shadow:inset 0 -2px 0 color-mix(in srgb,var(--n7) 55%,t
 .sw .fp.fx{opacity:.18}.sw.hov .fp.fx{opacity:.12}.sw.hov .fp.fx.on,.sw.hov .fp.on{opacity:1}
 .lbs.sel{font-weight:700}
 /* bloc 2 : jusqu'à trois nations comparées, une pastille par nation (GT, 16/11) */
-.chf{display:grid;gap:6px;width:max-content;max-width:100%;margin:-6px 0 10px auto}   /* une nation par ligne, partout, pastilles de même largeur : chiffres alignés (GT, 16/11) */
+.f2{display:flex;justify-content:flex-end;align-items:flex-start;gap:14px;margin:0 0 14px}
+.ctf{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:none}
+.ctf .lb{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.acf{display:flex;gap:10px}
+.acf button{font:12px Carlito,sans-serif;color:var(--ink-3);background:none;border:0;padding:0;cursor:pointer}
+.acf button:hover{color:var(--ink);text-decoration:underline}
+.acf button[hidden]{display:none}
+.chf{display:grid;gap:6px;width:max-content;max-width:100%;margin-top:19px}   /* une nation par ligne, pastilles de même largeur : chiffres alignés (GT, 16/11) */
+@media (max-width:560px){ .f2{flex-direction:column-reverse;align-items:flex-end;gap:8px} .chf{margin-top:0} .ctf select.sel{width:150px;min-width:0;height:34px;font-size:13px;padding:0 4px} }   /* téléphone : contrôles au-dessus, pastilles en dessous, pleine ligne */
+.chn{white-space:nowrap}
 .chf:empty{display:none}
 .chn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);border-radius:999px;padding:3px 5px 3px 10px;font:600 12.5px Carlito,sans-serif;color:var(--ink);background:var(--surface);cursor:pointer;line-height:1.3}
 .chn i{width:9px;height:9px;border-radius:50%;flex:none}
@@ -487,7 +496,13 @@ function favoris() {
     const nb = v => v >= .995 ? v.toFixed(1).replace('.', ',') : v >= .095 ? v.toFixed(2).replace('.', ',') : v >= .001 ? v.toFixed(3).replace('.', ',') : '< 0,001';
     const ch = document.getElementById('chf');
     ch.innerHTML = NF.map(c => \`<button type="button" class="chn" data-c="\${c}" aria-label="Retirer \${NATN[c] || c}"><i style="background:\${coulF(c)}"></i>\${NATN[c] || c}<span class="st">· <b>\${nb(tot(c))}</b> titre\${tot(c) >= 1.995 ? 's' : ''} attendu\${tot(c) >= 1.995 ? 's' : ''}</span><span class="x">×</span></button>\`).join('');
-    ch.querySelectorAll('.chn').forEach(b => b.onclick = () => { NF = NF.filter(c => c !== b.dataset.c); favoris(); }); }
+    ch.querySelectorAll('.chn').forEach(b => b.onclick = () => { NF = NF.filter(c => c !== b.dataset.c); favoris(); });
+    /* au hasard : trois nations parmi celles qui ont au moins un club visible (≥ 0,1 % de titre) ;
+       réinitialiser : retour à toutes les nations (bouton montré seulement s'il y a un choix) */
+    const vis = [...new Set(DATA.comp.flat().filter(z => z.p[5] >= .001).map(z => z.c))];
+    document.getElementById('rndF').onclick = () => { const t = [...vis]; NF = [];
+      while (NF.length < 3 && t.length) NF.push(t.splice(Math.floor(Math.random() * t.length), 1)[0]); favoris(); };
+    const r = document.getElementById('rstF'); r.hidden = !NF.length; r.onclick = () => { NF = []; favoris(); }; }
   const box = document.getElementById('sw'), W = box.clientWidth, mob = W < 560, H = 3 * 120 + 40, l = mob ? 22 : 110, r = mob ? 26 : 20;
   const lx = v => Math.log10(Math.max(v, .001)), x = v => l + (lx(v) + 3) / (Math.log10(.5) + 3) * (W - l - r);
   let s = \`<svg viewBox="0 0 \${W} \${H}" id="svf" role="img" aria-label="Chance de titre, favori de chaque coupe : \${DATA.comp.map((L, k) => \`\${CN[k]} \${L[0].n} \${pcs(L[0].p[5])}\`).join(', ')}">\`;
