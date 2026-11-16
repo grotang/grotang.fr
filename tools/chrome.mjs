@@ -61,8 +61,13 @@ export const FONTS = `<link rel="preload" href="/fonts/carlito-latin-400-normal.
  * `defer` plutôt que `async` : le script ne bloque pas le rendu et part après le
  * document. Une page de données n'a aucune raison d'attendre son compteur. */
 const UMAMI_ID = 'b0764e0c-1476-483f-8a03-c180ba11e2d7';   // site grotang.fr dans Umami Cloud
+/* Relais Cloudflare (Worker « gt-relais », compte de GT) : sert le script et
+ * transmet les visites depuis une adresse absente des listes de blocage
+ * (cloud.umami.is y figure). S'il tombe, seule la mesure s'arrête.
+ * Code du relais : Claude outputs/relais-umami/worker.js. */
+const RELAIS_MESURE = 'https://gt-relais.tanguy-drouin.workers.dev';
 export const ANALYTICS = UMAMI_ID
-  ? `<script defer src="https://cloud.umami.is/script.js" data-website-id="${UMAMI_ID}"></script>`
+  ? `<script defer src="${RELAIS_MESURE}/g.js" data-host-url="${RELAIS_MESURE}" data-website-id="${UMAMI_ID}"></script>`
   : '<!-- mesure d\'audience : en attente de l\'identifiant Umami -->';
 
 /* Les jetons, définis une fois. Le clair est le défaut : le sombre est un choix
