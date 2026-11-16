@@ -698,6 +698,8 @@ section > .famille + .panel{margin-top:22px}
 .tipsem .vnd3 span{flex:1; text-align:center; border-radius:4px; padding:5px 0 4px; color:#fff; font:700 14px/1 "IBM Plex Mono",monospace}
 .tipsem .vnd3 small{display:block; font:600 9.5px/1.4 Lato,system-ui,sans-serif; opacity:.9; letter-spacing:.03em}
 .tipsem .kl{display:grid; grid-template-columns:auto 1fr auto; gap:4px 8px; align-items:center; font-size:12px; color:var(--ink-2)}
+.tipsem .kl.bol{margin-top:7px; padding-top:6px; border-top:1px solid var(--rule-soft)}
+.tipsem .kl.bol b{text-align:right; font-variant-numeric:tabular-nums}
 .tipsem .kl b{font-family:"IBM Plex Mono",monospace; color:var(--ink); text-align:right}
 @media (max-width:940px){
   /* téléphone (28/10), et écrans intermédiaires jusqu'à 940 px (30/10 : la mise
@@ -6690,6 +6692,11 @@ document.getElementById('anomaly').innerHTML = anomalous.length
       if (joue(m)) { const r = res(m, home), x = pts(m, home); t[r]++; t.p += x; t.byk[m[2]].p += x; t.byk[m[2]].m++; } else t.f++;
     }
     for (const e of BON) if (lundi(e[0]) === k && T[e[4]]) { T[e[4]].B.push(e); T[e[4]].b += e[5]; }
+    /* une pastille par soir, compétition et sorte de bonus, pas une par club (GT, 16/11 :
+       14 « B » à la J8 de C1 pour l'Angleterre) ; le détail club par club est dans l'infobulle */
+    for (const t of Object.values(T)) { const G = new Map();
+      for (const e of t.B) { const q = e[0] + '|' + e[1] + '|' + e[2]; if (!G.has(q)) G.set(q, { d: e[0], k: e[1], ty: e[2], L: [], x: 0 }); const g = G.get(q); g.L.push(e); g.x += e[5]; }
+      t.G = [...G.values()]; t.G.forEach(g => g.L.sort((a, b) => b[5] - a[5] || (a[6] || 0) - (b[6] || 0))); }
     for (const t of Object.values(T)) { const d = div(t.c); t.g = d ? (t.p + t.b) / d : 0; t.div = d;
       t.M.sort((a, b) => (a[0][0] + (a[0][1] || '')).localeCompare(b[0][0] + (b[0][1] || ''))); }
     const R = Object.values(T).filter(t => t.v + t.n + t.d > 0).sort((a, b) => b.g - a.g || b.p - a.p);
@@ -6742,7 +6749,7 @@ document.getElementById('anomaly').innerHTML = anomalous.length
         const parJour = JOURS.map(d => t.M.map((x, j) => [x, j]).filter(([x]) => x[0][0] === d));
         /* une colonne par soir de match, alignée d'une nation à l'autre */
         /* bonus acquis ce soir-là : une pastille « B », après les matchs du soir */
-        const bo = d => t.B.map((e, b) => [e, b]).filter(([e]) => e[0] === d).map(([e, b]) => `<span class="sp bo" style="--k:var(${KVAR[e[1]]})" data-r="${i}" data-b="${b}">B</span>`).join('');
+        const bo = d => t.G.map((g, b) => [g, b]).filter(([g]) => g.d === d).map(([g, b]) => `<span class="sp bo" style="--k:var(${KVAR[g.k]})" data-r="${i}" data-b="${b}">B</span>`).join('');
         const pills = `<span class="sgA" style="grid-template-columns:${COLW}">` + parJour.map((L, q) => `<span class="sj">${L.map(([x, j]) => pill(x, j)).join('')}${bo(JOURS[q])}</span>`).join('') + '</span>';
         return `<div class="semrow${t.c === 'FRA' ? ' me' : ''}"><span class="rk">${t.v + t.n + t.d ? t.rang : '–'}</span>`
           + `<span class="nm" data-r="${i}"><i style="background:${col}"></i><span>${(M2 && NOM_COURT[t.c]) || name(t.c)}</span>${md}</span>`
@@ -6791,13 +6798,13 @@ document.getElementById('anomaly').innerHTML = anomalous.length
     for (let i = x.length - 2; i >= 0; i--) x[i] = Math.min(x[i], x[i + 1] - w[i] - g);
     sp.forEach((e, i) => { e.style.left = Math.max(0, x[i]) + 'px'; e.style.transform = 'none'; }); }
   function tipBonus(t, b){
-    const [d, k, ty, club, , x, pr] = t.B[b];
-    const lab = ty === 'part' ? 'Bonus de participation à la phase de ligue' : ty === 'rang' ? `Bonus de classement · ${pr}<sup>${pr === 1 ? 'er' : 'e'}</sup> de la phase de ligue` : `Bonus de tour · qualifié pour les ${pr}`;
-    const pourquoi = ty === 'part' ? 'qualifié par les barrages : acquis ce soir-là, pas à l\'entrée en lice' : ty === 'rang' ? 'acquis à la dernière journée de la phase de ligue' : 'acquis le soir où le tour précédent est gagné';
-    return `<div class="mh"><span class="kb" style="background:var(${KVAR[k]})">C${[1, 3, 4][k]}</span>${KN[k]}</div>`
-      + `<div class="when">${jourL(d)} · ${court(club)}</div>`
-      + `<div class="verdict"><span class="pill" style="background:var(--n4)">Bonus</span><span><b>+${String(x).replace('.', ',')} pt${x > 1 ? 's' : ''}</b>${t.div ? ` ÷ ${t.div} clubs = <b>+${nfx(x / t.div)}</b> pour ${name(t.c)}` : ''}</span></div>`
-      + `<div class="tfoot">${lab} : ${pourquoi}.</div>`;
+    const g = t.G[b], { d, k, ty, L, x } = g, pt = v => `+${String(v).replace('.', ',')} pt${v > 1 ? 's' : ''}`;
+    const lab = ty === 'part' ? 'Bonus de participation à la phase de ligue' : ty === 'rang' ? 'Bonus de classement de la phase de ligue' : `Bonus de tour · qualifié${L.length > 1 ? 's' : ''} pour les ${L[0][6]}`;
+    const det = e => ty === 'rang' ? `${e[6]}<sup>${e[6] === 1 ? 'er' : 'e'}</sup>` : '';
+    return `<div class="mh"><span class="kb" style="background:var(${KVAR[k]})">C${[1, 3, 4][k]}</span>${lab}</div>`
+      + `<div class="when">${jourL(d)}</div>`
+      + `<div class="verdict"><span class="pill" style="background:var(--n4)">Bonus</span><span><b>${pt(x)}</b>${L.length > 1 ? ` · ${L.length} clubs` : ''}</span></div>`
+      + `<div class="kl bol">${L.map(e => `<span>${det(e)}</span><span>${court(e[3])}</span><b>${pt(e[5])}</b>`).join('')}</div>`;
   }
   function tipNation(t){
     const nb = t.v + t.n + t.d, nN = Object.values(T).filter(x => x.v + x.n + x.d).length;
