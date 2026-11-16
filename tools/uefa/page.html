@@ -4778,7 +4778,11 @@ const legende = segs => segs.map(s =>
      0,85 le 14/11/2026 au soir, puis 0,80 (décision de GT : le modèle ne voit ni les joueurs
      ni l'entraîneur — une blessure, un départ au mercato d'hiver — et quatre saisons ne
      disent rien de la rareté des doublés ; prudence sur l'écart de niveau en phase finale). */
-  const BETA = 1.10, GAMMA = 0.80, PNUL = 0.20;
+  /* 16/11/2026 (GT) : BETA et GAMMA HARMONISÉS à 1,00 — deux paramètres gardés distincts, même
+     valeur. Contrôle (Claude outputs/elo/fit.py, forces du 13/11) : en phase finale, la pente
+     mesurée vaut ≈ 1,05 (0,80 coûtait 0,002 de log-loss sur 271 manches) ; en phase de ligue,
+     1,00 au lieu de 1,10 coûte 0,001 sur 1 587 matchs de validation (0,9457 → 0,9467). */
+  const BETA = 1.00, GAMMA = 1.00, PNUL = 0.20;
   /* BETA sert la phase de ligue ; GAMMA la phase finale (duels simulés, manches restantes des
      duels réels, 1N2 affichés). BETA_Q : tours de qualification de la saison prochaine (C28),
      BETA par défaut (GT, 16/11/2026). */

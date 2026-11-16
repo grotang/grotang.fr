@@ -209,7 +209,7 @@ const b2 = document.getElementById('b2'); b2.innerHTML = h2;
 b2.querySelectorAll('.pt').forEach(p => { p.onmousemove = e => montre(e, p.dataset.h); p.onmouseleave = cache; p.onclick = e => montre(e, p.dataset.h); });
 document.addEventListener('scroll', cache, { passive: true });
 /* bloc 3 : même formule que la projection (page UEFA : BETA, HOME, NUL_MAX, NUL_PENTE) */
-const BETA = 1.10, HOME = 0.57, NUL_MAX = 0.24, NUL_PENTE = 0.24, sig = x => 1 / (1 + Math.exp(-x));
+const BETA = 1.00, HOME = 0.57, NUL_MAX = 0.24, NUL_PENTE = 0.24, sig = x => 1 / (1 + Math.exp(-x));
 const C = FD.comparateur;
 const opts = C.map((c, i) => `<option value="${i}">${c[0]} (${c[1]})</option>`).join('');
 const cA = document.getElementById('cA'), cB = document.getElementById('cB');
