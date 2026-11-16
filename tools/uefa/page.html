@@ -4815,6 +4815,14 @@ const legende = segs => segs.map(s =>
      On compare au coefficient de variation que le modele produit, et on retient
      le couple qui minimise l'ecart. */
   const SIGMA = 0.12, LAMBDA = 1.0, SCAP = 0.45, DELTA = 0.11;
+  /* CHOC DE CLUB (GT, 16/11/2026) : un tirage par CLUB et par saison simulée, gardé toute la
+     campagne. Il porte ce que la force ne voit pas — rotation (un club de Premier League en
+     C4), blessures, mercato, erreur sur la force elle-même — et qui joue sur TOUS les tours à
+     la fois. Sans lui, les matchs sont bien calibrés un par un mais l'erreur s'empile jusqu'au
+     titre : Brighton 42 % en C4 (Opta 44,5 % avant saison, bookmakers ≈ 33 %, Kalshi 23 % le
+     16/11). CSIG en buts de force : 0,35 → Brighton ≈ 36 %, Paris SG ≈ 26 %, France top 5
+     87,3 → 85,6 % (100 000 saisons). À recaler sur 25 saisons de C1 (C30). */
+  const CSIG = 0.35;
   /* Le choc n'a pas la meme ampleur partout, et l'archive est formelle :
      l'Espagne varie de 8 % d'une saison a l'autre, l'Angleterre de 12 %, mais
      la Grece de 44 % et Chypre de 42 %. Un sigma unique ne peut pas tenir les
@@ -5179,7 +5187,7 @@ const legende = segs => segs.map(s =>
          comptée deux fois (une fois observée, une fois retirée au sort). */
       const Z = {}; for (const n of N) Z[n.c] = sigmaNat[n.c] * Math.sqrt(1 - (WPO[n.c] || 0)) * gauss();
       for (let k = 0; k < 3; k++) { const cl = CH[k], src = F[k], dst = FZ[k];
-        for (let i = 0; i < cl.length; i++) dst[i] = src[i] + Z[cl[i]]; }
+        for (let i = 0; i < cl.length; i++) dst[i] = src[i] + Z[cl[i]] + CSIG * (FC ? FC.echelle : 1.157) * gauss(); }
       const { PW: PWz } = rendement();
       for (let k = 0; k < 3; k++) {
         const cl = CH[k], f = FZ[k], pw = PWz[k], nj = JTOT[k], RK = RESTE[k];

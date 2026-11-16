@@ -97,7 +97,12 @@ const nav = await chromium.launch(EXE ? { executablePath: EXE } : {});
 const page = await nav.newPage({ viewport: { width: 1440, height: 1200 } });
 const erreurs = [];
 page.on('pageerror', e => erreurs.push(e.message));
-page.on('console', m => { if (m.type() === 'error') erreurs.push(m.text()); });
+/* Mesure d'audience (relais Umami, chrome.mjs) : un tiers, hors du sujet du test. Servie en
+   local, elle échoue (CORS : le relais n'accepte que https://grotang.fr) et polluait le test
+   d'une fausse erreur (16/11/2026). On bloque ses requêtes et on ignore ses messages. */
+const TIERS = /gt-relais\.|umami/i;
+await page.route(u => TIERS.test(String(u)), r => r.abort());
+page.on('console', m => { if (m.type() === 'error' && !TIERS.test(m.text()) && !TIERS.test((m.location() || {}).url || '')) erreurs.push(m.text()); });
 /* Servie en http local : les polices auto-hébergées (/fonts/) ne chargent pas en file://.
    La racine est le dossier au-dessus de la page (public/), qui contient /fonts/. */
 const serveur = await servir(path.dirname(path.dirname(FICHIER)));
