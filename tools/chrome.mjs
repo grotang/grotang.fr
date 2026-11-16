@@ -64,10 +64,12 @@ const UMAMI_ID = 'b0764e0c-1476-483f-8a03-c180ba11e2d7';   // site grotang.fr da
 /* Relais Cloudflare (Worker « gt-relais », compte de GT) : sert le script et
  * transmet les visites depuis une adresse absente des listes de blocage
  * (cloud.umami.is y figure). S'il tombe, seule la mesure s'arrête.
- * Code du relais : Claude outputs/relais-umami/worker.js. */
+ * Code du relais : Claude outputs/relais-umami/worker.js.
+ * DÉBRANCHÉ le 17/11 : Umami répondait « reçu » mais ne comptait rien
+ * (0 visite de 13h à minuit le 16/11). Retour au script direct. */
 const RELAIS_MESURE = 'https://gt-relais.tanguy-drouin.workers.dev';
 export const ANALYTICS = UMAMI_ID
-  ? `<script defer src="${RELAIS_MESURE}/g.js" data-host-url="${RELAIS_MESURE}" data-website-id="${UMAMI_ID}"></script>`
+  ? `<script defer src="https://cloud.umami.is/script.js" data-website-id="${UMAMI_ID}"></script>`
   : '<!-- mesure d\'audience : en attente de l\'identifiant Umami -->';
 
 /* Les jetons, définis une fois. Le clair est le défaut : le sombre est un choix
