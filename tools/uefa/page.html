@@ -3357,12 +3357,8 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
   function draw(){
     bG.setAttribute('aria-pressed', mode === 'gap'); bC.setAttribute('aria-pressed', mode === 'cum');
     { const sm = bG.querySelector('small'); if (sm) sm.textContent = past ? 'coefficient de la saison' : 'classement 5 ans'; }
-    /* marge droite : place pour les étiquettes de fin de courbe quand la dernière semaine est la
-       dernière colonne (saison close, finale passée) — elles étaient coupées (GT, 17/11) */
-    const ph = MOB(), boxW = box.clientWidth || 1000, mL = ph ? 50 : 54,
-      mR = lastW >= n - 1 ? 14 + 7.3 * Math.max(...[...cur()].map(c => (ph ? c : name(c)).length + (mode === 'gap' && c === 'FRA' ? 0 : 6))) - (ph ? 36 : 32) / 2 : 8,
-      cw = ph ? 36 : Math.max(32, (boxW - mL - Math.max(8, mR)) / n);
-    const Wd = mL + cw * n + Math.max(8, mR), mT = 30, pB = ph ? 270 : 330;
+    const ph = MOB(), boxW = box.clientWidth || 1000, mL = ph ? 50 : 54, cw = ph ? 36 : Math.max(32, (boxW - mL - 8) / n);
+    const Wd = mL + cw * n + 8, mT = 30, pB = ph ? 270 : 330;
     const yD = pB + 18, yM = pB + 31, yR = [pB + 52, pB + 70, pB + 88], avecP = cur().has('FRA') && (P5.some(v => v != null) || P5C.some(v => v != null)), avec2 = avecP && deux,
       i0 = WK.findIndex((k, i) => P5[i] != null || P5C[i] != null), xe = mL + cw * i0 - 12,
       lg = avec2 && !ph && i0 >= 0 && xe >= 190,   // ordinateur : les noms tiennent devant les premiers chiffres
@@ -3428,10 +3424,18 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
       g += `<polyline points="${p.map(q => q.join(',')).join(' ')}" fill="none" stroke="${col}" stroke-width="${c === 'FRA' ? 3 : 2.2}" stroke-linejoin="round"/>`;
       p.forEach((q, j) => g += `<circle cx="${q[0]}" cy="${q[1]}" r="${j === p.length - 1 ? 4 : 2.2}" fill="${col}"/>`);
       const e = p[p.length - 1], v = ser[c][lastW];
-      etiq.push({ x: e[0] + 9, y: e[1] + 4, col, t: `${ph ? c : name(c)}${mode === 'gap' && c === 'FRA' ? '' : ' ' + (mode === 'gap' ? sgn(v) : f1(v))}` }); });
-    /* étiquettes de fin de courbe : écartées de 14 px au moins, pour ne pas se chevaucher */
-    etiq.sort((a, b) => a.y - b.y); for (let j = 1; j < etiq.length; j++) if (etiq[j].y - etiq[j - 1].y < 14) etiq[j].y = etiq[j - 1].y + 14;
-    etiq.forEach(t => g += `<text x="${t.x}" y="${t.y}" class="el" fill="${t.col}">${t.t}</text>`);
+      etiq.push({ x: e[0] + 9, y: e[1] + 4, py: e[1], col, t: `${ph ? c : name(c)}${mode === 'gap' && c === 'FRA' ? '' : ' ' + (mode === 'gap' ? sgn(v) : f1(v))}` }); });
+    /* étiquettes de fin de courbe : écartées de 14 px au moins, pour ne pas se chevaucher.
+       Dernière semaine = dernière colonne (saison close) : pas de place à droite, l'étiquette passe
+       au-dessus du point, alignée à droite sur lui, ou en dessous si la voisine du dessus la gêne
+       (GT, 17/11 : le graphique garde la même largeur d'une saison à l'autre). */
+    const auBord = lastW >= n - 1;
+    etiq.sort((a, b) => a.py - b.py);
+    if (auBord) { let prev = -1e9;
+      etiq.forEach(t => { t.a = 'end'; t.x = X(lastW) + 6; const haut = t.py - 10, bas = t.py + 19;
+        t.y = haut - prev >= 14 && haut > mT + 10 ? haut : bas; prev = t.y; }); }
+    else for (let j = 1; j < etiq.length; j++) if (etiq[j].y - etiq[j - 1].y < 14) etiq[j].y = etiq[j - 1].y + 14;
+    etiq.forEach(t => g += `<text x="${t.x}" y="${t.y}" class="el" fill="${t.col}"${t.a ? ` text-anchor="${t.a}"` : ''}>${t.t}</text>`);
     g += `<line class="hv" x1="0" x2="0" y1="${mT}" y2="${pB}" stroke="var(--ink-3)" opacity="0"/><rect class="hit" x="${mL}" y="${mT}" width="${cw * n}" height="${Ht - mT}" fill="transparent"/>`;
     box.innerHTML = `<div class="sc2b"><svg id="chart2b" style="width:${Wd}px;height:${Ht}px" viewBox="0 0 ${Wd} ${Ht}" role="img" aria-label="Coefficient, semaine européenne après semaine européenne">`
       + `<defs><pattern id="hach2b" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="var(--rule)" stroke-width="1.2"/></pattern></defs>${g}</svg></div>`
