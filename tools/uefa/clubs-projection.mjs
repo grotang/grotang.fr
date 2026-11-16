@@ -61,7 +61,7 @@ export function buildClubsProjection(src) {
     favoris: `<h3>Les favoris, coupe par coupe</h3></div>
   <p class="psous">Chaque point est un club, placé selon sa chance de titre.</p>
   <div class="f2"><div class="chf" id="chf"></div><div class="ctf"><label class="lb" for="natF">Nations</label><select class="sel" id="natF"></select>
-    <div class="acf"><button type="button" id="rndF" title="Trois nations tirées au hasard">⤨ Au hasard</button><button type="button" id="rstF" title="Revenir à toutes les nations">↺ Réinitialiser</button></div></div></div>
+    <div class="acf"><button type="button" id="rstF" title="Revenir à toutes les nations">↺ Réinitialiser</button></div></div></div>
   <div class="sw" id="sw"></div>`,
     evo: `<h3>Semaine après semaine</h3></div>
   <p class="psous">Chance de titre à la fin de chaque semaine européenne.</p>
@@ -497,11 +497,8 @@ function favoris() {
     const ch = document.getElementById('chf');
     ch.innerHTML = NF.map(c => \`<button type="button" class="chn" data-c="\${c}" aria-label="Retirer \${NATN[c] || c}"><i style="background:\${coulF(c)}"></i>\${NATN[c] || c}<span class="st">· <b>\${nb(tot(c))}</b> titre\${tot(c) >= 1.995 ? 's' : ''} attendu\${tot(c) >= 1.995 ? 's' : ''}</span><span class="x">×</span></button>\`).join('');
     ch.querySelectorAll('.chn').forEach(b => b.onclick = () => { NF = NF.filter(c => c !== b.dataset.c); favoris(); });
-    /* au hasard : trois nations parmi celles qui ont au moins un club visible (≥ 0,1 % de titre) ;
-       réinitialiser : retour à toutes les nations (bouton montré seulement s'il y a un choix) */
-    const vis = [...new Set(DATA.comp.flat().filter(z => z.p[5] >= .001).map(z => z.c))];
-    document.getElementById('rndF').onclick = () => { const t = [...vis]; NF = [];
-      while (NF.length < 3 && t.length) NF.push(t.splice(Math.floor(Math.random() * t.length), 1)[0]); favoris(); };
+    /* réinitialiser : retour à toutes les nations (bouton montré seulement s'il y a un choix ;
+       « Au hasard » retiré le 16/11/2026, GT : n'apportait rien) */
     const r = document.getElementById('rstF'); r.hidden = !NF.length; r.onclick = () => { NF = []; favoris(); }; }
   const box = document.getElementById('sw'), W = box.clientWidth, mob = W < 560, H = 3 * 120 + 40, l = mob ? 22 : 110, r = mob ? 26 : 20;
   const lx = v => Math.log10(Math.max(v, .001)), x = v => l + (lx(v) + 3) / (Math.log10(.5) + 3) * (W - l - r);

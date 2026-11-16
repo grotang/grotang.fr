@@ -4885,6 +4885,18 @@ const legende = segs => segs.map(s =>
      Claude outputs/elo/fit.py. */
   const NUL_MAX = 0.24, NUL_PENTE = 0.24;
   const pnul = d => NUL_MAX * Math.exp(-NUL_PENTE * Math.abs(d));
+  /* SCORES DES MATCHS SIMULÉS (C32, 16/11/2026, demande de GT) : l'issue (1N2) reste
+     tirée comme avant ; le score est ensuite tiré SACHANT l'issue, deux lois de Poisson
+     de moyennes BUTS_MU[k]·exp(±BUTS_C·x/2), x = BETA·écart + HOME (le même logit que
+     l'issue). Calé sur les 990 matchs de phase de ligue 2024/25 et 2025/26 (forces du
+     backtest, Claude outputs/elo) : 3,47 buts par match en C1, 2,80 en C3, 2,69 en C4 ;
+     marge moyenne d'une victoire 1,96 observée, 1,98 simulée. Sert au départage. */
+  const BUTS_MU = [1.61, 1.339, 1.243], BUTS_C = 0.578;
+  const poisson = (l, u) => { let L = Math.exp(-l), k = 0, p = 1; do { k++; p *= u(); } while (p > L); return k - 1; };
+  const score = (k, x, r, u) => {   // r : 2 victoire dom., 1 nul, 0 victoire ext.
+    const lh = BUTS_MU[k] * Math.exp(BUTS_C * x / 2), la = BUTS_MU[k] * Math.exp(-BUTS_C * x / 2);
+    for (let t = 0; t < 80; t++) { const a = poisson(lh, u), b = poisson(la, u); if ((a > b ? 2 : a === b ? 1 : 0) === r) return [a, b]; }
+    return r === 2 ? [1, 0] : r === 1 ? [1, 1] : [0, 1]; };
 
   /* Barème de classement de phase de ligue (2024/25 →) : les places 24 à 1
      rapportent 0,25 point par rang gravi en C1 et en C3 ; en C4, 0,125 de la 24e
@@ -4978,6 +4990,16 @@ const legende = segs => segs.map(s =>
         }));
         const pos = clubs.map(x => { const i = (E[x.c] || []).findIndex(r => r[0] === x.n && r[1] === k); return i < 0 ? 99 : i; });
         const live = fx.filter(f => f.remH || f.remA);
+        /* DÉPARTAGE RÉEL (C32, 16/11/2026) : buts pour / contre, buts à l'extérieur,
+           victoires, victoires à l'extérieur des matchs déjà joués (scores Wikipédia),
+           et la liste des 8 (6) adversaires de chaque club, pour les critères 6-8. */
+        const bt = { gf: new Float64Array(36), gc: new Float64Array(36), ge: new Float64Array(36), v: new Float64Array(36), ve: new Float64Array(36) };
+        const adv = clubs.map(() => []);
+        for (const f of fx) { adv[f.h].push(f.a); adv[f.a].push(f.h);
+          if (!f.sc) continue;
+          const [g1, g2] = f.sc;
+          if (!f.remH) { bt.gf[f.h] += g1; bt.gc[f.h] += g2; if (g1 > g2) bt.v[f.h]++; }
+          if (!f.remA) { bt.gf[f.a] += g2; bt.gc[f.a] += g1; bt.ge[f.a] += g2; if (g2 > g1) { bt.v[f.a]++; bt.ve[f.a]++; } } }
         /* PHASE FINALE CONNUE (C25, 14/11/2026). Le robot lit les pages Wikipédia de la
            phase finale (tours j = 8 barrages, 9 huitièmes, 10 quarts, 11 demies, 12 finale) :
            dès qu'un tour est tiré, ses affiches sont dans SEM, et ses scores au fil des
@@ -5013,7 +5035,7 @@ const legende = segs => segs.map(s =>
             T.w = ea === 1 && eb !== 1 ? T.b : eb === 1 && ea !== 1 ? T.a : null;
           }
         }
-        out.push({ clubs, cl: clubs.map(x => x.c), pos, real, live, ko, rest: live.reduce((a, f) => a + f.remH + f.remA, 0) });
+        out.push({ clubs, cl: clubs.map(x => x.c), pos, real, bt, adv, live, ko, rest: live.reduce((a, f) => a + f.remH + f.remA, 0) });
       }
       return out;
     })();
@@ -5172,6 +5194,8 @@ const legende = segs => segs.map(s =>
        les deux ne se comparaient pas. */
     const ligue = Object.fromEntries(codes.map(c => [c, new Float64Array(NSIM)]));
     const ctrl = { koM: [0,0,0], ko: [0,0,0], rb: [0,0,0] };
+    /* départage de la phase de ligue (C32) : tampons réutilisés à chaque tirage */
+    const gf = new Float64Array(36), gc = new Float64Array(36), ge = new Float64Array(36), vi = new Float64Array(36), ve = new Float64Array(36), op = new Float64Array(36), od = new Float64Array(36), ob = new Float64Array(36);
 
     for (let s = 0; s < NSIM; s++) {
       const gain = {}, gainL = {};              // tout / arrêté à la fin de la phase de ligue
@@ -5217,20 +5241,32 @@ const legende = segs => segs.map(s =>
           /* les vraies affiches restantes, avec l'avantage du terrain */
           const C = CAL[k];
           pts = Float64Array.from(C.real);
+          gf.set(C.bt.gf); gc.set(C.bt.gc); ge.set(C.bt.ge); vi.set(C.bt.v); ve.set(C.bt.ve);
           for (const g of C.live) {
-            const dl = se[g.h] - se[g.a], pn = pnul(dl), ph = (1 - pn) * sig(BETA * dl + HOME), u = rnd();
-            const rh = u < ph ? 2 : u < ph + pn ? 1 : 0, ra = 2 - rh;
-            if (g.remH) { pts[g.h] += rh === 2 ? 3 : rh; addL(g.h, rh); }        // classement 3/1/0, coefficient 2/1/0
-            if (g.remA) { pts[g.a] += ra === 2 ? 3 : ra; addL(g.a, ra); }
+            const dl = se[g.h] - se[g.a], pn = pnul(dl), x = BETA * dl + HOME, ph = (1 - pn) * sig(x), u = rnd();
+            const rh = u < ph ? 2 : u < ph + pn ? 1 : 0, ra = 2 - rh, [b1, b2] = score(k, x, rh, rnd);
+            if (g.remH) { pts[g.h] += rh === 2 ? 3 : rh; addL(g.h, rh); gf[g.h] += b1; gc[g.h] += b2; if (rh === 2) vi[g.h]++; }        // classement 3/1/0, coefficient 2/1/0
+            if (g.remA) { pts[g.a] += ra === 2 ? 3 : ra; addL(g.a, ra); gf[g.a] += b2; gc[g.a] += b1; ge[g.a] += b2; if (ra === 2) { vi[g.a]++; ve[g.a]++; } }
           }
         } else {
           pts = cl.map((_, i) => { let p = 0; for (let j = 0; j < nj; j++) { const r = match(i); p += r === 2 ? 3 : r; } return p; });
           for (let i = 0; i < cl.length; i++) { let p = 0; for (let j = 0; j < RK[i]; j++) p += match(i); addL(i, p); }
         }
-        /* égalité de points : tirage au sort (décision de GT, 23/10/2026 ; la
-           différence de buts est inconnue, la force n'a pas à trancher) */
+        /* ÉGALITÉ DE POINTS : critères UEFA (art. 18 du règlement, C32, 16/11/2026 ;
+           avant : tirage au sort, décision de GT du 23/10, faute de scores) :
+           1 différence de buts, 2 buts marqués, 3 buts à l'extérieur, 4 victoires,
+           5 victoires à l'extérieur, 6 points des adversaires, 7 leur différence de
+           buts, 8 leurs buts marqués. Les critères 9 (cartons) et 10 (coefficient de
+           club) ne sont pas suivis : au-delà du 8, tirage au sort. Ancien moteur
+           (sans calendrier) : tirage au sort, faute de scores. */
         const alea = cl.map(() => rnd());
-        const ord = [...cl.keys()].sort((a, b) => (pts[b] - pts[a]) || (alea[a] - alea[b]));
+        let ord;
+        if (CAL) {
+          const A = CAL[k].adv, n = cl.length;
+          for (let i = 0; i < n; i++) { let p = 0, d = 0, b = 0; for (const j of A[i]) { p += pts[j]; d += gf[j] - gc[j]; b += gf[j]; } op[i] = p; od[i] = d; ob[i] = b; }
+          ord = [...cl.keys()].sort((a, b) => (pts[b] - pts[a]) || ((gf[b] - gc[b]) - (gf[a] - gc[a])) || (gf[b] - gf[a]) || (ge[b] - ge[a])
+            || (vi[b] - vi[a]) || (ve[b] - ve[a]) || (op[b] - op[a]) || (od[b] - od[a]) || (ob[b] - ob[a]) || (alea[a] - alea[b]));
+        } else ord = [...cl.keys()].sort((a, b) => (pts[b] - pts[a]) || (alea[a] - alea[b]));
         if (CAL) { const nC = cl.length; ord.forEach((i, r) => { RANG[k][i * nC + r]++; PTSM[k][i] += pts[i]; }); }
         /* Bonus de classement : seulement si la phase de ligue de la compétition n'est pas
            finie. Finie, la source l'a déjà crédité (colonne bonus) : le rajouter le comptait
@@ -5289,8 +5325,8 @@ const legende = segs => segs.map(s =>
           reel.set(w, !!T.fin); return w;
         };
         /* les 8 premiers : une fois les barrages tirés, ce sont les 8 clubs hors barrages
-           les mieux classés (à égalité de points, le tirage au sort du classement simulé
-           pouvait sinon envoyer en barrage un club qualifié d'office) */
+           les mieux classés (le classement simulé pouvait sinon envoyer en barrage un
+           club qualifié d'office) */
         let ordK = ord;
         if (KOR[8]) { const inB = new Set(KOR[8].flatMap(x => [x.a, x.b])), tetes = new Set(KOR[8].map(x => x.legs[1].h)), hors = ord.filter(i => !inB.has(i));
           ordK = [...hors.slice(0, 8), ...ord.filter(i => tetes.has(i)), ...ord.filter(i => inB.has(i) && !tetes.has(i)), ...hors.slice(8)]; }
