@@ -970,7 +970,7 @@ footer .legal{margin-top:3px; font-size:11px}
   </div>
 
   <div class="panel" id="p2b">
-    <div class="ptitle" id="semaines"><span class="no">2b</span><h3>Semaine après semaine</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="seg" role="group" aria-label="Lecture"><button type="button" id="b2-gap" aria-pressed="true">Écart à la France<small>classement 5 ans</small></button><button type="button" id="b2-cum" aria-pressed="false">Cumul<small>saison</small></button></span></span></span></div>
+    <div class="ptitle" id="semaines"><span class="no">2b</span><h3>Semaine après semaine</h3><span class="sub"><span class="ctl"><span class="lb">Lecture</span><span class="seg" role="group" aria-label="Lecture"><button type="button" id="b2-gap" aria-pressed="true">Écart à la France<small>classement 5 ans</small></button><button type="button" id="b2-cum" aria-pressed="false">Cumul<small>saison</small></button></span></span><span class="ctl"><span class="lb">Saison</span><span class="sel"><select id="seasonSel2b" aria-label="Saison"></select></span></span></span></div>
     <p class="recit">Au <b>rythme réel</b> : chaque point est une semaine européenne, du mardi au jeudi, toutes compétitions confondues. C'est la course telle que la France la vit, date après date. Même total à l'arrivée que le <a href="#journees">bloc 4</a>, qui compare, lui, à étape égale.</p>
     <div class="chips" id="chips2b"></div>
     <figure><div class="chartbox" id="box2b"><div class="tip" id="tip2b" hidden></div></div>
@@ -1803,6 +1803,59 @@ document.getElementById('stamp').innerHTML =
    closes viennent de saisons.json, chargé au premier choix d'une saison passée :
    calendrier, affiches françaises et semaine européenne, relevés sur Wikipédia et
    recoupés match par match avec l'archive du site (tools/uefa/archive/calendrier). */
+/* BONUS D'UNE SAISON, AU SOIR OÙ ILS SONT ACQUIS (GT, 16/11/2026) — partagé par les blocs 2 et 2b.
+   [date, compétition, type, club, nation, points, précision]. Types : part (participation à la
+   C1 d'un club venu des barrages, au soir du barrage retour), rang (classement de la phase de
+   ligue, dernière journée), groupe (1er / 2e d'un groupe, dernier match du groupe), tour.
+   2024/25 → : participation C1 6 ; classement C1/C3 0,25 × (25 − rang), C4 2 + 0,25 × (9 − rang)
+   du 1er au 8e puis 0,125 × (25 − rang) ; tour (8es, quarts, demies, finale) 1,5 / 1 / 0,5.
+   2021/22 → 2023/24 (phase de groupes) : participation C1 4 ; groupe C3 4 / 2, C4 2 / 1 (C1 : rien) ;
+   8es C1 5, C3 1, C4 rien ; quarts C1 1, C3 1, C4 rien ; demies et finale 1 partout. Classement
+   des groupes : points, puis confrontations directes (points, différence, buts), puis différence
+   et buts. Contrôle (17/11/2026) : les totaux tombent juste, nation par nation, sur les 5 saisons
+   (decomp-AAAA.json) — avant le 17/11, 2021 → 2023 n'étaient pas ventilés (quarts de C4 comptés à
+   tort). Règles : pages Wikipédia et presse (premierleague.com), reproduites sur l'archive. */
+const bonusSaison = (Ls, SK, y) => { const out = []; if (!SK) return out;
+  const KOB = [1.5, 1, 0.5], JT = [8, 8, 6], neuf = +y >= 2024;
+  const rbS = (k, r) => r > 24 ? 0 : k === 2 ? (r >= 9 ? 0.125 * (25 - r) : 2 + 0.25 * (9 - r)) : 0.25 * (25 - r);
+  const nat = {}, der = {}, prem = {}, finL = [null, null, null], nbL = [{}, {}, {}];
+  for (const m of Ls) { nat[m[4]] = m[5]; nat[m[6]] = m[7]; if (m[8] == null) continue;
+    for (const c of [m[4], m[6]]) { const q = c + '|' + m[2] + '|' + m[3]; if (!der[q] || der[q] < m[0]) der[q] = m[0]; if (!prem[q] || prem[q] > m[0]) prem[q] = m[0]; }
+    if (typeof m[3] === 'number' && m[3] < 8) { if (!finL[m[2]] || finL[m[2]] < m[0]) finL[m[2]] = m[0]; for (const c of [m[4], m[6]]) nbL[m[2]][c] = (nbL[m[2]][c] || 0) + 1; } }
+  const finG = {};   // ancien format : dernier soir du groupe de chaque club
+  if (neuf) for (let k = 0; k < 3; k++) { const v = Object.values(nbL[k]); if (v.length < 36 || v.some(n => n < JT[k])) { finL[k] = null; continue; }
+    const T = {}; for (const m of Ls) { if (m[2] !== k || typeof m[3] !== 'number' || m[3] > 7 || m[8] == null) continue;
+      for (const [c, f, a, aw] of [[m[4], m[8], m[9], 0], [m[6], m[9], m[8], 1]]) { const t = T[c] = T[c] || [0, 0, 0, 0, 0, 0];
+        t[0] += f > a ? 3 : f === a ? 1 : 0; t[1] += f - a; t[2] += f; t[3] += aw ? f : 0; t[4] += f > a ? 1 : 0; t[5] += aw && f > a ? 1 : 0; } }
+    Object.keys(T).sort((a, b) => { for (let i = 0; i < 6; i++) if (T[b][i] !== T[a][i]) return T[b][i] - T[a][i]; return 0; })
+      .forEach((c, i) => { const v = rbS(k, i + 1); if (v) out.push([finL[k], k, 'rang', c, nat[c], v, i + 1]); }); }
+  else { /* groupes : composantes reliées par les matchs de groupe (6 journées, 4 clubs) */
+    const GM = Ls.filter(m => typeof m[3] === 'number' && m[3] < 8 && m[8] != null), par = {};
+    const f = x => { while (par[x] != null && par[x] !== x) x = par[x]; return x; };
+    for (const m of GM) { par[m[4]] = par[m[4]] ?? m[4]; par[m[6]] = par[m[6]] ?? m[6]; const a = f(m[4]), b = f(m[6]); if (a !== b) par[a] = b; }
+    const G = {}; for (const m of GM) for (const c of [m[4], m[6]]) { const r = f(c); (G[r] = G[r] || { k: m[2], cl: new Set(), M: [] }).cl.add(c); }
+    for (const m of GM) G[f(m[4])].M.push(m);
+    const tab = (cl, M) => { const T = {}; cl.forEach(c => T[c] = [0, 0, 0]);
+      for (const m of M) if (m[4] in T && m[6] in T) for (const [c, a, b] of [[m[4], m[8], m[9]], [m[6], m[9], m[8]]]) { T[c][0] += a > b ? 3 : a === b ? 1 : 0; T[c][1] += a - b; T[c][2] += a; }
+      return T; };
+    const GB = [[0, 0], [4, 2], [2, 1]];
+    for (const g of Object.values(G)) { const cl = [...g.cl], A = tab(cl, g.M), fin = g.M.reduce((d, m) => m[0] > d ? m[0] : d, '');
+      cl.forEach(c => finG[c] = fin);
+      const cle = c => { const H = tab(cl.filter(d => A[d][0] === A[c][0]), g.M)[c]; return [A[c][0], H[0], H[1], H[2], A[c][1], A[c][2]]; };
+      const K = Object.fromEntries(cl.map(c => [c, cle(c)]));
+      cl.sort((a, b) => { for (let i = 0; i < 6; i++) if (K[b][i] !== K[a][i]) return K[b][i] - K[a][i]; return 0; });
+      cl.slice(0, 2).forEach((c, i) => { const v = GB[g.k][i]; if (v) out.push([fin, g.k, 'groupe', c, nat[c], v, i + 1]); }); } }
+  const TOUR = ['8es de finale', 'quarts de finale', 'demi-finales', 'finale'];
+  const BT = neuf ? null : [[5, 1, 1, 1], [1, 1, 1, 1], [0, 0, 1, 1]];
+  for (const [c, rows] of Object.entries(SK)) for (const r of rows) { const n = r[11];
+    if (r[3] === 0 && r[4] === 0 && der[n + '|0|q3']) out.push([der[n + '|0|q3'], 0, 'part', n, c, neuf ? 6 : 4]);
+    for (let col = 6; col <= 9; col++) { const k = r[col]; if (k !== 0 && k !== 1 && k !== 2) continue;
+      const v = neuf ? KOB[k] : BT[k][col - 6]; if (!v) continue;
+      /* tour gagné le soir du retour du tour précédent ; sinon fin de la phase de ligue / du groupe ;
+         sinon (tour précédent gagné sur tapis vert : Leipzig–Spartak Moscou, 2022) le 1er match du tour atteint */
+      const d = der[n + '|' + k + '|' + (col + 2)] || (col === 6 ? (neuf ? finL[k] : finG[n]) : null) || prem[n + '|' + k + '|' + (col + 3)];
+      if (d) out.push([d, k, 'tour', n, c, v, TOUR[col - 6]]); } }
+  return out; };
 let calY = 'cur', PASSE = null, PASSE_P = null;
 let drawSem = () => {};   /* bloc 2, rempli plus bas */
 const chargePasse = () => PASSE_P || (PASSE_P = fetch('saisons.json').then(r => r.ok ? r.json() : null).then(j => (PASSE = j)).catch(() => { PASSE_P = null; return null; }));
@@ -3146,6 +3199,20 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
    double la France ou que la France la double (PRJ.devFR, bloc 9). Choix de GT. */
 (function(){
   const box = document.getElementById('box2b'); if (!box || typeof SEM === 'undefined') return;
+  /* SAISONS CLOSES (GT, 17/11/2026) : filtre Saison, de 2021/22 à aujourd'hui. Une saison close
+     se lit dans saisons.json (calendrier, matchs, diviseurs, comme les blocs 1 et 2) : points des
+     matchs semaine par semaine + bonus au soir où ils sont acquis (bonusSaison) ; participation
+     directe à la C1 à la première semaine. Contrôle : les totaux retombent sur la source
+     (decomp-AAAA.json), nation par nation, sauf l'Irlande 2025/26 (diviseur de l'archive : 3
+     contre 4 à la source). Pas de 5 ans ni de « France top 5 » pour une saison close : courbes
+     et écarts sur le coefficient de la SAISON (0 en juillet). */
+  let redraw = () => {};
+  function build(P, yP){
+  const past = !!P;
+  const QU = [0, 1, 2].map(k => ((past ? P.QUAL : QUAL)[k] || []).filter(Boolean));
+  const CA = [0, 1, 2].map(k => ((past ? P.CAL : CAL)[k] || []).filter(Boolean));
+  const KOs = [0, 1, 2].map(k => ((past ? P.KO : KO)[k] || []).filter(Boolean));
+  const base0 = c => past ? 0 : base(c);
   const mon = iso => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7); return d.toISOString().slice(0, 10); };
   const dd = iso => new Date(iso + 'T12:00:00Z');
   const MO = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
@@ -3155,11 +3222,11 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
   const M = {};
   const put = (d, co, lab, ph) => { const w = mon(d), k = M[w] = M[w] || { w, ds: [], p: {}, ph };
     k.ds.push(d); if (!(co in k.p)) k.p[co] = lab; };
-  for (let co = 0; co < 3; co++) QUAL[co].forEach(([r, a, b]) => { const R = r === 'Bar.' ? 'B.' : r; put(a, co, R + 'A', 1); put(b, co, R + 'R', 1); });
-  for (let co = 0; co < 3; co++) CAL[co].forEach((x, j) => { put(x[0], co, 'J' + (j + 1), 0); put(finJ(x), co, 'J' + (j + 1), 0); });
+  for (let co = 0; co < 3; co++) QU[co].forEach(([r, a, b]) => { const R = r === 'Bar.' ? 'B.' : r; put(a, co, R + 'A', 1); put(b, co, R + 'R', 1); });
+  for (let co = 0; co < 3; co++) CA[co].forEach((x, j) => { put(x[0], co, 'J' + (j + 1), 0); put(finJ(x), co, 'J' + (j + 1), 0); });
   /* barrages : « B.A » / « B.R » (aller, retour), 3 caractères comme Q1A — « BarA » débordait (GT, 12/11) */
   const KOC = { PO: 'B.', '8es': '8e', '1/4': '¼', '1/2': '½', F: 'F' };
-  for (let co = 0; co < 3; co++) KO[co].forEach(([r, a, b]) => { const R = KOC[r] || r; if (b) { put(a, co, R + 'A', 2); put(b, co, R + 'R', 2); } else put(a, co, R, 2); });
+  for (let co = 0; co < 3; co++) KOs[co].forEach(([r, a, b]) => { const R = KOC[r] || r; if (b) { put(a, co, R + 'A', 2); put(b, co, R + 'R', 2); } else put(a, co, R, 2); });
   const WK = Object.values(M).sort((a, b) => a.w < b.w ? -1 : 1);
   WK.forEach(k => { k.ds.sort(); k.d0 = k.ds[0]; k.d1 = k.ds[k.ds.length - 1]; });
   const ix = w => WK.findIndex(x => x.w === w), n = WK.length;
@@ -3168,17 +3235,18 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
   for (const m of SEM) { if (typeof m[3] !== 'number' || m[3] > 7 || m[8] == null) continue;
     for (const [c, a, b] of [[m[5], m[8], m[9]], [m[7], m[9], m[8]]]) {
       const w = W[c] = W[c] || [0, 1, 2].map(() => new Array(8).fill(0)); w[m[2]][m[3]] += a > b ? 2 : a === b ? 1 : 0; } }
-  const ETEW = []; QUAL[0].forEach(([r, a, b]) => ETEW.push(ix(mon(a)), ix(mon(b))));
+  const ETEW = []; QU[0].forEach(([r, a, b]) => ETEW.push(ix(mon(a)), ix(mon(b))));
   let lastW = -1;
   for (let i = 0; i < nStepsQ && i <= lastPlayed; i++) lastW = Math.max(lastW, ETEW[i]);
   const G = {}, T = {};
+  if (!past) {
   for (const nn of N) { const c = nn.c, d = nn.divisor ?? (QUALS[c] ? QUALS[c].e : null);
     const v = new Array(n).fill(0), anc = new Array(n).fill(null);
     for (let i = 0; i < nStepsQ && i <= lastPlayed; i++) { v[ETEW[i]] += rawStep(c, i)[1]; anc[ETEW[i]] = rawStep(c, i)[0]; }
     for (let k = 0; k < nStepsM; k++) { const col = nStepsQ + k; if (col > lastPlayed) break;
       const tot = rawStep(c, col)[1], parts = [];
-      if (CAL[0][k]) parts.push([0, k]); if (CAL[1][k]) parts.push([1, k]); if (k > 0 && CAL[2][k - 1]) parts.push([2, k - 1]);
-      const wi = ([co, j]) => ix(mon(CAL[co][j][0]));
+      if (CA[0][k]) parts.push([0, k]); if (CA[1][k]) parts.push([1, k]); if (k > 0 && CA[2][k - 1]) parts.push([2, k - 1]);
+      const wi = ([co, j]) => ix(mon(CA[co][j][0]));
       const wks = new Set(parts.map(wi));
       const s = W[c] && d ? parts.reduce((a, [co, j]) => a + W[c][co][j] / d, 0) : null;
       let last;
@@ -3187,21 +3255,35 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
       anc[last] = rawStep(c, col)[0];
       wks.forEach(i => { if (passe(WK[i].d0)) lastW = Math.max(lastW, i); }); }
     /* cumul, recalé sur la source à chaque fin de colonne */
-    const t = []; let cur = base(c);
+    const t = []; let cur = base0(c);
     for (let i = 0; i < n; i++) { if (i > lastW) { t.push(null); continue; }
       const nv = anc[i] != null ? anc[i] : cur + v[i]; v[i] = nv - cur; cur = nv; t.push(cur); }
     G[c] = v; T[c] = t; }
+  } else {
+    /* saison close : tout est joué ; matchs + bonus, semaine par semaine */
+    lastW = n - 1;
+    const wk = d => { const w = mon(d); let i = WK.findIndex(x => x.w >= w); return i < 0 ? n - 1 : i; };
+    const V = {}, add = (c, i, x) => { (V[c] = V[c] || new Array(n).fill(0))[i] += x; };
+    for (const m of P.SEM) { if (m[8] == null) continue; const q = typeof m[3] === 'string', i = wk(m[0]);
+      for (const [c, a, b] of [[m[5], m[8], m[9]], [m[7], m[9], m[8]]]) add(c, i, a > b ? (q ? 1 : 2) : a === b ? (q ? .5 : 1) : 0); }
+    for (const e of bonusSaison(P.SEM, (typeof SANKEY_S !== 'undefined' && SANKEY_S[yP]) || {}, yP)) add(e[4], wk(e[0]), e[5]);
+    /* participation directe à la C1 (sans passer par les barrages) : première semaine */
+    for (const [c, rows] of Object.entries((typeof SANKEY_S !== 'undefined' && SANKEY_S[yP]) || {})) for (const r of rows) if (r[4] === 0 && r[3] !== 0) add(c, 0, +yP >= 2024 ? 6 : 4);
+    for (const nn of N) { const c = nn.c, d = P.div[c]; if (!d) continue;
+      const v = (V[c] || new Array(n).fill(0)).map(x => x / d), t = []; let cu = 0;
+      v.forEach(x => { cu += x; t.push(cu); }); G[c] = v; T[c] = t; }
+  }
   if (lastW < 0) return;
   /* pour projette.mjs (rembobinage) et la gazette (2c) : les semaines, les cumuls et les gains */
-  window.__semaines = () => ({ weeks: WK.map(k => ({ w: k.w, d0: k.d0, d1: k.d1, ph: k.ph })), lastW, T, G });
+  if (!past) window.__semaines = () => ({ weeks: WK.map(k => ({ w: k.w, d0: k.d0, d1: k.d1, ph: k.ph })), lastW, T, G });
   /* chances « top 5 » de la France, semaine par semaine */
   const top5 = a => { a = a && !Array.isArray(a) ? a.rg : a; return Array.isArray(a) ? a.slice(0, 5).reduce((x, y) => x + y, 0) : null; };
   /* DEUX LIGNES depuis la force des clubs (GT, 12/11/2026) : « nations » = le modèle
      initial, arrêté à la semaine de bascule (grisé ensuite) ; « clubs » = le modèle
      avec la force des clubs, à partir de cette semaine-là (voir projette.mjs). */
   const BASC = '2026-11-02', iB = WK.findIndex(k => k.w === BASC);
-  const PRJc = typeof PRJ !== 'undefined' && PRJ ? PRJ : null, prjClubs = !!(PRJc && PRJc.modele === 'clubs');
-  const PSx = typeof PSEM !== 'undefined' && PSEM ? PSEM : {};
+  const PRJc = !past && typeof PRJ !== 'undefined' && PRJ ? PRJ : null, prjClubs = !!(PRJc && PRJc.modele === 'clubs');
+  const PSx = !past && typeof PSEM !== 'undefined' && PSEM ? PSEM : {};
   const deux = iB >= 0 && iB <= lastW && (prjClubs || !!(PSx.c && Object.keys(PSx.c).length));
   /* saisons suivantes (C25, 14/11/2026) : la bascule n'est pas dans la saison, toutes
      les semaines sont au modèle des clubs (PSEM.c, voir projette.mjs) : une seule ligne */
@@ -3274,6 +3356,7 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
       ? `${A.getUTCDate()}–${B.getUTCDate()} ${MO[A.getUTCMonth()]}` : `${A.getUTCDate()} ${MO[A.getUTCMonth()]} – ${B.getUTCDate()} ${MO[B.getUTCMonth()]}`; };
   function draw(){
     bG.setAttribute('aria-pressed', mode === 'gap'); bC.setAttribute('aria-pressed', mode === 'cum');
+    { const sm = bG.querySelector('small'); if (sm) sm.textContent = past ? 'coefficient de la saison' : 'classement 5 ans'; }
     const ph = MOB(), boxW = box.clientWidth || 1000, mL = ph ? 50 : 54, cw = ph ? 36 : Math.max(32, (boxW - mL - 8) / n);
     const Wd = mL + cw * n + 8, mT = 30, pB = ph ? 270 : 330;
     const yD = pB + 18, yM = pB + 31, yR = [pB + 52, pB + 70, pB + 88], avecP = cur().has('FRA') && (P5.some(v => v != null) || P5C.some(v => v != null)), avec2 = avecP && deux,
@@ -3282,13 +3365,13 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
       yP = lg ? pB + 146 : avec2 ? pB + 140 : pB + 116, yP2 = lg ? pB + 172 : pB + 171, y5 = pB + 97, Ht = pB + (avecP ? (avec2 ? (lg ? 186 : 180) : 124) : 98);
     const X = i => mL + cw * (i + .5);
     const tf = T.FRA, S = [...cur()].sort((a, b) => (a === 'FRA') - (b === 'FRA')), ser = {};
-    S.forEach(c => { ser[c] = T[c].map((v, i) => v == null ? null : mode === 'cum' ? v - base(c) : v - tf[i]); });
+    S.forEach(c => { ser[c] = T[c].map((v, i) => v == null ? null : mode === 'cum' ? v - base0(c) : v - tf[i]); });
     const vals = S.flatMap(c => ser[c].filter(v => v != null));
     let lo = Math.min(0, ...vals), hi = Math.max(0, ...vals); const pad = (hi - lo) * .1 || 1; lo -= pad; hi += pad;
     const Y = v => mT + (pB - mT) * (1 - (v - lo) / (hi - lo)), st = (hi - lo) > 12 ? 2 : (hi - lo) > 5 ? 1 : .5;
     let g = '', yl = '';
     /* les phases, aux couleurs du bandeau du bloc 2 : Qualifs ambre, Ligue bleu, Finale violet */
-    const PN = PH_NOMS(false);
+    const PN = PH_NOMS(past && +yP < 2024);
     [[1, ...PN[0]], [0, ...PN[1]], [2, ...PN[2]]].forEach(([p, noms, mois, v]) => {
       const a = WK.findIndex(k => k.ph === p), b = n - 1 - [...WK].reverse().findIndex(k => k.ph === p); if (a < 0) return;
       const x0 = mL + cw * a + 1, w = cw * (b - a + 1) - 2;
@@ -3311,8 +3394,8 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
       : `<text x="${mL - 8}" y="${yP - 6}" text-anchor="end" class="rh" style="fill:var(--fr)">France</text><text x="${mL - 8}" y="${yP + 5}" text-anchor="end" class="rh" style="fill:var(--ink-2)">top\u00a05</text>`;
     CO.forEach((c, r) => yl += `<text x="${mL - 8}" y="${yR[r]}" text-anchor="end" class="rh" style="fill:var(${CV[r]})">${c}</text>`);
     let mo = -1;
-    WK.forEach((k, i) => { const x = X(i), cl = i > lastW ? ' fut' : i === lastW ? ' cur' : '', A = dd(k.d0), B = dd(k.d1);
-      if (i === lastW) g += `<rect x="${x - cw / 2 + 1.5}" y="${pB + 4}" width="${cw - 3}" height="${Ht - pB - 4}" rx="5" class="curbg"/>`;
+    WK.forEach((k, i) => { const x = X(i), cl = i > lastW ? ' fut' : i === lastW && !past ? ' cur' : '', A = dd(k.d0), B = dd(k.d1);
+      if (i === lastW && !past) g += `<rect x="${x - cw / 2 + 1.5}" y="${pB + 4}" width="${cw - 3}" height="${Ht - pB - 4}" rx="5" class="curbg"/>`;
       g += `<text x="${x}" y="${yD}" text-anchor="middle" class="dj${cl}">${A.getUTCMonth() === B.getUTCMonth() && k.d0 !== k.d1 ? A.getUTCDate() + '–' + B.getUTCDate() : A.getUTCDate()}</text>`;
       /* Mois (GT, 14/11/2026) : une fois, centré sous toutes ses semaines, entre deux traits
          plus marqués qui descendent jusqu'aux pastilles (ordinateur et téléphone). */
@@ -3399,7 +3482,17 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
         : !avec2 && P5[lastW] != null && P5[lastW - 1] != null ? ` Chances de finir dans les 5 premières : ${pc(P5[lastW - 1])} → <b>${pc(P5[lastW])}</b>.` : '')
       + ` ${ph ? 'Touchez' : 'Survolez'} une semaine pour le détail des huit premières.`;
   }
-  draw(); let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { chips(); draw(); }, 150); });
+  draw(); redraw = () => { chips(); draw(); };
+  }
+  build(null, null);
+  let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => redraw(), 150); });
+  /* filtre Saison : 2026/27 en cours, puis les saisons closes (saisons.json, chargé au premier choix) */
+  const selY = document.getElementById('seasonSel2b');
+  if (selY) { const cy = +String(D.meta.season).slice(0, 4);
+    selY.innerHTML = `<option value="cur">${D.meta.season.replace(/^(\d{4})\/\d{2}(\d{2})$/, '$1/$2')}</option>` + [4, 3, 2, 1, 0].map(i => cy - 5 + i).filter(y => y >= 2021).map(y => `<option value="${y}">${y}/${String(y + 1).slice(2)}</option>`).join('');
+    selY.onchange = async () => { const y = selY.value;
+      if (y === 'cur') { build(null, null); return; }
+      const J = await chargePasse(); if (J && J[y] && selY.value === y) build(J[y], y); }; }
 })();
 </script>
 <script>
@@ -4784,8 +4877,11 @@ const legende = segs => segs.map(s =>
   /* 16/11/2026 (GT) : BETA et GAMMA HARMONISÉS à 1,00 — deux paramètres gardés distincts, même
      valeur. Contrôle (Claude outputs/elo/fit.py, forces du 13/11) : en phase finale, la pente
      mesurée vaut ≈ 1,05 (0,80 coûtait 0,002 de log-loss sur 271 manches) ; en phase de ligue,
-     1,00 au lieu de 1,10 coûte 0,001 sur 1 587 matchs de validation (0,9457 → 0,9467). */
-  const BETA = 1.00, GAMMA = 1.00, PNUL = 0.20;
+     1,00 au lieu de 1,10 coûte 0,001 sur 1 587 matchs de validation (0,9457 → 0,9467).
+     16/11/2026, 23 h (GT) : 1,05 les deux. Le choc de club (CSIG) porte désormais l'incertitude
+     qui s'empilait jusqu'au titre ; la pente peut revenir vers la mesure (ligue 1,09, phase
+     finale 1,05). Effet : France 5e 84,5 → 84,9 %, Brighton C4 32,9 → 33,9 %, PSG C1 24,3 → 24,9 %. */
+  const BETA = 1.05, GAMMA = 1.05, PNUL = 0.20;
   /* BETA sert la phase de ligue ; GAMMA la phase finale (duels simulés, manches restantes des
      duels réels, 1N2 affichés). BETA_Q : tours de qualification de la saison prochaine (C28),
      BETA par défaut (GT, 16/11/2026). */
@@ -6623,8 +6719,8 @@ document.getElementById('anomaly').innerHTML = anomalous.length
    participation C1 6 ; classement C1/C3 0,25 × (25 − rang), C4 2 + 0,25 × (9 − rang) du 1er
    au 8e puis 0,125 × (25 − rang) ; tour (8es, quarts, demies, finale) 1,5 / 1 / 0,5. Contrôle
    du 16/11 : les totaux recalculés ainsi tombent juste, nation par nation, sur 2024/25 et
-   2025/26 (decomp-AAAA.json). Avant 2024/25 (phase de groupes), règles différentes : non
-   ventilé. */
+   2025/26 (decomp-AAAA.json). Avant 2024/25 (phase de groupes) : règles de l'époque, voir
+   bonusSaison (ventilées depuis le 17/11/2026). */
 (function(){
   const list = document.getElementById('semList'), tip = document.getElementById('tipSem'), box = document.getElementById('semBox');
   if (!list || typeof SEM === 'undefined') return;
@@ -6649,26 +6745,7 @@ document.getElementById('anomaly').innerHTML = anomalous.length
   prendre(SEM);
   /* les bonus de la saison regardée : [date, compétition, type, club, nation, points, précision] */
   let BON = [];
-  const KOB = [1.5, 1, 0.5], JT = [8, 8, 6];
-  const rbS = (k, r) => r > 24 ? 0 : k === 2 ? (r >= 9 ? 0.125 * (25 - r) : 2 + 0.25 * (9 - r)) : 0.25 * (25 - r);
-  const bonus = (Ls, SK, y) => { const out = []; if (!SK || +y < 2024) return out;
-    const nat = {}, der = {}, finL = [null, null, null], nbL = [{}, {}, {}];
-    for (const m of Ls) { nat[m[4]] = m[5]; nat[m[6]] = m[7]; if (m[8] == null) continue;
-      for (const c of [m[4], m[6]]) { const q = c + '|' + m[2] + '|' + m[3]; if (!der[q] || der[q] < m[0]) der[q] = m[0]; }
-      if (typeof m[3] === 'number' && m[3] < 8) { if (!finL[m[2]] || finL[m[2]] < m[0]) finL[m[2]] = m[0]; for (const c of [m[4], m[6]]) nbL[m[2]][c] = (nbL[m[2]][c] || 0) + 1; } }
-    for (let k = 0; k < 3; k++) { const v = Object.values(nbL[k]); if (v.length < 36 || v.some(n => n < JT[k])) { finL[k] = null; continue; }
-      const T = {}; for (const m of Ls) { if (m[2] !== k || typeof m[3] !== 'number' || m[3] > 7 || m[8] == null) continue;
-        for (const [c, f, a, aw] of [[m[4], m[8], m[9], 0], [m[6], m[9], m[8], 1]]) { const t = T[c] = T[c] || [0, 0, 0, 0, 0, 0];
-          t[0] += f > a ? 3 : f === a ? 1 : 0; t[1] += f - a; t[2] += f; t[3] += aw ? f : 0; t[4] += f > a ? 1 : 0; t[5] += aw && f > a ? 1 : 0; } }
-      Object.keys(T).sort((a, b) => { for (let i = 0; i < 6; i++) if (T[b][i] !== T[a][i]) return T[b][i] - T[a][i]; return 0; })
-        .forEach((c, i) => { const v = rbS(k, i + 1); if (v) out.push([finL[k], k, 'rang', c, nat[c], v, i + 1]); }); }
-    const TOUR = ['8es de finale', 'quarts de finale', 'demi-finales', 'finale'];
-    for (const [c, rows] of Object.entries(SK)) for (const r of rows) { const n = r[11];
-      if (r[3] === 0 && r[4] === 0 && der[n + '|0|q3']) out.push([der[n + '|0|q3'], 0, 'part', n, c, 6]);
-      for (let col = 6; col <= 9; col++) { const k = r[col]; if (k !== 0 && k !== 1 && k !== 2) continue;
-        const d = der[n + '|' + k + '|' + (col + 2)] || (col === 6 ? finL[k] : null);   // tour gagné le soir du retour du tour précédent ; top 8 : dernière journée
-        if (d) out.push([d, k, 'tour', n, c, KOB[k], TOUR[col - 6]]); } }
-    return out; };
+  const bonus = bonusSaison;
   BON = bonus(SEM, typeof SANKEY !== 'undefined' ? SANKEY : null, String(D.meta.season).slice(0, 4));
   /* Semaine affichée à l'ouverture : la semaine EN COURS (lundi 0 h, heure de
      Paris), dès qu'elle a des matchs, joués ou à venir. Une semaine sans match
@@ -6762,7 +6839,7 @@ document.getElementById('anomaly').innerHTML = anomalous.length
     const fr = T.FRA;
     document.getElementById('semNote').innerHTML = (fr && fr.v + fr.n + fr.d
       ? `<b>France</b> : ${fr.v} victoire${fr.v > 1 ? 's' : ''}, ${fr.n} nul${fr.n > 1 ? 's' : ''}, ${fr.d} défaite${fr.d > 1 ? 's' : ''}, <b>+${nfx(fr.g)}</b> au coefficient, ${fr.rang}<sup>${fr.rang === 1 ? 're' : 'e'}</sup> nation de la semaine sur ${nN}. ` : '')
-      + `Coefficient gagné = points des matchs de la semaine (victoire 2, nul 1 ; 1 et 0,5 en qualifications)${!COURS && pk().grp ? '' : ' + bonus acquis dans la semaine (pastille <b>B</b>)'} ÷ clubs engagés${!COURS && pk().grp ? ' ; bonus non ventilés avant 2024/25' : ''}. Trait sous la pastille : <b style="color:var(--c1)">C1</b> · <b style="color:var(--c3)">C3</b> · <b style="color:var(--c4)">C4</b> ; pastille creuse : à venir. Survolez une pastille ou une nation.`;
+      + `Coefficient gagné = points des matchs de la semaine (victoire 2, nul 1 ; 1 et 0,5 en qualifications) + bonus acquis dans la semaine (pastille <b>B</b>) ÷ clubs engagés. Trait sous la pastille : <b style="color:var(--c1)">C1</b> · <b style="color:var(--c3)">C3</b> · <b style="color:var(--c4)">C4</b> ; pastille creuse : à venir. Survolez une pastille ou une nation.`;
   }
   /* infobulles */
   function tipMatch(t, j){
@@ -6801,8 +6878,8 @@ document.getElementById('anomaly').innerHTML = anomalous.length
     sp.forEach((e, i) => { e.style.left = Math.max(0, x[i]) + 'px'; e.style.transform = 'none'; }); }
   function tipBonus(t, b){
     const g = t.G[b], { d, k, ty, L, x } = g, pt = v => `+${String(v).replace('.', ',')} pt${v > 1 ? 's' : ''}`;
-    const lab = ty === 'part' ? 'Bonus de participation à la phase de ligue' : ty === 'rang' ? 'Bonus de classement de la phase de ligue' : `Bonus de tour · qualifié${L.length > 1 ? 's' : ''} pour les ${L[0][6]}`;
-    const det = e => ty === 'rang' ? `${e[6]}<sup>${e[6] === 1 ? 'er' : 'e'}</sup>` : '';
+    const lab = ty === 'part' ? `Bonus de participation à la ${pk().grp ? 'phase de groupes' : 'phase de ligue'}` : ty === 'rang' ? 'Bonus de classement de la phase de ligue' : ty === 'groupe' ? 'Bonus de groupe' : `Bonus de tour · qualifié${L.length > 1 ? 's' : ''} pour les ${L[0][6]}`;
+    const det = e => ty === 'rang' || ty === 'groupe' ? `${e[6]}<sup>${e[6] === 1 ? 'er' : 'e'}</sup>` : '';
     return `<div class="mh"><span class="kb" style="background:var(${KVAR[k]})">C${[1, 3, 4][k]}</span>${lab}</div>`
       + `<div class="when">${jourL(d)}</div>`
       + `<div class="verdict"><span class="pill" style="background:var(--n4)">Bonus</span><span><b>${pt(x)}</b></span>${t.div ? `<span class="bodiv">÷ ${t.div} clubs = <b>+${nfx(x / t.div)}</b> pour ${name(t.c)}</span>` : ''}</div>`
