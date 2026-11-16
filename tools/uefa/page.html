@@ -3357,8 +3357,12 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
   function draw(){
     bG.setAttribute('aria-pressed', mode === 'gap'); bC.setAttribute('aria-pressed', mode === 'cum');
     { const sm = bG.querySelector('small'); if (sm) sm.textContent = past ? 'coefficient de la saison' : 'classement 5 ans'; }
-    const ph = MOB(), boxW = box.clientWidth || 1000, mL = ph ? 50 : 54, cw = ph ? 36 : Math.max(32, (boxW - mL - 8) / n);
-    const Wd = mL + cw * n + 8, mT = 30, pB = ph ? 270 : 330;
+    /* marge droite : place pour les étiquettes de fin de courbe quand la dernière semaine est la
+       dernière colonne (saison close, finale passée) — elles étaient coupées (GT, 17/11) */
+    const ph = MOB(), boxW = box.clientWidth || 1000, mL = ph ? 50 : 54,
+      mR = lastW >= n - 1 ? 14 + 7.3 * Math.max(...[...cur()].map(c => (ph ? c : name(c)).length + (mode === 'gap' && c === 'FRA' ? 0 : 6))) - (ph ? 36 : 32) / 2 : 8,
+      cw = ph ? 36 : Math.max(32, (boxW - mL - Math.max(8, mR)) / n);
+    const Wd = mL + cw * n + Math.max(8, mR), mT = 30, pB = ph ? 270 : 330;
     const yD = pB + 18, yM = pB + 31, yR = [pB + 52, pB + 70, pB + 88], avecP = cur().has('FRA') && (P5.some(v => v != null) || P5C.some(v => v != null)), avec2 = avecP && deux,
       i0 = WK.findIndex((k, i) => P5[i] != null || P5C[i] != null), xe = mL + cw * i0 - 12,
       lg = avec2 && !ph && i0 >= 0 && xe >= 190,   // ordinateur : les noms tiennent devant les premiers chiffres
