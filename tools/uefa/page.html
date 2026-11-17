@@ -3369,9 +3369,10 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
   function draw(){
     bG.setAttribute('aria-pressed', mode === 'gap'); bC.setAttribute('aria-pressed', mode === 'cum');
     { const sm = bG.querySelector('small'); if (sm) sm.textContent = past ? 'coefficient de la saison' : 'classement 5 ans'; }
-    /* ordinateur : marge droite fixe (64 px), la même pour TOUTES les saisons (GT, 17/11) — place
-       pour centrer le nom au-dessus du dernier point d'une saison close */
-    const ph = MOB(), boxW = box.clientWidth || 1000, mL = ph ? 50 : 54, mR = ph ? 8 : 64, cw = ph ? 36 : Math.max(32, (boxW - mL - mR) / n);
+    /* marge droite fixe, la même pour TOUTES les saisons (GT, 17/11) : ordinateur 64 px, pour centrer le
+       nom au-dessus du dernier point d'une saison close ; téléphone 84 px, les étiquettes restent à droite
+       du point (le graphique défile, la place ne manque pas) */
+    const ph = MOB(), boxW = box.clientWidth || 1000, mL = ph ? 50 : 54, mR = ph ? 84 : 64, cw = ph ? 36 : Math.max(32, (boxW - mL - mR) / n);
     const Wd = mL + cw * n + mR, mT = 30, pB = ph ? 270 : 330;
     const yD = pB + 18, yM = pB + 31, yR = [pB + 52, pB + 70, pB + 88], avecP = cur().has('FRA') && (P5.some(v => v != null) || P5C.some(v => v != null)), avec2 = avecP && deux,
       i0 = WK.findIndex((k, i) => P5[i] != null || P5C[i] != null), xe = mL + cw * i0 - 12,
@@ -3464,9 +3465,6 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
         out.push(`<text x="${cale(t.nom)}" y="${yN}" class="el" fill="${t.col}" text-anchor="middle">${t.nom}</text>`
           + `<text x="${cale(t.val)}" y="${yN + 14}" class="el" fill="${t.col}" text-anchor="middle">${t.val}</text>`); });
       g += out.join(''); etiq.length = 0; }
-    else if (auBord) { let prev = -1e9;
-      etiq.forEach(t => { t.a = 'end'; t.x = X(lastW) + 6; const haut = t.py - 10, bas = t.py + 19;
-        t.y = haut - prev >= 14 && haut > mT + 10 ? haut : bas; prev = t.y; }); }
     else for (let j = 1; j < etiq.length; j++) if (etiq[j].y - etiq[j - 1].y < 14) etiq[j].y = etiq[j - 1].y + 14;
     etiq.forEach(t => g += `<text x="${t.x}" y="${t.y}" class="el" fill="${t.col}"${t.a ? ` text-anchor="${t.a}"` : ''}>${t.t}</text>`);
     g += `<line class="hv" x1="0" x2="0" y1="${mT}" y2="${pB}" stroke="var(--ink-3)" opacity="0"/><rect class="hit" x="${mL}" y="${mT}" width="${cw * n}" height="${Ht - mT}" fill="transparent"/>`;
