@@ -922,7 +922,8 @@ footer .legal{margin-top:3px; font-size:11px}
 .mini tr.n2 td.r{font-size:10.5px}
 .mini tr.n2 td.d i{width:6px; height:6px; opacity:.7}
 .mini .lk{margin-top:8px; font-size:12.5px}
-.mini .lk a{color:var(--n1); text-decoration:none; font-weight:700}
+.mini .lk a{color:var(--n1); text-decoration:none; font-weight:700; display:block; width:fit-content}   /* un lien par ligne (GT, 17/11) */
+.mini .lk a + a{margin-top:4px}
 .mini .lk a:hover{text-decoration:underline}
 .mini .fin{display:grid; grid-template-columns:34px minmax(0,1fr) 64px; align-items:center; gap:6px 10px; font-size:13.5px; border-top:1px solid var(--rule); border-bottom:1px solid var(--rule); padding:8px 0}
 .mini .fin > div{display:contents}
@@ -1796,7 +1797,7 @@ document.getElementById('stamp').innerHTML =
     const gauche = `<div><div class="mh"><span class="mt">Classement à cinq ans</span>`
       + (MED ? `<span class="seg" role="group" aria-label="Classement"><button type="button" data-m="fin" aria-pressed="${mode === 'fin'}">Fin de saison</button><button type="button" data-m="cours" aria-pressed="${mode === 'cours'}">En cours</button></span>` : '')
       + `</div><table>${table()}</table><div class="lk"><a href="#classement">Classement complet →</a></div></div>`;
-    const droite = RG ? `<div><div class="mh"><span class="mt">En fin de saison, la France finit…</span></div>${fin()}<div class="lk"><a href="#projection">Détail de la projection →</a> · <a href="/football-clubs-projection-uefa/">Qui va gagner les coupes d'Europe ? →</a></div></div>` : '';
+    const droite = RG ? `<div><div class="mh"><span class="mt">En fin de saison, la France finit…</span></div>${fin()}<div class="lk"><a href="#projection">Détail de la projection →</a><a href="/football-clubs-projection-uefa/">Qui va gagner les coupes d'Europe ? →</a></div></div>` : '';
     el.innerHTML = gauche + droite;
     el.querySelectorAll('button[data-m]').forEach(b => b.onclick = () => { mode = b.dataset.m; draw(); });
   }
