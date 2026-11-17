@@ -120,7 +120,8 @@ let out = src.slice(0, a) + SENT[0] + 'const PRJ = ' + JSON.stringify(R) + ';' +
    semaine n'était figée qu'au démarrage de la suivante, et rejouée avec les forces du jour : elle
    voyait l'avenir. */
 const figee = (() => { try {
-  if (!INFO || !R.rgFR || ((R.calendrier || {}).bloque || []).length) return null;
+  /* le contrôle des matchs restants (modèle contre calendrier) doit être parfait : ni bloqué, ni toléré */
+  if (!INFO || !R.rgFR || ((R.calendrier || {}).bloque || []).length || ((R.calendrier || {}).tolere || []).length) return null;
   const k = INFO.weeks[INFO.lastW]; if (!k || k.w < BASCULE) return null;
   const html = fs.readFileSync(BATI, 'utf8'), a = html.indexOf('/*SEM_START*/const SEM = '), b = html.indexOf(';/*SEM_END*/', a);
   if (a < 0 || b < 0) return null;
@@ -129,7 +130,8 @@ const figee = (() => { try {
   const quand = (d, h) => { const [y, mo, j] = d.split('-').map(Number), [hh, mi] = (h || '21:00').split(':').map(Number); return Date.UTC(y, mo - 1, j, hh, mi); };
   const M = S0.filter(m => lundi(m[0]) === k.w);
   if (!M.length || M.some(m => m[8] == null)) return null;
-  const fin = Math.max(...M.map(m => quand(m[0], m[1]))) + 115 * 60e3;
+  /* fin du dernier match : coup d'envoi + 1 h 55, + 2 h 40 en phase finale (prolongation, tirs au but) */
+  const fin = Math.max(...M.map(m => quand(m[0], m[1]) + (typeof m[3] === 'number' && m[3] >= 8 ? 160 : 115) * 60e3));
   const x = /^(\d{2})\/(\d{2})\/(\d{4})(?:\s*-\s*(\d{2}):(\d{2}))?/.exec(String(R.maj || '').trim()); if (!x) return null;
   const asof = Date.UTC(+x[3], +x[2] - 1, +x[1], +(x[4] || 23), +(x[5] || 59));
   if (asof < fin) return null;
