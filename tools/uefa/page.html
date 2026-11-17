@@ -3366,8 +3366,10 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
   function draw(){
     bG.setAttribute('aria-pressed', mode === 'gap'); bC.setAttribute('aria-pressed', mode === 'cum');
     { const sm = bG.querySelector('small'); if (sm) sm.textContent = past ? 'coefficient de la saison' : 'classement 5 ans'; }
-    const ph = MOB(), boxW = box.clientWidth || 1000, mL = ph ? 50 : 54, cw = ph ? 36 : Math.max(32, (boxW - mL - 8) / n);
-    const Wd = mL + cw * n + 8, mT = 30, pB = ph ? 270 : 330;
+    /* ordinateur : marge droite fixe (64 px), la même pour TOUTES les saisons (GT, 17/11) — place
+       pour centrer le nom au-dessus du dernier point d'une saison close */
+    const ph = MOB(), boxW = box.clientWidth || 1000, mL = ph ? 50 : 54, mR = ph ? 8 : 64, cw = ph ? 36 : Math.max(32, (boxW - mL - mR) / n);
+    const Wd = mL + cw * n + mR, mT = 30, pB = ph ? 270 : 330;
     const yD = pB + 18, yM = pB + 31, yR = [pB + 52, pB + 70, pB + 88], avecP = cur().has('FRA') && (P5.some(v => v != null) || P5C.some(v => v != null)), avec2 = avecP && deux,
       i0 = WK.findIndex((k, i) => P5[i] != null || P5C[i] != null), xe = mL + cw * i0 - 12,
       lg = avec2 && !ph && i0 >= 0 && xe >= 190,   // ordinateur : les noms tiennent devant les premiers chiffres
@@ -3433,14 +3435,30 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
       g += `<polyline points="${p.map(q => q.join(',')).join(' ')}" fill="none" stroke="${col}" stroke-width="${c === 'FRA' ? 3 : 2.2}" stroke-linejoin="round"/>`;
       p.forEach((q, j) => g += `<circle cx="${q[0]}" cy="${q[1]}" r="${j === p.length - 1 ? 4 : 2.2}" fill="${col}"/>`);
       const e = p[p.length - 1], v = ser[c][lastW];
-      etiq.push({ x: e[0] + 9, y: e[1] + 4, py: e[1], col, t: `${ph ? c : name(c)}${mode === 'gap' && c === 'FRA' ? '' : ' ' + (mode === 'gap' ? sgn(v) : f1(v))}` }); });
+      const nom = ph ? c : name(c), val = mode === 'gap' && c === 'FRA' ? '' : (mode === 'gap' ? sgn(v) : f1(v));
+      etiq.push({ x: e[0] + 9, y: e[1] + 4, py: e[1], col, nom, val, t: `${nom}${val ? ' ' + val : ''}` }); });
     /* étiquettes de fin de courbe : écartées de 14 px au moins, pour ne pas se chevaucher.
        Dernière semaine = dernière colonne (saison close) : pas de place à droite, l'étiquette passe
        au-dessus du point, alignée à droite sur lui, ou en dessous si la voisine du dessus la gêne
        (GT, 17/11 : le graphique garde la même largeur d'une saison à l'autre). */
     const auBord = lastW >= n - 1;
     etiq.sort((a, b) => a.py - b.py);
-    if (auBord) { let prev = -1e9;
+    if (auBord && !ph) {
+      /* ordinateur, saison close (GT, 17/11) : nom centré AU-DESSUS du dernier point, écart (ou total
+         en Cumul) centré en dessous ; si la place au-dessus est prise, les deux passent en dessous */
+      const pris = etiq.map(t => [t.py - 5, t.py + 5]), libre = (y0, y1) => y0 >= mT - 4 && y1 <= pB + 2 && pris.every(([a, b]) => y1 <= a || y0 >= b);
+      const xc = X(lastW), lw = s => s.length * 7.3, cale = s => Math.min(xc, mL + cw * n + mR - lw(s) / 2 - 2);
+      const out = [], bx = y => [y - 11, y + 3];
+      [...etiq].sort((a, b) => a.py - b.py).forEach(t => {
+        /* au-dessus / en dessous ; sinon tout en dessous ; sinon tout au-dessus ; sinon la 1re */
+        const C = [[t.py - 10, t.py + 20], [t.py + 20, t.py + 34], [t.py - 24, t.py - 10],
+          ...Array.from({ length: 16 }, (_, k) => [t.py + 34 + 14 * k, t.py + 48 + 14 * k])].map(([yN, yV]) => t.val ? [yN, yV] : [yN, null]);
+        const ok = C.find(([yN, yV]) => libre(...bx(yN)) && (yV == null || libre(...bx(yV)))) || C[0];
+        const [yN, yV] = ok; pris.push(bx(yN)); if (yV != null) pris.push(bx(yV));
+        out.push(`<text x="${cale(t.nom)}" y="${yN}" class="el" fill="${t.col}" text-anchor="middle">${t.nom}</text>`);
+        if (yV != null) out.push(`<text x="${cale(t.val)}" y="${yV}" class="el" fill="${t.col}" text-anchor="middle">${t.val}</text>`); });
+      g += out.join(''); etiq.length = 0; }
+    else if (auBord) { let prev = -1e9;
       etiq.forEach(t => { t.a = 'end'; t.x = X(lastW) + 6; const haut = t.py - 10, bas = t.py + 19;
         t.y = haut - prev >= 14 && haut > mT + 10 ? haut : bas; prev = t.y; }); }
     else for (let j = 1; j < etiq.length; j++) if (etiq[j].y - etiq[j - 1].y < 14) etiq[j].y = etiq[j - 1].y + 14;
