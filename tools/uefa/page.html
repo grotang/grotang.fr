@@ -181,6 +181,8 @@ figcaption,.figc{font-size:12.5px; color:var(--ink-2); margin:10px 0 0; line-hei
 #chart2b .zl{font:700 10.5px "IBM Plex Mono",monospace; fill:var(--ink); letter-spacing:.06em; text-transform:uppercase}
 #p2b .seg button small{display:block; font-size:10px; font-weight:500; opacity:.75; line-height:1.15; margin-top:1px; letter-spacing:0; text-transform:none}
 #chips2b button:disabled{opacity:.38; cursor:not-allowed}
+#chips2b .raz2b{border-color:transparent; background:none; box-shadow:none; color:var(--ink-3); font-size:16px; padding:0 6px; min-width:0}   /* réinitialiser, léger (GT, 17/11) */
+#chips2b .raz2b:hover{color:var(--ink)}
 #chart2b .el{font:600 12px "IBM Plex Mono",monospace; paint-order:stroke; stroke:var(--surface); stroke-width:3px}
 #chart2b .dj{font:600 10.5px "IBM Plex Mono",monospace; fill:var(--ink); letter-spacing:-.4px}
 #chart2b .dm{font:10.5px "IBM Plex Mono",monospace; fill:var(--ink-3)}
@@ -3318,7 +3320,7 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
   const selG = new Set(['FRA', L[fi + 1], ...[L[fi - 1], L[fi - 2], L[fi + 2]].filter(presse)].filter(c => c && TOP8.includes(c)));
   /* Cumul, par défaut : la France et ses voisines directes au classement à 5 ans (GT, 06/11) */
   const voisines = () => ['FRA', L[fi - 1], L[fi + 1]].filter(Boolean);
-  const selC = new Set(voisines());
+  const selC = new Set(voisines()), defG = [...selG];
   let mode = 'gap';
   const cur = () => mode === 'gap' ? selG : selC;
   const tip = document.getElementById('tip2b'), cap = document.getElementById('cap2b');
@@ -3343,14 +3345,15 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
     const menu = `<span class="sel"><select id="add2b"${plein ? ' disabled' : ''} aria-label="Ajouter une nation"><option value="">${plein ? `${MAX2B} nations au plus` : ph ? '+ Ajouter…' : '+ Ajouter une nation…'}</option>`
       + (mode === 'cum' ? `<optgroup label="Les 8 premières">${ord8.map(opt).join('')}</optgroup><optgroup label="Toutes les autres">${autres.map(opt).join('')}</optgroup>` : ord8.map(opt).join(''))
       + `</select></span>`;
-    const cmd = mode === 'cum' ? `<button type="button" data-rnd="1" title="Trois nations au hasard, parmi toutes" aria-label="Trois nations au hasard">${ph ? '🎲' : '🎲 Random'}</button>`
-      + `<button type="button" data-raz="1" title="La France et ses deux voisines au classement à 5 ans" aria-label="La France et ses voisines">${ph ? '↺' : '↺ France et voisines'}</button>` : '';
+    /* réinitialiser : un symbole léger, dans les deux lectures (GT, 17/11) */
+    const cmd = (mode === 'cum' ? `<button type="button" data-rnd="1" title="Trois nations au hasard, parmi toutes" aria-label="Trois nations au hasard">${ph ? '🎲' : '🎲 Random'}</button>` : '')
+      + `<button type="button" data-raz="1" class="raz2b" title="Réinitialiser : ${mode === 'cum' ? 'la France et ses deux voisines au classement à 5 ans' : 'la sélection de départ'}" aria-label="Réinitialiser la sélection">↺</button>`;
     hostC.innerHTML = `<span class="lbl">Nations</span>` + menu + cmd + `<span class="sep"></span>`
       + [...S0].map(c => `<button type="button" class="tint" data-del="${c}" aria-pressed="true" style="background:var(${coul(c)});border-color:var(${coul(c)})" title="Retirer ${name(c)}">${nomPastille(c, ph)} ×</button>`).join('');
     hostC.querySelector('#add2b').onchange = ev => { const c = ev.target.value; if (c && S0.size < MAX2B) S0.add(c); chips(); draw(); }; };
   hostC.onclick = ev => { const b = ev.target.closest('button'); if (!b || b.disabled) return; const S0 = cur();
     if (b.dataset.rnd) { S0.clear(); tirage().forEach(c => S0.add(c)); }
-    else if (b.dataset.raz) { S0.clear(); voisines().forEach(c => S0.add(c)); }
+    else if (b.dataset.raz) { S0.clear(); (mode === 'cum' ? voisines() : defG).forEach(c => S0.add(c)); }
     else if (b.dataset.del) { if (S0.size > 1) S0.delete(b.dataset.del); }
     else if (b.dataset.c) { const c = b.dataset.c; if (S0.has(c)) { if (S0.size > 1) S0.delete(c); } else if (S0.size < MAX2B) S0.add(c); }
     chips(); draw(); };
@@ -3436,7 +3439,7 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
       p.forEach((q, j) => g += `<circle cx="${q[0]}" cy="${q[1]}" r="${j === p.length - 1 ? 4 : 2.2}" fill="${col}"/>`);
       const e = p[p.length - 1], v = ser[c][lastW];
       const nom = ph ? c : name(c), val = mode === 'gap' && c === 'FRA' ? '' : (mode === 'gap' ? sgn(v) : f1(v));
-      etiq.push({ x: e[0] + 9, y: e[1] + 4, py: e[1], col, nom, val, t: `${nom}${val ? ' ' + val : ''}` }); });
+      etiq.push({ c, x: e[0] + 9, y: e[1] + 4, py: e[1], col, nom, val, t: `${nom}${val ? ' ' + val : ''}` }); });
     /* étiquettes de fin de courbe : écartées de 14 px au moins, pour ne pas se chevaucher.
        Dernière semaine = dernière colonne (saison close) : pas de place à droite, l'étiquette passe
        au-dessus du point, alignée à droite sur lui, ou en dessous si la voisine du dessus la gêne
@@ -3448,15 +3451,18 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
          en Cumul) centré en dessous ; si la place au-dessus est prise, les deux passent en dessous */
       const pris = etiq.map(t => [t.py - 5, t.py + 5]), libre = (y0, y1) => y0 >= mT - 4 && y1 <= pB + 2 && pris.every(([a, b]) => y1 <= a || y0 >= b);
       const xc = X(lastW), lw = s => s.length * 7.3, cale = s => Math.min(xc, mL + cw * n + mR - lw(s) / 2 - 2);
-      const out = [], bx = y => [y - 11, y + 3];
+      const out = [];
       [...etiq].sort((a, b) => a.py - b.py).forEach(t => {
-        /* au-dessus / en dessous ; sinon tout en dessous ; sinon tout au-dessus ; sinon la 1re */
-        const C = [[t.py - 10, t.py + 20], [t.py + 20, t.py + 34], [t.py - 24, t.py - 10],
-          ...Array.from({ length: 16 }, (_, k) => [t.py + 34 + 14 * k, t.py + 48 + 14 * k])].map(([yN, yV]) => t.val ? [yN, yV] : [yN, null]);
-        const ok = C.find(([yN, yV]) => libre(...bx(yN)) && (yV == null || libre(...bx(yV)))) || C[0];
-        const [yN, yV] = ok; pris.push(bx(yN)); if (yV != null) pris.push(bx(yV));
-        out.push(`<text x="${cale(t.nom)}" y="${yN}" class="el" fill="${t.col}" text-anchor="middle">${t.nom}</text>`);
-        if (yV != null) out.push(`<text x="${cale(t.val)}" y="${yV}" class="el" fill="${t.col}" text-anchor="middle">${t.val}</text>`); });
+        /* France : à droite du point, seule nation dans ce cas (GT, 17/11) ; en Cumul, son total dessous */
+        if (t.c === 'FRA') { const y = t.py + 4; pris.push([y - 11, y + (t.val ? 17 : 3)]);
+          out.push(`<text x="${xc + 9}" y="${y}" class="el" fill="${t.col}">${t.nom}</text>` + (t.val ? `<text x="${xc + 9}" y="${y + 14}" class="el" fill="${t.col}">${t.val}</text>` : '')); return; }
+        /* les autres : nom et valeur d'un seul tenant, centrés, au-dessus du point ; sinon en dessous ;
+           sinon plus bas, à la première place libre */
+        const C = [t.py - 24, t.py + 20, ...Array.from({ length: 16 }, (_, k) => t.py + 48 + 14 * k)], h = [-11, 17];
+        const yN = C.find(y => libre(y + h[0], y + h[1])) ?? C[0];
+        pris.push([yN + h[0], yN + h[1]]);
+        out.push(`<text x="${cale(t.nom)}" y="${yN}" class="el" fill="${t.col}" text-anchor="middle">${t.nom}</text>`
+          + `<text x="${cale(t.val)}" y="${yN + 14}" class="el" fill="${t.col}" text-anchor="middle">${t.val}</text>`); });
       g += out.join(''); etiq.length = 0; }
     else if (auBord) { let prev = -1e9;
       etiq.forEach(t => { t.a = 'end'; t.x = X(lastW) + 6; const haut = t.py - 10, bas = t.py + 19;
