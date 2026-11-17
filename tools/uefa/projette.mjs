@@ -112,13 +112,42 @@ const src = fs.readFileSync(PAGE, 'utf8');
 const a = src.indexOf(SENT[0]), b = src.indexOf(SENT[1]);
 if (a < 0 || b < 0) { console.error('sentinelles PRJ introuvables dans page.html'); process.exit(2); }
 let out = src.slice(0, a) + SENT[0] + 'const PRJ = ' + JSON.stringify(R) + ';' + src.slice(b);
-/* PSEM : on fusionne avec l'existant, une semaine sautée garde sa valeur précédente */
+/* FIGER LA SEMAINE EN COURS DÈS QU'ELLE EST COMPLÈTE (GT, 17/11/2026). Le chiffre « France top 5 »
+   d'une semaine (modèle force des clubs) est celui de la PREMIÈRE projection où tous les matchs de la
+   semaine sont joués : scores Wikipédia (SEM) et relevé de la source postérieur à la fin du dernier
+   match (coup d'envoi + 1 h 55). Ensuite on n'y touche plus : ni les championnats du week-end, ni la
+   force du lundi, ni un changement de réglage — ils comptent pour la semaine suivante. Avant, une
+   semaine n'était figée qu'au démarrage de la suivante, et rejouée avec les forces du jour : elle
+   voyait l'avenir. */
+const figee = (() => { try {
+  if (!INFO || !R.rgFR || ((R.calendrier || {}).bloque || []).length) return null;
+  const k = INFO.weeks[INFO.lastW]; if (!k || k.w < BASCULE) return null;
+  const html = fs.readFileSync(BATI, 'utf8'), a = html.indexOf('/*SEM_START*/const SEM = '), b = html.indexOf(';/*SEM_END*/', a);
+  if (a < 0 || b < 0) return null;
+  const S0 = JSON.parse(html.slice(a + 25, b));
+  const lundi = s => { const d = new Date(s + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7); return d.toISOString().slice(0, 10); };
+  const quand = (d, h) => { const [y, mo, j] = d.split('-').map(Number), [hh, mi] = (h || '21:00').split(':').map(Number); return Date.UTC(y, mo - 1, j, hh, mi); };
+  const M = S0.filter(m => lundi(m[0]) === k.w);
+  if (!M.length || M.some(m => m[8] == null)) return null;
+  const fin = Math.max(...M.map(m => quand(m[0], m[1]))) + 115 * 60e3;
+  const x = /^(\d{2})\/(\d{2})\/(\d{4})(?:\s*-\s*(\d{2}):(\d{2}))?/.exec(String(R.maj || '').trim()); if (!x) return null;
+  const asof = Date.UTC(+x[3], +x[2] - 1, +x[1], +(x[4] || 23), +(x[5] || 59));
+  if (asof < fin) return null;
+  const nx = INFO.weeks[INFO.lastW + 1], fin7 = nx ? (() => { const d = new Date(nx.w + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + 6); return d.toISOString().slice(0, 10); })() : null;
+  const date = new Map(S0.filter(m => typeof m[3] === 'number' && m[3] <= 7).map(m => [m[2] + '|' + m[4] + '|' + m[6], (Array.isArray(m[10]) && m[10][0]) || m[0]]));
+  const pr = nx ? (R.pronos || []).filter(p => { const d = date.get(p[0] + '|' + p[1] + '|' + p[2]); return d && d >= nx.w && d <= fin7; }) : [];
+  return { w: k.w, val: { rg: R.rgFR.map(v => +v.toFixed(4)), med: Object.fromEntries(Object.entries((R.q || {}).tir || {}).map(([c, v]) => [c, +v[2].toFixed(3)])), pr, fige: R.maj } };
+} catch (e) { console.log('semaine non figee :', e.message); return null; } })();
+/* PSEM : on fusionne avec l'existant, une semaine sautée garde sa valeur précédente ; une semaine
+   déjà présente dans PSEM.c n'est jamais réécrite */
 const PA = out.indexOf('/*PSEM_START*/'), PB = out.indexOf('/*PSEM_END*/');
-if (PS && PA >= 0 && PB > PA) {
+if ((PS || figee) && PA >= 0 && PB > PA) {
   let avant = null; try { avant = JSON.parse(out.slice(PA + 14, PB).replace(/^const PSEM = /, '').replace(/;$/, '')); } catch (e) { avant = null; }
-  const s = { ...((avant && avant.s) || {}), ...PS.s }, c = { ...((avant && avant.c) || {}), ...(PS.c || {}) };
-  out = out.slice(0, PA) + '/*PSEM_START*/const PSEM = ' + JSON.stringify({ ...PS, s, c }) + ';' + out.slice(PB);
-  console.log(`page.html : bloc PSEM mis a jour (${Object.keys(PS.s).length} semaines « nations », ${Object.keys(PS.c || {}).length} « clubs » calculees)`);
+  const PS2 = PS || { ...(avant || {}), s: {}, c: {} };
+  const s = { ...((avant && avant.s) || {}), ...PS2.s }, c = { ...(PS2.c || {}), ...((avant && avant.c) || {}) };
+  if (figee && !c[figee.w]) { c[figee.w] = figee.val; console.log(`semaine du ${figee.w} figee : France dans les 5 premieres ${(figee.val.rg.slice(0, 5).reduce((a, b) => a + b, 0) * 100).toFixed(1)} %`); }
+  out = out.slice(0, PA) + '/*PSEM_START*/const PSEM = ' + JSON.stringify({ ...PS2, s, c }) + ';' + out.slice(PB);
+  console.log(`page.html : bloc PSEM mis a jour (${Object.keys(PS2.s).length} semaines « nations », ${Object.keys(PS2.c || {}).length} « clubs » calculees)`);
 }
 fs.writeFileSync(PAGE + '.tmp', out); fs.renameSync(PAGE + '.tmp', PAGE);
 
