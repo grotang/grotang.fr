@@ -1,0 +1,22 @@
+name: Test des sources ATP
+
+# Lancé à la main seulement (« Run workflow »). Lit une fois chaque source
+# possible de la Race ATP et dit ce que le robot obtient depuis GitHub :
+# code HTTP, taille, noms trouvés, début du texte. N'écrit rien dans le dépôt.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Lire les sources
+        run: node tools/atp/test-sources.mjs
