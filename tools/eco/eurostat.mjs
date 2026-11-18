@@ -79,7 +79,7 @@ export async function construire(get) {
   }
   const charge = async (ds, p) => lit(await get(req(ds, p)));
 
-  const [M, X, T, G, P, D, U, H, XN] = await Promise.all([
+  const [M, X, T, G, P, D, U, H, XN, HD] = await Promise.all([
     charge('gov_10a_main', { geo: 'FR', unit: 'MIO_EUR', sector: SECTEURS, na_item: NA_MAIN, sinceTimePeriod: DEBUT }),
     charge('gov_10a_exp', { geo: 'FR', unit: 'MIO_EUR', sector: SECTEURS, na_item: 'TE', sinceTimePeriod: DEBUT }),
     charge('gov_10a_taxag', { geo: 'FR', unit: 'MIO_EUR', sector: SECT_TAX, na_item: NA_TAX, sinceTimePeriod: DEBUT }),
@@ -89,6 +89,7 @@ export async function construire(get) {
     charge('gov_10a_exp', { geo: UE_GEO, unit: 'PC_GDP', sector: 'S13', na_item: 'TE', sinceTimePeriod: 2015 }),
     charge('gov_10a_main', { geo: UE_GEO, unit: 'PC_GDP', sector: 'S13', na_item: ['TE', 'TR', 'B9'], sinceTimePeriod: DEBUT }),
     charge('gov_10a_exp', { geo: 'FR', unit: 'MIO_EUR', sector: 'S13', na_item: NAT_F, sinceTimePeriod: DEBUT }),
+    charge('gov_10dd_edpt1', { geo: UE_GEO, unit: 'PC_GDP', sector: 'S13', na_item: 'GD', sinceTimePeriod: DEBUT }),
   ]);
 
   /* Deux « dernières années ».
@@ -132,8 +133,10 @@ export async function construire(get) {
   const ue = { an: anU, geo: UE_GEO, cofog: {} };
   for (const g of UE_GEO) { ue.cofog[g] = {}; for (const c of U.cats('cofog99')) { const v = U.v({ geo: g, cofog99: c, time: String(anU) }); if (v !== null) ue.cofog[g][c] = v; } }
   const anH = H.cats('time').map(Number).filter(y => y >= DEBUT && y <= der);
-  const hist = { an: anH, TE: {}, TR: {}, B9: {} };
+  const hist = { an: anH, TE: {}, TR: {}, B9: {}, GD: {} };
   for (const k of ['TE', 'TR', 'B9']) for (const g of UE_GEO) hist[k][g] = anH.map(y => H.v({ geo: g, na_item: k, time: String(y) }));
+  /* Dette au sens de Maastricht, % du PIB (gov_10dd_edpt1) : 4e indicateur du bloc 8. */
+  for (const g of UE_GEO) hist.GD[g] = anH.map(y => HD.v({ geo: g, time: String(y) }));
 
   /* ---------- contrôles ----------
      Une page fausse est pire qu'une page en retard : un seul contrôle en échec
@@ -193,6 +196,9 @@ export async function construire(get) {
   const pcH = hist.TE.FR[anH.indexOf(der)];
   ok(pcH !== null && pcH !== undefined && Math.abs(pcTE - pcH) <= 0.06, `${der} : dépenses ${pcTE.toFixed(2)} % du PIB recalculé = ${pcH} % publié`);
   ok(pib[iDer] && pop[iDer] && dette[iDer], `${der} : PIB, population et dette présents`);
+  /* Dette en % du PIB publiée = dette en euros / PIB, au dixième près. */
+  const pcGD = dette[iDer] / pib[iDer] * 100, gdH = hist.GD.FR[anH.indexOf(der)];
+  ok(gdH != null && Math.abs(pcGD - gdH) <= 0.15, `${der} : dette ${pcGD.toFixed(2)} % du PIB recalculée = ${gdH} % publiée`);
   ok(anU && anU >= derF - 1, `comparaison européenne : ${anU}`);
 
   return {

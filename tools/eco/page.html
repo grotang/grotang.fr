@@ -149,21 +149,33 @@ svg .m{font-variant-numeric:tabular-nums}
 .ax line,.ax path{stroke:var(--rule); stroke-width:1; fill:none}
 .ax text{fill:var(--ink-3); font-size:11px}
 .ax .z{stroke:var(--ink-3)}
-.ehp{display:flex; flex-wrap:wrap; gap:6px; margin:0 0 10px}
-.ehp button{appearance:none; font:inherit; font-size:12.5px; font-weight:600; color:var(--ink-2); background:var(--surface); border:1px solid var(--rule); border-radius:14px; padding:3px 10px 3px 8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px}
-.ehp button i{width:9px; height:9px; border-radius:50%; background:var(--rule); display:inline-block}
-.ehp button[aria-pressed="true"]{color:var(--ink); border-color:var(--ink-3); background:var(--surface-2)}
-.ehp button:focus-visible{outline:2px solid var(--fr); outline-offset:1px}
-.ehp .sep{width:1px; background:var(--rule); margin:2px 4px}
-.ehk{font-size:15px; margin:0 0 6px; line-height:1.45}
-.ehk b{font-variant-numeric:tabular-nums}
-.eh svg text{font-size:11px; fill:var(--ink-3)}
-.eh .lab{font-size:12px; font-weight:700; paint-order:stroke; stroke:var(--surface); stroke-width:3px; stroke-linejoin:round}
-.eh .lab .v{font-weight:400; font-variant-numeric:tabular-nums}
-.eh .evb{fill:var(--ink); fill-opacity:.045}
-.eh .evt{font-size:10.5px; fill:var(--ink-3); letter-spacing:.02em}
+/* Bloc 8 : mêmes pastilles de nations que la page UEFA (cohérence du site) */
+.chips{display:flex; flex-wrap:wrap; gap:6px; margin:0 0 12px; align-items:center}
+.chips button{appearance:none; font:inherit; font-size:12.5px; font-weight:600; padding:5px 11px; cursor:pointer;
+  border:1px solid var(--rule); background:var(--surface); color:var(--ink-2); border-radius:2px}
+.chips button.tint{color:#fff}
+.chips button:focus-visible{outline:2px solid var(--fr); outline-offset:1px}
+.chips .sep{width:1px; height:20px; background:var(--rule); margin:0 4px}
+.chips .lbl{font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3); font-weight:600}
+.chips .raz{border-color:transparent; background:none; color:var(--ink-3); padding:5px 6px}
+.chips .raz:hover{color:var(--ink)}
+.chips .play{margin-left:auto; font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink); background:var(--surface-2)}
+.chips .play:hover{border-color:var(--ink-3)}
+.chips .play[aria-pressed="true"]{background:var(--ink); border-color:var(--ink); color:var(--surface)}
+.recit{font-size:15px; line-height:1.5; color:var(--ink-2); margin:0 0 10px; max-width:110ch}
+.recit b{color:var(--ink); font-variant-numeric:tabular-nums}
+.eh svg text{font:11px "IBM Plex Mono",monospace; fill:var(--ink-3)}
+.eh .ax line{stroke-dasharray:2 4}
+.eh .lab{font:700 12px "IBM Plex Mono",monospace; paint-order:stroke; stroke:var(--surface); stroke-width:3px; stroke-linejoin:round}
+.eh .lab .v{font-weight:500}
+.eh .bdt{font:700 10.5px Calibri,"Carlito",Arial,sans-serif; letter-spacing:.05em; fill:var(--ink-2)}
+.eh .ghost{font:700 72px "IBM Plex Mono",monospace; fill:var(--ink); fill-opacity:.08}
+.eh .rule{font:600 10.5px "IBM Plex Mono",monospace; fill:var(--bad); paint-order:stroke; stroke:var(--surface); stroke-width:3px}
 .eh .ln{fill:none; stroke-linejoin:round; stroke-linecap:round; transition:opacity .15s}
-.eh.foc .ln:not(.hl), .eh.foc .lab:not(.hl){opacity:.18}
+.eh .pt{transition:opacity .15s}
+.eh.foc .ln:not(.hl), .eh.foc .lab:not(.hl), .eh.foc .pt:not(.hl){opacity:.15}
+@media (max-width:560px){ .chips .lbl{display:none} .chips .sep{flex-basis:100%; height:0; margin:0; width:auto}
+  .chips button.tint{font-size:12px; padding:4px 8px; min-height:32px} .eh .ghost{font-size:46px} }
 .lgd{display:flex; flex-wrap:wrap; gap:4px 14px; font-size:12.5px; color:var(--ink-2); margin:0 0 8px}
 .lgd span{display:inline-flex; align-items:center; gap:6px}
 .lgd i{width:12px; height:3px; border-radius:2px; display:inline-block}
@@ -592,11 +604,13 @@ body[data-mode="b27"] #budget-2027 > .shead{display:none}
   <div class="panel">
     <div class="ptitle"><span class="no">8</span><h3 id="t8">Trente ans de dépense publique, en % du PIB</h3>
       <span class="sub"><span class="ctl"><span class="lb">Indicateur</span><span class="seg" role="group" aria-label="Indicateur">
-        <button type="button" data-ei="TE" aria-pressed="true">Dépenses</button><button type="button" data-ei="TR" aria-pressed="false">Recettes</button><button type="button" data-ei="B9" aria-pressed="false">Solde</button></span></span></span></div>
-    <div class="ehp" id="ehP" role="group" aria-label="Pays affichés"></div>
-    <p class="ehk" id="ehK"></p>
-    <div class="chart eh" id="eh"></div>
-    <p class="figc" id="ehNote"></p>
+        <button type="button" data-ei="TE" aria-pressed="true">Dépenses</button><button type="button" data-ei="TR" aria-pressed="false">Recettes</button><button type="button" data-ei="B9" aria-pressed="false">Solde</button><button type="button" data-ei="GD" aria-pressed="false">Dette</button></span></span>
+        <span class="ctl"><span class="lb">Lecture</span><span class="seg" role="group" aria-label="Lecture">
+        <button type="button" data-el="N" aria-pressed="true">Niveau</button><button type="button" data-el="E" aria-pressed="false">Écart à la zone euro</button></span></span></span></div>
+    <p class="recit" id="ehK"></p>
+    <div class="chips" id="ehP" role="group" aria-label="Nations affichées"></div>
+    <figure style="margin:0"><div class="chart eh" id="eh"></div>
+    <figcaption class="figc" id="ehNote"></figcaption></figure>
   </div>
 </section>
 
@@ -810,7 +824,7 @@ const GEO_A = { DE: "l'Allemagne", IT: "l'Italie", ES: "l'Espagne", NL: 'les Pay
   SE: 'la Suède', DK: 'le Danemark', FI: 'la Finlande', EA20: 'la zone euro', EU27_2020: "l'Union européenne" };
 
 /* ---------- état de la page ---------- */
-const S = { an: D.derF, u: 'md', v: 'fonction', e: 'f', g: 'f', cmp: 'EA20', cap: null, capS: 0, ei: 'TE', eh: ['FR', 'EA20', 'DE', 'IT', 'SE'] };
+const S = { an: D.derF, u: 'md', v: 'fonction', e: 'f', g: 'f', cmp: 'EA20', cap: null, capS: 0, ei: 'TE', el: 'N', eh: ['FR', 'DE', 'IT', 'ES'] };
 try { const h = new URLSearchParams(location.hash.slice(1));
   if (D.an.includes(+h.get('an'))) S.an = +h.get('an');
   if (['md', 'pib', 'hab', 'cent'].includes(h.get('u'))) S.u = h.get('u');
@@ -1402,106 +1416,176 @@ function europe() {
   europeHist();
 }
 
-/* Bloc 8 : trente ans, pays au choix. 16:9, étiquettes en bout de courbe,
-   France toujours en tête de lecture, écart avec la zone euro ombré, grandes
-   crises repérées. Une couleur fixe par pays : elle ne change pas quand on
-   en ajoute ou en retire un. */
-const EH_C = { FR: '--n1', DE: '--n7', IT: '--n6', ES: '--n4', NL: '--n2', BE: '--n5', AT: '--n3', SE: '--n8', DK: '--ink-2', FI: '--good', EA20: '--ink', EU27_2020: '--ink-3' };
-const EH_I = { TE: { t: 'Trente ans de dépense publique, en % du PIB', n: 'dépense publique', s: 'dépense' },
-  TR: { t: 'Trente ans de recettes publiques, en % du PIB', n: 'recettes publiques', s: 'recettes' },
-  B9: { t: 'Trente ans de solde public, en % du PIB', n: 'solde public', s: 'solde' } };
-const EH_EV = [[2008, 2009, 'Crise financière'], [2011, 2012, 'Crise de l\'euro'], [2020, 2021, 'Covid'], [2022, 2022, 'Énergie']];
+/* Bloc 8 : trente ans, quatre nations au plus, la zone euro en référence.
+   Même grammaire que la page UEFA : pastilles teintées « Nom × », menu
+   « + Ajouter une nation… », ↺ pour revenir au jeu par défaut ; chiffres en
+   IBM Plex Mono, un point par année, étiquettes en bout de courbe, bandeaux
+   des crises en tête du graphique. Deux lectures : le niveau, ou l'écart à
+   la zone euro (la zone euro devient l'axe zéro). ▶ rejoue 1995 → dernière
+   année. Une couleur fixe par pays : elle ne change pas quand on en ajoute. */
+const EH_C = { FR: '--n1', DE: '--n7', IT: '--n6', ES: '--n4', NL: '--n2', BE: '--n5', AT: '--n3', SE: '--n8', DK: '--ink-2', FI: '--good', EA20: '--ink' };
+const EH_3 = { FR: 'FRA', DE: 'GER', IT: 'ITA', ES: 'ESP', NL: 'NED', BE: 'BEL', AT: 'AUT', SE: 'SWE', DK: 'DEN', FI: 'FIN', EA20: 'ZE' };
+const EH_I = {
+  TE: { t: 'dépense publique', s: 'dépense', ds: 'gov_10a_main' },
+  TR: { t: 'recettes publiques', s: 'recettes', ds: 'gov_10a_main' },
+  B9: { t: 'solde public', s: 'solde', ds: 'gov_10a_main' },
+  GD: { t: 'dette publique', s: 'dette', ds: 'gov_10dd_edpt1' } };
+const EH_EV = [[2008, 2009, 'Subprimes', 'Crise financière'], [2011, 2012, 'Crise euro', 'Crise de l\'euro'], [2020, 2022, 'Covid, énergie', 'Covid puis énergie']];
+const EH_MAX = 4, EH_DEF = ['FR', 'DE', 'IT', 'ES'];
+const EH = { t: null, raf: 0 };
+const ehMob = () => $('eh').clientWidth < 560;
+function ehStop() { if (EH.raf) cancelAnimationFrame(EH.raf); EH.raf = 0; EH.t = null; }
+function ehPlay() {
+  const n = D.hist.an.length - 1, red = matchMedia('(prefers-reduced-motion: reduce)').matches, dur = 6500, t0 = performance.now();
+  EH.t = 0;
+  const f = now => { const p = Math.min(1, (now - t0) / dur), t = red ? Math.floor(p * n) : p * n;
+    if (p >= 1) { ehStop(); ehDraw(); return; }
+    EH.t = t; ehDraw(); EH.raf = requestAnimationFrame(f); };
+  EH.raf = requestAnimationFrame(f);
+}
+/* valeurs affichées : niveau, ou écart à la zone euro */
+function ehVal() {
+  const V = D.hist[S.ei], E = V.EA20;
+  if (S.el === 'N') return V;
+  const o = {}; for (const g in V) o[g] = V[g].map((v, i) => v === null || E[i] === null ? null : Math.round((v - E[i]) * 10) / 10);
+  return o;
+}
 function europeHist() {
-  const H0 = D.hist, ys = H0.an, I = S.ei, V = H0[I], geo = D.ue.geo.filter(g => V[g]);
-  const last = ys.length - 1, fy = v => (I === 'B9' && v > 0 ? '+' : '') + nf(v, 1) + ' %';
-  /* pastilles des pays */
-  const chip = g => `<button type="button" data-eh="${g}" aria-pressed="${S.eh.includes(g)}"><i style="background:${S.eh.includes(g) ? col(EH_C[g]) : 'var(--rule)'}"></i>${GEO[g]}</button>`;
-  $('ehP').innerHTML = geo.filter(g => g !== 'EA20' && g !== 'EU27_2020').map(chip).join('') + '<span class="sep"></span>' + ['EA20', 'EU27_2020'].filter(g => V[g]).map(chip).join('');
+  const H0 = D.hist, ys = H0.an, I = S.ei, V = H0[I], gap = S.el === 'E', last = ys.length - 1, mob = ehMob();
+  const pays = D.ue.geo.filter(g => V[g] && g !== 'EA20' && g !== 'EU27_2020');
+  S.eh = S.eh.filter(g => pays.includes(g)).slice(0, EH_MAX); if (!S.eh.length) S.eh = ['FR'];
   document.querySelectorAll('[data-ei]').forEach(b => b.setAttribute('aria-pressed', b.dataset.ei === I));
-  $('t8').textContent = EH_I[I].t;
-  const sel = geo.filter(g => S.eh.includes(g));
-  /* la phrase de tête : France, zone euro, rang */
-  const pays = geo.filter(g => g !== 'EA20' && g !== 'EU27_2020' && V[g][last] !== null);
-  const ord = [...pays].sort((a, b) => V[b][last] - V[a][last]), rang = ord.indexOf('FR') + 1, fr = V.FR[last], ea = V.EA20 ? V.EA20[last] : null;
-  const d95 = V.FR[0] !== null ? fr - V.FR[0] : null;
-  $('ehK').innerHTML = `En ${ys[last]}, ${I === 'B9' ? 'déficit' : EH_I[I].n} de la France : <b>${I === 'B9' ? nf(-fr, 1) : nf(fr, 1)} % du PIB</b>`
-    + (ea !== null ? `, contre ${I === 'B9' ? nf(-ea, 1) : nf(ea, 1)} % dans la zone euro (<b>${I === 'B9' ? nf(Math.abs(fr - ea), 1) + ' pt ' + (fr <= ea ? 'de plus' : 'de moins') : (fr - ea >= 0 ? '+' : '−') + nf(Math.abs(fr - ea), 1) + ' pt'}</b>)` : '')
-    + `. ${I === 'B9' ? (rang === pays.length ? 'Le plus gros déficit' : `${pays.length - rang + 1}<sup>e</sup> plus gros déficit`) : rang === 1 ? `<b>Premier</b> pays` : `${rang}<sup>e</sup> pays`} des ${pays.length} de la sélection${I === 'B9' ? '' : ' par le niveau'}.`;
-  /* géométrie 16:9 (plus haut sur téléphone pour rester lisible) */
+  document.querySelectorAll('[data-el]').forEach(b => b.setAttribute('aria-pressed', b.dataset.el === S.el));
+  const T = EH_I[I];
+  $('t8').textContent = gap ? `Trente ans d'écart à la zone euro : ${T.t}, en points de PIB` : `Trente ans de ${T.t}, en % du PIB`;
+  /* pastilles, façon UEFA */
+  const plein = S.eh.length >= EH_MAX, dispo = pays.filter(g => !S.eh.includes(g));
+  $('ehP').innerHTML = `<span class="lbl">Nations</span><span class="sel"><select aria-label="Ajouter une nation"${plein ? ' disabled' : ''}><option value="">${plein ? `${EH_MAX} nations au plus` : mob ? '+ Ajouter…' : '+ Ajouter une nation…'}</option>`
+    + dispo.map(g => `<option value="${g}">${GEO[g]}</option>`).join('') + `</select></span>`
+    + `<button type="button" class="raz" data-raz="1" title="France, Allemagne, Italie, Espagne" aria-label="Revenir à la France et ses voisines">${mob ? '↺' : '↺ France et voisines'}</button>`
+    + `<button type="button" class="play" data-play="1" aria-pressed="false">${mob ? '▶ Rejouer' : `▶ Rejouer ${ys[0]} → ${ys[last]}`}</button><span class="sep"></span>`
+    + S.eh.map(g => `<button type="button" class="tint" data-del="${g}" aria-pressed="true" style="background:var(${EH_C[g]});border-color:var(${EH_C[g]})" title="Retirer ${GEO[g]}">${mob ? EH_3[g] : GEO[g]} ×</button>`).join('');
+  /* récit : France, zone euro, rang parmi les dix pays suivis */
+  const fr = V.FR[last], ea = V.EA20[last], d = fr - ea, sg = x => (x >= 0 ? '+' : '−') + nf(Math.abs(x), 1);
+  const ord = pays.filter(g => V[g][last] !== null).sort((a, b) => I === 'B9' ? V[a][last] - V[b][last] : V[b][last] - V[a][last]), rang = ord.indexOf('FR') + 1;
+  const RG = { TE: 'dépensier', TR: 'prélevé', B9: 'déficitaire', GD: 'endetté' }[I];
+  const rg = `${rang === 1 ? '<b>Premier</b>' : rang + '<sup>e</sup>'} pays le plus ${RG} des ${ord.length} suivis`;
+  if (gap) {
+    const i0 = V.FR.findIndex((v, i) => v !== null && V.EA20[i] !== null), d0 = V.FR[i0] - V.EA20[i0];
+    const sens = I === 'B9' ? (d < 0 ? 'un déficit plus lourd que' : 'un solde meilleur que') : d >= 0 ? 'au-dessus de' : 'en dessous de';
+    $('ehK').innerHTML = `${T.s[0].toUpperCase() + T.s.slice(1)} : en ${ys[last]}, la France est à <b>${sg(d)} pt</b> de la zone euro (${sens} la moyenne). `
+      + `En ${ys[i0]}, l'écart était de <b>${sg(d0)} pt</b> : ${Math.abs(d - d0) < 0.5 ? 'il n\'a guère bougé' : `il ${Math.abs(d) > Math.abs(d0) ? 's\'est creusé' : 's\'est réduit'} de ${nf(Math.abs(d - d0), 1)} pt`}. ${rg}.`;
+  } else {
+    const v = x => I === 'B9' ? nf(-x, 1) : nf(x, 1);
+    $('ehK').innerHTML = `En ${ys[last]}, ${I === 'B9' ? 'déficit public' : T.t} de la France : <b>${v(fr)} % du PIB</b>, contre ${v(ea)} % dans la zone euro (<b>${I === 'B9' ? nf(Math.abs(d), 1) + ' pt ' + (d <= 0 ? 'de plus' : 'de moins') : sg(d) + ' pt'}</b>). ${rg}.`;
+  }
+  /* légende */
+  const manque = S.eh.filter(g => V[g][last] === null).map(g => `${GEO[g]} : dernier chiffre publié en ${ys[V[g].findLastIndex(x => x !== null)]}.`).join(' ');
+  const nAns = V.FR.filter(x => x !== null && x < -3).length, nTot = V.FR.filter(x => x !== null).length;
+  const n60 = H0.GD.FR.filter(x => x !== null && x > 60).length;
+  $('ehNote').innerHTML = (gap ? `Écart = pays − zone euro (20 pays), en points de PIB ; la zone euro est l'axe zéro. ` : '')
+    + (I === 'B9' && !gap ? `Depuis ${ys[0]}, la France a dépassé 3 % de déficit ${nAns} années sur ${nTot}. ` : '')
+    + (I === 'GD' && !gap ? `Depuis ${ys[0]}, la France a dépassé le plafond de 60 % ${n60} années sur ${nTot}. ` : '')
+    + (manque ? manque + ' ' : '')
+    + `${EH_MAX} nations au plus ; survolez la courbe pour lire une année (un clic la choisit pour toute la page), une étiquette pour isoler un pays. `
+    + `Source : Eurostat (${T.ds}${I === 'GD' ? ', dette au sens de Maastricht' : ', agrégats révisés'}).`;
+  ehDraw();
+}
+function ehDraw() {
+  const H0 = D.hist, ys = H0.an, I = S.ei, gap = S.el === 'E', V = ehVal(), last = ys.length - 1, play = EH.t !== null, T = play ? EH.t : last;
+  const sel = S.eh, sers = [...sel.filter(g => g !== 'FR'), ...(sel.includes('FR') ? ['FR'] : [])];
+  const fy = v => ((gap || I === 'B9') && v > 0 ? '+' : v < 0 ? '−' : '') + nf(Math.abs(v), 1);
+  const pb_ = $('ehP').querySelector('[data-play]'); if (pb_) { pb_.setAttribute('aria-pressed', play); pb_.textContent = play ? '■ Arrêter' : ehMob() ? '▶ Rejouer' : `▶ Rejouer ${ys[0]} → ${ys[last]}`; }
+  /* géométrie 16:9 (plus haut sur téléphone) */
   const box = $('eh'), W = Math.max(300, box.clientWidth), mob = W < 560;
-  const H = mob ? Math.round(W * 0.82) : Math.round(W * 9 / 16), pl = 38, pr = mob ? 86 : 132, pt = 26, pb = 26;
+  const H = mob ? Math.round(W * 0.86) : Math.round(W * 9 / 16), pl = 36, pr = mob ? 74 : 124, pt = 32, pb = 24;
+  /* échelle sur la série complète (elle ne bouge pas pendant la relecture) ; zone euro incluse */
   let lo = Infinity, hi = -Infinity;
-  for (const g of sel) for (const v of V[g]) if (v !== null) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
-  if (!sel.length) { lo = 0; hi = 1; }
-  if (I === 'B9') { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
-  const pad = (hi - lo) * 0.06; lo -= pad; hi += pad;
-  const { t } = niceTicks(lo, hi, mob ? 4 : 6); lo = Math.min(lo, t[0]); hi = Math.max(hi, t[t.length - 1]);
-  const sx = i => pl + i / last * (W - pl - pr), sy = v => pt + (hi - v) / (hi - lo) * (H - pt - pb);
+  for (const g of [...sel, 'EA20']) for (const v of V[g]) if (v !== null) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+  if (gap || I === 'B9') { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
+  if (!gap && I === 'B9') lo = Math.min(lo, -3.5);
+  if (!gap && I === 'GD') { lo = Math.min(lo, 55); hi = Math.max(hi, 62); }
+  const pad = (hi - lo) * 0.05; lo -= pad; hi += pad;
+  const { t } = niceTicks(lo, hi, mob ? 5 : 6); lo = Math.min(lo, t[0]); hi = Math.max(hi, t[t.length - 1]);
+  const cw = (W - pl - pr) / last, sx = i => pl + i * cw, sy = v => pt + (hi - v) / (hi - lo) * (H - pt - pb);
   const svg = svgIn(box, W, H);
-  /* crises */
-  for (const [a, b, n] of EH_EV) { const ia = ys.indexOf(a), ib = ys.indexOf(b); if (ia < 0) continue;
-    const x0 = sx(ia) - 0.5 * (W - pl - pr) / last, x1 = sx(ib) + 0.5 * (W - pl - pr) / last;
-    el('rect', { x: x0, y: pt, width: x1 - x0, height: H - pt - pb, class: 'evb' }, svg);
-    if (!mob || n === 'Covid') el('text', { x: (x0 + x1) / 2, y: pt - 8, 'text-anchor': 'middle', class: 'evt' }, svg).textContent = n; }
+  /* bandeaux des crises, comme les phases de la page UEFA */
+  for (const [a, b, c, n] of EH_EV) { const ia = ys.indexOf(a), ib = ys.indexOf(b); if (ia < 0) continue;
+    const x0 = sx(ia) - cw / 2 + 1, x1 = sx(ib) + cw / 2 - 1, w = x1 - x0;
+    el('rect', { x: x0, y: 6, width: w, height: 19, rx: 4, style: 'fill:var(--ink-3); fill-opacity:.2' }, svg);
+    el('rect', { x: x0, y: pt - 3, width: w, height: H - pt - pb + 3, rx: 4, style: 'fill:var(--ink-3); fill-opacity:.06' }, svg);
+    const lab = w >= n.length * 5.6 + 8 ? n : w >= c.length * 5.6 + 8 ? c : w >= 30 ? String(a).slice(2) + '-' + String(b).slice(2) : '';
+    if (lab) el('text', { x: (x0 + x1) / 2, y: 19.5, 'text-anchor': 'middle', class: 'bdt' }, svg).textContent = lab; }
   /* axes */
   const gx = el('g', { class: 'ax' }, svg);
-  for (const v of t) { el('line', { x1: pl, x2: W - pr, y1: sy(v), y2: sy(v), style: v === 0 && I === 'B9' ? 'stroke:var(--ink-3)' : '' }, gx);
-    el('text', { x: pl - 6, y: sy(v) + 4, 'text-anchor': 'end' }, gx).textContent = (I === 'B9' && v > 0 ? '+' : '') + nf(v, 0); }
-  ys.forEach((y, i) => { if (y % (mob ? 10 : 5) === 0) el('text', { x: sx(i), y: H - 7, 'text-anchor': 'middle' }, gx).textContent = y; });
-  if (I === 'B9') el('text', { x: pl + 4, y: sy(-3) - 4, style: 'fill:var(--bad); font-size:10.5px' }, svg).textContent = '−3 % : la règle européenne';
-  if (I === 'B9') el('line', { x1: pl, x2: W - pr, y1: sy(-3), y2: sy(-3), style: 'stroke:var(--bad); stroke-dasharray:4 3; stroke-opacity:.6' }, svg);
-  /* écart France / zone euro ombré */
-  if (sel.includes('FR') && sel.includes('EA20')) {
-    const up = V.FR.map((v, i) => v === null || V.EA20[i] === null ? null : `${sx(i).toFixed(1)},${sy(v).toFixed(1)}`).filter(Boolean),
-      dn = V.EA20.map((v, i) => v === null || V.FR[i] === null ? null : `${sx(i).toFixed(1)},${sy(v).toFixed(1)}`).filter(Boolean).reverse();
-    el('polygon', { points: up.concat(dn).join(' '), style: 'fill:var(--n1); fill-opacity:.09' }, svg); }
+  for (const v of t) { el('line', { x1: pl, x2: W - pr + 4, y1: sy(v), y2: sy(v), class: v === 0 ? 'z' : null, style: v === 0 ? 'stroke-dasharray:none' : null }, gx);
+    el('text', { x: pl - 6, y: sy(v) + 4, 'text-anchor': 'end' }, gx).textContent = ((gap || I === 'B9') && v > 0 ? '+' : v < 0 ? '−' : '') + (v === 0 ? '0' : nf(Math.abs(v), (t[1] - t[0]) % 1 ? 1 : 0)); }
+  ys.forEach((y, i) => { if (y % (mob ? 10 : 5) === 0) el('text', { x: sx(i), y: H - 6, 'text-anchor': 'middle' }, gx).textContent = y; });
+  /* règles européennes */
+  const rule = (v, txt) => { el('line', { x1: pl, x2: W - pr + 4, y1: sy(v), y2: sy(v), style: 'stroke:var(--bad); stroke-dasharray:5 4; stroke-opacity:.7' }, svg);
+    el('text', { x: pl + 6, y: sy(v) - 5, class: 'rule' }, svg).textContent = txt; };
+  if (!gap && I === 'B9') rule(-3, '−3 % : règle du déficit');
+  if (!gap && I === 'GD') rule(60, '60 % : plafond de Maastricht');
+  /* année en filigrane pendant la relecture */
+  if (play) el('text', { x: pl + 10, y: pt + (mob ? 46 : 70), class: 'ghost' }, svg).textContent = ys[Math.min(last, Math.round(T))];
   /* repère de l'année choisie */
   const k = ys.indexOf(S.an);
-  if (k >= 0) el('line', { x1: sx(k), x2: sx(k), y1: pt, y2: H - pb, style: 'stroke:var(--ink-3); stroke-dasharray:2 3' }, svg);
-  /* courbes : agrégats en pointillés, France au-dessus de tout */
-  const ordre = [...sel].sort((a, b) => (a === 'FR') - (b === 'FR'));
-  const L = {};
-  for (const g of ordre) {
-    let d = '', on = false;
-    V[g].forEach((v, i) => { if (v === null) { on = false; return; } d += (on ? 'L' : 'M') + sx(i).toFixed(1) + ',' + sy(v).toFixed(1); on = true; });
-    const agr = g === 'EA20' || g === 'EU27_2020';
-    L[g] = el('path', { d, class: 'ln', style: `stroke:${col(EH_C[g])}; stroke-width:${g === 'FR' ? 3.2 : agr ? 1.8 : 2}${agr ? '; stroke-dasharray:5 4' : ''}` }, svg);
-    const lv = V[g][last]; if (lv !== null) el('circle', { cx: sx(last), cy: sy(lv), r: g === 'FR' ? 4.5 : 3.2, style: `fill:${col(EH_C[g])}; stroke:var(--surface); stroke-width:1.5` }, svg);
+  if (!play && k >= 0) el('line', { x1: sx(k), x2: sx(k), y1: pt, y2: H - pb, style: 'stroke:var(--ink-3); stroke-dasharray:2 3' }, svg);
+  /* tracé jusqu'à T (fractionnaire : le dernier segment est interpolé) */
+  const upto = g => { const P = []; const v = V[g], n = Math.floor(T);
+    for (let i = 0; i <= n; i++) if (v[i] !== null) P.push([sx(i), sy(v[i]), i]);
+    if (T > n && n < last && v[n] !== null && v[n + 1] !== null) { const f = T - n; P.push([sx(n + f), sy(v[n] + (v[n + 1] - v[n]) * f), -1]); }
+    return P; };
+  const valAt = g => { const v = V[g], n = Math.floor(T);
+    if (T > n && n < last && v[n] !== null && v[n + 1] !== null) return v[n] + (v[n + 1] - v[n]) * (T - n);
+    for (let i = n; i >= 0; i--) if (v[i] !== null) return v[i]; return null; };
+  const path = P => { let d = '', prev = -9; for (const [x, y, i] of P) { d += (i === -1 || i === prev + 1 ? 'L' : 'M') + x.toFixed(1) + ',' + y.toFixed(1); if (i >= 0) prev = i; } return d.replace(/^L/, 'M'); };
+  /* écart France / zone euro ombré (niveau) ou France / zéro (écart) */
+  if (sel.includes('FR')) { const pF = upto('FR'), pE = gap ? pF.map(([x]) => [x, sy(0)]) : upto('EA20');
+    if (pF.length > 1 && pE.length > 1) el('polygon', { points: pF.concat([...pE].reverse()).map(([x, y]) => x.toFixed(1) + ',' + y.toFixed(1)).join(' '), style: 'fill:var(--n1); fill-opacity:.08' }, svg); }
+  /* zone euro : la référence (pointillés), axe zéro en lecture « écart » */
+  const L = {}, PTS = {}, heads = [];
+  if (!gap) { const P = upto('EA20'); L.EA20 = el('path', { d: path(P), class: 'ln', style: 'stroke:var(--ink); stroke-width:1.8; stroke-dasharray:5 4' }, svg);
+    if (P.length) heads.push({ g: 'EA20', x: P[P.length - 1][0], y: P[P.length - 1][1], v: valAt('EA20') }); }
+  else heads.push({ g: 'EA20', x: sx(T), y: sy(0), v: 0 });
+  for (const g of sers) {
+    const P = upto(g), fr = g === 'FR';
+    L[g] = el('path', { d: path(P), class: 'ln', style: `stroke:var(${EH_C[g]}); stroke-width:${fr ? 3 : 2}` }, svg);
+    const gp = PTS[g] = el('g', { class: 'pt' }, svg);
+    for (const [x, y, i] of P) if (i >= 0) el('circle', { cx: x, cy: y, r: fr ? 2.6 : 2.1, style: `fill:var(${EH_C[g]})` }, gp);
+    if (P.length) { const [x, y, i] = P[P.length - 1];
+      el('circle', { cx: x, cy: y, r: fr ? 4.6 : 3.6, style: `fill:var(${EH_C[g]}); stroke:var(--surface); stroke-width:1.5` }, gp);
+      heads.push({ g, x, y, v: valAt(g) }); }
   }
   /* étiquettes en bout de courbe, écartées pour ne pas se chevaucher */
-  const labs = sel.filter(g => V[g][last] !== null).map(g => ({ g, y: sy(V[g][last]) })).sort((a, b) => a.y - b.y), gap = 15;
-  for (let i = 1; i < labs.length; i++) labs[i].y = Math.max(labs[i].y, labs[i - 1].y + gap);
-  const over = labs.length ? labs[labs.length - 1].y - (H - pb) : 0;
-  if (over > 0) { labs[labs.length - 1].y -= over; for (let i = labs.length - 2; i >= 0; i--) labs[i].y = Math.min(labs[i].y, labs[i + 1].y - gap); }
+  heads.sort((a, b) => a.y - b.y); const gp = 15;
+  for (let i = 1; i < heads.length; i++) heads[i].y = Math.max(heads[i].y, heads[i - 1].y + gp);
+  const over = heads.length ? heads[heads.length - 1].y - (H - pb) : 0;
+  if (over > 0) { heads[heads.length - 1].y -= over; for (let i = heads.length - 2; i >= 0; i--) heads[i].y = Math.min(heads[i].y, heads[i + 1].y - gp); }
   const LB = {};
-  for (const q of labs) { const x = sx(last) + 8, nm = mob ? ({ EA20: 'Zone €', EU27_2020: 'UE', NL: 'Pays-Bas', DE: 'Allem.', DK: 'Danem.' }[q.g] || GEO[q.g]) : GEO[q.g];
-    const tx = el('text', { x, y: q.y + 4, class: 'lab', style: `fill:${col(EH_C[q.g])}` }, svg);
-    tx.textContent = nm + ' '; el('tspan', { class: 'v' }, tx).textContent = nf(V[q.g][last], 1); LB[q.g] = tx; }
-  /* survol : réticule, infobulle classée, pays survolé mis en avant */
+  for (const q of heads) { const tx = el('text', { x: q.x + 10, y: q.y + 4, class: 'lab', style: `fill:var(${EH_C[q.g]})` }, svg);
+    tx.textContent = (mob ? EH_3[q.g] : GEO[q.g]) + ' '; el('tspan', { class: 'v' }, tx).textContent = gap && q.g === 'EA20' ? '0' : fy(Math.round(q.v * 10) / 10); LB[q.g] = tx; }
+  if (play) return;
+  /* survol : réticule, infobulle classée (dix pays + zone euro), pays mis en avant */
   const cr = el('line', { y1: pt, y2: H - pb, style: 'stroke:var(--ink-2); stroke-width:1; display:none; pointer-events:none' }, svg);
   const dots = el('g', { style: 'pointer-events:none' }, svg);
   const hit = el('rect', { x: pl, y: pt, width: W - pl - pr, height: H - pt - pb, style: 'fill:transparent; cursor:crosshair', 'data-tip': 1 }, svg);
-  const near = e => { const r = svg.getBoundingClientRect(), x = (e.clientX - r.left) * W / r.width; return Math.max(0, Math.min(last, Math.round((x - pl) / (W - pl - pr) * last))); };
+  const near = e => { const r = svg.getBoundingClientRect(), x = (e.clientX - r.left) * W / r.width; return Math.max(0, Math.min(last, Math.round((x - pl) / cw))); };
+  const tous = D.ue.geo.filter(g => V[g] && g !== 'EU27_2020');
   const mv = e => { const i = near(e); cr.setAttribute('x1', sx(i)); cr.setAttribute('x2', sx(i)); cr.style.display = '';
-    dots.innerHTML = ''; for (const g of sel) if (V[g][i] !== null) el('circle', { cx: sx(i), cy: sy(V[g][i]), r: 3.5, style: `fill:${col(EH_C[g])}; stroke:var(--surface); stroke-width:1.5` }, dots);
-    const r = [...pays, ...['EA20', 'EU27_2020'].filter(g => V[g])].filter(g => V[g][i] !== null).sort((a, b) => V[b][i] - V[a][i]);
-    tipOn(e, `<div class="th">${ys[i]} · ${EH_I[I].n}, % du PIB</div>` + r.map(g => trow(`<span style="color:${S.eh.includes(g) ? col(EH_C[g]) : 'inherit'}">${S.eh.includes(g) ? '<b>' + GEO[g] + '</b>' : GEO[g]}</span>`, fy(V[g][i]))).join('')
-      + (V.EA20 && V.FR[i] !== null && V.EA20[i] !== null ? `<div class="tf">France − zone euro : ${(V.FR[i] - V.EA20[i] >= 0 ? '+' : '−') + nf(Math.abs(V.FR[i] - V.EA20[i]), 1)} pt</div>` : '')); };
+    dots.innerHTML = ''; for (const g of sel) if (V[g][i] !== null) el('circle', { cx: sx(i), cy: sy(V[g][i]), r: 4, style: `fill:var(${EH_C[g]}); stroke:var(--surface); stroke-width:1.5` }, dots);
+    const r = tous.filter(g => V[g][i] !== null).sort((a, b) => V[b][i] - V[a][i]);
+    tipOn(e, `<div class="th">${ys[i]} · ${T_(I)}${gap ? ', écart à la zone euro (pt)' : ', % du PIB'}</div>` + r.map(g => { const on = sel.includes(g) || g === 'EA20';
+      return trow(`<span style="color:${on ? `var(${EH_C[g]})` : 'inherit'}">${on ? '<b>' + GEO[g] + '</b>' : GEO[g]}</span>`, gap && g === 'EA20' ? '0' : fy(V[g][i])); }).join('')
+      + (!gap && V.FR[i] !== null && V.EA20[i] !== null ? `<div class="tf">France − zone euro : ${fy(Math.round((V.FR[i] - V.EA20[i]) * 10) / 10)} pt</div>` : '')); };
   hit.addEventListener('mousemove', mv); hit.addEventListener('touchstart', e => mv(e.touches[0]), { passive: true });
   hit.addEventListener('mouseleave', () => { cr.style.display = 'none'; dots.innerHTML = ''; tipOff(); });
   hit.addEventListener('click', e => setAn(ys[near(e)]));
-  /* survol d'une étiquette ou d'une pastille : un pays ressort */
-  const foc = g => { box.classList.toggle('foc', !!g); for (const x of sel) { L[x] && L[x].classList.toggle('hl', x === g); LB[x] && LB[x].classList.toggle('hl', x === g); } };
-  for (const g of sel) if (LB[g]) { LB[g].style.cursor = 'default'; LB[g].addEventListener('mouseenter', () => foc(g)); LB[g].addEventListener('mouseleave', () => foc(null)); }
-  document.querySelectorAll('[data-eh]').forEach(b => { b.addEventListener('mouseenter', () => S.eh.includes(b.dataset.eh) && foc(b.dataset.eh)); b.addEventListener('mouseleave', () => foc(null)); });
-  /* note */
-  const ecarts = pays.filter(g => g !== 'FR' && V.FR[last] !== null).map(g => [g, fr - V[g][last]]);
-  const nAns = V.FR.filter(v => v !== null && v < -3).length, nTot = V.FR.filter(v => v !== null).length;
-  $('ehNote').innerHTML = (I === 'B9' ? `Depuis ${ys[0]}, la France a dépassé 3 % de déficit ${nAns} années sur ${nTot}. `
-      : d95 !== null ? `Depuis ${ys[0]}, la France est passée de ${nf(V.FR[0], 1)} à ${nf(fr, 1)} % du PIB (${d95 >= 0 ? '+' : '−'}${nf(Math.abs(d95), 1)} pt). ` : '')
-    + `Cliquez sur les pays pour les afficher ou les retirer ; survolez une étiquette pour isoler une courbe, la courbe pour lire une année (un clic choisit l'année pour toute la page). `
-    + `Bandes grises : crise financière de 2008-2009, crise de l'euro de 2011-2012, Covid en 2020-2021, crise de l'énergie en 2022. Source : Eurostat, agrégats révisés (gov_10a_main).`;
+  const foc = g => { box.classList.toggle('foc', !!g); for (const x of [...sel, 'EA20']) for (const o of [L[x], LB[x], PTS[x]]) o && o.classList.toggle('hl', x === g); };
+  for (const g in LB) { LB[g].style.cursor = 'default'; LB[g].addEventListener('mouseenter', () => foc(g)); LB[g].addEventListener('mouseleave', () => foc(null)); }
+  $('ehP').querySelectorAll('[data-del]').forEach(b => { b.onmouseenter = () => foc(b.dataset.del); b.onmouseleave = () => foc(null); });
 }
+const T_ = I => EH_I[I].t;
 
 /* ======================================================================
    Courbes (une seule échelle, réticule et infobulle au survol)
@@ -1726,9 +1810,15 @@ document.querySelectorAll('[data-e]').forEach(b => b.addEventListener('click', (
 document.querySelectorAll('[data-g]').forEach(b => b.addEventListener('click', () => { S.g = b.dataset.g;
   document.querySelectorAll('[data-g]').forEach(x => x.setAttribute('aria-pressed', x === b)); europe(); }));
 cmp.addEventListener('change', () => { S.cmp = cmp.value; europe(); });
-document.querySelectorAll('[data-ei]').forEach(b => b.addEventListener('click', () => { S.ei = b.dataset.ei; europeHist(); }));
-$('ehP').addEventListener('click', e => { const b = e.target.closest('[data-eh]'); if (!b) return; const g = b.dataset.eh;
-  S.eh = S.eh.includes(g) ? S.eh.filter(x => x !== g) : [...S.eh, g]; if (!S.eh.length) S.eh = ['FR']; europeHist(); });
+document.querySelectorAll('[data-ei]').forEach(b => b.addEventListener('click', () => { S.ei = b.dataset.ei; ehStop(); europeHist(); }));
+document.querySelectorAll('[data-el]').forEach(b => b.addEventListener('click', () => { S.el = b.dataset.el; ehStop(); europeHist(); }));
+$('ehP').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.play) { if (EH.t === null) ehPlay(); else { ehStop(); ehDraw(); } return; }
+  ehStop();
+  if (b.dataset.raz) S.eh = [...EH_DEF];
+  else if (b.dataset.del && S.eh.length > 1) S.eh = S.eh.filter(x => x !== b.dataset.del);
+  europeHist(); });
+$('ehP').addEventListener('change', e => { const g = e.target.value; if (g && S.eh.length < EH_MAX && !S.eh.includes(g)) S.eh = [...S.eh, g]; ehStop(); europeHist(); });
 S.vAuto = true;
 
 const moisFR = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];

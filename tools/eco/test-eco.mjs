@@ -53,6 +53,15 @@ for (const g of D.ue.geo) {
   const C = D.ue.cofog[g], s = Object.keys(C).filter(c => /^GF\d\d$/.test(c)).reduce((a, c) => a + C[c], 0);
   ok(Math.abs(s - C.TOTAL) <= 0.6, `Europe ${g} : Σ fonctions ${s.toFixed(1)} ≈ ${C.TOTAL} % du PIB (arrondis au dixième)`);
 }
+/* Bloc 8 : quatre indicateurs par pays. Trous tolérés aux bords seulement
+   (DK et UE27 commencent en 2000 ; un pays peut avoir un ou deux ans de retard) ;
+   France et zone euro complètes. */
+{ const H = D.hist; let n = 0;
+  for (const k of ['TE', 'TR', 'B9', 'GD']) for (const g of D.ue.geo) {
+    const v = H[k][g]; if (!v || v.length !== H.an.length || (() => { const i = v.findIndex(x => x != null), j = v.findLastIndex(x => x != null); return i > 5 || j < v.length - 3 || v.slice(i, j + 1).some(x => x == null) || (['FR', 'EA20'].includes(g) && (i > 0 || j < v.length - 1)); })()) { n++; ok(false, `historique ${k} ${g} incomplet`); } }
+  ok(n === 0, `historique 1995 → ${H.an.at(-1)} : dépenses, recettes, solde, dette × ${D.ue.geo.length} pays`);
+  const k = D.an.indexOf(H.an.at(-1));
+  ok(Math.abs(D.dette[k] / D.pib[k] * 100 - H.GD.FR.at(-1)) <= 0.15, `dette ${H.an.at(-1)} : ${H.GD.FR.at(-1)} % du PIB = euros / PIB`); }
 
 /* Repères (Eurostat, millésime d'octobre 2026). Une révision les déplace de
    quelques dixièmes, pas plus : au-delà, c'est la lecture qui a changé. */
