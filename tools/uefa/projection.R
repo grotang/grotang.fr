@@ -194,7 +194,8 @@ lire_nations <- function(chemin) {
 }
 
 # Les affiches : [competition (0/1/2), journee, "date", "heure", "domicile",
-# "NAT", "exterieur", "NAT", buts dom | null, buts ext | null]. On ne garde que
+# "NAT", "exterieur", "NAT", buts dom | null, buts ext | null (, [date, heure]
+# si le match a ete reprogramme : ignore ici)]. On ne garde que
 # la phase de ligue (journee numerique). Un match avec un score est joue.
 lire_affiches <- function(chemin_nations, saison) {
   d <- dirname(trouver_fichier(chemin_nations))
@@ -202,7 +203,7 @@ lire_affiches <- function(chemin_nations, saison) {
   if (!length(fic)) stop(sprintf("\n  Affiches introuvables : %s/wiki/affiches-%s-AA.json\n", d, saison), call. = FALSE)
   cat(sprintf("lecture de %s\n", fic[1]))
   txt <- paste(readLines(fic[1], warn = FALSE, encoding = "UTF-8"), collapse = "")
-  re <- '\\[([0-9]+),([0-9]+),"([0-9-]+)","([^"]*)","([^"]*)","([A-Z]{3})","([^"]*)","([A-Z]{3})",(null|[0-9]+),(null|[0-9]+)\\]'
+  re <- '\\[([0-9]+),([0-9]+),"([0-9-]+)","([^"]*)","([^"]*)","([A-Z]{3})","([^"]*)","([A-Z]{3})",(null|[0-9]+),(null|[0-9]+)(,\\[[^]]*\\])?\\]'
   m <- regmatches(txt, gregexpr(re, txt))[[1]]
   if (!length(m)) stop("\n  Aucune affiche de phase de ligue lue.\n", call. = FALSE)
   x <- do.call(rbind, lapply(m, function(s) regmatches(s, regexec(re, s))[[1]][-1]))
