@@ -288,6 +288,8 @@ function t3(){
 }
 cA.onchange = cB.onchange = t3;
 document.getElementById('rnd').onclick = () => { tirage(); t3(); };
+/* bascule clair/sombre : la couleur du texte sur la barre de l'Allemagne en dépend */
+document.addEventListener('grotang:theme', t3);
 document.querySelectorAll('#f3 button').forEach(b => b.onclick = () => { document.querySelectorAll('#f3 button').forEach(x => x.classList.toggle('on', x === b)); ter = +b.dataset.v; t3(); });
 t3();
 })();
