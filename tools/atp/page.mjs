@@ -4,6 +4,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 import { nav, navCSS, FAVICON, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF, PIED } from '../chrome.mjs';
 import { abs, DOMAINE } from '../site.mjs';
 import { nation } from '../tennis/nations.mjs';
@@ -12,6 +13,16 @@ const ICI = path.dirname(fileURLToPath(import.meta.url));
 export const SAISONS = [2026, 2027];
 export const cle = an => 'atp' + an;
 export const fichierData = an => path.join(ICI, `data-${an}.json`);
+
+/* « Page publiée » : heure du dernier commit qui a touché la page ou les données de la
+   saison, comme Force des clubs ; sans git, heure de fabrication. */
+function publiee(an) {
+  let d = null;
+  try { const t = execFileSync('git', ['log', '-1', '--format=%cI', '--', 'page.html', 'page.mjs', `data-${an}.json`], { cwd: ICI, encoding: 'utf8' }).trim(); if (t) d = new Date(t); } catch { /* pas de git */ }
+  d = d || new Date();
+  const part = o => new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', ...o }).format(d);
+  return `${part({ weekday: 'short' })} ${part({ day: '2-digit' })} ${part({ month: 'short' })} ${part({ year: 'numeric' })} ` + part({ hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
+}
 
 export function buildSaisonATP(an, { apercu = null } = {}) {
   const KEY = cle(an);
@@ -34,6 +45,7 @@ export function buildSaisonATP(an, { apercu = null } = {}) {
   });
 
   /* noms et drapeaux des nations présentes (filtre « Nation ») ; sans drapeau sur Wikipédia = bannière neutre */
+  data.publie = publiee(an);
   data.nations = Object.fromEntries([...new Set(data.joueurs.map(j => j.c || ''))].map(c => {
     const n = c ? nation(c) : null; return [c, n ? { nom: n.nom, drap: n.drap } : { nom: c || 'Bannière neutre', drap: '' }]; }));
   let out = brut.replace(RE, () => `/*DATA_START*/const SA = ${JSON.stringify(data)};/*DATA_END*/`);

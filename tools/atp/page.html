@@ -17,8 +17,6 @@ h1{font-size:clamp(28px,4.4vw,44px); line-height:1.04; font-weight:700}
 h2{font-size:clamp(19px,2.3vw,24px); line-height:1.15; font-weight:700; display:flex; gap:10px; align-items:baseline}
 a{color:var(--fr)}
 :focus-visible{outline:2px solid var(--fr); outline-offset:2px}
-.kicker{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3)}
-.lead{margin:6px 0 0; font-size:15.5px; color:var(--ink-2); max-width:720px}
 .num{display:inline-grid; place-items:center; width:1.5em; height:1.5em; border-radius:50%; background:var(--ink); color:var(--surface); font-family:"IBM Plex Mono",monospace; font-size:.62em; flex:none}
 
 .atp{--ao:#0091D2; --rg:#D2691E; --wim:#5C2D91; --uso:#C99000; --m:#465063;
@@ -28,15 +26,13 @@ a{color:var(--fr)}
   --p1:#3987e5; --p2:#d95926; --p3:#199e70; --p4:#e66767; --ctx:#3A4050; --qual:#FF9B6B;
   --g0:#1a1f2a; --g1:#1c3225; --g2:#205535; --g3:#277a48; --g4:#36aa5c; --g5:#55d476}
 
-/* ---------- en-tête ---------- */
-.hero{display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:18px 32px; align-items:end; padding:4px 0 20px; border-bottom:1px solid var(--rule)}
-.tuiles{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
-.tuile{background:var(--surface); border:1px solid var(--rule-soft); border-radius:12px; padding:11px 14px 10px; position:relative; overflow:hidden}
-.tuile::before{content:""; position:absolute; inset:0 auto 0 0; width:4px; background:var(--c, var(--fr))}
-.tuile b{display:block; font-family:"Newsreader",Georgia,serif; font-size:30px; line-height:1.05; font-weight:700}
-.tuile span{display:block; font-size:13px; font-weight:700; margin-top:3px}
-.tuile small{display:block; font-size:11.5px; color:var(--ink-3); margin-top:1px}
-@media (max-width:760px){ .hero{grid-template-columns:1fr} }
+/* ---------- en-tête : comme Force des clubs et la page UEFA (GT, 19/11/2026) ---------- */
+.mast{display:flex; flex-wrap:wrap; gap:16px 32px; align-items:flex-end; justify-content:space-between; border-bottom:2px solid var(--ink); padding-bottom:14px}
+.mast h1{margin:6px 0 10px}
+.mast .lede{font-size:17px; line-height:1.5; color:var(--ink-2); max-width:68ch; margin:0}
+.stamp{display:grid; gap:3px; margin-left:auto; text-align:right; font-size:12px; color:var(--ink-2)}
+.stamp b{color:var(--ink); font-weight:600}
+.stamp .next{margin-top:3px; padding-top:5px; border-top:1px solid var(--rule-soft)}
 
 /* ---------- sélecteur de joueurs ---------- */
 .sel{display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:13px; color:var(--ink-3); background:var(--ground); padding:8px 0}
@@ -114,13 +110,13 @@ table.fr{border-collapse:separate; border-spacing:1px; font-size:10.5px; font-va
 </head>
 <body>
 <main class="wrap atp">
-<header class="hero">
+<header class="mast">
   <div>
-    <div class="kicker" id="kick">Tennis · Saison ATP</div>
+    <div class="surtitre">Tennis · Saison ATP</div>
     <h1 id="h1">Saison ATP</h1>
-    <p class="lead" id="lead"></p>
+    <p class="lede" id="lead"></p>
   </div>
-  <div class="tuiles" id="tuiles"></div>
+  <div class="stamp" id="stamp"></div>
 </header>
 
 <div class="sel" id="sel"><span>Joueurs mis en avant :</span><span id="chips"></span>
@@ -216,20 +212,17 @@ const pastille = n => `<i style="display:inline-block;width:8px;height:8px;borde
 function entete() {
   document.getElementById('h1').textContent = `Saison ATP ${AN}`;
   document.getElementById('lead').innerHTML = nS
-    ? `Tous les points gagnés depuis le 1<sup>er</sup> janvier ${AN} par les joueurs du circuit, semaine après semaine : Grands Chelems, Masters 1000, ATP 500 et 250, United Cup et Challengers. Tout le monde part de zéro. Mis à jour le ${lab(SA.maj)}.`
-    : `La saison ${AN} commence le 1<sup>er</sup> janvier. D'ici là, seule la Race to Turin ${AN} a démarré, avec les tournois joués depuis la fin du Masters de Paris ${AN - 1} (bloc 4). Mis à jour le ${lab(SA.maj)}.`;
-  const t = document.getElementById('tuiles');
-  if (nS) { const a = J0[0], b = J0[1];
-    const titres = {}; J.forEach(j => j.r.forEach(r => { if (r[1] === 'W' && T[r[0]].c !== 'CH' && T[r[0]].c !== 'UC' && T[r[0]].w >= 0) titres[j.n] = (titres[j.n] || 0) + 1; }));
-    const [tn, tc] = Object.entries(titres).sort((x, y) => y[1] - x[1])[0] || ['—', 0];
-    const gs = T.filter(x => x.c === 'GS' && x.w >= 0).map(x => { const j = J.find(j => j.r.some(r => r[0] === T.indexOf(x) && r[1] === 'W')); return j ? NOM(j.n) : '?'; });
-    t.innerHTML = `<div class="tuile"><b>${nf(dernier(a))}</b><span>${flag(a.c)} ${a.n}</span><small>en tête de la saison</small></div>`
-      + `<div class="tuile" style="--c:var(--p2)"><b>${nf(dernier(a) - dernier(b))}</b><span>points d'avance</span><small>sur ${b.n}</small></div>`
-      + `<div class="tuile" style="--c:var(--p3)"><b>${tc}</b><span>titres sur le circuit</span><small>${tn}, le plus titré</small></div>`
-      + `<div class="tuile" style="--c:var(--rg)"><b>${gs.length}/4</b><span>Grands Chelems joués</span><small>${gs.join(', ') || '—'}</small></div>`;
-  } else { const a = J.slice().sort((x, y) => y.pts[nR - 1] - x.pts[nR - 1])[0];
-    t.innerHTML = `<div class="tuile"><b>${nf(a.pts[nR - 1])}</b><span>${flag(a.c)} ${a.n}</span><small>en tête de la Race ${AN}</small></div>`
-      + `<div class="tuile" style="--c:var(--p2)"><b>${nR}</b><span>semaine${nR > 1 ? 's' : ''} de Race</span><small>depuis le ${lab(SA.debut)}</small></div>`; }
+    ? `Tous les points gagnés depuis le 1<sup>er</sup> janvier, semaine après semaine.<br><b>Tout le monde part de zéro</b> · circuit ATP et Challengers`
+    : `La saison commence le 1<sup>er</sup> janvier.<br><b>La Race ${AN} est déjà lancée</b> · bloc 4`;
+  /* dates à droite : semaine des données, publication, prochain passage du robot (lundi) */
+  const dLong = iso => { const d = new Date(iso + 'T12:00:00'); const f = o => new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', ...o }).format(d);
+    return `${f({ weekday: 'short' })} ${f({ day: '2-digit' })} ${f({ month: 'short' })} ${f({ year: 'numeric' })}`; };
+  const dData = [SS.at(-1), SR.at(-1)].filter(Boolean).sort().pop();
+  const jAuj = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(new Date());
+  const jLun = (() => { const d = new Date(jAuj + 'T12:00:00'); let n = (8 - d.getDay()) % 7; if (n === 0 && SA.maj === jAuj) n = 7; return n; })();
+  document.getElementById('stamp').innerHTML = `<div>Données&nbsp;: <b>${dLong(dData)}</b></div>`
+    + (SA.publie ? `<div>Page publiée&nbsp;: <b>${SA.publie}</b></div>` : '')
+    + `<div class="next">Prochaine mise à jour <b>${jLun === 0 ? "aujourd'hui" : 'J−' + jLun}</b></div>`;
   document.getElementById('src').innerHTML = `Source : tableaux des tournois sur Wikipédia (en anglais), barème officiel de l'ATP ; calcul grotang.fr, contrôlé chaque lundi contre la Race publiée. Mise à jour : ${lab(SA.maj)}.`;
 }
 
