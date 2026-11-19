@@ -401,9 +401,10 @@ function course() {
   const L = DATA.comp[K], x = i => l + i * (W - l - r) / 5, y = v => t + (1 - v) * (H - t - b);
   /* une nation choisie : tous ses clubs en couleur ; sinon les favoris et les clubs français */
   /* sans filtre : 5 courbes au plus (GT, 19/11/2026), par priorité : le favori, les clubs
-     français (les mieux placés d'abord), puis le 2e, le 3e… tant qu'il reste de la place */
+     français (les mieux placés d'abord ; sans chance réelle, sous 1 % de titre, ils passent leur tour),
+     puis le 2e, le 3e… tant qu'il reste de la place */
   const cinq = () => { const o = [...L].sort((a, b) => b.p[5] - a.p[5]), out = [o[0]];
-    for (const c of [...o.filter(c => c.c === 'FRA'), ...o.slice(1)]) { if (out.length >= 5) break; if (!out.includes(c)) out.push(c); }
+    for (const c of [...o.filter(c => c.c === 'FRA' && c.p[5] >= .01), ...o.slice(1)]) { if (out.length >= 5) break; if (!out.includes(c)) out.push(c); }
     return out; };
   const vis = new Set((NC ? L.filter(c => c.c === NC) : cinq()).map(c => c.n));
   const pts = c => c.p.map((v, i) => \`\${x(i)},\${y(v)}\`).join(' ');
