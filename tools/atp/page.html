@@ -244,12 +244,12 @@ function courbes(id, S, champ, ymax, opts) {
   const X = k => m.l + (n === 1 ? 0 : k * (W - m.l - m.r) / (n - 1)), Y = y => H - m.b - y / ymax * (H - m.t - m.b);
   const wk = opts.wk;
   for (const t of T) { const w = t[wk]; if (w < 0 || w === undefined) continue;
-    if (t.c === 'GS') { const a = Math.max(0, w - 2); el('rect', { x: X(a), y: m.t, width: Math.max(2, X(w) - X(a)), height: H - m.t - m.b, fill: cv(GSC[t.n]), opacity: .1 }, s);
-      txt(s, (X(a) + X(w)) / 2, m.t - (tel ? 8 : -2), GSA[t.n], { a: 'middle', fs: tel ? 9 : 10, fw: 700, fill: cv(GSC[t.n]) }); }
-    if (t.c === 'F') { const a = Math.max(0, w - 1); el('rect', { x: X(a), y: m.t, width: Math.max(2, X(w) - X(a)), height: H - m.t - m.b, fill: cv('--fin'), opacity: .14 }, s);
+    if (t.c === 'GS') { const a = Math.max(0, w - 2); el('rect', { x: X(a), y: m.t, width: Math.max(2, X(w) - X(a)), height: H - m.t - m.b, fill: cv(GSC[t.n]), opacity: .2 }, s);
+      txt(s, (X(a) + X(w)) / 2, m.t - (tel ? 8 : -2), GSA[t.n], { a: 'middle', fs: tel ? 10 : 11.5, fw: 700, fill: cv(GSC[t.n]) }); }
+    if (t.c === 'F') { const a = Math.max(0, w - 1); el('rect', { x: X(a), y: m.t, width: Math.max(2, X(w) - X(a)), height: H - m.t - m.b, fill: cv('--fin'), opacity: .2 }, s);
       txt(s, (X(a) + X(w)) / 2, m.t - (tel ? 8 : -2), tel ? 'F' : 'Finals', { a: 'middle', fs: tel ? 9 : 10, fw: 700, fill: cv('--fin') }); }
-    /* Masters 1000 : une bande à peine visible (GT : « quelque chose de subtil ») */
-    if (t.c === 'M' || t.c === 'MC') { const a = Math.max(0, w - (t.f > t.s ? 2 : 1)); el('rect', { x: X(a), y: m.t + 14, width: Math.max(2, X(w) - X(a)), height: H - m.t - m.b - 14, fill: cv('--ink'), opacity: .035 }, s); } }
+    /* Masters 1000 : une bande grise légère, nettement en dessous des GC (GT, 19/11 : un peu plus marquée) */
+    if (t.c === 'M' || t.c === 'MC') { const a = Math.max(0, w - (t.f > t.s ? 2 : 1)); el('rect', { x: X(a), y: m.t + 14, width: Math.max(2, X(w) - X(a)), height: H - m.t - m.b - 14, fill: cv('--ink'), opacity: .075 }, s); } }
   const pas = ymax > 6000 ? 2000 : ymax > 2500 ? 1000 : ymax > 1000 ? 500 : ymax > 400 ? 100 : 50;
   for (let g = 0; g <= ymax; g += pas) { el('line', { x1: m.l, x2: W - m.r, y1: Y(g), y2: Y(g), stroke: cv('--rule-soft') }, s); txt(s, m.l - 6, Y(g), tel ? (g >= 1000 ? (g / 1000).toLocaleString('fr-FR') + 'k' : g) : nf(g), { a: 'end', fs: tel ? 10 : 11 }); }
   const LETTRE = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
