@@ -44,7 +44,8 @@ a{color:var(--fr)}
 .chip{font:inherit; font-size:13px; font-weight:700; border:1px solid var(--rule); background:var(--surface); color:var(--ink); border-radius:14px; padding:3px 6px 3px 9px; display:inline-flex; align-items:center; gap:6px}
 .chip i{width:10px; height:10px; border-radius:50%}
 .chip button{border:0; background:none; color:var(--ink-3); cursor:pointer; font-size:15px; line-height:1; padding:0 3px}
-.natf{display:inline-flex; align-items:center; gap:6px; margin-left:auto}
+.ctl2{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+.natf{display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--ink-3)}
 .natf select{font:inherit; font-size:13px; border:1px solid var(--rule); background:var(--surface); color:var(--ink); border-radius:14px; padding:3px 8px}
 .sel input{font:inherit; font-size:13px; border:1px solid var(--rule); background:var(--surface); color:var(--ink); border-radius:14px; padding:4px 10px; width:210px}
 
@@ -123,26 +124,25 @@ table.fr{border-collapse:separate; border-spacing:1px; font-size:10.5px; font-va
 </header>
 
 <div class="sel" id="sel"><span>Joueurs mis en avant :</span><span id="chips"></span>
-  <input id="cherche" list="noms" placeholder="Ajouter un joueur…" autocomplete="off"><datalist id="noms"></datalist>
-  <label class="natf">Nation <select id="nat"></select></label></div>
+  <input id="cherche" list="noms" placeholder="Ajouter un joueur…" autocomplete="off"><datalist id="noms"></datalist></div>
 
 <section class="card" id="b1">
   <h2><span class="num">1</span>La course aux points</h2>
-  <p class="s">Tous les points gagnés depuis le 1<sup>er</sup> janvier, cumulés chaque lundi (les points d'un tournoi comptent le lundi qui suit sa fin). En gris, le reste du top 20 (ou les meilleurs de la nation choisie). Bandes de couleur : les Grands Chelems et les ATP Finals ; bandes grises légères : les Masters 1000.</p>
+  <p class="s">Tous les points gagnés depuis le 1<sup>er</sup> janvier, cumulés chaque lundi (les points d'un tournoi comptent le lundi qui suit sa fin). En gris, le reste du top 20. Bandes de couleur : les Grands Chelems et les ATP Finals ; bandes grises légères : les Masters 1000.</p>
   <div class="viz" id="v1"></div>
 </section>
 
 <section class="card" id="b2">
   <h2><span class="num">2</span>La saison semaine par semaine</h2>
   <p class="s">Une colonne par semaine. En tête, les Grands Chelems, les Masters 1000 et les ATP Finals sur toute leur durée ; en dessous, les ATP 500 et 250 de la semaine (survoler pour les noms). Une case par résultat, sur la durée du tournoi ; plus elle est foncée, plus elle a rapporté. Cases en pointillé : Challengers.</p>
-  <div class="seg" id="n2"></div>
+  <div class="ctl2"><div class="seg" id="n2"></div><label class="natf">Nation <select id="nat"></select></label></div>
   <div class="lg" id="lg2"></div>
   <div class="scroll"><table class="fr" id="t2"></table></div>
 </section>
 
 <section class="card" id="b3">
   <h2><span class="num">3</span>Le classement, semaine après semaine</h2>
-  <p class="s">Rang au classement de la saison chaque lundi depuis l'Open d'Australie, pour les 12 premiers d'aujourd'hui (ou les 8 meilleurs de la nation choisie). Survoler une ligne pour la suivre.</p>
+  <p class="s">Rang au classement de la saison chaque lundi depuis l'Open d'Australie, pour les 12 premiers d'aujourd'hui. Survoler une ligne pour la suivre.</p>
   <div class="viz" id="v3"></div>
 </section>
 
@@ -199,7 +199,7 @@ const okNat = j => NAT === null || (j.c || '') === NAT;
   const L = Object.keys(cpt).sort((a, b) => (NATS[a]?.nom || a).localeCompare(NATS[b]?.nom || b, 'fr'));
   const sel = document.getElementById('nat');
   sel.innerHTML = '<option value="*">Toutes</option>' + L.map(c => `<option value="${c}">${flag(c) ? flag(c) + ' ' : ''}${NATS[c]?.nom || c || 'Bannière neutre'} (${cpt[c]})</option>`).join('');
-  sel.onchange = () => { NAT = sel.value === '*' ? null : sel.value; tout(); }; }
+  sel.onchange = () => { NAT = sel.value === '*' ? null : sel.value; v2(); }; }
 const SLOT = ['--p1', '--p2', '--p3', '--p4'];
 const coul = n => { const k = SEL.indexOf(n); return cv(k >= 0 ? SLOT[k] : '--ctx'); };
 const pastille = n => `<i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${coul(n)};margin-right:4px"></i>`;
@@ -256,7 +256,7 @@ function courbes(id, S, champ, ymax, opts) {
     el('path', { d: q.map((y, k) => (k ? 'L' : 'M') + X(k) + ',' + Y(y)).join(''), fill: 'none', stroke: cv('--qual'), 'stroke-width': 1.5, 'stroke-dasharray': '4 3' }, s);
     const kq = Math.round((n - 1) * .55); txt(s, X(kq), Y(q[kq]) + 12, '8e place', { fill: cv('--qual'), fs: 10.5, fw: 700, a: 'middle' }); }
   const step = c => c.map((y, k) => k ? `H${X(k).toFixed(1)}V${Y(y).toFixed(1)}` : `M${X(0)},${Y(y)}`).join('');
-  const top = J.filter(okNat).sort((a, b) => (b[champ][n - 1] || 0) - (a[champ][n - 1] || 0)).slice(0, 20).concat(J.filter(j => SEL.includes(j.n)));
+  const top = J.slice().sort((a, b) => (b[champ][n - 1] || 0) - (a[champ][n - 1] || 0)).slice(0, 20).concat(J.filter(j => SEL.includes(j.n)));
   const ordre = [...top.filter(j => !SEL.includes(j.n)), ...SEL.slice().reverse().map(x => J.find(j => j.n === x)).filter(Boolean)];
   const labs = [];
   for (const j of ordre) { const sel = SEL.includes(j.n), c = j[champ];
@@ -268,7 +268,7 @@ function courbes(id, S, champ, ymax, opts) {
   const hit = el('rect', { x: m.l - 10, y: 0, width: W - m.l - m.r + 20, height: H, fill: 'transparent' }, s);
   const on = ev => { const r = s.getBoundingClientRect(); const k = n === 1 ? 0 : Math.max(0, Math.min(n - 1, Math.round((ev.clientX - r.left - m.l) / (W - m.l - m.r) * (n - 1))));
     cur.setAttribute('x1', X(k)); cur.setAttribute('x2', X(k)); cur.setAttribute('opacity', 1);
-    const cl = J.filter(j => okNat(j) || SEL.includes(j.n)).sort((a, b) => (b[champ][k] || 0) - (a[champ][k] || 0));
+    const cl = J.slice().sort((a, b) => (b[champ][k] || 0) - (a[champ][k] || 0));
     const vus = cl.filter((j, i) => i < 10 || SEL.includes(j.n));
     const tn = T.filter(t => t[wk] === k && t.c !== 'CH').map(t => t.n);
     show(ev, `<div class="h">Lundi ${lab(S[k])}</div>${tn.length ? `<div style="color:var(--ink-3);font-size:11.5px;margin-bottom:4px">après ${tn.slice(0, 3).join(', ')}${tn.length > 3 ? '…' : ''}</div>` : ''}`
@@ -279,7 +279,7 @@ function courbes(id, S, champ, ymax, opts) {
 const arrondi = v => Math.max(500, Math.ceil(v * 1.05 / (v > 3000 ? 1000 : 250)) * (v > 3000 ? 1000 : 250));
 
 function v1() {
-  const mx = Math.max(0, ...J.filter(j => okNat(j) || SEL.includes(j.n)).map(j => j.sp[nS - 1] || 0));
+  const mx = Math.max(0, ...J.map(j => j.sp[nS - 1] || 0));
   courbes('v1', SS, 'sp', arrondi(mx), { wk: 'w', rang: (j, k) => j.sr[k] || 999, vide: `La saison ${AN} n'a pas encore commencé : rendez-vous le 1<sup>er</sup> janvier. La Race ${AN}, elle, est lancée (bloc 4).` });
 }
 
@@ -351,9 +351,8 @@ function v3() {
   const v = document.getElementById('v3'); v.innerHTML = '';
   if (nS < 2) { v.innerHTML = `<div class="vide">Le classement semaine après semaine apparaîtra après deux lundis de saison.</div>`; return; }
   const n = nS, W = Math.max(320, v.clientWidth);
-  const choix = (NAT === null ? J0.slice(0, 12) : J0.filter(okNat).slice(0, 8));
-  SEL.forEach(x => { const j = J.find(y => y.n === x); if (j && okNat(j) && !choix.includes(j) && j.sr[n - 1]) choix.push(j); });
-  if (!choix.length) { v.innerHTML = `<div class="vide">Aucun joueur de cette nation au classement.</div>`; return; }
+  const choix = J0.slice(0, 12);
+  SEL.forEach(x => { const j = J.find(y => y.n === x); if (j && !choix.includes(j) && j.sr[n - 1]) choix.push(j); });
   const pire = Math.max(...choix.map(j => j.sr[n - 1]));
   const R = Math.min(100, Math.max(12, Math.ceil((pire + 3) / 5) * 5));
   const H = Math.max(300, Math.min(520, 22 * Math.min(R, 20) + 60)), m = { t: 14, r: W < 600 ? 110 : 160, b: 28, l: 34 };
@@ -379,10 +378,8 @@ function v3() {
   const ordre = [...choix.filter(j => !SEL.includes(j.n)), ...SEL.slice().reverse().map(x => choix.find(j => j.n === x)).filter(Boolean)];
   const G = el('g', { 'clip-path': 'url(#c3)' }, s), lignes = [];
   const labs = [];
-  /* filtre nation : 8 lignes au plus, chacune sa couleur (palette du site) */
-  const pal = ['--n1', '--n2', '--n3', '--n4', '--n5', '--n6', '--n7', '--n8'];
-  ordre.forEach((j, i) => { const sel = SEL.includes(j.n) || NAT !== null, c = SEL.includes(j.n) ? coul(j.n) : NAT !== null ? cv(pal[choix.indexOf(j) % 8]) : cv(gris[i % 2]);
-    const p = el('path', { d: trace(j.sr), fill: 'none', stroke: c, 'stroke-width': sel ? (NAT !== null && !SEL.includes(j.n) ? 2.4 : 3) : 1.6, opacity: sel ? 1 : .45, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, G);
+  ordre.forEach((j, i) => { const sel = SEL.includes(j.n), c = sel ? coul(j.n) : cv(gris[i % 2]);
+    const p = el('path', { d: trace(j.sr), fill: 'none', stroke: c, 'stroke-width': sel ? 3 : 1.6, opacity: sel ? 1 : .45, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, G);
     const fin = j.sr[n - 1]; el('circle', { cx: X(n - 1), cy: Y(fin), r: sel ? 4 : 3, fill: c, opacity: sel ? 1 : .7 }, G);
     lignes.push({ j, p, sel });
     labs.push({ y: Y(fin), j, sel, c }); });
@@ -395,7 +392,7 @@ function v3() {
     lignes.forEach(L => { L.p.setAttribute('opacity', L === best ? 1 : L.sel ? .5 : .15); L.p.setAttribute('stroke-width', L === best ? 3.2 : L.sel ? 3 : 1.6); });
     if (best) show(ev, `<div class="h">${flag(best.j.c)} ${best.j.n}</div>Lundi ${lab(SS[k])} : <b>${best.j.sr[k]}<sup>e</sup></b> · ${nf(best.j.sp[k])} pts<br><span style="color:var(--ink-3)">Aujourd'hui : ${best.j.sr[n - 1]}<sup>e</sup></span>`); };
   hit.addEventListener('pointermove', on);
-  hit.addEventListener('pointerleave', () => { lignes.forEach(L => { L.p.setAttribute('opacity', L.sel ? 1 : .45); L.p.setAttribute('stroke-width', L.sel ? (NAT !== null ? 2.4 : 3) : 1.6); }); hide(); });
+  hit.addEventListener('pointerleave', () => { lignes.forEach(L => { L.p.setAttribute('opacity', L.sel ? 1 : .45); L.p.setAttribute('stroke-width', L.sel ? 3 : 1.6); }); hide(); });
 }
 
 /* ---------- 4 · la Race ---------- */
