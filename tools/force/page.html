@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Force des clubs</title>
 <style>
+:root{--c-FRA:var(--fr);--c-ENG:#d6262f;--c-ITA:#1f9a4c;--c-ESP:#e3a008;--c-GER:#2f3439;--c-POR:#8f1d3b;--c-BEL:#6a4bc4;--c-NED:#f27405;--c-r1:#12a3a3;--c-r2:#8a5a2b;--c-r3:#5f7a99;--c-r4:#e87ba4;--c-r5:#7f8c2a}
+:root[data-theme="dark"]{--c-ENG:#f0534d;--c-ITA:#3cb96a;--c-ESP:#f0b52a;--c-GER:#c9ced4;--c-POR:#d8607e;--c-BEL:#9a85ec;--c-NED:#ff9233;--c-r1:#2cc4c4;--c-r2:#c08a55;--c-r3:#93abc7;--c-r4:#d55181;--c-r5:#b3c25a}
 /* Page /football-force-des-clubs/ — la force des clubs (chantier C23, 13/11/2026).
    Données : tools/uefa/force-clubs.json (robot force.yml, chaque lundi) et l'historique
    tools/uefa/archive/force-historique.json ; noms, coupes et points de coefficient lus
@@ -188,7 +190,10 @@ td.td.up{color:var(--good)} td.td.dn{color:var(--bad)}
 /*DATA_START*/const FD = null;/*DATA_END*/
 const NOMS = {ENG:'Angleterre',ITA:'Italie',ESP:'Espagne',GER:'Allemagne',FRA:'France',POR:'Portugal',BEL:'Belgique',NED:'Pays-Bas',TUR:'Turquie',GRE:'Grèce', ...FD.nnoms};
 const ORDRE = FD.ordre;
-const SLOT = {}; FD.top8.forEach((c, i) => SLOT[c] = '--n' + (i + 1));
+/* une couleur par NATION, comme les pages UEFA (GT, 19/11/2026, variante A « identité ») ;
+   réserve pour un nouveau venu du top 8 */
+const NAT_COUL = new Set(['FRA','ENG','ITA','ESP','GER','POR','BEL','NED']), RESERVE = ['--c-r1','--c-r2','--c-r3','--c-r4','--c-r5'];
+const SLOT = {}; { let ri = 0; FD.top8.forEach(c => { SLOT[c] = NAT_COUL.has(c) ? '--c-' + c : (RESERVE[ri++] || '--ink-3'); }); }
 const kNom = c => c === 'FRA' ? 'var(--fr)' : SLOT[c] ? `var(${SLOT[c]})` : 'var(--ink-3)';
 const styleNom = c => `color:${kNom(c)};font-weight:${c === 'FRA' ? 700 : 600}`;
 const dec = (x, n) => x.toFixed(n).replace('.', ',');
@@ -264,7 +269,8 @@ tirage();
 let ter = 0;
 /* couleur d'un club : celle de sa nation (8 premières, comme partout sur le site) ; sinon encre neutre.
    Même couleur des deux côtés (même nation, ou deux nations sans couleur) : B en teinte pâle. */
-const TEXTE_SOMBRE = new Set(['--n4', '--n5']);
+/* encre foncée sur les fonds clairs : Espagne (jaune) ; Allemagne en mode sombre (gris clair) */
+const TEXTE_SOMBRE = { has: k => k === '--c-ESP' || (k === '--c-GER' && document.documentElement.dataset.theme === 'dark') };
 const coul = c => c === 'FRA' ? '--fr' : SLOT[c] || null;
 function t3(){
   const A = C[cA.value], Bc = C[cB.value];
