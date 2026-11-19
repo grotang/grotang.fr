@@ -46,12 +46,9 @@ export const PAGES = [
       apercu: '/football-joueurs-decisifs-wip/' } },
   { key: 'nantes', url: '/football-fc-nantes-histoire/', titre: 'FC Nantes',                rubrique: ['Football'] },
   { key: 'tennis', url: '/tennis-grand-chelem-nations/', titre: 'Grand Chelem',             rubrique: ['Tennis'] },
-  /* Saison ATP (19/11/2026) : une page par saison, même gabarit (tools/atp/). En aperçu
-     tant que la page se construit ; le jour où elle sort, on retire `aVenir`. */
-  { key: 'atp2026', url: '/tennis-saison-atp-2026/',     titre: '2026',                     rubrique: ['Tennis', 'Saison ATP'],
-    aVenir: { h1: 'Saison ATP 2026', texte: "La saison 2026 semaine après semaine : tous les points gagnés depuis le 1er janvier, le classement chaque lundi, et la Race to Turin.", apercu: '/tennis-saison-atp-2026-wip/' } },
-  { key: 'atp2027', url: '/tennis-saison-atp-2027/',     titre: '2027',                     rubrique: ['Tennis', 'Saison ATP'],
-    aVenir: { h1: 'Saison ATP 2027', texte: "La saison 2027 semaine après semaine, dès le 1er janvier. La Race to Turin 2027, elle, a déjà commencé.", apercu: '/tennis-saison-atp-2027-wip/' } },
+  /* Saison ATP (19/11/2026) : une page par saison, même gabarit (tools/atp/). En ligne depuis le 19/11/2026. */
+  { key: 'atp2026', url: '/tennis-saison-atp-2026/',     titre: '2026',                     rubrique: ['Tennis', 'Saison ATP'], nouveau: '2026-11-19' },
+  { key: 'atp2027', url: '/tennis-saison-atp-2027/',     titre: '2027',                     rubrique: ['Tennis', 'Saison ATP'], nouveau: '2026-11-19' },
   { key: 'eco',    url: '/france-comptes-publics/',      titre: 'Budget de la France',      rubrique: ['Économie'] },
   { key: 'b27',    url: '/france-simulateur-budget/',    titre: 'Faites votre budget 2027', rubrique: ['Économie'] },
 ];
@@ -69,7 +66,9 @@ export const RELAIS = {
   '/budget-france/': '/france-comptes-publics/',        // le 31/10/2026, une heure
   '/budget-2027/':   '/france-simulateur-budget/',      // le 31/10/2026, une heure
   '/football-fc-nantes-histoire-wip/': '/football-fc-nantes-histoire/',   // aperçu du 05/11/2026
-  '/football-clubs-francais-phase-de-ligue/': '/football-clubs-projection-uefa-phase-ligue/',   // page cachée, renommée le 14/11/2026
+  '/football-clubs-francais-phase-de-ligue/': '/football-clubs-projection-uefa-phase-ligue/',
+  '/tennis-saison-atp-2026-wip/': '/tennis-saison-atp-2026/',   // aperçu du 19/11/2026, quelques heures
+  '/tennis-saison-atp-2027-wip/': '/tennis-saison-atp-2027/',   // idem   // page cachée, renommée le 14/11/2026
 };
 
 /* Rubriques annoncées, sans aucune page encore : elles apparaissent dans le menu

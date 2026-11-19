@@ -279,6 +279,8 @@ html{scroll-padding-top:58px}
 .gn-new-pt{display:inline-block;width:7px;height:7px;border-radius:50%;background:#FFD400;box-shadow:0 0 0 1.5px #0F141D;
   margin-left:5px;vertical-align:5px}
 :root[data-theme="dark"] .gn-new{box-shadow:1.5px 1.5px 0 #000} :root[data-theme="dark"] .gn-new-pt{box-shadow:0 0 0 1.5px #000}
+.gnav .gn-panel .gn-par{display:flex;align-items:center;font-size:13.5px;padding:9px 12px 7px;color:var(--ink-2);cursor:default}
+.gnav .gn-panel .gn-par-ici{color:var(--ink)}
 .gn-grp{display:flex;flex-direction:column;gap:1px;padding-top:4px}
 .gn-grp + .gn-grp,.gn-panel > a + .gn-grp{border-top:1px solid var(--rule-soft);margin-top:4px}
 .gn-grp-t{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:4px 10px 2px}
@@ -331,8 +333,11 @@ function rubrique(r, current) {
   const pp0 = toutes(r), pp = pp0.some(p => p.key === 'uefa') ? [...pp0, CLUBS_PRJ] : pp0;   // la projection des clubs (ligne en retrait) compte pour la rubrique
   if (pp0.length === 1) return lien(pp0[0], current, r.nom).replace('<a ', `<a title="${esc(pp0[0].titre)}" `);
   const ici = pp.some(p => p.key === current) || (current === 'gazette' && pp.some(p => p.key === 'uefa'));
-  const groupe = (s, niv) => `<div class="gn-grp"><span class="gn-grp-t">${esc(s.nom)}</span>`
-    + s.pages.map(p => lien(p, current)).join('') + s.sous.map(x => groupe(x, niv + 1)).join('') + '</div>';
+  /* sous-rubrique (Tennis → Saison ATP → 2026, 2027) : une ligne parente, puis ses pages
+     en retrait avec les traits de rattachement, comme la gazette sous « Coefficient UEFA »
+     (GT, 19/11/2026 : « cohérent avec foot, hiérarchique, indenté ») */
+  const groupe = (s, niv) => `<span class="gn-par${s.pages.some(p => p.key === current) ? ' gn-par-ici' : ''}">${esc(s.nom)}</span>`
+    + s.pages.map(p => lien(p, current).replace('<a ', '<a class="gn-sub" ')).join('') + s.sous.map(x => groupe(x, niv + 1)).join('');
   return `<details class="gn-dd"><summary${ici ? ' class="gn-ici"' : ''}>${esc(r.nom)}${pp.some(p => estNouveau(p)) ? `<i class="gn-new-pt" aria-hidden="true" data-fin="${pp.filter(p => estNouveau(p)).map(finNouveau).sort().pop()}"></i>` : ''}</summary><div class="gn-panel">`
     + r.pages.map(p => lien(p, current) + (p.key === 'uefa' ? sousGazette(current) + sousClubs(current) : '')).join('') + r.sous.map(s => groupe(s, 1)).join('') + '</div></details>';
 }

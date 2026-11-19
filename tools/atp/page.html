@@ -66,6 +66,21 @@ table.fr{border-collapse:separate; border-spacing:1px; font-size:10.5px; font-va
 .fr td.nm{width:auto; text-align:left; white-space:nowrap; padding-right:8px; font-weight:700; font-size:12px; position:sticky; left:0; background:var(--surface); z-index:1}
 .fr td.tt{width:auto; padding:0 6px; font-weight:700; font-size:11.5px}
 .fr td.rk{width:auto; color:var(--ink-3); padding-right:4px; text-align:right}
+.fr thead tr.au th{height:96px}
+.fr thead tr.au th span{max-height:150px; overflow:hidden; text-overflow:ellipsis}
+.fr thead th.mo{height:auto; font-size:10.5px; text-align:left; padding:0 0 3px 2px; border-left:1px solid var(--rule); font-weight:700; color:var(--ink-2)}
+.fr thead tr.voie th{height:24px; padding:0}
+.fr thead tr:not(.au) th{height:auto}
+.fr thead tr.voie th{height:24px}
+.fr th.ev{position:relative}
+.fr th.ev span{writing-mode:horizontal-tb; transform:none; position:absolute; left:1px; top:2px; min-width:calc(100% - 2px); z-index:2; border-radius:4px; padding:3px 4px; font-size:10.5px; font-weight:700; white-space:nowrap; text-align:center}
+.fr th.ev.gs span{color:#fff; font-size:11.5px}
+.fr th.ev.m span{background:var(--ink); color:var(--surface)}
+.fr td.re{font-weight:400}
+.fr col.cs{width:28px; min-width:28px}
+.fr td.re.gsr{box-shadow:inset 0 3px 0 var(--bord)}
+.fr td.re.mr{box-shadow:inset 0 3px 0 var(--ink)}
+.fr td.re.ch{outline:1.5px dashed color-mix(in srgb,var(--ink-3) 70%,transparent); outline-offset:-3px}
 .lg{display:flex; flex-wrap:wrap; gap:4px 12px; font-size:12px; color:var(--ink-3); align-items:center}
 .lg i{display:inline-block; width:12px; height:12px; border-radius:2px; margin-right:4px; vertical-align:-2px}
 
@@ -104,8 +119,8 @@ table.fr{border-collapse:separate; border-spacing:1px; font-size:10.5px; font-va
 </section>
 
 <section class="card" id="b2">
-  <h2><span class="num">2</span>La saison de gauche à droite</h2>
-  <p class="s">Une colonne par tournoi du circuit, dans l'ordre du calendrier, une case par résultat ; les Challengers sont regroupés dans une colonne. Plus la case est foncée, plus elle a rapporté.</p>
+  <h2><span class="num">2</span>La saison semaine par semaine</h2>
+  <p class="s">Une colonne par semaine. En tête, les Grands Chelems et les Masters 1000 sur toute leur durée (deux semaines pour la plupart), puis les autres tournois de la semaine. Une case par résultat, sur la durée du tournoi ; plus elle est foncée, plus elle a rapporté. Cases en pointillé : Challengers.</p>
   <div class="seg" id="n2"></div>
   <div class="lg" id="lg2"></div>
   <div class="scroll"><table class="fr" id="t2"></table></div>
@@ -242,8 +257,12 @@ function v1() {
   courbes('v1', SS, 'sp', arrondi(mx), { wk: 'w', rang: (j, k) => j.sr[k] || 999, vide: `La saison ${AN} n'a pas encore commencé : rendez-vous le 1<sup>er</sup> janvier. La Race ${AN}, elle, est lancée (bloc 4).` });
 }
 
-/* ---------- 2 · la grille ---------- */
+/* ---------- 2 · la saison semaine par semaine ---------- */
+/* Une colonne = une semaine (GT, 19/11/2026). Les Grands Chelems et les Masters 1000
+   s'étalent sur leurs semaines, en tête ; les autres tournois de la semaine sont
+   empilés dans l'étiquette de la colonne, séparés par « / ». */
 let N2 = 20;
+const semIdx = d => Math.round((dt(d) - dt(SS[0])) / 6048e5);
 function v2() {
   const t = document.getElementById('t2'), G = ['--g0', '--g1', '--g2', '--g3', '--g4', '--g5'].map(cv);
   document.getElementById('n2').innerHTML = [20, 50, 100].map(k => `<button type="button" aria-pressed="${k === N2}" data-k="${k}">Top ${k}</button>`).join('');
@@ -252,23 +271,42 @@ function v2() {
   const k = p => p <= 0 ? 0 : p < 50 ? 1 : p < 200 ? 2 : p < 500 ? 3 : p < 1000 ? 4 : 5;
   const ink = p => k(p) >= 4 ? '#fff' : cv('--ink');
   const court = p => p >= 1000 ? (p / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + 'k' : p;
-  const cols = T.map((x, i) => ({ ...x, i })).filter(x => x.c !== 'CH' && x.w >= 0).sort((a, b) => a.s < b.s ? -1 : a.s > b.s ? 1 : a.n.localeCompare(b.n));
+  /* toutes les semaines de l'année, même celles à venir */
+  const W = []; for (let d = dt(SS[0]); d.getUTCFullYear() === AN; d.setUTCDate(d.getUTCDate() + 7)) W.push(d.toISOString().slice(0, 10));
+  const nW = W.length;
+  T.forEach(x => { x.k0 = semIdx(x.s); x.k1 = semIdx(x.f); });
+  const dansAn = x => x.k0 >= 0 && x.k0 < nW;
+  /* GC et Masters : en tête, sur leur durée, une ligne par chevauchement (Canada / Cincinnati) */
+  const gros = T.filter(x => (x.c === 'GS' || x.c === 'M' || x.c === 'MC') && dansAn(x)).sort((a, b) => a.k0 - b.k0);
+  const voies = []; for (const x of gros) { let v = voies.findIndex(L => L.at(-1).k1 < x.k0); if (v < 0) { voies.push([]); v = voies.length - 1; } voies[v].push(x); }
+  const autres = W.map((_, i) => T.filter(x => !gros.includes(x) && x.c !== 'CH' && x.k0 === i).map(x => x.n));
+  const typeSem = W.map((_, i) => { const g = gros.find(x => x.k0 <= i && i <= x.k1); return g ? g : null; });
+  const fondVide = i => { const g = typeSem[i]; return g ? `color-mix(in srgb, ${cv(g.c === 'GS' ? GSC[g.n] : '--m')} ${g.c === 'GS' ? 9 : 6}%, ${G[0]})` : G[0]; };
+  /* mois */
+  let hm = '<tr><th></th><th></th>'; for (let i = 0; i < nW;) { const m = dt(W[i]).getUTCMonth(); let j = i; while (j < nW && dt(W[j]).getUTCMonth() === m) j++; hm += `<th class="mo" colspan="${j - i}">${MOIS[m]}</th>`; i = j; } hm += '<th></th></tr>';
+  const hv = voies.map(L => { let h = '<tr class="voie"><th></th><th></th>', i = 0;
+    for (const x of L) { if (x.k0 > i) h += `<th colspan="${x.k0 - i}"></th>`; const n = Math.min(nW, x.k1 + 1) - x.k0;
+      h += `<th colspan="${n}" class="ev ${x.c === 'GS' ? 'gs' : 'm'}"><span style="${x.c === 'GS' ? `background:var(${GSC[x.n]})` : ''}" title="${x.n} · ${CAT[x.c]}">${({ 'Indian Wells': 'I. Wells' })[x.n] || x.n}</span></th>`; i = x.k0 + n; }
+    if (i < nW) h += `<th colspan="${nW - i}"></th>`; return h + '<th></th></tr>'; }).join('');
+  const ha = '<tr class="au"><th></th><th></th>' + autres.map((L, i) => `<th><span>${L.join(' / ')}</span></th>`).join('') + '<th><span>Total</span></th></tr>';
   const js = [...J0.slice(0, N2), ...SEL.map(n => J.find(j => j.n === n)).filter(j => j && !J0.slice(0, N2).includes(j))];
-  const enSaison = r => T[r[0]].w >= 0;
-  t.innerHTML = `<thead><tr><th></th><th></th>${cols.map(x => `<th class="${x.c === 'GS' ? 'gs' : x.c === 'M' ? 'm' : ''}"><span ${x.c === 'GS' ? `style="background:var(${GSC[x.n]})"` : ''}>${x.n}</span></th>`).join('')}<th><span>Challengers</span></th><th><span>Total</span></th></tr></thead><tbody>`
-    + js.map(j => { const by = {}; j.r.forEach(r => by[r[0]] = r); const ch = j.r.filter(r => T[r[0]].c === 'CH' && enSaison(r)), chp = ch.reduce((a, r) => a + r[2], 0);
-      return `<tr><td class="rk">${j.sr[nS - 1] || ''}</td><td class="nm">${SEL.includes(j.n) ? pastille(j.n) : ''}${DRAP(j.c)} ${NOM(j.n)}</td>`
-        + cols.map(x => { const r = by[x.i]; if (!r) return `<td style="background:${G[0]}"></td>`;
-          return `<td data-j="${j.n}" data-t="${x.i}" style="background:${G[k(r[2])]};color:${ink(r[2])}">${r[1] === 'W' ? '<b>' + court(r[2]) + '</b>' : r[2] ? court(r[2]) : '·'}</td>`; }).join('')
-        + `<td data-j="${j.n}" data-ch="1" style="background:${G[k(chp)]};color:${ink(chp)}">${chp ? court(chp) : ''}</td><td class="tt">${nf(dernier(j))}</td></tr>`; }).join('') + '</tbody>';
-  t.querySelectorAll('td[data-j]').forEach(td => { const on = ev => { const j = J.find(x => x.n === td.dataset.j);
-      if (td.dataset.ch) { const ch = j.r.filter(r => T[r[0]].c === 'CH' && enSaison(r));
-        show(ev, `<div class="h">${j.n} · Challengers</div>${ch.length ? ch.map(r => `<div class="r"><span>${T[r[0]].n} (${TOUR[r[1]] || r[1]})</span><b>${nf(r[2])}</b></div>`).join('') : 'aucun point'}`); return; }
-      const x = T[+td.dataset.t], r = j.r.find(y => y[0] === +td.dataset.t);
+  const corps = js.map(j => {
+    const rs = j.r.filter(r => dansAn(T[r[0]])).map(r => ({ r, x: T[r[0]] })).sort((a, b) => a.x.k0 - b.x.k0 || b.r[2] - a.r[2]);
+    let h = `<tr><td class="rk">${j.sr[nS - 1] || ''}</td><td class="nm">${SEL.includes(j.n) ? pastille(j.n) : ''}${DRAP(j.c)} ${NOM(j.n)}</td>`, i = 0;
+    for (let q = 0; q < rs.length; q++) { const { r, x } = rs[q]; if (x.k0 < i) continue;
+      while (i < x.k0) h += `<td style="background:${fondVide(i++)}"></td>`;
+      const suiv = rs.slice(q + 1).find(y => y.x.k0 > x.k0), fin = Math.min(x.k1, suiv ? suiv.x.k0 - 1 : x.k1, nW - 1), n = fin - x.k0 + 1;
+      const cl = x.c === 'CH' ? ' ch' : x.c === 'GS' ? ' gsr' : x.c === 'M' || x.c === 'MC' ? ' mr' : '';
+      h += `<td colspan="${n}" class="re${cl}" data-j="${j.n}" data-t="${r[0]}" style="background:${G[k(r[2])]};color:${ink(r[2])};${x.c === 'GS' ? `--bord:var(${GSC[x.n]})` : ''}">${r[1] === 'W' ? '<b>' + court(r[2]) + '</b>' : r[2] ? court(r[2]) : '·'}</td>`; i = fin + 1; }
+    while (i < nW) h += `<td style="background:${fondVide(i++)}"></td>`;
+    return h + `<td class="tt">${nf(dernier(j))}</td></tr>`; }).join('');
+  /* largeur fixe par semaine : sans elle, une semaine où tout le monde joue un tournoi de deux semaines s'écrase */
+  t.innerHTML = `<colgroup><col><col>${W.map(() => '<col class="cs">').join('')}<col></colgroup><thead>${hm}${hv}${ha}</thead><tbody>${corps}</tbody>`;
+  t.querySelectorAll('td[data-j]').forEach(td => { const on = ev => { const j = J.find(x => x.n === td.dataset.j), x = T[+td.dataset.t], r = j.r.find(y => y[0] === +td.dataset.t);
       show(ev, `<div class="h">${x.n} · ${CAT[x.c] || x.c}</div>${j.n}<br>${TOUR[r[1]] || r[1]} · <b>${nf(r[2])} point${r[2] > 1 ? 's' : ''}</b>`); };
     td.addEventListener('pointermove', on); td.addEventListener('pointerleave', hide); });
   document.getElementById('lg2').innerHTML = [['1–49', 1], ['50–199', 2], ['200–499', 3], ['500–999', 4], ['1 000 et +', 5]].map(([l, i]) => `<span><i style="background:${G[i]}"></i>${l} pts</span>`).join('')
-    + `<span>Titre en gras · colonnes en pastille : Grands Chelems · en gras : Masters 1000. Faire défiler vers la droite.</span>`;
+    + `<span><i style="background:${G[1]};outline:1.5px dashed var(--ink-3);outline-offset:-3px"></i>Challenger</span><span>Titre en gras. Faire défiler vers la droite.</span>`;
 }
 
 /* ---------- 3 · les rangs ---------- */
