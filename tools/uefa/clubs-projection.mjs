@@ -400,7 +400,12 @@ function course() {
   const W = Wd, H = mob ? 330 : 410, l = 30, r = mob ? 116 : 150, t = 26, b = 30;
   const L = DATA.comp[K], x = i => l + i * (W - l - r) / 5, y = v => t + (1 - v) * (H - t - b);
   /* une nation choisie : tous ses clubs en couleur ; sinon les favoris et les clubs français */
-  const vis = new Set((NC ? L.filter(c => c.c === NC) : [...L.slice(0, mob ? 5 : 7), ...L.filter(c => c.c === 'FRA' && c.p[1] >= .2)]).map(c => c.n));
+  /* sans filtre : 5 courbes au plus (GT, 19/11/2026), par priorité : le favori, les clubs
+     français (les mieux placés d'abord), puis le 2e, le 3e… tant qu'il reste de la place */
+  const cinq = () => { const o = [...L].sort((a, b) => b.p[5] - a.p[5]), out = [o[0]];
+    for (const c of [...o.filter(c => c.c === 'FRA'), ...o.slice(1)]) { if (out.length >= 5) break; if (!out.includes(c)) out.push(c); }
+    return out; };
+  const vis = new Set((NC ? L.filter(c => c.c === NC) : cinq()).map(c => c.n));
   const pts = c => c.p.map((v, i) => \`\${x(i)},\${y(v)}\`).join(' ');
   let s = \`<svg viewBox="0 0 \${W} \${H}" id="sv" role="img" aria-label="\${CN[K]}, chance d'atteindre chaque tour : \${L.slice(0, 3).map(c => \`\${c.n} \${pcs(c.p[5])} de titre\`).join(', ')}">\`;
   /* SANS QUADRILLAGE (GT, 19/11/2026) : pas de lignes de fond ; 0, 50 et 100 % en texte discret,
