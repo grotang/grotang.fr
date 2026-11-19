@@ -54,6 +54,8 @@ a{color:var(--fr)}
 .card p.s{margin:0; color:var(--ink-3); font-size:13px; max-width:80ch}
 .viz{width:100%; position:relative}
 svg{display:block; overflow:visible}
+.lgc{display:flex; flex-wrap:wrap; gap:4px 14px; font-size:12.5px; margin-top:6px}
+.lgc b{font-variant-numeric:tabular-nums}
 .vide{padding:22px; text-align:center; color:var(--ink-3); border:1px dashed var(--rule); border-radius:10px}
 .seg{display:inline-flex; border:1px solid var(--rule); border-radius:999px; overflow:hidden; align-self:flex-start}
 .seg button{font:inherit; font-size:12.5px; font-weight:700; border:0; background:var(--surface); color:var(--ink-2); padding:4px 12px; cursor:pointer}
@@ -238,20 +240,21 @@ document.getElementById('cherche').addEventListener('change', e => { const n = e
 function courbes(id, S, champ, ymax, opts) {
   const v = document.getElementById(id); v.innerHTML = '';
   const n = S.length; if (!n) { v.innerHTML = `<div class="vide">${opts.vide}</div>`; return; }
-  const W = Math.max(320, v.clientWidth), H = W < 600 ? 300 : 400, m = { t: 16, r: W < 600 ? 80 : 120, b: 40, l: 50 };
+  const W = Math.max(280, v.clientWidth), tel = W < 600, H = tel ? 280 : 400, m = tel ? { t: 18, r: 10, b: 26, l: 30 } : { t: 16, r: 120, b: 40, l: 50 };
   const s = el('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}` }, v);
   const X = k => m.l + (n === 1 ? 0 : k * (W - m.l - m.r) / (n - 1)), Y = y => H - m.b - y / ymax * (H - m.t - m.b);
   const wk = opts.wk;
   for (const t of T) { const w = t[wk]; if (w < 0 || w === undefined) continue;
     if (t.c === 'GS') { const a = Math.max(0, w - 2); el('rect', { x: X(a), y: m.t, width: Math.max(2, X(w) - X(a)), height: H - m.t - m.b, fill: cv(GSC[t.n]), opacity: .1 }, s);
-      txt(s, (X(a) + X(w)) / 2, m.t + 2, GSA[t.n], { a: 'middle', fs: 10, fw: 700, fill: cv(GSC[t.n]) }); }
+      txt(s, (X(a) + X(w)) / 2, m.t - (tel ? 8 : -2), GSA[t.n], { a: 'middle', fs: tel ? 9 : 10, fw: 700, fill: cv(GSC[t.n]) }); }
     if (t.c === 'F') { const a = Math.max(0, w - 1); el('rect', { x: X(a), y: m.t, width: Math.max(2, X(w) - X(a)), height: H - m.t - m.b, fill: cv('--fin'), opacity: .14 }, s);
-      txt(s, (X(a) + X(w)) / 2, m.t + 2, 'Finals', { a: 'middle', fs: 10, fw: 700, fill: cv('--fin') }); }
+      txt(s, (X(a) + X(w)) / 2, m.t - (tel ? 8 : -2), tel ? 'F' : 'Finals', { a: 'middle', fs: tel ? 9 : 10, fw: 700, fill: cv('--fin') }); }
     /* Masters 1000 : une bande à peine visible (GT : « quelque chose de subtil ») */
     if (t.c === 'M' || t.c === 'MC') { const a = Math.max(0, w - (t.f > t.s ? 2 : 1)); el('rect', { x: X(a), y: m.t + 14, width: Math.max(2, X(w) - X(a)), height: H - m.t - m.b - 14, fill: cv('--ink'), opacity: .035 }, s); } }
   const pas = ymax > 6000 ? 2000 : ymax > 2500 ? 1000 : ymax > 1000 ? 500 : ymax > 400 ? 100 : 50;
-  for (let g = 0; g <= ymax; g += pas) { el('line', { x1: m.l, x2: W - m.r, y1: Y(g), y2: Y(g), stroke: cv('--rule-soft') }, s); txt(s, m.l - 6, Y(g), nf(g), { a: 'end' }); }
-  S.forEach((d, k) => { if (dt(d).getUTCDate() <= 7) txt(s, X(k), H - m.b + 18, MOIS[dt(d).getUTCMonth()], { fs: 10.5 }); });
+  for (let g = 0; g <= ymax; g += pas) { el('line', { x1: m.l, x2: W - m.r, y1: Y(g), y2: Y(g), stroke: cv('--rule-soft') }, s); txt(s, m.l - 6, Y(g), tel ? (g >= 1000 ? (g / 1000).toLocaleString('fr-FR') + 'k' : g) : nf(g), { a: 'end', fs: tel ? 10 : 11 }); }
+  const LETTRE = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+  S.forEach((d, k) => { if (dt(d).getUTCDate() <= 7) txt(s, X(k), H - m.b + (tel ? 14 : 18), tel ? LETTRE[dt(d).getUTCMonth()] : MOIS[dt(d).getUTCMonth()], { fs: tel ? 10 : 10.5, a: tel ? 'middle' : 'start' }); });
   if (opts.qual) { const q = S.map((_, k) => J.map(j => j[champ][k] || 0).sort((a, b) => b - a)[7]);
     el('path', { d: q.map((y, k) => (k ? 'L' : 'M') + X(k) + ',' + Y(y)).join(''), fill: 'none', stroke: cv('--qual'), 'stroke-width': 1.5, 'stroke-dasharray': '4 3' }, s);
     const kq = Math.round((n - 1) * .55); txt(s, X(kq), Y(q[kq]) + 12, '8e place', { fill: cv('--qual'), fs: 10.5, fw: 700, a: 'middle' }); }
@@ -263,7 +266,10 @@ function courbes(id, S, champ, ymax, opts) {
     el('path', { d: n === 1 ? `M${X(0) - 4},${Y(c[0])}H${X(0) + 4}` : step(c), fill: 'none', stroke: coul(j.n), 'stroke-width': sel ? 2.5 : 1.1, 'stroke-linejoin': 'round' }, s);
     if (sel) labs.push({ y: Y(c[n - 1]), t: `${NOM(j.n)} ${nf(c[n - 1])}` }); }
   labs.sort((a, b) => a.y - b.y); for (let k = 1; k < labs.length; k++) if (labs[k].y - labs[k - 1].y < 14) labs[k].y = labs[k - 1].y + 14;
-  labs.forEach(l => txt(s, X(n - 1) + 8, l.y, l.t, { fill: cv('--ink'), fw: 700, fs: 11.5 }));
+  if (!tel) labs.forEach(l => txt(s, X(n - 1) + 8, l.y, l.t, { fill: cv('--ink'), fw: 700, fs: 11.5 }));
+  else { const lg = document.createElement('div'); lg.className = 'lgc';
+    lg.innerHTML = SEL.map(x => J.find(j => j.n === x)).filter(Boolean).sort((a, b) => (b[champ][n - 1] || 0) - (a[champ][n - 1] || 0))
+      .map(j => `<span>${pastille(j.n)}${NOM(j.n)} <b>${nf(j[champ][n - 1] || 0)}</b></span>`).join(''); v.appendChild(lg); }
   const cur = el('line', { y1: m.t, y2: H - m.b, stroke: cv('--ink-3'), 'stroke-dasharray': '2 3', opacity: 0 }, s);
   const hit = el('rect', { x: m.l - 10, y: 0, width: W - m.l - m.r + 20, height: H, fill: 'transparent' }, s);
   const on = ev => { const r = s.getBoundingClientRect(); const k = n === 1 ? 0 : Math.max(0, Math.min(n - 1, Math.round((ev.clientX - r.left - m.l) / (W - m.l - m.r) * (n - 1))));
@@ -355,7 +361,7 @@ function v3() {
   SEL.forEach(x => { const j = J.find(y => y.n === x); if (j && !choix.includes(j) && j.sr[n - 1]) choix.push(j); });
   const pire = Math.max(...choix.map(j => j.sr[n - 1]));
   const R = Math.min(100, Math.max(12, Math.ceil((pire + 3) / 5) * 5));
-  const H = Math.max(300, Math.min(520, 22 * Math.min(R, 20) + 60)), m = { t: 14, r: W < 600 ? 110 : 160, b: 28, l: 34 };
+  const tel = W < 600, H = Math.max(300, Math.min(520, 22 * Math.min(R, 20) + 60)), m = { t: 14, r: tel ? 94 : 160, b: 28, l: tel ? 24 : 34 };
   const s = el('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}` }, v);
   /* on commence au lundi qui suit l'Open d'Australie : avant, le classement se forme
      (deux semaines de tournois, des rangs qui sautent de 80 places) */
@@ -366,8 +372,9 @@ function v3() {
   const pas = R > 40 ? 10 : 5;
   [1, ...Array.from({ length: Math.floor(R / pas) }, (_, i) => (i + 1) * pas)].forEach(r => {
     el('line', { x1: m.l, x2: W - m.r, y1: Y(r), y2: Y(r), stroke: cv('--rule-soft'), 'stroke-dasharray': r === 1 ? '' : '2 4' }, s);
-    txt(s, m.l - 8, Y(r), r, { a: 'end', fs: 10 }); });
-  SS.forEach((d, k) => { if (k >= K0 && dt(d).getUTCDate() <= 7) { el('line', { x1: X(k), x2: X(k), y1: m.t, y2: H - m.b, stroke: cv('--rule-soft') }, s); txt(s, X(k) + 3, H - 10, MOIS[dt(d).getUTCMonth()], { fs: 10.5 }); } });
+    txt(s, m.l - (tel ? 5 : 8), Y(r), r, { a: 'end', fs: 10 }); });
+  const LETTRE = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+  SS.forEach((d, k) => { if (k >= K0 && dt(d).getUTCDate() <= 7) { el('line', { x1: X(k), x2: X(k), y1: m.t, y2: H - m.b, stroke: cv('--rule-soft') }, s); txt(s, X(k) + (tel ? 0 : 3), H - 10, tel ? LETTRE[dt(d).getUTCMonth()] : MOIS[dt(d).getUTCMonth()], { fs: tel ? 10 : 10.5, a: tel ? 'middle' : 'start' }); } });
   const clip = el('clipPath', { id: 'c3' }, el('defs', {}, s)); el('rect', { x: m.l - 6, y: m.t - 6, width: W - m.l - m.r + 12, height: H - m.t - m.b + 12 }, clip);
   /* courbe lissée (points médians), coupée quand le joueur n'est pas classé */
   const trace = rk => { let d = '', prec = null;
@@ -379,12 +386,12 @@ function v3() {
   const G = el('g', { 'clip-path': 'url(#c3)' }, s), lignes = [];
   const labs = [];
   ordre.forEach((j, i) => { const sel = SEL.includes(j.n), c = sel ? coul(j.n) : cv(gris[i % 2]);
-    const p = el('path', { d: trace(j.sr), fill: 'none', stroke: c, 'stroke-width': sel ? 3 : 1.6, opacity: sel ? 1 : .45, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, G);
+    const p = el('path', { d: trace(j.sr), fill: 'none', stroke: c, 'stroke-width': sel ? (tel ? 2.4 : 3) : (tel ? 1.2 : 1.6), opacity: sel ? 1 : .45, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, G);
     const fin = j.sr[n - 1]; el('circle', { cx: X(n - 1), cy: Y(fin), r: sel ? 4 : 3, fill: c, opacity: sel ? 1 : .7 }, G);
     lignes.push({ j, p, sel });
     labs.push({ y: Y(fin), j, sel, c }); });
   labs.sort((a, b) => a.y - b.y); for (let q = 1; q < labs.length; q++) if (labs[q].y - labs[q - 1].y < 13) labs[q].y = labs[q - 1].y + 13;
-  labs.forEach(l => { txt(s, X(n - 1) + 10, l.y, `${l.j.sr[n - 1]}. ${flag(l.j.c)} ${NOM(l.j.n)}`, { fill: l.sel ? cv('--ink') : cv('--ink-2'), fw: l.sel ? 700 : 400, fs: 11 }); });
+  labs.forEach(l => { txt(s, X(n - 1) + (tel ? 7 : 10), l.y, tel ? `${l.j.sr[n - 1]}. ${NOM(l.j.n)}` : `${l.j.sr[n - 1]}. ${flag(l.j.c)} ${NOM(l.j.n)}`, { fill: l.sel ? cv('--ink') : cv('--ink-2'), fw: l.sel ? 700 : 400, fs: tel ? 10 : 11 }); });
   /* survol : la ligne la plus proche passe au premier plan */
   const hit = el('rect', { x: m.l, y: 0, width: W - m.l - m.r, height: H, fill: 'transparent' }, s);
   const on = ev => { const r = s.getBoundingClientRect(), k = Math.max(K0, Math.min(n - 1, K0 + Math.round((ev.clientX - r.left - m.l) / (W - m.l - m.r) * (n - 1 - K0)))), y = ev.clientY - r.top;
