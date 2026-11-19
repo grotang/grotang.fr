@@ -66,10 +66,19 @@ main.fc.bn .barre i{background:var(--nc)}
 .cp.C1{background:var(--c1)} .cp.C3{background:var(--c3)} .cp.C4{background:var(--c4)}
 .cp.non{background:none;color:var(--ink-3);border:1px dashed var(--rule)}
 td.ix{font-family:'IBM Plex Mono',monospace;font-weight:600;text-align:right;width:44px}
-td.bar{width:46%;padding-right:0}
-th.bar{position:relative;height:34px}
+td.bar{padding-right:0}
+/* ordinateur : colonnes serrées à gauche (club, nation, coupe collés à leur contenu),
+   un vrai blanc avant les barres, qui prennent tout le reste */
+@media (min-width:641px){
+  td.club,td.nation,td.cpc,th.nat,th.cpc{width:1%;white-space:nowrap}
+  table.cl td.club{padding-right:18px} table.cl td.nation,table.cl th.nat{padding-right:22px}
+  table.cl td.cpc,table.cl th.cpc{padding-right:0}
+  table.cl td.bar,table.cl th.bar{padding-left:96px}
+}
+th.bar{height:34px}
+th.bar .ech1{position:relative;height:34px}
 table.cl th{vertical-align:bottom}
-td.bar,th.bar{padding-left:30px}
+
 th.bar span{position:absolute;bottom:6px;transform:translateX(-50%);white-space:nowrap;text-align:center;line-height:1.15;letter-spacing:.04em;text-transform:none;font-weight:500}
 .barre{position:relative;height:22px}
 .barre i{position:absolute;z-index:1;top:5px;height:12px;background:var(--nc);border-radius:6px}
@@ -126,7 +135,8 @@ td.td.up{color:var(--good)} td.td.dn{color:var(--bad)}
 @media (max-width:640px){
   table.cl{font-size:13px} td.rg{width:22px} td.bar,th.bar,td.td,th.td{display:none} td.ixm,th.ixm{display:table-cell}
   table.cl td{padding:5px 4px;border-bottom:1px solid var(--rule-soft)} table.cl th{padding:0 4px 6px}
-  td.club{font-size:13px} .promu{display:inline-block;margin:2px 0 0 0}
+  table.cl td.club{font-size:13px;width:1%;min-width:11em;white-space:normal;padding-right:14px} .promu{font-size:9.5px;padding:0 3px;margin-left:4px}
+  table.cl td.nation{width:1%;padding-right:10px} td.cpc{width:1%}
   .nation .long{display:none} .nation .court{display:inline} .nation i{margin-right:4px}
   #b2{--gauche:86px!important} .ln .nm{font-size:12.5px} .ln .nm small{font-size:10.5px} .piste .et{font-size:10px}
   .duel{grid-template-columns:1fr} .duel .vs{display:none}
@@ -198,7 +208,7 @@ const SLOT = {}; { let ri = 0; FD.top8.forEach(c => { SLOT[c] = NAT_COUL.has(c) 
 const kNom = c => c === 'FRA' ? 'var(--fr)' : SLOT[c] ? `var(${SLOT[c]})` : 'var(--ink-3)';
 const styleNom = c => `color:${kNom(c)};font-weight:${c === 'FRA' ? 700 : 600}`;
 const dec = (x, n) => x.toFixed(n).replace('.', ',');
-const butsTxt = ix => { const g = (ix - 100) / FD.pts_but; return (g >= 0 ? '+' : '−') + dec(Math.abs(g), 2) + ' but'; };
+const butsTxt = ix => { const g = (ix - 100) / FD.pts_but; if (Math.abs(g) < 0.005) return '0,00 but'; return (g >= 0 ? '+' : '−') + dec(Math.abs(g), 2) + ' but'; };
 const cp = c => c ? `<i class="cp ${c}">${c}</i>` : '<i class="cp non">—</i>';
 const MAXI = 190, MINI = 40, pos = ix => Math.max(0, Math.min(100, (ix - MINI) / (MAXI - MINI) * 100));
 const dJ = FD.date.split('-').reverse().join('/');
@@ -228,7 +238,7 @@ function t1(){
   const rep = [[100, 'club<br>moyen'], [140, '+1 but'], [180, '+2 buts']].filter(([v]) => v >= lo && v <= hi + place / 2);
   const barre = c => { const a = X(Math.min(c.ix, 100)), b = X(Math.max(c.ix, 100)), dr = c.ix >= 100;
     return `<div class="barre">${rep.map(([v]) => `<span class="rp${v === 100 ? ' z' : ''}" style="left:${X(v)}%"></span>`).join('')}<i style="left:${a}%;width:${Math.max(b - a, 0.6)}%;--nc:${kNom(c.nat)}"></i><em style="${dr ? `left:calc(${b}% + 8px)` : `right:calc(${100 - a}% + 8px)`}">${Math.round(c.ix)}<small>${butsTxt(c.ix)}</small></em></div>`; };
-  document.getElementById('h1').innerHTML = rep.map(([v, t]) => `<span style="left:${X(v)}%">${t}</span>`).join('');
+  document.getElementById('h1').innerHTML = '<div class="ech1">' + rep.map(([v, t]) => `<span style="left:${X(v)}%">${t}</span>`).join('') + '</div>';
   document.getElementById('t1').innerHTML = L.map(c => `<tr class="${c.nat === 'FRA' && n !== 'FRA' ? 'fr' : ''}${c.rang <= 3 ? ' top' : ''}"><td class="rg">${c.rang}</td><td class="club">${c.nom}${c.promu ? '<span class="promu" title="Promu cette saison : son point de départ est le niveau moyen des promus de sa ligue">promu</span>' : ''}${c.eu && n !== 'autres' ? `<span class="promu" title="Force tirée de ses ${c.eu} matchs européens des trois dernières années : son championnat n'est pas suivi">Europe seulement</span>` : ''}<span class="sous"><span class="nc" style="color:${kNom(c.nat)}">${c.nat}</span>${cp(c.coupe)}</span></td><td class="nation"><i style="background:${kNom(c.nat)}"></i><span class="long">${NOMS[c.nat]}</span><span class="court">${c.nat}</span></td><td class="cpc">${cp(c.coupe)}</td><td class="bar">${barre(c)}</td><td class="ixm">${Math.round(c.ix)}</td>${sem(c)}</tr>`).join('');
 }
 document.querySelectorAll('#f1 button').forEach(b => b.onclick = () => { document.querySelectorAll('#f1 button').forEach(x => x.classList.toggle('on', x === b)); m1 = b.dataset.v; t1(); });
