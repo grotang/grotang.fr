@@ -67,9 +67,10 @@ main.fc.bn .barre i{background:var(--nc)}
 .cp.non{background:none;color:var(--ink-3);border:1px dashed var(--rule)}
 td.ix{font-family:'IBM Plex Mono',monospace;font-weight:600;text-align:right;width:44px}
 td.bar{width:46%;padding-right:0}
-th.bar{position:relative;height:16px}
-th.bar span{position:absolute;bottom:6px;transform:translateX(-50%);white-space:nowrap;letter-spacing:.04em;text-transform:none;font-weight:500}
-th.bar span:first-child{transform:none}
+th.bar{position:relative;height:34px}
+table.cl th{vertical-align:bottom}
+td.bar,th.bar{padding-left:30px}
+th.bar span{position:absolute;bottom:6px;transform:translateX(-50%);white-space:nowrap;text-align:center;line-height:1.15;letter-spacing:.04em;text-transform:none;font-weight:500}
 .barre{position:relative;height:22px}
 .barre i{position:absolute;z-index:1;top:5px;height:12px;background:var(--nc);border-radius:6px}
 .barre em{position:absolute;z-index:2;top:0;line-height:22px;padding:0 3px;margin-left:-3px;background:var(--surface);border-radius:3px;font-style:normal;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:14px;color:var(--ink);white-space:nowrap}
@@ -224,7 +225,7 @@ function t1(){
   /* échelle de la vue : les barres partent de 100 (le club européen moyen) ; à gauche pour les clubs sous 100 */
   const lo = Math.min(100, ...L.map(c => c.ix)), hi = Math.max(...L.map(c => c.ix)), place = 0.2 * (hi - lo) + 8, gauche = lo < 100 ? 0.3 * (hi - lo) + 10 : 0;
   const X = ix => (ix - lo + gauche) / (hi - lo + gauche + place) * 100, z = X(100);
-  const rep = [[100, 'club moyen'], [140, '+1 but'], [180, '+2 buts']].filter(([v]) => v >= lo && v <= hi + place / 2);
+  const rep = [[100, 'club<br>moyen'], [140, '+1 but'], [180, '+2 buts']].filter(([v]) => v >= lo && v <= hi + place / 2);
   const barre = c => { const a = X(Math.min(c.ix, 100)), b = X(Math.max(c.ix, 100)), dr = c.ix >= 100;
     return `<div class="barre">${rep.map(([v]) => `<span class="rp${v === 100 ? ' z' : ''}" style="left:${X(v)}%"></span>`).join('')}<i style="left:${a}%;width:${Math.max(b - a, 0.6)}%;--nc:${kNom(c.nat)}"></i><em style="${dr ? `left:calc(${b}% + 8px)` : `right:calc(${100 - a}% + 8px)`}">${Math.round(c.ix)}<small>${butsTxt(c.ix)}</small></em></div>`; };
   document.getElementById('h1').innerHTML = rep.map(([v, t]) => `<span style="left:${X(v)}%">${t}</span>`).join('');
