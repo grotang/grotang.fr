@@ -25,7 +25,9 @@ export function buildClubsProjection(src) {
   const nom = n => { const f = NOMCLUB[n] || n; return COURT[f] || f; };
   /* couleurs des nations : les mêmes que la page UEFA (France d'abord, puis le top 8 du classement) */
   const top8 = [...(D.nations || [])].sort((a, b) => a.r - b.r).slice(0, 8).map(n => n.c);
-  const slot = {}; ['FRA', ...top8.filter(c => c !== 'FRA')].forEach((c, i) => { slot[c] = '--n' + (i + 1); });
+  /* une couleur par nation, comme la page UEFA (GT, 19/11/2026) ; réserve pour un nouveau venu du top 8 */
+  const slot = {}; { const NATC = new Set(['FRA', 'ENG', 'ITA', 'ESP', 'GER', 'POR', 'BEL', 'NED']), RES = ['--c-r1', '--c-r2', '--c-r3', '--c-r4', '--c-r5']; let ri = 0;
+    ['FRA', ...top8.filter(c => c !== 'FRA')].forEach(c => { slot[c] = NATC.has(c) ? '--c-' + c : (RES[ri++] || '--ink-3'); }); }
   const nat = {}, bil = {}, t8 = {};
   for (const [c, L] of Object.entries(D.eff || {})) for (const r of L) { nat[r[0] + '|' + r[1]] = c; bil[r[0] + '|' + r[1]] = [r[7] || 0, r[8] || 0, r[9] || 0]; }
   for (const c of P.clubs || []) t8[c[0] + '|' + c[2]] = c[9];
@@ -110,6 +112,8 @@ ${FAVICON}
 ${FONTS}
 ${THEME_BOOT}
 <style>${TOKENS}
+:root{--c-FRA:var(--fr);--c-ENG:#d6262f;--c-ITA:#1f9a4c;--c-ESP:#e3a008;--c-GER:#2f3439;--c-POR:#8f1d3b;--c-BEL:#6a4bc4;--c-NED:#f27405;--c-r1:#12a3a3;--c-r2:#8a5a2b;--c-r3:#5f7a99;--c-r4:#e87ba4;--c-r5:#7f8c2a}
+:root[data-theme="dark"]{--c-ENG:#f0534d;--c-ITA:#3cb96a;--c-ESP:#f0b52a;--c-GER:#c9ced4;--c-POR:#d8607e;--c-BEL:#9a85ec;--c-NED:#ff9233;--c-r1:#2cc4c4;--c-r2:#c08a55;--c-r3:#93abc7;--c-r4:#d55181;--c-r5:#b3c25a}
 ${navCSS}
 *{box-sizing:border-box}
 body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.5 Carlito,Calibri,system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}

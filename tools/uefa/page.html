@@ -11,6 +11,11 @@
   --fr:#2a78d6; --fr-soft:#E4EDFA;
   --good:#0F7040; --bad:#B02C2C;
   --n1:#2a78d6; --n2:#eb6834; --n3:#1baf7a; --n4:#eda100; --n5:#e87ba4; --n6:#008300; --n7:#4a3aa7; --n8:#e34948;
+  /* COULEURS DES NATIONS, fixes, quel que soit le classement (GT, 19/11/2026, variante A
+     « identité ») ; les --n restent pour les phases et repères. Réserve --c-r1..r5 pour les
+     nations qui entrent dans le top 8 ou qu'on ajoute à un graphique. */
+  --c-FRA:var(--fr); --c-ENG:#d6262f; --c-ITA:#1f9a4c; --c-ESP:#e3a008; --c-GER:#2f3439; --c-POR:#8f1d3b; --c-BEL:#6a4bc4; --c-NED:#f27405;
+  --c-r1:#12a3a3; --c-r2:#8a5a2b; --c-r3:#5f7a99; --c-r4:#e87ba4; --c-r5:#7f8c2a;
   /* Les quatre postes du 2b. Teintes et encres de libelle validees ensemble
      (separation daltonisme et vision normale sur toutes les paires, contraste
      du libelle dans son segment). L'encre suit le fond, elle n'est pas blanche
@@ -30,6 +35,8 @@
   --fr:#5D9BF0; --fr-soft:#16233A;
   --good:#43BE83; --bad:#EE7A76;
   --n1:#3987e5; --n2:#d95926; --n3:#199e70; --n4:#c98500; --n5:#d55181; --n6:#008300; --n7:#9085e9; --n8:#e66767;
+  --c-FRA:var(--fr); --c-ENG:#f0534d; --c-ITA:#3cb96a; --c-ESP:#f0b52a; --c-GER:#c9ced4; --c-POR:#d8607e; --c-BEL:#9a85ec; --c-NED:#ff9233;
+  --c-r1:#2cc4c4; --c-r2:#c08a55; --c-r3:#93abc7; --c-r4:#d55181; --c-r5:#b3c25a;
   --d1:#C2C8D0; --d2:#c98500; --d3:#5D9BF0; --d4:#d55181;
   --d1i:#0F141D; --d2i:#0F141D; --d3i:#0F141D; --d4i:#0F141D;
   --band:#111823;
@@ -677,6 +684,8 @@ section > .famille + .panel{margin-top:22px}
   position:relative; cursor:pointer; transition:transform .12s, box-shadow .12s}
 .sp::after{content:""; position:absolute; left:4px; right:4px; bottom:-4px; height:2.5px; border-radius:2px; background:var(--k)}
 .sp.v{background:var(--good)} .sp.n{background:#8B95A3} .sp.d{background:var(--bad)}
+/* pastilles de nation sur fond clair (Espagne jaune ; Allemagne gris clair en sombre) : encre foncée */
+button.tint[style*="--c-ESP"], :root[data-theme="dark"] button.tint[style*="--c-GER"]{color:#0F141D}
 .sp.bo{background:var(--n4)}   /* bonus acquis ce soir-là (GT, 16/11/2026) */
 :root[data-theme="dark"] .sp:not(.f), :root[data-theme="dark"] .tipsem .verdict .pill, :root[data-theme="dark"] .tipsem .vnd3 span{color:#0B0F14}
 .sp.f{background:transparent; color:var(--ink-3); box-shadow:inset 0 0 0 1.5px var(--rule); font-size:9px}
@@ -1615,7 +1624,9 @@ const TOP8S = [...TOP8].sort((x,y)=>BY[y].y[4]-BY[x].y[4]);
 const KNAME = ['C1 · Ligue des Champions','C3 · Ligue Europa','C4 · Ligue Conférence'];
 const KSHORT= ['C1','C3','C4'];
 const KVAR  = ['--c1','--c3','--c4'];
-const SLOT  = {}; ['FRA',...TOP8.filter(c=>c!=='FRA')].forEach((c,i)=>SLOT[c]='--n'+(i+1));
+/* une couleur par NATION, plus par rang (GT, 19/11/2026) : un dépassement ne fait plus changer les couleurs */
+const NAT_COUL = new Set(['FRA','ENG','ITA','ESP','GER','POR','BEL','NED']), RESERVE = ['--c-r1','--c-r2','--c-r3','--c-r4','--c-r5'];
+const SLOT  = {}; { let ri = 0; ['FRA',...TOP8.filter(c=>c!=='FRA')].forEach(c => { SLOT[c] = NAT_COUL.has(c) ? '--c-' + c : (RESERVE[ri++] || '--ink-3'); }); }
 const seasonNow = c => BY[c].y[4];
 const kCoef = c => BY[c].k.map(v=>v/divisor(BY[c]));
 
@@ -3329,7 +3340,7 @@ document.addEventListener('grotang:theme', () => { if (typeof drawAll === 'funct
   const TOUTES = N.map(x => x.c).filter(c => T[c] && T[c].some(v => v != null));
   const tirage = () => { const pool = [...TOUTES], out = []; while (out.length < 3 && pool.length) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]); return out; };
   /* couleurs : celle de la nation si elle en a une (top 8), sinon un jeton libre */
-  const JET = ['--n1', '--n2', '--n3', '--n4', '--n5', '--n6', '--n7', '--n8'];
+  const JET = RESERVE.filter(t => !Object.values(SLOT).includes(t));
   let PAL = {};
   const palette = () => { const L2 = [...cur()], pris = new Set(L2.map(c => SLOT[c]).filter(Boolean)), libres = JET.filter(t => !pris.has(t) && t !== SLOT.FRA);   // le bleu reste à la France, même absente
     PAL = {}; L2.forEach(c => { PAL[c] = SLOT[c] || libres.shift() || '--ink-3'; }); };
@@ -6206,7 +6217,7 @@ const legende = segs => segs.map(s =>
   const voisinesB = () => { const L = [...N].sort((a, b) => a.r - b.r).map(n => n.c), i = L.indexOf('FRA'), V = natsV();
     return ['FRA', L[i - 1], L[i + 1]].filter(c => c && V.includes(c)); };
   const selB = new Set(voisinesB());
-  const JETONS = ['--n1','--n2','--n3','--n4','--n5','--n6','--n7','--n8'];
+  const JETONS = RESERVE.filter(t => !Object.values(SLOT).includes(t));
   let PALB = {};
   const majPalB = () => { const list = [...selB];
     const pris = new Set(list.map(c => SLOT[c]).filter(Boolean));
