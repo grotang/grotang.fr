@@ -134,7 +134,9 @@ h2{font:700 20px Carlito,sans-serif;margin:30px 0 10px}
 .ch{position:relative}
 .ch svg{width:100%;height:auto;display:block;overflow:visible}
 .ch .ln{fill:none;stroke-linecap:round;transition:opacity .15s,stroke-width .15s}
-.ch .fond{stroke:var(--ink-3);stroke-width:1;opacity:.22}
+.ch .fond{stroke:var(--ink-3);stroke-width:1;opacity:.13}
+.ch .aire{transition:opacity .15s}
+.ch.hov .aire{opacity:.25}
 .ch.hov .ln{opacity:.12}
 .ch.hov .ln.on{opacity:1;stroke-width:3.2}
 .ch .lb{font:12px Carlito,sans-serif;fill:var(--ink-2);cursor:default}
@@ -380,6 +382,17 @@ function nations(id, cur, clubs, fn) {
 const nomNat = c => \`<span style="color:\${c === 'FRA' ? 'var(--fr)' : col(c)};font-weight:\${c === 'FRA' ? 700 : 600}">\${NATN[c] || c}</span>\`;
 /* bloc 1 : la course. Lignes droites d'un tour à l'autre, une marque discrète à chaque
    tour ; le favori porte ses chances au-dessus de sa courbe. */
+/* courbe lissée monotone (Fritsch-Carlson) : douce, sans jamais dépasser les points ni remonter */
+function lisse(P) {
+  const n = P.length; if (n < 3) return 'M' + P.map(q => q.join(',')).join('L');
+  const d = [], m = [];
+  for (let i = 0; i < n - 1; i++) d.push((P[i + 1][1] - P[i][1]) / (P[i + 1][0] - P[i][0]));
+  m[0] = d[0]; m[n - 1] = d[n - 2];
+  for (let i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : 2 / (1 / d[i - 1] + 1 / d[i]);
+  let s = \`M\${P[0][0]},\${P[0][1]}\`;
+  for (let i = 0; i < n - 1; i++) { const h = (P[i + 1][0] - P[i][0]) / 3;
+    s += \`C\${P[i][0] + h},\${P[i][1] + m[i] * h} \${P[i + 1][0] - h},\${P[i + 1][1] - m[i + 1] * h} \${P[i + 1][0]},\${P[i + 1][1]}\`; }
+  return s; }
 function course() {
   boutons('comp', K, false, k => { K = k; if (NC && !DATA.comp[k].some(c => c.c === NC)) NC = ''; course(); });
   nations('natC', NC, DATA.comp[K], v => { NC = v; course(); });
@@ -390,15 +403,22 @@ function course() {
   const vis = new Set((NC ? L.filter(c => c.c === NC) : [...L.slice(0, mob ? 5 : 7), ...L.filter(c => c.c === 'FRA' && c.p[1] >= .2)]).map(c => c.n));
   const pts = c => c.p.map((v, i) => \`\${x(i)},\${y(v)}\`).join(' ');
   let s = \`<svg viewBox="0 0 \${W} \${H}" id="sv" role="img" aria-label="\${CN[K]}, chance d'atteindre chaque tour : \${L.slice(0, 3).map(c => \`\${c.n} \${pcs(c.p[5])} de titre\`).join(', ')}">\`;
-  for (const v of [0, .25, .5, .75, 1]) s += \`<line x1="\${l}" x2="\${x(5)}" y1="\${y(v)}" y2="\${y(v)}" stroke="var(--rule-soft)"/><text x="\${l - 6}" y="\${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--ink-3)">\${v * 100}\${v === 1 ? ' %' : ''}</text>\`;
+  /* SANS QUADRILLAGE (GT, 19/11/2026) : pas de lignes de fond ; 0, 50 et 100 % en texte discret,
+     une seule ligne de base. Les courbes portent le graphique. */
+  for (const v of [0, .5, 1]) s += \`<text x="\${l - 6}" y="\${y(v) + 4}" text-anchor="end" font-size="10.5" fill="var(--ink-3)" opacity=".8">\${v * 100}\${v === 1 ? ' %' : ''}</text>\`;
+  s += \`<line x1="\${l}" x2="\${x(5)}" y1="\${y(0)}" y2="\${y(0)}" stroke="var(--rule)"/>\`;
   TOURS.forEach((n, i) => { const tx = \`<text x="\${x(i)}" y="\${H - 10}" text-anchor="middle" font-size="11.5" font-weight="600" fill="\${i ? 'var(--ink-2)' : 'var(--fr)'}"\${i ? '' : ' text-decoration="underline"'}>\${mob && n.length > 6 ? n.slice(0, 4) + '.' : n}</text>\`;
-    s += \`<line x1="\${x(i)}" x2="\${x(i)}" y1="\${t}" y2="\${H - b}" stroke="var(--rule-soft)" stroke-dasharray="\${i ? '2 3' : ''}"/>\` + (i ? tx : \`<a href="\${DATA.phl}"><title>Phase de ligue : le rang final de chaque club</title>\${tx}</a>\`); });
+    s += (i ? tx : \`<a href="\${DATA.phl}"><title>Phase de ligue : le rang final de chaque club</title>\${tx}</a>\`); });
   /* rappel discret des couleurs de phase de la page UEFA : ligue en bleu, phase finale en violet */
   { const xm = (x(0) + x(1)) / 2, yb = H - b + 3; s += \`<line x1="\${x(0)}" x2="\${xm - 2}" y1="\${yb}" y2="\${yb}" stroke="var(--fr)" stroke-width="3" stroke-linecap="round" opacity=".55"/><line x1="\${xm + 2}" x2="\${x(5)}" y1="\${yb}" y2="\${yb}" stroke="var(--n7)" stroke-width="3" stroke-linecap="round" opacity=".55"/>\`; }
   const F = L.find(c => vis.has(c.n)) || L[0], rg = c => (vis.has(c.n) ? 1 : 0) + (c.c === 'FRA' ? 1 : 0) + (c === F ? 2 : 0), ordre = [...L].sort((a, b) => rg(a) - rg(b));
-  for (const c of ordre) { const on = vis.has(c.n), fr = c.c === 'FRA', tc = teinte(c);
-    s += \`<polyline class="ln \${on ? '' : 'fond'}" data-n="\${c.n}" points="\${pts(c)}" stroke="\${on ? tc : ''}" stroke-width="\${on ? (fr ? 2.6 : 1.8) : 1}" stroke-linejoin="round"/>\`;
-    if (on) s += c.p.map((v, i) => \`<circle class="mk" data-n="\${c.n}" cx="\${x(i)}" cy="\${y(v)}" r="2.3" fill="\${tc}"/>\`).join('');
+  { const P = F.p.map((v, i) => [x(i), y(v)]);
+    s += \`<defs><linearGradient id="gF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="\${teinte(F)}" stop-opacity=".2"/><stop offset=".85" stop-color="\${teinte(F)}" stop-opacity="0"/></linearGradient></defs>\`
+      + \`<path class="aire" data-n="\${F.n}" d="\${lisse(P)}L\${x(5)},\${y(0)}L\${x(0)},\${y(0)}Z" fill="url(#gF)"/>\`; }
+  for (const c of ordre) { const on = vis.has(c.n), fr = c.c === 'FRA', tc = teinte(c), P = c.p.map((v, i) => [x(i), y(v)]);
+    s += \`<path class="ln \${on ? '' : 'fond'}" data-n="\${c.n}" d="\${lisse(P)}" stroke="\${on ? tc : ''}" stroke-width="\${on ? (c === F || fr ? 3 : 2.2) : 1}"/>\`;
+    /* un seul point, au bout : le titre */
+    if (on) s += \`<circle class="mk" data-n="\${c.n}" cx="\${x(5)}" cy="\${y(c.p[5])}" r="\${c === F ? 4.5 : 3.5}" fill="\${tc}"/>\`;
     s += c.p.map((v, i) => \`<circle class="dot" data-n="\${c.n}" cx="\${x(i)}" cy="\${y(v)}" r="3.6" fill="var(--surface)" stroke="\${tc}" stroke-width="2"/>\`).join(''); }
   /* le favori : ses chances, tour par tour, au-dessus de sa courbe */
   s += F.p.map((v, i) => i === 0 || i === 5 ? '' : \`<text class="vl" data-n="\${F.n}" x="\${x(i)}" y="\${y(v) - 9}" text-anchor="middle" fill="\${teinte(F)}">\${pcs(v)}</text>\`).join('');
