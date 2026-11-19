@@ -134,7 +134,7 @@ table.fr{border-collapse:separate; border-spacing:1px; font-size:10.5px; font-va
 
 <section class="card" id="b2">
   <h2><span class="num">2</span>La saison semaine par semaine</h2>
-  <p class="s">Une colonne par semaine. En tête, les Grands Chelems, les Masters 1000 et les ATP Finals sur toute leur durée ; en dessous, les ATP 500 et 250 de la semaine (survoler pour les noms). Une case par résultat, sur la durée du tournoi ; plus elle est foncée, plus elle a rapporté. Cases en pointillé : Challengers.</p>
+  <p class="s">Une colonne par semaine. En tête, les Grands Chelems, les Masters 1000 et les ATP Finals sur toute leur durée ; en dessous, les ATP 500 et 250 de la semaine (survoler ou toucher pour les noms). Une case par résultat, sur la durée du tournoi ; plus elle est foncée, plus elle a rapporté. Cases en pointillé : Challengers.</p>
   <div class="ctl2"><div class="seg" id="n2"></div><label class="natf">Nation <select id="nat"></select></label></div>
   <div class="lg" id="lg2"></div>
   <div class="scroll"><table class="fr" id="t2"></table></div>
@@ -142,7 +142,7 @@ table.fr{border-collapse:separate; border-spacing:1px; font-size:10.5px; font-va
 
 <section class="card" id="b3">
   <h2><span class="num">3</span>Le classement, semaine après semaine</h2>
-  <p class="s">Rang au classement de la saison chaque lundi depuis l'Open d'Australie, pour les 12 premiers d'aujourd'hui. Survoler une ligne pour la suivre.</p>
+  <p class="s">Rang au classement de la saison chaque lundi depuis l'Open d'Australie, pour les 12 premiers d'aujourd'hui. Survoler ou toucher une ligne pour la suivre.</p>
   <div class="viz" id="v3"></div>
 </section>
 
@@ -180,9 +180,17 @@ const GSA = { "Open d'Australie": 'AO', 'Roland-Garros': 'RG', 'Wimbledon': 'WIM
 const TOUR = { W: 'titre', F: 'finale', SF: 'demi-finale', QF: 'quart de finale', R16: '8e de finale', R32: '16e de finale', R64: '32e de finale', R128: '1er tour', UC: 'United Cup', forfait: 'forfait', Q: 'qualifié', Q1: '1er tour des qualif.', Q2: '2e tour des qualif.', Q3: '3e tour des qualif.' };
 const CAT = { F: 'ATP Finals', GS: 'Grand Chelem', M: 'Masters 1000', MC: 'Masters 1000 (Monte-Carlo)', '500': 'ATP 500', '250': 'ATP 250', UC: 'United Cup', CH: 'Challenger' };
 const tip = document.getElementById('tip');
-const show = (ev, h) => { tip.innerHTML = h; tip.classList.add('on'); const w = tip.offsetWidth, hh = tip.offsetHeight; let x = ev.clientX + 14, y = ev.clientY + 14;
-  if (x + w > innerWidth - 6) x = ev.clientX - w - 14; if (y + hh > innerHeight - 6) y = ev.clientY - hh - 10; tip.style.left = x + 'px'; tip.style.top = Math.max(6, y) + 'px'; };
-const hide = () => tip.classList.remove('on');
+/* Info-bulles. Souris : elles suivent le pointeur. Doigt (GT, 19/11/2026) : un appui
+   l'ouvre au-dessus du doigt, elle reste affichée jusqu'au prochain appui ailleurs. */
+const show = (ev, h) => { tip.innerHTML = h; tip.classList.add('on'); const w = tip.offsetWidth, hh = tip.offsetHeight;
+  let x, y;
+  if (ev.pointerType && ev.pointerType !== 'mouse') { x = Math.max(6, Math.min(innerWidth - w - 6, ev.clientX - w / 2)); y = ev.clientY - hh - 18; if (y < 6) y = ev.clientY + 26; }
+  else { x = ev.clientX + 14; y = ev.clientY + 14; if (x + w > innerWidth - 6) x = ev.clientX - w - 14; if (y + hh > innerHeight - 6) y = ev.clientY - hh - 10; }
+  tip.style.left = x + 'px'; tip.style.top = Math.max(6, y) + 'px'; };
+const souris = ev => !ev || !ev.pointerType || ev.pointerType === 'mouse';
+const hide = ev => { if (souris(ev)) tip.classList.remove('on'); };
+/* appui ailleurs que sur un graphique ou une case : on referme */
+document.addEventListener('pointerdown', ev => { if (!souris(ev) && !ev.target.closest('.viz svg, #t2 td[data-j], #t2 th[data-sem]')) tip.classList.remove('on'); });
 
 /* semaines de la saison (classement saison) et de la Race */
 const SS = SA.saison, SR = SA.semaines, nS = SS.length, nR = SR.length;
@@ -276,7 +284,7 @@ function courbes(id, S, champ, ymax, opts) {
     show(ev, `<div class="h">Lundi ${lab(S[k])}</div>${tn.length ? `<div style="color:var(--ink-3);font-size:11.5px;margin-bottom:4px">après ${tn.slice(0, 3).join(', ')}${tn.length > 3 ? '…' : ''}</div>` : ''}`
       + vus.map(j => { const i = J.filter(x => (x[champ][k] || 0) > (j[champ][k] || 0)).length, g = (j[champ][k] || 0) - (k ? j[champ][k - 1] || 0 : 0), sel = SEL.includes(j.n);
         return `<div class="r" style="${sel ? '' : 'color:var(--ink-3)'}"><span>${i + 1}. ${sel ? pastille(j.n) : ''}${NOM(j.n)}</span><span><b>${nf(j[champ][k] || 0)}</b>${g > 0 ? ` <span style="color:var(--ink-3)">+${nf(g)}</span>` : ''}</span></div>`; }).join('')); };
-  hit.addEventListener('pointermove', on); hit.addEventListener('pointerdown', on); hit.addEventListener('pointerleave', () => { cur.setAttribute('opacity', 0); hide(); });
+  hit.addEventListener('pointermove', on); hit.addEventListener('pointerdown', on); hit.addEventListener('pointerleave', ev => { if (!souris(ev)) return; cur.setAttribute('opacity', 0); hide(ev); });
 }
 const arrondi = v => Math.max(500, Math.ceil(v * 1.05 / (v > 3000 ? 1000 : 250)) * (v > 3000 ? 1000 : 250));
 
@@ -336,10 +344,10 @@ function v2() {
   t.innerHTML = `<colgroup><col><col>${W.map(() => '<col class="cs">').join('')}<col></colgroup><thead>${hm}${hv}${hp}</thead><tbody>${corps || `<tr><td></td><td class="nm">Aucun joueur de cette nation n'a encore marqué de points.</td></tr>`}</tbody>`;
   t.querySelectorAll('td[data-j]').forEach(td => { const on = ev => { const j = J.find(x => x.n === td.dataset.j), x = T[+td.dataset.t], r = j.r.find(y => y[0] === +td.dataset.t);
       show(ev, `<div class="h">${x.n} · ${CAT[x.c] || x.c}</div>${j.n}<br>${TOUR[r[1]] || r[1]} · <b>${nf(r[2])} point${r[2] > 1 ? 's' : ''}</b>`); };
-    td.addEventListener('pointermove', on); td.addEventListener('pointerleave', hide); });
+    td.addEventListener('pointermove', on); td.addEventListener('pointerdown', on); td.addEventListener('pointerleave', hide); });
   t.querySelectorAll('th[data-sem]').forEach(th => { const on = ev => { const i = +th.dataset.sem;
       show(ev, `<div class="h">Semaine du ${lab(W[i])}</div>` + petits[i].map(x => `<div class="r"><span>${x.n}</span><span>${x.c === 'UC' ? 'United Cup' : 'ATP ' + x.c}</span></div>`).join('')); };
-    th.addEventListener('pointermove', on); th.addEventListener('pointerleave', hide); });
+    th.addEventListener('pointermove', on); th.addEventListener('pointerdown', on); th.addEventListener('pointerleave', hide); });
   document.getElementById('lg2').innerHTML = [['1–49', 1], ['50–199', 2], ['200–499', 3], ['500–999', 4], ['1 000 et +', 5]].map(([l, i]) => `<span><i style="background:${G[i]}"></i>${l} pts</span>`).join('')
     + `<span><i style="background:${G[1]};outline:1.5px dashed var(--ink-3);outline-offset:-3px"></i>Challenger</span><span>Titre en gras. Faire défiler vers la droite.</span>`;
 }
@@ -394,8 +402,8 @@ function v3() {
     let best = null, dmin = 1e9; for (const L of lignes) { const rk = L.j.sr[k]; if (!rk) continue; const d = Math.abs(Y(Math.min(rk, R + 3)) - y); if (d < dmin) { dmin = d; best = L; } }
     lignes.forEach(L => { L.p.setAttribute('opacity', L === best ? 1 : L.sel ? .5 : .15); L.p.setAttribute('stroke-width', L === best ? 3.2 : L.sel ? 3 : 1.6); });
     if (best) show(ev, `<div class="h">${flag(best.j.c)} ${best.j.n}</div>Lundi ${lab(SS[k])} : <b>${best.j.sr[k]}<sup>e</sup></b> · ${nf(best.j.sp[k])} pts<br><span style="color:var(--ink-3)">Aujourd'hui : ${best.j.sr[n - 1]}<sup>e</sup></span>`); };
-  hit.addEventListener('pointermove', on);
-  hit.addEventListener('pointerleave', () => { lignes.forEach(L => { L.p.setAttribute('opacity', L.sel ? 1 : .45); L.p.setAttribute('stroke-width', L.sel ? 3 : 1.6); }); hide(); });
+  hit.addEventListener('pointermove', on); hit.addEventListener('pointerdown', on);
+  hit.addEventListener('pointerleave', ev => { if (!souris(ev)) return; lignes.forEach(L => { L.p.setAttribute('opacity', L.sel ? 1 : .45); L.p.setAttribute('stroke-width', L.sel ? 3 : 1.6); }); hide(); });
 }
 
 /* ---------- 4 · la Race ---------- */

@@ -15,6 +15,7 @@ import { catalogueATP, catalogueChallenger } from './moteur/catalogue.mjs';
 import { calcule, regroupe, total } from './moteur/calcul.mjs';
 import { lireUnitedCup, rangsA } from './moteur/uc.mjs';
 import { FR, court } from './noms.mjs';
+import { natDe } from '../tennis/wiki.mjs';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const arg = k => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : null; };
@@ -175,6 +176,17 @@ const J = [...garde].sort((a, b) => (totS[b]?.at(-1) || 0) - (totS[a]?.at(-1) ||
 });
 /* les ATP Finals figurent au calendrier de la page même avant d'avoir des points (bande dans le bloc 1) */
 for (const x of atp.filter(x => x.cat === 'ATP Finals' && x.page)) tIdx(x.page, x.cat, x.semaine);
+/* Joueurs sans drapeau dans les tableaux (Russes et Biélorusses jouent sous bannière
+   neutre) : leur pays réel, lu dans l'infobox de leur article (« country = {{RUS}} »),
+   gardé dans nations-joueurs.json (GT, 19/11/2026 : « mets le vrai pays du joueur »). */
+{ const F = path.join(ICI, 'nations-joueurs.json');
+  const NJ = fs.existsSync(F) ? JSON.parse(fs.readFileSync(F, 'utf8')) : {};
+  const manque = J.filter(j => !j.c && !(j.n in NJ)).map(j => j.n);
+  if (manque.length) { const A = await pages(manque);
+    for (const n of manque) { const c = A.get(n); const m = c && /\|\s*country\s*=\s*([^\n]*)/i.exec(c); NJ[n] = m ? natDe(m[1]) : null; }
+    if (!DRY) fs.writeFileSync(F, JSON.stringify(Object.fromEntries(Object.entries(NJ).sort()), null, 1)); }
+  for (const j of J) if (!j.c && NJ[j.n]) j.c = NJ[j.n];
+  const reste = J.filter(j => !j.c).map(j => j.n); if (reste.length) note('⚠ pays introuvable : ' + reste.join(', ')); }
 const data = { an: AN, maj: auj, debut: DEBUT, fin: FIN, close: !!pAn && auj >= FIN, semaines: sem, saison: semS, tournois: T, joueurs: J };
 note(`${J.length} joueurs ; Race : ${sem.length} semaines (${sem[0]} → ${der}) ; saison : ${semS.length} semaines ; ${T.length} tournois`);
 /* on n'écrit que si un chiffre a bougé (la date de mise à jour seule ne compte pas) */
