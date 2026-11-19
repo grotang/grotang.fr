@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saison ATP</title>
+<style>
+/* Pages /tennis-saison-atp-AAAA/ — une saison ATP semaine par semaine.
+   Données : tools/atp/data-AAAA.json, fabriqué chaque lundi par tools/atp/refresh.mjs
+   à partir des tableaux Wikipédia. Jetons communs : chrome.mjs. */
+*{box-sizing:border-box}
+body{margin:0; background:var(--ground); color:var(--ink);
+  font-family:Calibri,"Carlito","Helvetica Neue",Arial,sans-serif; font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased}
+.wrap{max-width:1100px; margin:0 auto; padding-inline:clamp(16px,3vw,32px); padding-block:clamp(16px,3vw,28px) 64px; display:flex; flex-direction:column; gap:18px}
+h1,h2{font-family:"Newsreader",Georgia,"Times New Roman",serif; font-optical-sizing:auto; letter-spacing:-.012em; text-wrap:balance; margin:0}
+h1{font-size:clamp(28px,4.4vw,44px); line-height:1.04; font-weight:700}
+h2{font-size:clamp(19px,2.3vw,24px); line-height:1.15; font-weight:700; display:flex; gap:10px; align-items:baseline}
+a{color:var(--fr)}
+:focus-visible{outline:2px solid var(--fr); outline-offset:2px}
+.kicker{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3)}
+.lead{margin:6px 0 0; font-size:15.5px; color:var(--ink-2); max-width:720px}
+.num{display:inline-grid; place-items:center; width:1.5em; height:1.5em; border-radius:50%; background:var(--ink); color:var(--surface); font-family:"IBM Plex Mono",monospace; font-size:.62em; flex:none}
+
+.atp{--ao:#0091D2; --rg:#D2691E; --wim:#5C2D91; --uso:#C99000; --m:#465063;
+  --p1:#2a78d6; --p2:#eb6834; --p3:#1baf7a; --p4:#e34948; --ctx:#C9CFD9; --qual:#B43E12;
+  --g0:#EDF0F5; --g1:#D3E9D7; --g2:#A6D3B2; --g3:#6DB886; --g4:#33975C; --g5:#0F7040}
+:root[data-theme="dark"] .atp{--ao:#1A95CC; --rg:#E07B36; --wim:#9A6AD0; --uso:#E0A800; --m:#B5BCC9;
+  --p1:#3987e5; --p2:#d95926; --p3:#199e70; --p4:#e66767; --ctx:#3A4050; --qual:#FF9B6B;
+  --g0:#1a1f2a; --g1:#1c3225; --g2:#205535; --g3:#277a48; --g4:#36aa5c; --g5:#55d476}
+
+/* ---------- en-tête ---------- */
+.hero{display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:18px 32px; align-items:end; padding:4px 0 20px; border-bottom:1px solid var(--rule)}
+.tuiles{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
+.tuile{background:var(--surface); border:1px solid var(--rule-soft); border-radius:12px; padding:11px 14px 10px; position:relative; overflow:hidden}
+.tuile::before{content:""; position:absolute; inset:0 auto 0 0; width:4px; background:var(--c, var(--fr))}
+.tuile b{display:block; font-family:"Newsreader",Georgia,serif; font-size:30px; line-height:1.05; font-weight:700}
+.tuile span{display:block; font-size:13px; font-weight:700; margin-top:3px}
+.tuile small{display:block; font-size:11.5px; color:var(--ink-3); margin-top:1px}
+@media (max-width:760px){ .hero{grid-template-columns:1fr} }
+
+/* ---------- sélecteur de joueurs ---------- */
+.sel{display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:13px; color:var(--ink-3); background:var(--ground); padding:8px 0}
+@media (min-width:761px){ .sel{position:sticky; top:0; z-index:5} }
+.chip{font:inherit; font-size:13px; font-weight:700; border:1px solid var(--rule); background:var(--surface); color:var(--ink); border-radius:14px; padding:3px 6px 3px 9px; display:inline-flex; align-items:center; gap:6px}
+.chip i{width:10px; height:10px; border-radius:50%}
+.chip button{border:0; background:none; color:var(--ink-3); cursor:pointer; font-size:15px; line-height:1; padding:0 3px}
+.sel input{font:inherit; font-size:13px; border:1px solid var(--rule); background:var(--surface); color:var(--ink); border-radius:14px; padding:4px 10px; width:210px}
+
+/* ---------- blocs ---------- */
+.card{background:var(--surface); border:1px solid var(--rule); border-radius:12px; padding:18px 20px; display:flex; flex-direction:column; gap:10px; min-width:0}
+.card p.s{margin:0; color:var(--ink-3); font-size:13px; max-width:80ch}
+.viz{width:100%; position:relative}
+svg{display:block; overflow:visible}
+.vide{padding:22px; text-align:center; color:var(--ink-3); border:1px dashed var(--rule); border-radius:10px}
+.seg{display:inline-flex; border:1px solid var(--rule); border-radius:999px; overflow:hidden; align-self:flex-start}
+.seg button{font:inherit; font-size:12.5px; font-weight:700; border:0; background:var(--surface); color:var(--ink-2); padding:4px 12px; cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink); color:var(--surface)}
+
+.scroll{overflow-x:auto; -webkit-overflow-scrolling:touch}
+table.fr{border-collapse:separate; border-spacing:1px; font-size:10.5px; font-variant-numeric:tabular-nums}
+.fr th{font-weight:700; color:var(--ink-3); padding:0 0 4px; vertical-align:bottom; height:92px}
+.fr th span{display:inline-block; writing-mode:vertical-rl; transform:rotate(180deg); white-space:nowrap; padding:2px 0}
+.fr th.gs span{color:#fff; border-radius:3px; padding:4px 2px}
+.fr th.m span{color:var(--ink)}
+.fr td{width:26px; min-width:26px; height:20px; text-align:center; border-radius:2px; cursor:default}
+.fr td.nm{width:auto; text-align:left; white-space:nowrap; padding-right:8px; font-weight:700; font-size:12px; position:sticky; left:0; background:var(--surface); z-index:1}
+.fr td.tt{width:auto; padding:0 6px; font-weight:700; font-size:11.5px}
+.fr td.rk{width:auto; color:var(--ink-3); padding-right:4px; text-align:right}
+.lg{display:flex; flex-wrap:wrap; gap:4px 12px; font-size:12px; color:var(--ink-3); align-items:center}
+.lg i{display:inline-block; width:12px; height:12px; border-radius:2px; margin-right:4px; vertical-align:-2px}
+
+.box{background:var(--surface-2); border-radius:10px; padding:12px 16px; font-size:13.5px; color:var(--ink-2)}
+.box p{margin:4px 0}
+.diff{border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums}
+.diff th,.diff td{padding:4px 10px; border-bottom:1px solid var(--rule-soft); text-align:right}
+.diff th:first-child,.diff td:first-child{text-align:left}
+.diff th{color:var(--ink-3); font-weight:700; font-size:12px}
+
+.tip{position:fixed; pointer-events:none; background:var(--surface); border:1px solid var(--rule); border-radius:8px; padding:8px 10px; font-size:12.5px; box-shadow:0 6px 18px rgba(0,0,0,.14); opacity:0; transition:opacity .08s; z-index:20; max-width:300px}
+.tip.on{opacity:1}
+.tip .h{font-weight:700; margin-bottom:3px}
+.tip .r{display:flex; justify-content:space-between; gap:14px}
+.src{font-size:12px; color:var(--ink-3)}
+</style>
+</head>
+<body>
+<main class="wrap atp">
+<header class="hero">
+  <div>
+    <div class="kicker" id="kick">Tennis · Saison ATP</div>
+    <h1 id="h1">Saison ATP</h1>
+    <p class="lead" id="lead"></p>
+  </div>
+  <div class="tuiles" id="tuiles"></div>
+</header>
+
+<div class="sel" id="sel"><span>Joueurs mis en avant :</span><span id="chips"></span>
+  <input id="cherche" list="noms" placeholder="Ajouter un joueur…" autocomplete="off"><datalist id="noms"></datalist></div>
+
+<section class="card" id="b1">
+  <h2><span class="num">1</span>La course aux points</h2>
+  <p class="s">Tous les points gagnés depuis le 1<sup>er</sup> janvier, cumulés chaque lundi (les points d'un tournoi comptent le lundi qui suit sa fin). En gris, le reste du top 20. Bandes de couleur : les Grands Chelems ; traits sous l'axe : les Masters 1000.</p>
+  <div class="viz" id="v1"></div>
+</section>
+
+<section class="card" id="b2">
+  <h2><span class="num">2</span>La saison de gauche à droite</h2>
+  <p class="s">Une colonne par tournoi du circuit, dans l'ordre du calendrier, une case par résultat ; les Challengers sont regroupés dans une colonne. Plus la case est foncée, plus elle a rapporté.</p>
+  <div class="seg" id="n2"></div>
+  <div class="lg" id="lg2"></div>
+  <div class="scroll"><table class="fr" id="t2"></table></div>
+</section>
+
+<section class="card" id="b3">
+  <h2><span class="num">3</span>Le classement, semaine après semaine</h2>
+  <p class="s">Rang au classement de la saison chaque lundi, pour les joueurs passés par le top 20.</p>
+  <div class="viz" id="v3"></div>
+</section>
+
+<section class="card" id="b4">
+  <h2><span class="num">4</span>La Race to Turin</h2>
+  <p class="s" id="s4"></p>
+  <div class="box" id="x4"></div>
+  <div class="viz" id="v4"></div>
+  <div class="scroll"><table class="diff" id="t4"></table></div>
+</section>
+
+<p class="src" id="src"></p>
+<!--PIED-->
+</main>
+<div class="tip" id="tip"></div>
+<script>
+/*DATA_START*/const SA = null;/*DATA_END*/
+const T = SA.tournois, J = SA.joueurs, AN = SA.an;
+const cv = n => getComputedStyle(document.querySelector('.atp')).getPropertyValue(n).trim();
+const NS = 'http://www.w3.org/2000/svg';
+const el = (t, a, p, x) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (x !== undefined) e.textContent = x; if (p) p.appendChild(e); return e; };
+const txt = (s, x, y, t, o = {}) => el('text', { x, y, 'font-size': o.fs || 11, fill: o.fill || cv('--ink-3'), 'text-anchor': o.a || 'start', 'dominant-baseline': 'middle', 'font-weight': o.fw || 400, 'font-family': 'inherit' }, s, t);
+const nf = v => v.toLocaleString('fr-FR');
+const MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+const dt = s => new Date(s + 'T00:00:00Z');
+const lab = s => { const d = dt(s); return `${d.getUTCDate()} ${MOIS[d.getUTCMonth()]} ${d.getUTCFullYear()}`; };
+/* nom court : « Alex de Minaur » → « de Minaur », « Félix Auger-Aliassime » → « Auger-Aliassime » */
+const NOM = n => { const p = n.split(' '); const i = p.findIndex((x, k) => k > 0 && /^(de|van|von|del|da|di|le)$/i.test(x)); return i > 0 ? p.slice(i).join(' ') : p.slice(-1)[0]; };
+const DRAP = c => { const iso = { GER: 'DE', SUI: 'CH', NED: 'NL', RSA: 'ZA', CHI: 'CL', DEN: 'DK', GRE: 'GR', PAR: 'PY', URU: 'UY', CRO: 'HR', BUL: 'BG', POR: 'PT', MON: 'MC', SLO: 'SI', TPE: 'TW', INA: 'ID', LAT: 'LV', ALG: 'DZ', IRI: 'IR', GBR: 'GB', USA: 'US', FRA: 'FR', ESP: 'ES', ITA: 'IT', AUS: 'AU', CAN: 'CA', ARG: 'AR', CZE: 'CZ', SRB: 'RS', RUS: 'RU', KAZ: 'KZ', BEL: 'BE', POL: 'PL', NOR: 'NO', AUT: 'AT', JPN: 'JP', CHN: 'CN', BRA: 'BR', HUN: 'HU', FIN: 'FI', SWE: 'SE', COL: 'CO', PER: 'PE', ECU: 'EC', BOL: 'BO', MEX: 'MX', GEO: 'GE', UKR: 'UA', BLR: 'BY', TUN: 'TN', IND: 'IN', KOR: 'KR', HKG: 'HK', LTU: 'LT', EST: 'EE', SVK: 'SK', ROU: 'RO', TUR: 'TR', ISR: 'IL', CYP: 'CY', BIH: 'BA', MDA: 'MD', NZL: 'NZ', LBN: 'LB', EGY: 'EG', MAR: 'MA' }[c];
+  return iso ? String.fromCodePoint(...[...iso].map(x => 0x1F1A5 + x.charCodeAt(0))) : ''; };
+const GSC = { "Open d'Australie": '--ao', 'Roland-Garros': '--rg', 'Wimbledon': '--wim', 'US Open': '--uso' };
+const GSA = { "Open d'Australie": 'AO', 'Roland-Garros': 'RG', 'Wimbledon': 'WIM', 'US Open': 'USO' };
+const TOUR = { W: 'titre', F: 'finale', SF: 'demi-finale', QF: 'quart de finale', R16: '8e de finale', R32: '16e de finale', R64: '32e de finale', R128: '1er tour', UC: 'United Cup', forfait: 'forfait', Q: 'qualifié', Q1: '1er tour des qualif.', Q2: '2e tour des qualif.', Q3: '3e tour des qualif.' };
+const CAT = { GS: 'Grand Chelem', M: 'Masters 1000', MC: 'Masters 1000 (Monte-Carlo)', '500': 'ATP 500', '250': 'ATP 250', UC: 'United Cup', CH: 'Challenger' };
+const tip = document.getElementById('tip');
+const show = (ev, h) => { tip.innerHTML = h; tip.classList.add('on'); const w = tip.offsetWidth, hh = tip.offsetHeight; let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + w > innerWidth - 6) x = ev.clientX - w - 14; if (y + hh > innerHeight - 6) y = ev.clientY - hh - 10; tip.style.left = x + 'px'; tip.style.top = Math.max(6, y) + 'px'; };
+const hide = () => tip.classList.remove('on');
+
+/* semaines de la saison (classement saison) et de la Race */
+const SS = SA.saison, SR = SA.semaines, nS = SS.length, nR = SR.length;
+const dernier = j => nS ? j.sp[nS - 1] : 0;
+const J0 = J.filter(j => nS && j.sr[nS - 1]).sort((a, b) => a.sr[nS - 1] - b.sr[nS - 1]);
+/* les points d'un tournoi tombent le lundi qui suit sa dernière semaine */
+const credit = t => { const d = dt(t.f); d.setUTCDate(d.getUTCDate() + 7); return d.toISOString().slice(0, 10); };
+T.forEach(t => { t.cr = credit(t); t.w = SS.findIndex(s => s >= t.cr); t.wr = SR.findIndex(s => s >= t.cr); });
+
+let SEL = (J0.length ? J0 : J).slice(0, 4).map(j => j.n);
+const SLOT = ['--p1', '--p2', '--p3', '--p4'];
+const coul = n => { const k = SEL.indexOf(n); return cv(k >= 0 ? SLOT[k] : '--ctx'); };
+const pastille = n => `<i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${coul(n)};margin-right:4px"></i>`;
+
+/* ---------- en-tête ---------- */
+function entete() {
+  document.getElementById('h1').textContent = `Saison ATP ${AN}`;
+  document.getElementById('lead').innerHTML = nS
+    ? `Tous les points gagnés depuis le 1<sup>er</sup> janvier ${AN} par les joueurs du circuit, semaine après semaine : Grands Chelems, Masters 1000, ATP 500 et 250, United Cup et Challengers. Tout le monde part de zéro. Mis à jour le ${lab(SA.maj)}.`
+    : `La saison ${AN} commence le 1<sup>er</sup> janvier. D'ici là, seule la Race to Turin ${AN} a démarré, avec les tournois joués depuis la fin du Masters de Paris ${AN - 1} (bloc 4). Mis à jour le ${lab(SA.maj)}.`;
+  const t = document.getElementById('tuiles');
+  if (nS) { const a = J0[0], b = J0[1];
+    const titres = {}; J.forEach(j => j.r.forEach(r => { if (r[1] === 'W' && T[r[0]].c !== 'CH' && T[r[0]].c !== 'UC' && T[r[0]].w >= 0) titres[j.n] = (titres[j.n] || 0) + 1; }));
+    const [tn, tc] = Object.entries(titres).sort((x, y) => y[1] - x[1])[0] || ['—', 0];
+    const gs = T.filter(x => x.c === 'GS' && x.w >= 0).map(x => { const j = J.find(j => j.r.some(r => r[0] === T.indexOf(x) && r[1] === 'W')); return j ? NOM(j.n) : '?'; });
+    t.innerHTML = `<div class="tuile"><b>${nf(dernier(a))}</b><span>${DRAP(a.c)} ${a.n}</span><small>en tête de la saison</small></div>`
+      + `<div class="tuile" style="--c:var(--p2)"><b>${nf(dernier(a) - dernier(b))}</b><span>points d'avance</span><small>sur ${b.n}</small></div>`
+      + `<div class="tuile" style="--c:var(--p3)"><b>${tc}</b><span>titres sur le circuit</span><small>${tn}, le plus titré</small></div>`
+      + `<div class="tuile" style="--c:var(--rg)"><b>${gs.length}/4</b><span>Grands Chelems joués</span><small>${gs.join(', ') || '—'}</small></div>`;
+  } else { const a = J.slice().sort((x, y) => y.pts[nR - 1] - x.pts[nR - 1])[0];
+    t.innerHTML = `<div class="tuile"><b>${nf(a.pts[nR - 1])}</b><span>${DRAP(a.c)} ${a.n}</span><small>en tête de la Race ${AN}</small></div>`
+      + `<div class="tuile" style="--c:var(--p2)"><b>${nR}</b><span>semaine${nR > 1 ? 's' : ''} de Race</span><small>depuis le ${lab(SA.debut)}</small></div>`; }
+  document.getElementById('src').innerHTML = `Source : tableaux des tournois sur Wikipédia (en anglais), barème officiel de l'ATP ; calcul grotang.fr, contrôlé chaque lundi contre la Race publiée. Mise à jour : ${lab(SA.maj)}.`;
+}
+
+/* ---------- sélecteur ---------- */
+function chips() {
+  document.getElementById('chips').innerHTML = SEL.map((n, k) => `<span class="chip"><i style="background:${cv(SLOT[k])}"></i>${NOM(n)}<button type="button" aria-label="Retirer ${n}" data-n="${n}">×</button></span>`).join('');
+  document.querySelectorAll('#chips button').forEach(b => b.onclick = () => { SEL = SEL.filter(x => x !== b.dataset.n); tout(); });
+}
+document.getElementById('noms').innerHTML = J.map(j => `<option value="${j.n}">`).join('');
+document.getElementById('cherche').addEventListener('change', e => { const n = e.target.value; if (!J.some(j => j.n === n)) return;
+  if (!SEL.includes(n)) { if (SEL.length >= 4) SEL.shift(); SEL.push(n); } e.target.value = ''; tout(); });
+
+/* courbe en escalier sur un axe de semaines */
+function courbes(id, S, champ, ymax, opts) {
+  const v = document.getElementById(id); v.innerHTML = '';
+  const n = S.length; if (!n) { v.innerHTML = `<div class="vide">${opts.vide}</div>`; return; }
+  const W = Math.max(320, v.clientWidth), H = W < 600 ? 300 : 400, m = { t: 16, r: W < 600 ? 80 : 120, b: 40, l: 50 };
+  const s = el('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}` }, v);
+  const X = k => m.l + (n === 1 ? 0 : k * (W - m.l - m.r) / (n - 1)), Y = y => H - m.b - y / ymax * (H - m.t - m.b);
+  const wk = opts.wk;
+  for (const t of T) { const w = t[wk]; if (w < 0 || w === undefined) continue;
+    if (t.c === 'GS') { const a = Math.max(0, w - 2); el('rect', { x: X(a), y: m.t, width: Math.max(2, X(w) - X(a)), height: H - m.t - m.b, fill: cv(GSC[t.n]), opacity: .1 }, s);
+      txt(s, (X(a) + X(w)) / 2, m.t + 2, GSA[t.n], { a: 'middle', fs: 10, fw: 700, fill: cv(GSC[t.n]) }); }
+    if (t.c === 'M') el('line', { x1: X(Math.max(0, w - 1)), x2: X(w), y1: H - m.b + 4, y2: H - m.b + 4, stroke: cv('--m'), 'stroke-width': 3, 'stroke-linecap': 'round' }, s); }
+  const pas = ymax > 6000 ? 2000 : ymax > 2500 ? 1000 : ymax > 1000 ? 500 : ymax > 400 ? 100 : 50;
+  for (let g = 0; g <= ymax; g += pas) { el('line', { x1: m.l, x2: W - m.r, y1: Y(g), y2: Y(g), stroke: cv('--rule-soft') }, s); txt(s, m.l - 6, Y(g), nf(g), { a: 'end' }); }
+  S.forEach((d, k) => { if (dt(d).getUTCDate() <= 7) txt(s, X(k), H - m.b + 18, MOIS[dt(d).getUTCMonth()], { fs: 10.5 }); });
+  if (opts.qual) { const q = S.map((_, k) => J.map(j => j[champ][k] || 0).sort((a, b) => b - a)[7]);
+    el('path', { d: q.map((y, k) => (k ? 'L' : 'M') + X(k) + ',' + Y(y)).join(''), fill: 'none', stroke: cv('--qual'), 'stroke-width': 1.5, 'stroke-dasharray': '4 3' }, s);
+    const kq = Math.round((n - 1) * .55); txt(s, X(kq), Y(q[kq]) + 12, '8e place', { fill: cv('--qual'), fs: 10.5, fw: 700, a: 'middle' }); }
+  const step = c => c.map((y, k) => k ? `H${X(k).toFixed(1)}V${Y(y).toFixed(1)}` : `M${X(0)},${Y(y)}`).join('');
+  const top = J.filter(j => opts.rang(j, n - 1) <= 20 || SEL.includes(j.n));
+  const ordre = [...top.filter(j => !SEL.includes(j.n)), ...SEL.slice().reverse().map(x => J.find(j => j.n === x)).filter(Boolean)];
+  const labs = [];
+  for (const j of ordre) { const sel = SEL.includes(j.n), c = j[champ];
+    el('path', { d: n === 1 ? `M${X(0) - 4},${Y(c[0])}H${X(0) + 4}` : step(c), fill: 'none', stroke: coul(j.n), 'stroke-width': sel ? 2.5 : 1.1, 'stroke-linejoin': 'round' }, s);
+    if (sel) labs.push({ y: Y(c[n - 1]), t: `${NOM(j.n)} ${nf(c[n - 1])}` }); }
+  labs.sort((a, b) => a.y - b.y); for (let k = 1; k < labs.length; k++) if (labs[k].y - labs[k - 1].y < 14) labs[k].y = labs[k - 1].y + 14;
+  labs.forEach(l => txt(s, X(n - 1) + 8, l.y, l.t, { fill: cv('--ink'), fw: 700, fs: 11.5 }));
+  const cur = el('line', { y1: m.t, y2: H - m.b, stroke: cv('--ink-3'), 'stroke-dasharray': '2 3', opacity: 0 }, s);
+  const hit = el('rect', { x: m.l - 10, y: 0, width: W - m.l - m.r + 20, height: H, fill: 'transparent' }, s);
+  const on = ev => { const r = s.getBoundingClientRect(); const k = n === 1 ? 0 : Math.max(0, Math.min(n - 1, Math.round((ev.clientX - r.left - m.l) / (W - m.l - m.r) * (n - 1))));
+    cur.setAttribute('x1', X(k)); cur.setAttribute('x2', X(k)); cur.setAttribute('opacity', 1);
+    const cl = J.slice().sort((a, b) => (b[champ][k] || 0) - (a[champ][k] || 0));
+    const vus = cl.filter((j, i) => i < 10 || SEL.includes(j.n));
+    const tn = T.filter(t => t[wk] === k && t.c !== 'CH').map(t => t.n);
+    show(ev, `<div class="h">Lundi ${lab(S[k])}</div>${tn.length ? `<div style="color:var(--ink-3);font-size:11.5px;margin-bottom:4px">après ${tn.slice(0, 3).join(', ')}${tn.length > 3 ? '…' : ''}</div>` : ''}`
+      + vus.map(j => { const i = cl.indexOf(j), g = (j[champ][k] || 0) - (k ? j[champ][k - 1] || 0 : 0), sel = SEL.includes(j.n);
+        return `<div class="r" style="${sel ? '' : 'color:var(--ink-3)'}"><span>${i + 1}. ${sel ? pastille(j.n) : ''}${NOM(j.n)}</span><span><b>${nf(j[champ][k] || 0)}</b>${g > 0 ? ` <span style="color:var(--ink-3)">+${nf(g)}</span>` : ''}</span></div>`; }).join('')); };
+  hit.addEventListener('pointermove', on); hit.addEventListener('pointerdown', on); hit.addEventListener('pointerleave', () => { cur.setAttribute('opacity', 0); hide(); });
+}
+const arrondi = v => Math.max(500, Math.ceil(v * 1.05 / (v > 3000 ? 1000 : 250)) * (v > 3000 ? 1000 : 250));
+
+function v1() {
+  const mx = Math.max(0, ...J.map(j => j.sp[nS - 1] || 0));
+  courbes('v1', SS, 'sp', arrondi(mx), { wk: 'w', rang: (j, k) => j.sr[k] || 999, vide: `La saison ${AN} n'a pas encore commencé : rendez-vous le 1<sup>er</sup> janvier. La Race ${AN}, elle, est lancée (bloc 4).` });
+}
+
+/* ---------- 2 · la grille ---------- */
+let N2 = 20;
+function v2() {
+  const t = document.getElementById('t2'), G = ['--g0', '--g1', '--g2', '--g3', '--g4', '--g5'].map(cv);
+  document.getElementById('n2').innerHTML = [20, 50, 100].map(k => `<button type="button" aria-pressed="${k === N2}" data-k="${k}">Top ${k}</button>`).join('');
+  document.querySelectorAll('#n2 button').forEach(b => b.onclick = () => { N2 = +b.dataset.k; v2(); });
+  if (!nS) { t.innerHTML = ''; document.getElementById('lg2').innerHTML = `<span>Rien à afficher avant le premier tournoi de ${AN}.</span>`; return; }
+  const k = p => p <= 0 ? 0 : p < 50 ? 1 : p < 200 ? 2 : p < 500 ? 3 : p < 1000 ? 4 : 5;
+  const ink = p => k(p) >= 4 ? '#fff' : cv('--ink');
+  const court = p => p >= 1000 ? (p / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + 'k' : p;
+  const cols = T.map((x, i) => ({ ...x, i })).filter(x => x.c !== 'CH' && x.w >= 0).sort((a, b) => a.s < b.s ? -1 : a.s > b.s ? 1 : a.n.localeCompare(b.n));
+  const js = [...J0.slice(0, N2), ...SEL.map(n => J.find(j => j.n === n)).filter(j => j && !J0.slice(0, N2).includes(j))];
+  const enSaison = r => T[r[0]].w >= 0;
+  t.innerHTML = `<thead><tr><th></th><th></th>${cols.map(x => `<th class="${x.c === 'GS' ? 'gs' : x.c === 'M' ? 'm' : ''}"><span ${x.c === 'GS' ? `style="background:var(${GSC[x.n]})"` : ''}>${x.n}</span></th>`).join('')}<th><span>Challengers</span></th><th><span>Total</span></th></tr></thead><tbody>`
+    + js.map(j => { const by = {}; j.r.forEach(r => by[r[0]] = r); const ch = j.r.filter(r => T[r[0]].c === 'CH' && enSaison(r)), chp = ch.reduce((a, r) => a + r[2], 0);
+      return `<tr><td class="rk">${j.sr[nS - 1] || ''}</td><td class="nm">${SEL.includes(j.n) ? pastille(j.n) : ''}${DRAP(j.c)} ${NOM(j.n)}</td>`
+        + cols.map(x => { const r = by[x.i]; if (!r) return `<td style="background:${G[0]}"></td>`;
+          return `<td data-j="${j.n}" data-t="${x.i}" style="background:${G[k(r[2])]};color:${ink(r[2])}">${r[1] === 'W' ? '<b>' + court(r[2]) + '</b>' : r[2] ? court(r[2]) : '·'}</td>`; }).join('')
+        + `<td data-j="${j.n}" data-ch="1" style="background:${G[k(chp)]};color:${ink(chp)}">${chp ? court(chp) : ''}</td><td class="tt">${nf(dernier(j))}</td></tr>`; }).join('') + '</tbody>';
+  t.querySelectorAll('td[data-j]').forEach(td => { const on = ev => { const j = J.find(x => x.n === td.dataset.j);
+      if (td.dataset.ch) { const ch = j.r.filter(r => T[r[0]].c === 'CH' && enSaison(r));
+        show(ev, `<div class="h">${j.n} · Challengers</div>${ch.length ? ch.map(r => `<div class="r"><span>${T[r[0]].n} (${TOUR[r[1]] || r[1]})</span><b>${nf(r[2])}</b></div>`).join('') : 'aucun point'}`); return; }
+      const x = T[+td.dataset.t], r = j.r.find(y => y[0] === +td.dataset.t);
+      show(ev, `<div class="h">${x.n} · ${CAT[x.c] || x.c}</div>${j.n}<br>${TOUR[r[1]] || r[1]} · <b>${nf(r[2])} point${r[2] > 1 ? 's' : ''}</b>`); };
+    td.addEventListener('pointermove', on); td.addEventListener('pointerleave', hide); });
+  document.getElementById('lg2').innerHTML = [['1–49', 1], ['50–199', 2], ['200–499', 3], ['500–999', 4], ['1 000 et +', 5]].map(([l, i]) => `<span><i style="background:${G[i]}"></i>${l} pts</span>`).join('')
+    + `<span>Titre en gras · colonnes en pastille : Grands Chelems · en gras : Masters 1000. Faire défiler vers la droite.</span>`;
+}
+
+/* ---------- 3 · les rangs ---------- */
+function v3() {
+  const v = document.getElementById('v3'); v.innerHTML = '';
+  if (nS < 2) { v.innerHTML = `<div class="vide">Le classement semaine après semaine apparaîtra après deux lundis de saison.</div>`; return; }
+  const n = nS, W = Math.max(320, v.clientWidth), H = 420, m = { t: 12, r: W < 600 ? 92 : 130, b: 26, l: 28 }, R = 20;
+  const s = el('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}` }, v);
+  const X = k => m.l + k * (W - m.l - m.r) / (n - 1), Y = r => m.t + (Math.min(r, R + 1) - 1) * (H - m.t - m.b) / R;
+  for (let r = 1; r <= R; r++) txt(s, m.l - 8, Y(r), r, { a: 'end', fs: 10 });
+  txt(s, m.l - 8, Y(R + 1), '>20', { a: 'end', fs: 9 });
+  SS.forEach((d, k) => { if (dt(d).getUTCDate() <= 7) txt(s, X(k), H - 8, MOIS[dt(d).getUTCMonth()], { fs: 10.5 }); });
+  const pass = J.filter(j => j.sr.some(r => r && r <= R) || SEL.includes(j.n));
+  const ordre = [...pass.filter(j => !SEL.includes(j.n)), ...SEL.slice().reverse().map(x => J.find(j => j.n === x)).filter(Boolean)];
+  const labs = [];
+  for (const j of ordre) { const sel = SEL.includes(j.n), rk = j.sr.map(r => r || R + 1);
+    const deb = j.sp.findIndex(c => c > 0); if (deb < 0) continue;
+    el('path', { d: rk.map((r, k) => k < deb ? '' : (k === deb ? 'M' : 'L') + X(k).toFixed(1) + ',' + Y(r).toFixed(1)).join(''), fill: 'none', stroke: coul(j.n), 'stroke-width': sel ? 3 : 1.1, 'stroke-linejoin': 'round', opacity: sel ? 1 : .8 }, s);
+    if (rk[n - 1] <= R || sel) labs.push({ y: Y(rk[n - 1]), t: NOM(j.n), sel, j }); }
+  labs.sort((a, b) => a.y - b.y); for (let k = 1; k < labs.length; k++) if (labs[k].y - labs[k - 1].y < 11) labs[k].y = labs[k - 1].y + 11;
+  labs.forEach(l => txt(s, X(n - 1) + 8, l.y, l.t, { fill: l.sel ? cv('--ink') : cv('--ink-3'), fw: l.sel ? 700 : 400, fs: 10.5 }));
+}
+
+/* ---------- 4 · la Race ---------- */
+function v4() {
+  const fin = SA.fin, ferme = SA.close;
+  document.getElementById('s4').innerHTML = `Le classement qui qualifie les huit meilleurs pour les ATP Finals de Turin. ${ferme ? `Close depuis le ${lab(fin)}.` : `En cours : ${nR} semaine${nR > 1 ? 's' : ''} depuis le ${lab(SR[0])}.`}`;
+  document.getElementById('x4').innerHTML = `<p><b>Ce n'est pas tout à fait le même classement que celui de la saison.</b></p>`
+    + `<p>· <b>Elle commence plus tôt :</b> le lundi qui suit le Masters de Paris de l'année d'avant (${lab(SA.debut)}). Les Challengers de novembre ${AN - 1}${AN - 1 >= 2026 ? ' et les derniers tournois du circuit' : ''} comptent déjà.</p>`
+    + `<p>· <b>Elle finit plus tôt :</b> après le Masters de Paris${SA.fin.endsWith('12-31') ? '' : ` (${lab(fin)})`}. Ce qui se joue ensuite compte pour la Race suivante.</p>`
+    + `<p>· <b>Elle ne garde que les meilleurs résultats :</b> les 4 Grands Chelems, les 8 Masters 1000 obligatoires et les 6 meilleurs autres tournois. Jusqu'à 3 mauvais Masters peuvent être remplacés par de meilleurs résultats ailleurs.</p>`;
+  const mx = Math.max(0, ...J.map(j => j.pts[nR - 1] || 0));
+  courbes('v4', SR, 'pts', arrondi(mx), { wk: 'wr', rang: (j, k) => j.rg[k] || 999, qual: true, vide: 'Pas encore de points.' });
+  const t = document.getElementById('t4');
+  const top = J.slice().sort((a, b) => a.rg[nR - 1] - b.rg[nR - 1]).slice(0, 12);
+  const kS = nS ? SS.findLastIndex(s => s <= SR[nR - 1]) : -1;
+  t.innerHTML = `<thead><tr><th>Race ${AN}, au ${lab(SR[nR - 1])}</th><th>Points Race</th>${kS >= 0 ? '<th>Points saison à cette date</th><th>Écart</th>' : ''}</tr></thead><tbody>`
+    + top.map(j => `<tr><td>${j.rg[nR - 1]}. ${DRAP(j.c)} ${j.n}</td><td><b>${nf(j.pts[nR - 1])}</b></td>${kS >= 0 ? `<td>${nf(j.sp[kS])}</td><td>${j.pts[nR - 1] - j.sp[kS] > 0 ? '+' : ''}${nf(j.pts[nR - 1] - j.sp[kS])}</td>` : ''}</tr>`).join('') + '</tbody>';
+}
+
+function tout() { chips(); v1(); v2(); v3(); v4(); }
+entete(); tout();
+let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(tout, 150); });
+new MutationObserver(tout).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+</script>
+</body>
+</html>

@@ -6,6 +6,7 @@
  *             tools/uefa/nations.json (chiffres des vignettes de l'accueil)
  *             tools/eco/page.html + tools/eco/data.json (page économie, relue chaque lundi)
  *             tools/joueurs/page.html + tools/joueurs/data.json (joueurs décisifs, saisons closes)
+ *             tools/atp/page.html + tools/atp/data-AAAA.json (pages « Saison ATP », une par saison, données du robot atp.yml)
  *             tools/nantes/page.html + Google Sheet « FC Nantes » relu à chaque build (photo de secours tools/nantes/historique.csv)
  * Sortie    : public/  — exactement ce que Netlify publie, sans build côté Netlify.
  *
@@ -22,6 +23,7 @@ import { nav, navCSS, FAVICON, FAVICON_SVG, MANIFEST, TOKENS, THEME_BOOT, THEME_
 import { buildEco } from './eco/page.mjs';
 import { buildJoueurs } from './joueurs/page.mjs';
 import { buildNantes } from './nantes/page.mjs';
+import { buildSaisonATP, SAISONS, cle as cleATP } from './atp/page.mjs';
 import { buildClubsFR } from './uefa/clubs-fr.mjs';
 import { buildClubsProjection } from './uefa/clubs-projection.mjs';
 import { buildForce } from './force/page.mjs';
@@ -59,14 +61,6 @@ const PUB_RE = /window\.PUBLIE = "[^"]*"/;
    effacé au début de la fabrication, donc à l'instant où l'on écrit il n'y a
    plus rien à comparer sur le disque. C'est ce détail qui avait fait échouer
    la première version, silencieusement. */
-/* Heure (objet Date) du dernier commit qui a touché ces sources ; null sans git.
-   Déclarée en fonction (et non en const) : utilisée avant sa ligne. */
-function heureGit(...src) {
-  try {
-    const d = execFileSync('git', ['log', '-1', '--format=%cI', '--', ...src], { cwd: ROOT, encoding: 'utf8' }).trim();
-    return d ? new Date(d) : null;
-  } catch { return null; }
-}
 const writeStable = (p, s, avant) => {
   if (avant && PUB_RE.test(avant) && PUB_RE.test(s)
       && avant.replace(PUB_RE, '') === s.replace(PUB_RE, '')) s = avant;
@@ -231,13 +225,7 @@ function buildUefa() {
      à deux questions différentes : « les chiffres datent de quand ? » et « la page
      que je lis date de quand ? ».
      Heure de Paris, parce que la page s'adresse à des lecteurs français. */
-  /* 19/11 (GT) : « publiée » = dernière fois que CETTE page a changé, pas l'heure
-     de la fabrication. public/ est refait à chaque dépôt, quel qu'il soit : un
-     dépôt du tennis à 23 h 59 affichait « 23h59 » ici. On prend donc l'heure du
-     dernier commit qui a touché les sources de la page UEFA (gabarit + données,
-     force des clubs, fichiers Wikipédia). Le menu et le pied, communs à tout le
-     site, n'en font pas partie. Sans git : heure de fabrication, comme avant. */
-  const now = heureGit('tools/uefa/page.html', 'tools/uefa/force-clubs.json', 'tools/uefa/wiki') || new Date();
+  const now = new Date();
   const part = o => new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', ...o }).format(now);
   /* Même forme que la ligne du dessus, séparateur compris : deux lignes de tampon
      côte à côte avec deux ponctuations différentes, ça se voit tout de suite. */
@@ -632,6 +620,10 @@ const joueurs = APERCU_JOUEURS ? buildJoueurs({ apercu: APERCU_JOUEURS }) : null
    le jour où elle sort, on retire `aVenir` dans site.mjs et buildNantes() sans aperçu. */
 const APERCU_NANTES = PAGES.find(p => p.key === 'nantes').aVenir?.apercu;
 const nantes = await buildNantes(APERCU_NANTES ? { apercu: APERCU_NANTES } : {});
+/* Saison ATP (19/11/2026) : une page par saison (tools/atp/), données tools/atp/data-AAAA.json
+   écrites chaque lundi par le robot atp.yml. En aperçu (noindex) tant que `aVenir` est dans site.mjs. */
+const ATP = SAISONS.map(an => { const ap = PAGES.find(p => p.key === cleATP(an)).aVenir?.apercu;
+  const b = buildSaisonATP(an, ap ? { apercu: ap } : {}); return { an, cible: ap || url(cleATP(an)), ...b }; });
 /* page cachée (noindex, hors menu et sitemap) : probas de classement des clubs français, tirées de PRJ */
 const clubsFR = buildClubsFR(read('tools/uefa/page.html'));
 /* projection club par club (C29) : indexée, tirée de PRJ comme la page cachée */
@@ -729,6 +721,7 @@ const sizes = {
   [fichier(url('b27'))]: write(fichier(url('b27')), b27.html),
   ...(joueurs ? { [fichier(APERCU_JOUEURS)]: write(fichier(APERCU_JOUEURS), joueurs.html) } : {}),
   [fichier(APERCU_NANTES || url('nantes'))]: write(fichier(APERCU_NANTES || url('nantes')), nantes.html),
+  ...Object.fromEntries(ATP.map(a => [fichier(a.cible), write(fichier(a.cible), a.html)])),
   [fichier(CACHEES.clubsFR)]: write(fichier(CACHEES.clubsFR), clubsFR.html),
   [fichier(CLUBS_PRJ.url)]: write(fichier(CLUBS_PRJ.url), clubsPrj.html),
   [fichier(url('force'))]: write(fichier(url('force')), force ? force.html : pageAVenir(FORCE_ATTENTE)),
@@ -740,7 +733,7 @@ const sizes = {
   'robots.txt': write('robots.txt', ROBOTS),
   'favicon.svg': write('favicon.svg', FAVICON_SVG),
   'site.webmanifest': write('site.webmanifest', MANIFEST),
-  'sitemap.xml': write('sitemap.xml', sitemap({ uefa: majUefa, force: majForce, tennis: majTennis, eco: majEco, b27: majB27, nantes: majNantes, gazettes: [[CLUBS_PRJ.url, majUefa], ...datesGaz] })),
+  'sitemap.xml': write('sitemap.xml', sitemap({ uefa: majUefa, force: majForce, tennis: majTennis, eco: majEco, b27: majB27, nantes: majNantes, ...Object.fromEntries(ATP.map(a => [cleATP(a.an), a.maj])), gazettes: [[CLUBS_PRJ.url, majUefa], ...datesGaz] })),
 };
 
 for (const [f, n] of Object.entries(sizes)) console.log(String(n).padStart(7), f);

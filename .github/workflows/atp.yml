@@ -1,0 +1,65 @@
+name: Rafraîchissement Saison ATP
+
+# LES PAGES /tennis-saison-atp-AAAA/ SE METTENT À JOUR TOUTES SEULES (depuis le 19/11/2026).
+#
+# Les points d'un tournoi comptent le lundi qui suit sa fin : le robot passe le
+# lundi, puis le mardi pour rattraper un tableau complété en retard sur Wikipédia.
+# 08 h 23 UTC : hors des passages des robots UEFA et tennis ; jamais à la minute 00.
+#
+# Chaque passage relit l'année en cours et la suivante (la Race de l'année
+# suivante démarre la semaine qui suit le Masters de Paris). N'écrit data-AAAA.json
+# que si un chiffre a bougé. Contrôle contre le top 20 de la Race publié sur
+# Wikipédia : écart massif → rien n'est écrit et le passage échoue (e-mail de GitHub).
+#
+# Lancé à la main (« Run workflow ») : un passage tout de suite.
+on:
+  schedule:
+    - cron: '23 8 * * 1,2'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: atp-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Relire Wikipédia et recalculer
+        run: |
+          set -euo pipefail
+          A=$(date -u +%Y)
+          node tools/atp/refresh.mjs --an "$A"
+          node tools/atp/refresh.mjs --an "$((A + 1))"
+
+      - name: Déposer si quelque chose a changé
+        id: depot
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- tools/atp && [ -z "$(git ls-files --others --exclude-standard tools/atp)" ]; then
+            echo "Rien à déposer."
+            exit 0
+          fi
+          git config user.name  "grotang.fr (robot)"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/atp/data-*.json tools/atp/alias.json tools/atp/uc-rangs-*.json
+          git commit -m "Saison ATP : semaine relue sur Wikipédia ($(date -u +%d/%m))"
+          git push || { git pull --rebase && git push; }
+          echo "deploy=true" >> "$GITHUB_OUTPUT"
+
+      - name: Publier le site
+        if: steps.depot.outputs.deploy == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run pages.yml --ref main
