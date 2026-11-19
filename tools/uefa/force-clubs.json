@@ -1,5 +1,5 @@
 {
-"date": "2026-11-16",
+"date": "2026-11-19",
 "alertes": [],
 "fraicheur": {
 "ENG": "2026-11-12",
@@ -9,13 +9,13 @@
 "FRA": "2026-11-12",
 "POR": "2026-11-12",
 "BEL": "2026-11-12",
-"NED": "2026-11-12",
+"NED": "2026-11-19",
 "TUR": "2026-11-12",
 "GRE": "2026-11-12"
 },
 "echelle": 1.157,
-"avantage_terrain": 0.325,
-"base_indice": 2.106,
+"avantage_terrain": 0.324,
+"base_indice": 2.1064,
 "points_par_but": 40,
 "avancement": {
 "ENG": 0.263,
@@ -25,258 +25,258 @@
 "FRA": 0.294,
 "POR": 0.32,
 "BEL": 0.301,
-"NED": 0.353,
+"NED": 0.351,
 "TUR": 0.32,
 "GRE": 0.379
 },
 "clubs": {
-"AA Gent": 1.9318,
+"AA Gent": 1.9322,
 "AC Milan": 2.5643,
-"AC Omonia Nikosia": 1.5387,
-"AEK Athens": 2.0467,
-"AFC Bournemouth": 3.3454,
-"AS Monaco": 2.6999,
-"AS Roma": 2.818,
-"AZ Alkmaar": 1.996,
-"Ajax Amsterdam": 2.1192,
-"Arsenal FC": 4.0518,
-"Aston Villa": 3.4803,
-"Atalanta Bergamo": 2.5936,
-"Atletico Madrid": 3.3544,
-"Bayer Leverkusen": 2.9313,
-"Besiktas Istanbul": 2.0358,
-"Borussia Dortmund": 3.0414,
-"Brighton & Hove Albion": 3.2515,
-"Celtic FC": 1.8061,
+"AC Omonia Nikosia": 1.5392,
+"AEK Athens": 2.047,
+"AFC Bournemouth": 3.3456,
+"AS Monaco": 2.7005,
+"AS Roma": 2.8182,
+"AZ Alkmaar": 1.9812,
+"Ajax Amsterdam": 2.127,
+"Arsenal FC": 4.0521,
+"Aston Villa": 3.4808,
+"Atalanta Bergamo": 2.5941,
+"Atletico Madrid": 3.3547,
+"Bayer Leverkusen": 2.9317,
+"Besiktas Istanbul": 2.0363,
+"Borussia Dortmund": 3.0418,
+"Brighton & Hove Albion": 3.2517,
+"Celtic FC": 1.8067,
 "Como 1907": 3.1117,
-"Crvena Zvezda": 1.7431,
-"Crystal Palace": 2.7328,
-"Dinamo Kiev": 1.2068,
-"Dinamo Zagreb": 1.8093,
-"FC Barcelona": 3.7454,
-"FC Bayern München": 4.0315,
-"FC Brügge": 2.7304,
-"FC Drita": 0.4406,
-"FC Inter Mailand": 3.2766,
-"FC Kairat Almaty": 1.1011,
-"FC Kopenhagen": 1.9608,
-"FC Liverpool": 3.4843,
-"FC Lugano": 1.8217,
-"FC Midtjylland": 2.1822,
-"FC Noah": 0.9998,
-"FC Porto": 2.815,
-"FC Twente Enschede": 2.1206,
-"FC Villarreal": 2.2946,
-"FCSB Bukarest": 1.1896,
-"FK Bodo/Glimt": 2.8624,
-"FK Borac Banja Luka": 0.8937,
-"FK Karabakh Agdam": 1.6965,
-"FK Rigas Futbola Skola": 0.7346,
-"Fenerbahce Istanbul": 2.4126,
-"Ferencvaros Budapest": 2.293,
-"Feyenoord": 2.1156,
-"Galatasaray": 2.6069,
-"Getafe CF": 1.9317,
-"HSK Zrinjski Mostar": 0.8215,
-"Istanbul Basaksehir": 1.6793,
-"Jagiellonia Bialystok": 1.5758,
-"Juventus Turin": 2.8014,
-"KuPS Kuopio": 0.6956,
-"Larne FC": -0.2939,
-"Lech Poznan": 1.6622,
-"Lille OSC": 2.4365,
-"Lincoln Red Imps": 0.2699,
-"Maccabi Tel-Aviv": 1.0797,
-"Manchester City": 3.4331,
-"Manchester United": 3.0697,
-"NEC Nijmegen": 1.8279,
-"NK Celje": 1.3228,
-"NK Rijeka": 1.4653,
-"Napoli": 2.4391,
-"OFI Heraklion": 1.4583,
-"Olympiakos Piraeus": 2.3664,
-"Olympique Lyonnais": 2.5606,
-"Olympique de Marseille": 2.4838,
-"PAOK Thessaloniki": 2.0187,
-"PFC Ludogorets Razgrad": 1.3421,
-"PSV Eindhoven": 2.7811,
-"Pafos FC": 1.7547,
-"Panathinaikos Athen": 1.9649,
-"Paris Saint-Germain": 4.2455,
-"RB Leipzig": 2.4596,
-"RC Celta": 2.2337,
-"RC Lens": 2.2392,
-"RSC Anderlecht": 2.1195,
-"Rangers FC": 1.6558,
-"Real Betis": 2.5329,
-"Real Madrid": 3.6139,
-"Real Sociedad": 2.4664,
-"Red Bull Salzburg": 1.576,
-"SC Freiburg": 2.4669,
-"SC Uniao Torreense": 1.4247,
-"SK Brann Bergen": 1.8829,
-"SK Rapid Wien": 1.1774,
-"SL Benfica": 2.9234,
-"Shakhtar Donetsk": 2.1622,
-"Shamrock Rovers": 0.6378,
-"Slavia Prag": 1.4925,
-"Slovan Bratislava": 0.9366,
-"Sparta Prag": 1.7886,
-"Sporting Braga": 2.3356,
-"Sporting CP": 3.1291,
-"Stade Rennais": 2.3775,
-"Sturm Graz": 1.5767,
-"Sunderland AFC": 2.6114,
-"TSG 1899 Hoffenheim": 2.2591,
-"Trabzonspor": 1.9545,
-"Union Saint-Gilloise": 2.5541,
-"Universitatea Craiova": 1.4929,
-"VV St. Truiden": 1.832,
-"VfB Stuttgart": 2.536,
-"Vikingur Reykjavik": 0.9262,
-"Viktoria Pilsen": 1.9694
+"Crvena Zvezda": 1.7435,
+"Crystal Palace": 2.7327,
+"Dinamo Kiev": 1.2071,
+"Dinamo Zagreb": 1.8099,
+"FC Barcelona": 3.7457,
+"FC Bayern München": 4.0319,
+"FC Brügge": 2.7308,
+"FC Drita": 0.4401,
+"FC Inter Mailand": 3.2767,
+"FC Kairat Almaty": 1.1014,
+"FC Kopenhagen": 1.9611,
+"FC Liverpool": 3.4846,
+"FC Lugano": 1.822,
+"FC Midtjylland": 2.1829,
+"FC Noah": 0.9986,
+"FC Porto": 2.8158,
+"FC Twente Enschede": 2.1289,
+"FC Villarreal": 2.2951,
+"FCSB Bukarest": 1.1903,
+"FK Bodo/Glimt": 2.8631,
+"FK Borac Banja Luka": 0.8939,
+"FK Karabakh Agdam": 1.6975,
+"FK Rigas Futbola Skola": 0.7351,
+"Fenerbahce Istanbul": 2.4129,
+"Ferencvaros Budapest": 2.2934,
+"Feyenoord": 2.1104,
+"Galatasaray": 2.6071,
+"Getafe CF": 1.9321,
+"HSK Zrinjski Mostar": 0.822,
+"Istanbul Basaksehir": 1.6795,
+"Jagiellonia Bialystok": 1.5757,
+"Juventus Turin": 2.8015,
+"KuPS Kuopio": 0.6958,
+"Larne FC": -0.2936,
+"Lech Poznan": 1.6624,
+"Lille OSC": 2.437,
+"Lincoln Red Imps": 0.2706,
+"Maccabi Tel-Aviv": 1.0804,
+"Manchester City": 3.4333,
+"Manchester United": 3.0701,
+"NEC Nijmegen": 1.8329,
+"NK Celje": 1.3229,
+"NK Rijeka": 1.4654,
+"Napoli": 2.4394,
+"OFI Heraklion": 1.4589,
+"Olympiakos Piraeus": 2.3673,
+"Olympique Lyonnais": 2.5616,
+"Olympique de Marseille": 2.4846,
+"PAOK Thessaloniki": 2.0192,
+"PFC Ludogorets Razgrad": 1.3423,
+"PSV Eindhoven": 2.7815,
+"Pafos FC": 1.7554,
+"Panathinaikos Athen": 1.9656,
+"Paris Saint-Germain": 4.2459,
+"RB Leipzig": 2.4601,
+"RC Celta": 2.2342,
+"RC Lens": 2.2398,
+"RSC Anderlecht": 2.12,
+"Rangers FC": 1.6563,
+"Real Betis": 2.5332,
+"Real Madrid": 3.6143,
+"Real Sociedad": 2.4669,
+"Red Bull Salzburg": 1.5769,
+"SC Freiburg": 2.4676,
+"SC Uniao Torreense": 1.4248,
+"SK Brann Bergen": 1.8838,
+"SK Rapid Wien": 1.1776,
+"SL Benfica": 2.924,
+"Shakhtar Donetsk": 2.161,
+"Shamrock Rovers": 0.6377,
+"Slavia Prag": 1.493,
+"Slovan Bratislava": 0.9364,
+"Sparta Prag": 1.7874,
+"Sporting Braga": 2.3362,
+"Sporting CP": 3.1296,
+"Stade Rennais": 2.3781,
+"Sturm Graz": 1.577,
+"Sunderland AFC": 2.6109,
+"TSG 1899 Hoffenheim": 2.2596,
+"Trabzonspor": 1.9549,
+"Union Saint-Gilloise": 2.5548,
+"Universitatea Craiova": 1.493,
+"VV St. Truiden": 1.8326,
+"VfB Stuttgart": 2.5366,
+"Vikingur Reykjavik": 0.9264,
+"Viktoria Pilsen": 1.9698
 },
 "nations": {
-"ALB": 0.666,
+"ALB": 0.6661,
 "AND": 0.1272,
-"ARM": 0.5002,
-"AUT": 1.6893,
-"AZE": 1.1974,
-"BEL": 1.6549,
-"BIH": 0.0227,
-"BLR": 0.4962,
-"BUL": 1.3281,
-"CRO": 1.4994,
-"CYP": 1.5925,
-"CZE": 1.4772,
-"DEN": 1.4364,
-"ENG": 2.8982,
-"ESP": 2.2176,
-"EST": 0.0066,
-"FIN": 0.6331,
-"FRA": 2.0932,
-"FRO": 0.2012,
-"GEO": -0.0181,
-"GER": 2.1713,
-"GIB": -0.6478,
-"GRE": 1.258,
-"HUN": 0.8677,
-"IRL": 0.4582,
-"ISL": 0.3916,
-"ISR": 1.3062,
-"ITA": 2.167,
-"KAZ": 0.2839,
-"KOS": 0.0942,
-"LIE": 0.4621,
-"LTU": -0.0684,
+"ARM": 0.4995,
+"AUT": 1.6896,
+"AZE": 1.1977,
+"BEL": 1.6554,
+"BIH": 0.023,
+"BLR": 0.4963,
+"BUL": 1.3282,
+"CRO": 1.5003,
+"CYP": 1.5921,
+"CZE": 1.4774,
+"DEN": 1.4367,
+"ENG": 2.8985,
+"ESP": 2.218,
+"EST": 0.0067,
+"FIN": 0.6325,
+"FRA": 2.0939,
+"FRO": 0.2014,
+"GEO": -0.018,
+"GER": 2.1718,
+"GIB": -0.6477,
+"GRE": 1.2585,
+"HUN": 0.8678,
+"IRL": 0.4581,
+"ISL": 0.3918,
+"ISR": 1.3059,
+"ITA": 2.1672,
+"KAZ": 0.2841,
+"KOS": 0.0943,
+"LIE": 0.46,
+"LTU": -0.0683,
 "LUX": -0.3312,
-"LVA": 0.8506,
-"MDA": -0.112,
-"MKD": 0.2878,
-"MLT": -0.2502,
-"MNE": -0.2468,
-"NED": 1.3891,
+"LVA": 0.8508,
+"MDA": -0.1115,
+"MKD": 0.288,
+"MLT": -0.2501,
+"MNE": -0.2467,
+"NED": 1.3652,
 "NIR": -0.495,
-"NOR": 1.6616,
-"POL": 1.7576,
-"POR": 1.6857,
-"ROU": 1.0577,
-"SCO": 0.8512,
-"SMR": -0.8736,
-"SRB": 0.6507,
-"SUI": 1.3835,
-"SVK": 0.842,
-"SVN": 0.5426,
-"SWE": 1.3574,
-"TUR": 1.3853,
-"UKR": 0.6899,
-"WAL": -0.4747
+"NOR": 1.6619,
+"POL": 1.7578,
+"POR": 1.6862,
+"ROU": 1.0579,
+"SCO": 0.8514,
+"SMR": -0.8734,
+"SRB": 0.6514,
+"SUI": 1.3843,
+"SVK": 0.8428,
+"SVN": 0.5428,
+"SWE": 1.3577,
+"TUR": 1.3856,
+"UKR": 0.6901,
+"WAL": -0.4745
 },
 "championnats": [
 [
 "Paris Saint-Germain FC",
 "FRA",
-4.2455
+4.2459
 ],
 [
 "Arsenal FC",
 "ENG",
-4.0518
+4.0521
 ],
 [
 "FC Bayern Munich",
 "GER",
-4.0315
+4.0319
 ],
 [
 "FC Barcelona",
 "ESP",
-3.7454
+3.7457
 ],
 [
 "Real Madrid CF",
 "ESP",
-3.6139
+3.6143
 ],
 [
 "Liverpool FC",
 "ENG",
-3.4843
+3.4846
 ],
 [
 "Aston Villa FC",
 "ENG",
-3.4803
+3.4808
 ],
 [
 "Manchester City FC",
 "ENG",
-3.4331
+3.4333
 ],
 [
 "Atlético Madrid",
 "ESP",
-3.3544
+3.3547
 ],
 [
 "AFC Bournemouth",
 "ENG",
-3.3454
+3.3456
 ],
 [
 "Newcastle United FC",
 "ENG",
-3.2877
+3.288
 ],
 [
 "Inter Milan",
 "ITA",
-3.2766
+3.2767
 ],
 [
 "Brighton & Hove Albion FC",
 "ENG",
-3.2515
+3.2517
 ],
 [
 "Brentford FC",
 "ENG",
-3.1697
+3.1699
 ],
 [
 "Sporting CP",
 "POR",
-3.1291
+3.1296
 ],
 [
 "Chelsea FC",
 "ENG",
-3.1215
+3.122
 ],
 [
 "Tottenham Hotspur FC",
 "ENG",
-3.1138
+3.1137
 ],
 [
 "Como 1907",
@@ -286,102 +286,102 @@
 [
 "Manchester United FC",
 "ENG",
-3.0697
+3.0701
 ],
 [
 "Leeds United FC",
 "ENG",
-3.0431
+3.0433
 ],
 [
 "Borussia Dortmund",
 "GER",
-3.0414
+3.0418
 ],
 [
 "Everton FC",
 "ENG",
-3.0033
+3.0035
 ],
 [
 "Nottingham Forest FC",
 "ENG",
-2.9345
+2.935
 ],
 [
 "Fulham FC",
 "ENG",
-2.9332
+2.9334
 ],
 [
 "Bayer 04 Leverkusen",
 "GER",
-2.9313
+2.9317
 ],
 [
 "SL Benfica",
 "POR",
-2.9234
+2.924
 ],
 [
 "Hull City AFC",
 "ENG",
-2.83
+2.8302
 ],
 [
 "AS Roma",
 "ITA",
-2.818
+2.8182
 ],
 [
 "FC Porto",
 "POR",
-2.815
+2.8158
 ],
 [
 "Juventus FC",
 "ITA",
-2.8014
+2.8015
 ],
 [
 "PSV Eindhoven",
 "NED",
-2.7811
+2.7815
 ],
 [
 "Crystal Palace FC",
 "ENG",
-2.7328
+2.7327
 ],
 [
 "Club Brugge KV",
 "BEL",
-2.7304
+2.7308
 ],
 [
 "AS Monaco FC",
 "FRA",
-2.6999
+2.7005
 ],
 [
 "SS Lazio",
 "ITA",
-2.6395
+2.6399
 ],
 [
 "Sunderland AFC",
 "ENG",
-2.6114
+2.6109
 ],
 [
 "Galatasaray SK (football)",
 "TUR",
-2.6069
+2.6071
 ],
 [
 "Atalanta BC",
 "ITA",
-2.5936
+2.5941
 ],
 [
 "AC Milan",
@@ -391,717 +391,722 @@
 [
 "Olympique Lyonnais",
 "FRA",
-2.5606
+2.5616
 ],
 [
 "Royale Union Saint-Gilloise",
 "BEL",
-2.5541
+2.5548
 ],
 [
 "VfB Stuttgart",
 "GER",
-2.536
+2.5366
 ],
 [
 "Real Betis",
 "ESP",
-2.5329
+2.5332
 ],
 [
 "Olympique de Marseille",
 "FRA",
-2.4838
+2.4846
 ],
 [
 "SC Freiburg",
 "GER",
-2.4669
+2.4676
 ],
 [
 "Real Sociedad",
 "ESP",
-2.4664
+2.4669
 ],
 [
 "RB Leipzig",
 "GER",
-2.4596
+2.4601
 ],
 [
 "Coventry City FC",
 "ENG",
-2.4487
+2.4488
 ],
 [
 "SSC Napoli",
 "ITA",
-2.4391
+2.4394
 ],
 [
 "Lille OSC",
 "FRA",
-2.4365
+2.437
 ],
 [
 "Bologna FC 1909",
 "ITA",
-2.4162
+2.4165
 ],
 [
 "Fenerbahçe SK (football)",
 "TUR",
-2.4126
+2.4129
 ],
 [
 "Frosinone Calcio",
 "ITA",
-2.3931
+2.3934
 ],
 [
 "Stade Rennais FC",
 "FRA",
-2.3775
+2.3781
 ],
 [
 "Olympiacos FC",
 "GRE",
-2.3664
+2.3673
 ],
 [
 "Athletic Bilbao",
 "ESP",
-2.3579
+2.3582
 ],
 [
 "SC Braga",
 "POR",
-2.3356
+2.3362
 ],
 [
 "Paris FC",
 "FRA",
-2.3182
+2.3189
 ],
 [
 "Villarreal CF",
 "ESP",
-2.2946
+2.2951
 ],
 [
 "Rayo Vallecano",
 "ESP",
-2.279
+2.2793
 ],
 [
 "TSG 1899 Hoffenheim",
 "GER",
-2.2591
+2.2596
 ],
 [
 "Ipswich Town FC",
 "ENG",
-2.2398
+2.2401
 ],
 [
 "RC Lens",
 "FRA",
-2.2392
+2.2398
 ],
 [
 "RC Celta de Vigo",
 "ESP",
-2.2337
+2.2342
 ],
 [
 "RC Strasbourg Alsace",
 "FRA",
-2.2265
+2.227
 ],
 [
 "SV Elversberg",
 "GER",
-2.2212
+2.2217
 ],
 [
 "Toulouse FC",
 "FRA",
-2.2198
+2.2204
 ],
 [
 "Eintracht Frankfurt",
 "GER",
-2.2072
+2.2079
 ],
 [
 "1 FSV Mainz 05",
 "GER",
-2.1959
+2.1964
 ],
 [
 "ACF Fiorentina",
 "ITA",
-2.1814
+2.1817
 ],
 [
 "Deportivo de A Coruña",
 "ESP",
-2.1777
+2.1781
 ],
 [
 "Elche CF",
 "ESP",
-2.1611
+2.1615
 ],
 [
 "Deportivo Alavés",
 "ESP",
-2.1434
-],
-[
-"Valencia CF",
-"ESP",
-2.1252
+2.1438
 ],
 [
 "FC Twente",
 "NED",
-2.1206
-],
-[
-"RSC Anderlecht",
-"BEL",
-2.1195
+2.1289
 ],
 [
 "AFC Ajax",
 "NED",
-2.1192
+2.127
+],
+[
+"Valencia CF",
+"ESP",
+2.1256
+],
+[
+"RSC Anderlecht",
+"BEL",
+2.12
 ],
 [
 "FC Lorient",
 "FRA",
-2.1172
+2.1178
 ],
 [
 "RCD Espanyol",
 "ESP",
-2.1166
-],
-[
-"Feyenoord",
-"NED",
-2.1156
+2.1169
 ],
 [
 "Stade Brestois 29",
 "FRA",
-2.1119
+2.1125
+],
+[
+"Feyenoord",
+"NED",
+2.1104
 ],
 [
 "CA Osasuna",
 "ESP",
-2.106
+2.1063
 ],
 [
 "Sevilla FC",
 "ESP",
-2.1025
+2.1028
 ],
 [
 "KRC Genk",
 "BEL",
-2.0717
+2.0725
 ],
 [
 "Levante UD",
 "ESP",
-2.0616
+2.0619
 ],
 [
 "FC Augsburg",
 "GER",
-2.0472
+2.0477
 ],
 [
 "AEK Athens FC",
 "GRE",
-2.0467
+2.047
 ],
 [
 "Beşiktaş JK",
 "TUR",
-2.0358
+2.0363
 ],
 [
 "SV Werder Bremen",
 "GER",
-2.0202
+2.0207
 ],
 [
 "Torino FC",
 "ITA",
-2.0201
+2.0203
 ],
 [
 "PAOK FC",
 "GRE",
-2.0187
+2.0192
 ],
 [
 "Genoa CFC",
 "ITA",
-2.001
-],
-[
-"AZ Alkmaar",
-"NED",
-1.996
+2.0013
 ],
 [
 "Amed SFK",
 "TUR",
-1.9853
+1.9857
 ],
 [
 "US Sassuolo Calcio",
 "ITA",
-1.9846
+1.9848
+],
+[
+"AZ Alkmaar",
+"NED",
+1.9812
 ],
 [
 "FC Famalicão",
 "POR",
-1.9761
+1.9767
 ],
 [
 "Panathinaikos FC",
 "GRE",
-1.9649
+1.9656
 ],
 [
 "Trabzonspor",
 "TUR",
-1.9545
+1.9549
 ],
 [
 "Udinese Calcio",
 "ITA",
-1.9384
+1.9386
 ],
 [
 "KAA Gent",
 "BEL",
-1.9318
+1.9322
 ],
 [
 "Getafe CF",
 "ESP",
-1.9317
+1.9321
 ],
 [
 "Hamburger SV",
 "GER",
-1.9292
+1.9297
 ],
 [
 "Cagliari Calcio",
 "ITA",
-1.9211
+1.9213
 ],
 [
 "Borussia Mönchengladbach",
 "GER",
-1.9152
+1.9157
 ],
 [
 "1 FC Köln",
 "GER",
-1.8857
+1.8862
 ],
 [
 "SC Paderborn 07",
 "GER",
-1.879
+1.8796
 ],
 [
 "1 FC Union Berlin",
 "GER",
-1.8762
+1.8767
 ],
 [
 "Parma Calcio 1913",
 "ITA",
-1.8582
+1.8585
 ],
 [
 "AJ Auxerre",
 "FRA",
-1.8494
+1.8501
 ],
 [
 "Académico de Viseu FC",
 "POR",
-1.8477
-],
-[
-"Sint-Truidense VV",
-"BEL",
-1.832
+1.8483
 ],
 [
 "NEC Nijmegen",
 "NED",
-1.8279
+1.8329
+],
+[
+"Sint-Truidense VV",
+"BEL",
+1.8326
 ],
 [
 "Gil Vicente FC",
 "POR",
-1.8241
+1.8247
 ],
 [
 "OGC Nice",
 "FRA",
-1.7936
+1.7946
 ],
 [
 "Vitória SC",
 "POR",
-1.7851
+1.7857
 ],
 [
 "FC Schalke 04",
 "GER",
-1.7847
+1.7851
 ],
 [
 "Royal Antwerp FC",
 "BEL",
-1.7707
+1.7712
 ],
 [
 "Royal Charleroi SC",
 "BEL",
-1.7599
+1.7604
 ],
 [
 "Lommel SK",
 "BEL",
-1.7279
+1.7284
 ],
 [
 "Racing de Santander",
 "ESP",
-1.7222
+1.7226
 ],
 [
 "Venezia FC",
 "ITA",
-1.7216
+1.7218
 ],
 [
 "CD Santa Clara",
 "POR",
-1.721
+1.7216
 ],
 [
 "KV Mechelen",
 "BEL",
-1.7163
+1.7168
 ],
 [
 "Le Havre AC",
 "FRA",
-1.7143
+1.715
 ],
 [
 "Le Mans FC",
 "FRA",
-1.7111
+1.7117
 ],
 [
 "Göztepe SK",
 "TUR",
-1.7089
+1.7092
 ],
 [
 "US Lecce",
 "ITA",
-1.6939
+1.6941
 ],
 [
 "Angers SCO",
 "FRA",
-1.6801
+1.6808
 ],
 [
 "İstanbul Başakşehir FK",
 "TUR",
-1.6793
+1.6795
 ],
 [
 "FC Arouca",
 "POR",
-1.6586
+1.6592
 ],
 [
 "KVC Westerlo",
 "BEL",
-1.6431
+1.6437
 ],
 [
 "ES Troyes AC",
 "FRA",
-1.6156
-],
-[
-"SC Heerenveen",
-"NED",
-1.6019
+1.6162
 ],
 [
 "FC Utrecht",
 "NED",
-1.5976
+1.6081
+],
+[
+"SC Heerenveen",
+"NED",
+1.601
 ],
 [
 "Moreirense FC",
 "POR",
-1.5913
+1.5919
 ],
 [
 "Standard Liège",
 "BEL",
-1.5833
+1.5838
 ],
 [
 "Çorum FK",
 "TUR",
-1.566
+1.5663
 ],
 [
 "FC Alverca",
 "POR",
-1.5623
-],
-[
-"AC Monza",
-"ITA",
-1.5445
+1.5629
 ],
 [
 "FC Groningen",
 "NED",
-1.5286
+1.5467
+],
+[
+"AC Monza",
+"ITA",
+1.5448
 ],
 [
 "Málaga CF",
 "ESP",
-1.5278
+1.5282
 ],
 [
 "Cercle Brugge KSV",
 "BEL",
-1.5211
+1.5215
 ],
 [
 "Samsunspor",
 "TUR",
-1.5126
+1.5129
 ],
 [
 "SV Zulte Waregem",
 "BEL",
-1.5026
+1.5032
 ],
 [
 "Oud-Heverlee Leuven",
 "BEL",
-1.4995
+1.5001
 ],
 [
 "GD Estoril Praia",
 "POR",
-1.497
+1.4976
 ],
 [
 "RAAL La Louvière",
 "BEL",
-1.4586
+1.4592
 ],
 [
 "OFI Crete FC",
 "GRE",
-1.4583
+1.4589
 ],
 [
 "CD Nacional",
 "POR",
-1.4555
+1.4561
 ],
 [
 "Aris Thessaloniki FC",
 "GRE",
-1.4164
+1.417
 ],
 [
 "Kocaelispor",
 "TUR",
-1.4128
+1.4131
 ],
 [
 "Levadiakos FC",
 "GRE",
-1.4031
-],
-[
-"Kasımpaşa SK",
-"TUR",
-1.3897
+1.4036
 ],
 [
 "Go Ahead Eagles",
 "NED",
-1.3844
+1.3991
+],
+[
+"Kasımpaşa SK",
+"TUR",
+1.39
 ],
 [
 "CF Estrela da Amadora",
 "POR",
-1.3589
+1.3595
 ],
 [
 "Çaykur Rizespor",
 "TUR",
-1.3387
+1.339
 ],
 [
 "Casa Pia AC",
 "POR",
-1.3353
+1.3359
 ],
 [
 "SC Telstar",
 "NED",
-1.3185
+1.3265
 ],
 [
 "Rio Ave FC",
 "POR",
-1.3057
+1.3063
 ],
 [
 "Alanyaspor",
 "TUR",
-1.3046
-],
-[
-"Atromitos FC",
-"GRE",
-1.2651
-],
-[
-"Konyaspor",
-"TUR",
-1.2614
-],
-[
-"Fortuna Sittard",
-"NED",
-1.2602
-],
-[
-"Iraklis FC (Thessaloniki)",
-"GRE",
-1.1878
-],
-[
-"Excelsior Rotterdam",
-"NED",
-1.1845
-],
-[
-"Sparta Rotterdam",
-"NED",
-1.1822
-],
-[
-"CS Marítimo",
-"POR",
-1.1794
-],
-[
-"Gençlerbirliği",
-"TUR",
-1.1715
-],
-[
-"Kalamata FC",
-"GRE",
-1.1674
+1.3049
 ],
 [
 "SC Cambuur",
 "NED",
-1.1542
+1.2807
+],
+[
+"Fortuna Sittard",
+"NED",
+1.2736
+],
+[
+"Atromitos FC",
+"GRE",
+1.2657
+],
+[
+"Konyaspor",
+"TUR",
+1.2617
+],
+[
+"Excelsior Rotterdam",
+"NED",
+1.2433
+],
+[
+"Sparta Rotterdam",
+"NED",
+1.2038
+],
+[
+"Iraklis FC (Thessaloniki)",
+"GRE",
+1.1883
+],
+[
+"CS Marítimo",
+"POR",
+1.18
+],
+[
+"Gençlerbirliği",
+"TUR",
+1.1718
+],
+[
+"Kalamata FC",
+"GRE",
+1.168
 ],
 [
 "SK Beveren",
 "BEL",
-1.1504
+1.151
 ],
 [
 "PEC Zwolle",
 "NED",
-1.1464
+1.1425
 ],
 [
 "Gaziantep FK",
 "TUR",
-1.1057
+1.1061
 ],
 [
 "Erzurumspor FK",
 "TUR",
-1.1029
+1.1032
 ],
 [
 "AE Kifisia FC",
 "GRE",
-1.0633
+1.0638
 ],
 [
 "Asteras Tripolis FC",
 "GRE",
-0.9804
+0.981
 ],
 [
 "Panetolikos FC",
 "GRE",
-0.977
+0.9776
 ],
 [
 "Eyüpspor",
 "TUR",
-0.9742
+0.9745
 ],
 [
 "ADO Den Haag",
 "NED",
-0.9716
+0.9655
 ],
 [
 "Volos FC",
 "GRE",
-0.7444
+0.745
 ],
 [
 "KV Kortrijk",
 "BEL",
-0.7234
+0.7239
 ],
 [
 "Willem II (football club)",
 "NED",
-0.5397
+0.5395
+],
+[
+"Willem II Tilburg",
+"NED",
+0.5395
 ]
 ],
 "promus": [
@@ -1131,6 +1136,7 @@
 "SV Elversberg",
 "Venezia FC",
 "Willem II (football club)",
+"Willem II Tilburg",
 "Çorum FK"
 ],
 "seuil_hors10": 25,
@@ -1138,259 +1144,259 @@
 [
 "FK Bodo/Glimt",
 "NOR",
-2.8624,
+2.8631,
 48
 ],
 [
 "Ferencvaros Budapest",
 "HUN",
-2.293,
+2.2934,
 50
 ],
 [
 "FC Midtjylland",
 "DEN",
-2.1822,
+2.1829,
 41
 ],
 [
 "Shakhtar Donetsk",
 "UKR",
-2.1622,
+2.161,
 36
 ],
 [
 "Viktoria Pilsen",
 "CZE",
-1.9694,
+1.9698,
 42
 ],
 [
 "FC Kopenhagen",
 "DEN",
-1.9608,
+1.9611,
 43
 ],
 [
 "SK Brann Bergen",
 "NOR",
-1.8829,
+1.8838,
 31
 ],
 [
 "FC Lugano",
 "SUI",
-1.8217,
+1.822,
 29
 ],
 [
 "Dinamo Zagreb",
 "CRO",
-1.8093,
+1.8099,
 36
 ],
 [
 "Celtic FC",
 "SCO",
-1.8061,
+1.8067,
 30
 ],
 [
 "Sparta Prag",
 "CZE",
-1.7886,
+1.7874,
 40
 ],
 [
 "Pafos FC",
 "CYP",
-1.7547,
+1.7554,
 41
 ],
 [
 "Crvena Zvezda",
 "SRB",
-1.7431,
+1.7435,
 37
 ],
 [
 "Legia Warschau",
 "POL",
-1.7407,
+1.7406,
 34
 ],
 [
 "FK Karabakh Agdam",
 "AZE",
-1.6965,
+1.6975,
 44
 ],
 [
 "Lech Poznan",
 "POL",
-1.6622,
+1.6624,
 26
 ],
 [
 "Rangers FC",
 "SCO",
-1.6558,
+1.6563,
 36
 ],
 [
 "Sturm Graz",
 "AUT",
-1.5767,
+1.577,
 32
 ],
 [
 "Red Bull Salzburg",
 "AUT",
-1.576,
+1.5769,
 34
 ],
 [
 "Jagiellonia Bialystok",
 "POL",
-1.5758,
+1.5757,
 40
 ],
 [
 "AC Omonia Nikosia",
 "CYP",
-1.5387,
+1.5392,
 38
-],
-[
-"Universitatea Craiova",
-"ROU",
-1.4929,
-25
 ],
 [
 "Slavia Prag",
 "CZE",
-1.4925,
+1.493,
 28
+],
+[
+"Universitatea Craiova",
+"ROU",
+1.493,
+25
 ],
 [
 "NK Rijeka",
 "CRO",
-1.4653,
+1.4654,
 28
 ],
 [
 "PFC Ludogorets Razgrad",
 "BUL",
-1.3421,
+1.3423,
 40
 ],
 [
 "NK Celje",
 "SVN",
-1.3228,
+1.3229,
 48
 ],
 [
 "Malmö FF",
 "SWE",
-1.2568,
+1.2574,
 30
 ],
 [
 "Dinamo Kiev",
 "UKR",
-1.2068,
+1.2071,
 32
 ],
 [
 "FCSB Bukarest",
 "ROU",
-1.1896,
+1.1903,
 38
 ],
 [
 "SK Rapid Wien",
 "AUT",
-1.1774,
+1.1776,
 34
 ],
 [
 "FC Kairat Almaty",
 "KAZ",
-1.1011,
+1.1014,
 27
 ],
 [
 "Maccabi Tel-Aviv",
 "ISR",
-1.0797,
+1.0804,
 39
 ],
 [
 "FC Noah",
 "ARM",
-0.9998,
+0.9986,
 34
 ],
 [
 "Slovan Bratislava",
 "SVK",
-0.9366,
+0.9364,
 42
 ],
 [
 "Vikingur Reykjavik",
 "ISL",
-0.9262,
+0.9264,
 30
 ],
 [
 "FK Borac Banja Luka",
 "BIH",
-0.8937,
+0.8939,
 31
 ],
 [
 "HSK Zrinjski Mostar",
 "BIH",
-0.8215,
+0.822,
 26
 ],
 [
 "FK Rigas Futbola Skola",
 "LVA",
-0.7346,
+0.7351,
 30
 ],
 [
 "KuPS Kuopio",
 "FIN",
-0.6956,
+0.6958,
 31
 ],
 [
 "Shamrock Rovers",
 "IRL",
-0.6378,
+0.6377,
 36
 ],
 [
 "FC Drita",
 "KOS",
-0.4406,
+0.4401,
 30
 ],
 [
 "Lincoln Red Imps",
 "GIB",
-0.2699,
+0.2706,
 33
 ],
 [
 "Larne FC",
 "NIR",
--0.2939,
+-0.2936,
 26
 ]
 ]
