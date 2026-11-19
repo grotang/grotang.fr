@@ -39,8 +39,13 @@ select.sel{font:inherit;font-size:13.5px;padding:5px 8px;border:1px solid var(--
 /* bloc 1 · le classement */
 table.cl{width:100%;border-collapse:collapse;font-size:14px}
 table.cl th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;text-align:left;padding:0 6px 6px;border-bottom:1px solid var(--rule)}
-table.cl td{padding:5px 6px;border-bottom:1px solid var(--rule-soft);vertical-align:middle}
+table.cl td{padding:6px 6px;vertical-align:middle}
+table.cl tbody tr{transition:background .15s}
+table.cl tbody tr:hover td{background:color-mix(in srgb,var(--ink) 5%,transparent)}
 table.cl tr.fr td{background:var(--fr-soft)}
+table.cl tr.fr td:first-child{border-radius:6px 0 0 6px} table.cl tr.fr td:last-child{border-radius:0 6px 6px 0}
+table.cl tr.top td.rg{font-size:15px;font-weight:700;color:var(--ink)}
+.club .sous{display:none}
 td.rg{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-3);width:28px;text-align:right}
 td.club{font-weight:600}
 .nation{white-space:nowrap;font-size:13.5px}
@@ -53,12 +58,16 @@ main.fc.bn .barre i{background:var(--nc)}
 .cp.C1{background:var(--c1)} .cp.C3{background:var(--c3)} .cp.C4{background:var(--c4)}
 .cp.non{background:none;color:var(--ink-3);border:1px dashed var(--rule)}
 td.ix{font-family:'IBM Plex Mono',monospace;font-weight:600;text-align:right;width:44px}
-td.bar{width:40%}
-.barre{position:relative;height:12px}
-.barre i{position:absolute;left:0;top:2px;height:8px;background:color-mix(in srgb,var(--ink) 55%,var(--surface));border-radius:1px}
-tr.fr .barre i{background:var(--fr)}
-.barre b{position:absolute;top:-2px;bottom:-2px;width:0;border-left:1.5px dashed var(--ink-3)}
-td.but{font-size:12.5px;color:var(--ink-3);white-space:nowrap;text-align:right}
+td.bar{width:46%;padding-right:0}
+th.bar{position:relative;height:16px}
+th.bar span{position:absolute;bottom:6px;transform:translateX(-50%);white-space:nowrap;letter-spacing:.04em;text-transform:none;font-weight:500}
+th.bar span:first-child{transform:none}
+.barre{position:relative;height:22px}
+.barre i{position:absolute;top:5px;height:12px;background:var(--nc);border-radius:6px;opacity:.92}
+tr:hover .barre i{opacity:1}
+.barre em{position:absolute;top:0;line-height:22px;font-style:normal;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:14px;color:var(--ink);white-space:nowrap}
+.barre em small{font-family:Lato,system-ui,sans-serif;font-weight:400;font-size:11.5px;color:var(--ink-3);margin-left:7px}
+.barre .zero{position:absolute;top:2px;bottom:2px;width:0;border-left:1px solid var(--rule)}
 td.td{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-3);text-align:right;width:52px;white-space:nowrap}
 td.td.up{color:var(--good)} td.td.dn{color:var(--bad)}
 .pied{font-size:12.5px;color:var(--ink-3);margin:10px 0 0;line-height:1.5}
@@ -103,7 +112,11 @@ td.td.up{color:var(--good)} td.td.dn{color:var(--bad)}
 .ecart{font-size:15px;margin:14px 0 0}
 .ecart b{font-family:'IBM Plex Mono',monospace}
 @media (max-width:640px){
-  td.but,th.but,td.bar,th.bar{display:none} table.cl{font-size:13px} td.rg{width:22px}
+  table.cl{font-size:13px} td.rg{width:22px} td.nation,th.nat,td.cpc,th.cpc,td.td,th.td{display:none}
+  .club .sous{display:flex;gap:6px;align-items:center;margin-top:2px;font-weight:400} .club .sous .cp{font-size:9.5px;min-width:20px;padding:0 3px}
+  .club .sous .nc{font-family:'IBM Plex Mono',monospace;font-size:11px}
+  td.bar{width:52%} .barre em small{display:none} .barre em{font-size:13px}
+  th.bar span:not(:first-child){display:none}
   .nation .long{display:none} .nation .court{display:inline} .nation i{margin-right:4px}
   #b2{--gauche:86px!important} .ln .nm{font-size:12.5px} .ln .nm small{font-size:10.5px} .piste .et{font-size:10px}
   .duel{grid-template-columns:1fr} .duel .vs{display:none}
@@ -132,7 +145,7 @@ td.td.up{color:var(--good)} td.td.dn{color:var(--bad)}
       <div class="grp"><span class="lb">Clubs</span><span class="seg" id="f1"><button class="on" data-v="tous">Tous</button><button data-v="eu"><span class="lg">Engagés en Europe</span><span class="ct">En Europe</span></button></span></div>
       <div class="grp dr"><label class="lb" for="f1n">Nation</label><select class="sel" id="f1n"></select></div>
     </div>
-    <table class="cl"><thead><tr><th></th><th>Club</th><th>Nation</th><th>Coupe</th><th style="text-align:right">Indice</th><th class="bar"></th><th class="but" style="text-align:right">Face au club moyen</th><th style="text-align:right">Sem.</th></tr></thead><tbody id="t1"></tbody></table>
+    <table class="cl"><thead><tr><th></th><th>Club</th><th class="nat">Nation</th><th class="cpc">Coupe</th><th class="bar" id="h1"></th><th class="td" style="text-align:right">Sem.</th></tr></thead><tbody id="t1"></tbody></table>
     <p class="pied" id="p1"></p>
   </section>
 
@@ -177,7 +190,7 @@ document.getElementById('maj').innerHTML = `Données au <b>${dJ}</b> · mise à 
 const s1 = document.getElementById('f1n');
 s1.innerHTML = '<option value="">Toutes</option>' + ORDRE.map(c => `<option value="${c}">${NOMS[c]}</option>`).join('') + (FD.clubs.length > FD.nb10 ? '<option value="autres">Autres nations</option>' : '');
 let m1 = 'tous';
-const sem = c => { if (c.av == null) return '<td class="td">·</td>'; const d = c.ix - c.av; if (Math.abs(d) < 0.5) return '<td class="td">=</td>'; return `<td class="td ${d > 0 ? 'up' : 'dn'}">${d > 0 ? '▲' : '▼'} ${dec(Math.abs(d), 0)}</td>`; };
+const sem = c => { if (c.av == null) return '<td class="td">·</td>'; const d = c.ix - c.av; if (Math.abs(d) < 0.5) return '<td class="td"></td>'; return `<td class="td ${d > 0 ? 'up' : 'dn'}">${d > 0 ? '▲' : '▼'} ${dec(Math.abs(d), 0)}</td>`; };
 function t1(){
   const n = s1.value;
   let L = FD.clubs.filter(c => (!n || (n === 'autres' ? c.eu : c.nat === n)) && (m1 === 'tous' || c.coupe));
@@ -185,11 +198,18 @@ function t1(){
   const ADJ = {ENG:'anglais',ITA:'italiens',ESP:'espagnols',GER:'allemands',FRA:'français',POR:'portugais',BEL:'belges',NED:'néerlandais',TUR:'turcs',GRE:'grecs'};
   const DE = {ENG:"d'Angleterre",ITA:"d'Italie",ESP:"d'Espagne",GER:"d'Allemagne",FRA:'de France',POR:'du Portugal',BEL:'de Belgique',NED:'des Pays-Bas',TUR:'de Turquie',GRE:'de Grèce'};
   document.getElementById('r1').textContent = n === 'autres' ? `Les ${L.length} clubs des autres nations${m1 === 'eu' ? ' engagés en Europe' : ''}, notés sur leurs seuls matchs européens.` : n ? `Les ${L.length} clubs ${m1 === 'eu' ? ADJ[n] + ' engagés en Europe' : 'du championnat ' + DE[n]}.` : `Les 30 clubs les plus forts${m1 === 'eu' ? ' parmi les engagés en Europe' : ''}.`;
-  document.getElementById('t1').innerHTML = L.map(c => `<tr class="${c.nat === 'FRA' ? 'fr' : ''}"><td class="rg">${c.rang}</td><td class="club">${c.nom}${c.promu ? '<span class="promu" title="Promu cette saison : son point de départ est le niveau moyen des promus de sa ligue">promu</span>' : ''}${c.eu && n !== 'autres' ? `<span class="promu" title="Force tirée de ses ${c.eu} matchs européens des trois dernières années : son championnat n'est pas suivi">Europe seulement</span>` : ''}</td><td class="nation" style="${styleNom(c.nat)}"><i style="background:${kNom(c.nat)}"></i><span class="long">${NOMS[c.nat]}</span><span class="court">${c.nat}</span></td><td>${cp(c.coupe)}</td><td class="ix">${Math.round(c.ix)}</td><td class="bar"><div class="barre"><i style="width:${pos(c.ix)}%;--nc:${kNom(c.nat)}"></i><b style="left:${pos(100)}%"></b></div></td><td class="but">${butsTxt(c.ix)}</td>${sem(c)}</tr>`).join('');
+  /* échelle de la vue : les barres partent de 100 (le club européen moyen) ; à gauche pour les clubs sous 100 */
+  const lo = Math.min(100, ...L.map(c => c.ix)), hi = Math.max(...L.map(c => c.ix)), place = 0.2 * (hi - lo) + 8, gauche = lo < 100 ? 0.3 * (hi - lo) + 10 : 0;
+  const X = ix => (ix - lo + gauche) / (hi - lo + gauche + place) * 100, z = X(100);
+  const barre = c => { const a = X(Math.min(c.ix, 100)), b = X(Math.max(c.ix, 100)), dr = c.ix >= 100;
+    return `<div class="barre">${lo < 100 ? `<span class="zero" style="left:${z}%"></span>` : ''}<i style="left:${a}%;width:${Math.max(b - a, 0.6)}%;--nc:${kNom(c.nat)}"></i><em style="${dr ? `left:calc(${b}% + 8px)` : `right:calc(${100 - a}% + 8px)`}">${Math.round(c.ix)}<small>${butsTxt(c.ix)}</small></em></div>`; };
+  const rep = [[100, 'club moyen'], [140, '+1 but'], [180, '+2 buts']].filter(([v]) => v >= lo && v <= hi + place / 2);
+  document.getElementById('h1').innerHTML = rep.map(([v, t]) => `<span style="left:${X(v)}%">${t}</span>`).join('');
+  document.getElementById('t1').innerHTML = L.map(c => `<tr class="${c.nat === 'FRA' && n !== 'FRA' ? 'fr' : ''}${c.rang <= 3 ? ' top' : ''}"><td class="rg">${c.rang}</td><td class="club">${c.nom}${c.promu ? '<span class="promu" title="Promu cette saison : son point de départ est le niveau moyen des promus de sa ligue">promu</span>' : ''}${c.eu && n !== 'autres' ? `<span class="promu" title="Force tirée de ses ${c.eu} matchs européens des trois dernières années : son championnat n'est pas suivi">Europe seulement</span>` : ''}<span class="sous"><span class="nc" style="color:${kNom(c.nat)}">${c.nat}</span>${cp(c.coupe)}</span></td><td class="nation"><i style="background:${kNom(c.nat)}"></i><span class="long">${NOMS[c.nat]}</span><span class="court">${c.nat}</span></td><td class="cpc">${cp(c.coupe)}</td><td class="bar">${barre(c)}</td>${sem(c)}</tr>`).join('');
 }
 document.querySelectorAll('#f1 button').forEach(b => b.onclick = () => { document.querySelectorAll('#f1 button').forEach(x => x.classList.toggle('on', x === b)); m1 = b.dataset.v; t1(); });
 s1.onchange = t1; t1();
-document.getElementById('p1').textContent = `Trait pointillé : 100, le club moyen de la phase de ligue (Ligue des champions, Ligue Europa, Ligue Conférence). « Sem. » : évolution de l'indice depuis le relevé de la semaine précédente${FD.semPrec ? ' (' + FD.semPrec.split('-').reverse().join('/') + ')' : ' — premier relevé cette semaine'}.`;
+document.getElementById('p1').textContent = `Les barres partent de 100, le club moyen de la phase de ligue (Ligue des champions, Ligue Europa, Ligue Conférence). « Sem. » : évolution de l'indice depuis le relevé de la semaine précédente${FD.semPrec ? ' (' + FD.semPrec.split('-').reverse().join('/') + ')' : ' — premier relevé cette semaine'}.`;
 /* bloc 2 */
 const bul = document.getElementById('bulle');
 const montre = (e, h) => { bul.innerHTML = h; bul.style.display = 'block'; bul.style.left = Math.max(6, Math.min(e.clientX + 12, innerWidth - 270)) + 'px'; bul.style.top = (e.clientY + 14) + 'px'; };
@@ -209,7 +229,7 @@ const b2 = document.getElementById('b2'); b2.innerHTML = h2;
 b2.querySelectorAll('.pt').forEach(p => { p.onmousemove = e => montre(e, p.dataset.h); p.onmouseleave = cache; p.onclick = e => montre(e, p.dataset.h); });
 document.addEventListener('scroll', cache, { passive: true });
 /* bloc 3 : même formule que la projection (page UEFA : BETA, HOME, NUL_MAX, NUL_PENTE) */
-const BETA = 1.00, HOME = 0.57, NUL_MAX = 0.24, NUL_PENTE = 0.24, sig = x => 1 / (1 + Math.exp(-x));
+const BETA = 1.05, HOME = 0.57, NUL_MAX = 0.24, NUL_PENTE = 0.24, sig = x => 1 / (1 + Math.exp(-x));
 const C = FD.comparateur;
 const opts = C.map((c, i) => `<option value="${i}">${c[0]} (${c[1]})</option>`).join('');
 const cA = document.getElementById('cA'), cB = document.getElementById('cB');
