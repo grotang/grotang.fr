@@ -160,7 +160,7 @@ if (semS.length) { const g = rangsS.at(-1).slice(0, 100); g.forEach(n => garde.a
 
 /* 7. Écriture */
 const T = [], iT = {};
-const sorteT = x => x.cat === 'Grand Slam' ? 'GS' : x.cat === 'United Cup' ? 'UC' : x.cat === 'ATP 1000' ? (/Monte-Carlo/.test(x.page) ? 'MC' : 'M') : x.cat === 'ATP 500' ? '500' : x.cat === 'ATP 250' ? '250' : 'CH';
+const sorteT = x => x.cat === 'ATP Finals' ? 'F' : x.cat === 'Grand Slam' ? 'GS' : x.cat === 'United Cup' ? 'UC' : x.cat === 'ATP 1000' ? (/Monte-Carlo/.test(x.page) ? 'MC' : 'M') : x.cat === 'ATP 500' ? '500' : x.cat === 'ATP 250' ? '250' : 'CH';
 const tIdx = (page, cat, semaine) => {
   if (!(page in iT)) { const x = catalogue.find(c => c.page === page) || { page, cat, semaine };
     iT[page] = T.push({ n: FR[court(page)] || court(page), c: sorteT(x), s: x.semaine || semaine, f: x.fin || x.semaine || semaine }) - 1; }
@@ -173,6 +173,8 @@ const J = [...garde].sort((a, b) => (totS[b]?.at(-1) || 0) - (totS[a]?.at(-1) ||
     r: L.filter(x => x.p > 0 || x.forfait).sort((a, b) => a.sem < b.sem ? -1 : 1)
       .map(x => [tIdx(x.page, x.cat, x.sem), x.rd, x.p, d.comptes.has(x) ? 1 : 0]) };
 });
+/* les ATP Finals figurent au calendrier de la page même avant d'avoir des points (bande dans le bloc 1) */
+for (const x of atp.filter(x => x.cat === 'ATP Finals' && x.page)) tIdx(x.page, x.cat, x.semaine);
 const data = { an: AN, maj: auj, debut: DEBUT, fin: FIN, close: !!pAn && auj >= FIN, semaines: sem, saison: semS, tournois: T, joueurs: J };
 note(`${J.length} joueurs ; Race : ${sem.length} semaines (${sem[0]} → ${der}) ; saison : ${semS.length} semaines ; ${T.length} tournois`);
 /* on n'écrit que si un chiffre a bougé (la date de mise à jour seule ne compte pas) */

@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { nav, navCSS, FAVICON, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF, PIED } from '../chrome.mjs';
 import { abs, DOMAINE } from '../site.mjs';
+import { nation } from '../tennis/nations.mjs';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 export const SAISONS = [2026, 2027];
@@ -32,6 +33,9 @@ export function buildSaisonATP(an, { apercu = null } = {}) {
     keywords: [`saison ATP ${an}`, `Race to Turin ${an}`, 'classement ATP', 'tennis'],
   });
 
+  /* noms et drapeaux des nations présentes (filtre « Nation ») ; sans drapeau sur Wikipédia = bannière neutre */
+  data.nations = Object.fromEntries([...new Set(data.joueurs.map(j => j.c || ''))].map(c => {
+    const n = c ? nation(c) : null; return [c, n ? { nom: n.nom, drap: n.drap } : { nom: c || 'Bannière neutre', drap: '' }]; }));
   let out = brut.replace(RE, () => `/*DATA_START*/const SA = ${JSON.stringify(data)};/*DATA_END*/`);
   out = out.replace(/<title>[^<]*<\/title>/, () => `<title>${titre}</title>`);
   out = out.replace('<meta name="viewport" content="width=device-width, initial-scale=1.0">',

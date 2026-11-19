@@ -4,7 +4,7 @@ export const FR = {
   'Australian Open': "Open d'Australie", 'French Open': 'Roland-Garros', 'Wimbledon Championships': 'Wimbledon', 'US Open': 'US Open',
   'BNP Paribas Open': 'Indian Wells', 'Miami Open': 'Miami', 'Monte-Carlo Masters': 'Monte-Carlo', 'Mutua Madrid Open': 'Madrid',
   'Italian Open': 'Rome', 'National Bank Open': 'Canada', 'Cincinnati Open': 'Cincinnati', 'Rolex Shanghai Masters': 'Shanghai',
-  'Rolex Paris Masters': 'Paris', 'United Cup': 'United Cup',
+  'Rolex Paris Masters': 'Paris', 'United Cup': 'United Cup', 'ATP Finals': 'ATP Finals',
   'ATP Hong Kong Tennis Open': 'Hong Kong', 'Brisbane International': 'Brisbane', 'Adelaide International': 'Adélaïde', 'ASB Classic': 'Auckland',
   'Open Occitanie': 'Montpellier', 'Dallas Open': 'Dallas', 'ABN AMRO Open': 'Rotterdam', 'Argentina Open': 'Buenos Aires',
   'Qatar ExxonMobil Open': 'Doha', 'Rio Open': 'Rio', 'Delray Beach Open': 'Delray Beach', 'Dubai Tennis Championships': 'Dubaï',
