@@ -61,6 +61,14 @@ const PUB_RE = /window\.PUBLIE = "[^"]*"/;
    effacé au début de la fabrication, donc à l'instant où l'on écrit il n'y a
    plus rien à comparer sur le disque. C'est ce détail qui avait fait échouer
    la première version, silencieusement. */
+/* Heure (objet Date) du dernier commit qui a touché ces sources ; null sans git.
+   Déclarée en fonction (et non en const) : utilisée avant sa ligne. */
+function heureGit(...src) {
+  try {
+    const d = execFileSync('git', ['log', '-1', '--format=%cI', '--', ...src], { cwd: ROOT, encoding: 'utf8' }).trim();
+    return d ? new Date(d) : null;
+  } catch { return null; }
+}
 const writeStable = (p, s, avant) => {
   if (avant && PUB_RE.test(avant) && PUB_RE.test(s)
       && avant.replace(PUB_RE, '') === s.replace(PUB_RE, '')) s = avant;
@@ -225,7 +233,14 @@ function buildUefa() {
      à deux questions différentes : « les chiffres datent de quand ? » et « la page
      que je lis date de quand ? ».
      Heure de Paris, parce que la page s'adresse à des lecteurs français. */
-  const now = new Date();
+  /* 19/11 (GT) : « publiée » = dernière fois que CETTE page a changé, pas l'heure
+     de la fabrication. public/ est refait à chaque dépôt, quel qu'il soit : un
+     dépôt du tennis à 23 h 59 affichait « 23h59 » ici. On prend donc l'heure du
+     dernier commit qui a touché les sources de la page UEFA (gabarit + données,
+     force des clubs, fichiers Wikipédia). Le menu et le pied, communs à tout le
+     site, n'en font pas partie. Sans git : heure de fabrication, comme avant.
+     NE PAS RETIRER (écrasé une fois par une copie ancienne de build.mjs, 19/11). */
+  const now = heureGit('tools/uefa/page.html', 'tools/uefa/force-clubs.json', 'tools/uefa/wiki') || new Date();
   const part = o => new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', ...o }).format(now);
   /* Même forme que la ligne du dessus, séparateur compris : deux lignes de tampon
      côte à côte avec deux ponctuations différentes, ça se voit tout de suite. */
