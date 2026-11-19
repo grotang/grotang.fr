@@ -16,6 +16,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 import { nav, navCSS, FAVICON, TOKENS, THEME_BOOT, THEME_JS, FONTS, ANALYTICS, VERIF, PIED } from '../chrome.mjs';
 import { abs } from '../site.mjs';
 
@@ -45,6 +46,16 @@ const NOMS_FR = {
   'Le Mans FC': 'Le Mans', 'Toulouse FC': 'Toulouse FC', 'Málaga CF': 'Málaga', 'RC Strasbourg Alsace': 'RC Strasbourg', 'Genoa CFC': 'Genoa',
 };
 const propre = w => w.replace(/\s*\([^)]*\)/g, '').replace(/\s+(FC|F\.C\.|CF|SFK|FK|JK|SK|BC|AFC)$/, '').replace(/^(FC|AFC|1 FC|1 FSV)\s+/, '').trim();
+
+/* « Page publiée » (19/11, GT) : heure du dernier commit qui a touché cette page ou ses données,
+   comme la page UEFA ; sans git, heure de fabrication. */
+function publiee() {
+  let d = null;
+  try { const t = execFileSync('git', ['log', '-1', '--format=%cI', '--', 'tools/force', 'tools/uefa/force-clubs.json'], { cwd: RACINE, encoding: 'utf8' }).trim(); if (t) d = new Date(t); } catch { /* pas de git */ }
+  d = d || new Date();
+  const part = o => new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', ...o }).format(d);
+  return `${part({ weekday: 'short' })} ${part({ day: '2-digit' })} ${part({ month: 'short' })} ${part({ year: 'numeric' })} ` + part({ hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
+}
 
 export function buildForce() {
   const FC = JSON.parse(lit('tools/uefa/force-clubs.json'));
@@ -85,7 +96,7 @@ export function buildForce() {
     ...Object.entries(effW).filter(([w, e]) => !dans.has(w) && FC.clubs[e.s] != null).map(([w, e]) => [nomW(w), e.nat, FC.clubs[e.s]]),
     ...(FC.hors10 || []).map(([s, nat, f]) => [fr(s), nat, f])]
     .sort((a, b) => a[0].localeCompare(b[0], 'fr'));
-  const FD = { date: FC.date, semPrec, pts_but: K, echelle: FC.echelle, terrain: Math.round(FC.avantage_terrain * 100) / 100,
+  const FD = { date: FC.date, publie: publiee(), semPrec, pts_but: K, echelle: FC.echelle, terrain: Math.round(FC.avantage_terrain * 100) / 100,
     nnoms: Object.fromEntries([...new Set((FC.hors10 || []).map(x => x[1]))].map(c => [c, FRNAME[c] || c])), seuil: FC.seuil_hors10 || null, nb10: FC.championnats.length,
     ordre: DIX, top8: ['FRA', ...(D.nations || []).slice(0, 8).map(n => n.c).filter(c => c !== 'FRA')].slice(0, 8), clubs, contingents, ligue, comparateur, defaut: [nomW('Paris Saint-Germain FC'), nomW('Arsenal FC')] };
 

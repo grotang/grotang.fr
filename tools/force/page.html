@@ -14,8 +14,13 @@ body{margin:0;background:var(--ground);color:var(--ink);font-family:Carlito,Cali
 main.fc{max-width:1100px;margin:0 auto;padding:28px clamp(14px,3vw,28px) 48px}
 main.fc h1{font-family:Newsreader,Georgia,serif;font-weight:700;font-size:clamp(30px,4.4vw,44px);line-height:1.08;margin:6px 0 10px;letter-spacing:-.01em}
 main.fc .lede{font-size:17px;line-height:1.5;color:var(--ink-2);max-width:68ch;margin:0 0 8px}
-main.fc .maj{font-size:12.5px;color:var(--ink-3);margin-bottom:22px}
-main.fc .maj b{color:var(--ink-2);font-weight:600}
+/* en-tête comme la page UEFA : titre à gauche, dates à droite */
+.mast{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:flex-end;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:24px}
+main.fc .mast .lede{margin:0}
+.stamp{display:grid;gap:3px;margin-left:auto;text-align:right;font-size:12px;color:var(--ink-2)}
+.stamp b{color:var(--ink);font-weight:600}
+.mast .lede .cp{font-size:12px;vertical-align:2px}
+.stamp .next{margin-top:3px;padding-top:5px;border-top:1px solid var(--rule-soft)}
 a{color:var(--fr)}
 :focus-visible{outline:2px solid var(--fr);outline-offset:2px}
 .bloc{background:var(--surface);border:1px solid var(--rule);border-radius:3px;box-shadow:var(--shadow);padding:clamp(16px,2.4vw,24px);margin:0 0 22px}
@@ -135,14 +140,18 @@ td.td.up{color:var(--good)} td.td.dn{color:var(--bad)}
 </head>
 <body>
 <main class="fc">
-  <div class="surtitre">Football · Force des clubs</div>
-  <h1>La force des clubs</h1>
-  <p class="lede">Le niveau réel des clubs, mesuré sur la saison en cours et les trois précédentes — championnat et coupes d'Europe, la saison la plus récente comptant le plus. <b>100 = le club moyen de la phase de ligue européenne.</b> 40 points d'écart = un but d'écart sur terrain neutre.</p>
-  <div class="maj" id="maj"></div>
+  <header class="mast">
+    <div>
+      <div class="surtitre">Football · Force des clubs</div>
+      <h1>La force des clubs</h1>
+      <p class="lede">Le niveau réel des top clubs.<br><b>100 = le club moyen</b> phase de ligue <i class="cp C1">C1</i> <i class="cp C3">C3</i> <i class="cp C4">C4</i></p>
+    </div>
+    <div class="stamp" id="stamp"></div>
+  </header>
 
   <section class="bloc" id="classement">
     <h2><span class="no-bloc">1</span>Le classement</h2>
-    <p class="recit"><span id="r1">Les 30 clubs les plus forts.</span> Un club à 140 bat le club européen moyen d'un but en moyenne ; à 180, de deux buts.</p>
+    <p class="recit"><span id="r1">Les 30 clubs les plus forts.</span><br>140 = un but de mieux que le club moyen.<br>180 = deux buts.</p>
     <div class="filtres f1">
       <div class="grp"><span class="lb">Clubs</span><span class="seg" id="f1"><button class="on" data-v="tous">Tous</button><button data-v="eu"><span class="lg">Engagés en Europe</span><span class="ct">En Europe</span></button></span></div>
       <div class="grp dr"><label class="lb" for="f1n">Nation</label><select class="sel" id="f1n"></select></div>
@@ -187,7 +196,14 @@ const butsTxt = ix => { const g = (ix - 100) / FD.pts_but; return (g >= 0 ? '+' 
 const cp = c => c ? `<i class="cp ${c}">${c}</i>` : '<i class="cp non">—</i>';
 const MAXI = 190, MINI = 40, pos = ix => Math.max(0, Math.min(100, (ix - MINI) / (MAXI - MINI) * 100));
 const dJ = FD.date.split('-').reverse().join('/');
-document.getElementById('maj').innerHTML = `Données au <b>${dJ}</b> · mise à jour chaque lundi · ${FD.clubs.length} clubs notés : les ${FD.nb10} clubs des championnats des 10 premières nations du coefficient UEFA${FD.clubs.length > FD.nb10 ? ` et les ${FD.clubs.length - FD.nb10} clubs d'autres nations qui ont joué au moins ${FD.seuil} matchs européens sur les trois dernières années` : ''}`;
+const dLong = iso => { const d = new Date(iso + 'T12:00:00'); const f = o => new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', ...o }).format(d);
+  return `${f({ weekday: 'short' })} ${f({ day: '2-digit' })} ${f({ month: 'short' })} ${f({ year: 'numeric' })}`; };
+/* le robot tourne chaque lundi matin : prochain lundi (aujourd'hui si lundi et données pas encore du jour) */
+const auj = new Date(), jAuj = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(auj);
+const jLun = (() => { const d = new Date(jAuj + 'T12:00:00'); let n = (8 - d.getDay()) % 7; if (n === 0 && FD.date === jAuj) n = 7; return n; })();
+document.getElementById('stamp').innerHTML = `<div>Données&nbsp;: <b>${dLong(FD.date)}</b></div>`
+  + (FD.publie ? `<div>Page publiée&nbsp;: <b>${FD.publie}</b></div>` : '')
+  + `<div class="next">Prochaine mise à jour <b>${jLun === 0 ? "aujourd'hui" : 'J−' + jLun}</b></div>`;
 /* bloc 1 */
 const s1 = document.getElementById('f1n');
 s1.innerHTML = '<option value="">Toutes</option>' + ORDRE.map(c => `<option value="${c}">${NOMS[c]}</option>`).join('') + (FD.clubs.length > FD.nb10 ? '<option value="autres">Autres nations</option>' : '');
@@ -211,7 +227,7 @@ function t1(){
 }
 document.querySelectorAll('#f1 button').forEach(b => b.onclick = () => { document.querySelectorAll('#f1 button').forEach(x => x.classList.toggle('on', x === b)); m1 = b.dataset.v; t1(); });
 s1.onchange = t1; t1();
-document.getElementById('p1').textContent = `Les barres partent de 100, le club moyen de la phase de ligue (Ligue des champions, Ligue Europa, Ligue Conférence). « Sem. » : évolution de l'indice depuis le relevé de la semaine précédente${FD.semPrec ? ' (' + FD.semPrec.split('-').reverse().join('/') + ')' : ' — premier relevé cette semaine'}.`;
+document.getElementById('p1').textContent = `${FD.clubs.length} clubs notés : les ${FD.nb10} des championnats des 10 premières nations${FD.clubs.length > FD.nb10 ? ` et ${FD.clubs.length - FD.nb10} d'autres nations (au moins ${FD.seuil} matchs européens en trois ans)` : ''}. Les barres partent de 100, le club moyen de la phase de ligue (Ligue des champions, Ligue Europa, Ligue Conférence). « Sem. » : évolution de l'indice depuis le relevé de la semaine précédente${FD.semPrec ? ' (' + FD.semPrec.split('-').reverse().join('/') + ')' : ' — premier relevé cette semaine'}.`;
 /* bloc 2 */
 const bul = document.getElementById('bulle');
 const montre = (e, h) => { bul.innerHTML = h; bul.style.display = 'block'; bul.style.left = Math.max(6, Math.min(e.clientX + 12, innerWidth - 270)) + 'px'; bul.style.top = (e.clientY + 14) + 'px'; };
