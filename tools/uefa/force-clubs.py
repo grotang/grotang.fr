@@ -104,7 +104,8 @@ def canon(x): return re.sub(r'\s+', ' ', x.replace('.', '')).strip()
 # Un club dont Wikipédia change le nom d'une saison à l'autre deviendrait deux clubs (et un faux
 # promu). Ancien nom -> nom retenu ; appliqué aux grilles lues ET à l'archive. Vérifié le 13/11/2026 :
 # un seul cas sur les 10 ligues et 4 saisons. Le script signale tout nouveau cas (alerte « renommé ? »).
-ALIAS_LIGUE = {'Gençlerbirliği SK': 'Gençlerbirliği'}
+ALIAS_LIGUE = {'Gençlerbirliği SK': 'Gençlerbirliği',
+               'Willem II Tilburg': 'Willem II (football club)'}   # 20/11 : Wikipédia emploie les deux noms la même saison, matchs comptés deux fois
 def nom_ligue(x): x = canon(x); return ALIAS_LIGUE.get(x, x)
 def stop(msg): print('ÉCHEC :', msg); sys.exit(1)
 ALERTES = []
