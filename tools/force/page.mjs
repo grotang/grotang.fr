@@ -85,8 +85,8 @@ export function buildForce() {
   const effS = {}; for (const [c, L] of Object.entries(D.eff || {})) if (!DIX.includes(c)) for (const r of L) effS[r[0]] = COUPE[r[1]];
   const avant = k => semPrec && H[semPrec][k] != null ? H[semPrec][k] : null;
   const clubs = [
-    ...FC.championnats.map(([w, nat, f]) => ({ f, nom: nomW(w), nat, ix: ix(f), coupe: effW[w] ? effW[w].coupe : null, promu: promus.has(w) || undefined, av: avant(w) })),
-    ...(FC.hors10 || []).map(([s, nat, f, k]) => ({ f, nom: fr(s), nat, ix: ix(f), coupe: effS[s] || null, eu: k, av: avant('EU:' + s) })),
+    ...FC.championnats.map(([w, nat, f]) => ({ f, nom: nomW(w), nat, ix: ix(f), coupe: effW[w] ? effW[w].coupe : null, promu: promus.has(w) || undefined, av: avant(w), h: sems.map(d => H[d][w] ?? null) })),
+    ...(FC.hors10 || []).map(([s, nat, f, k]) => ({ f, nom: fr(s), nat, ix: ix(f), coupe: effS[s] || null, eu: k, av: avant('EU:' + s), h: sems.map(d => H[d]['EU:' + s] ?? null) })),
   ].sort((a, b) => b.f - a.f).map((c, i) => { delete c.f; return { rang: i + 1, ...c }; });
   const forceDe = (w, e) => FC.clubs[e.s] ?? FC.nations[e.nat];
   const contingents = Object.entries(effW).map(([w, e]) => ({ nom: nomW(w), nat: e.nat, coupe: e.coupe, pts: e.pts, lp: lp.has(e.s), ix: ix(forceDe(w, e)) }));
@@ -96,7 +96,18 @@ export function buildForce() {
     ...Object.entries(effW).filter(([w, e]) => !dans.has(w) && FC.clubs[e.s] != null).map(([w, e]) => [nomW(w), e.nat, FC.clubs[e.s]]),
     ...(FC.hors10 || []).map(([s, nat, f]) => [fr(s), nat, f])]
     .sort((a, b) => a[0].localeCompare(b[0], 'fr'));
-  const FD = { date: FC.date, publie: publiee(), semPrec, pts_but: K, echelle: FC.echelle, terrain: Math.round(FC.avantage_terrain * 100) / 100,
+  /* calendrier de la saison européenne (page UEFA : CAL, KO ; 1er match de qualification) :
+     bornes de l'axe du bloc 2 et bandes des phases */
+  const saisonEU = (() => { try {
+    const obj = nom => Function(`return (${entre(src, `const ${nom} = `, '\n};') + '\n}'});`)();
+    const CAL = obj('CAL'), KO = obj('KO');
+    let q0 = null; try { const J = JSON.parse(lit(`tools/uefa/wiki/jours-qualifs-${D.meta.season.slice(0, 4)}-${D.meta.season.slice(-2)}.json`)); q0 = Object.values(J).flat().map(r => r[4]).sort()[0]; } catch { /* sans les qualifications */ }
+    const tous = [0, 1, 2].flatMap(k => [...CAL[k].map(x => x[0]), ...KO[k].flatMap(x => x.slice(1).filter(Boolean))]).sort();
+    const j1 = CAL[0][0][0], j8 = [0, 1, 2].map(k => CAL[k].at(-1)[0]).sort().at(-1);
+    const ko = lab => { const d = [0, 1, 2].flatMap(k => (KO[k].find(x => x[0] === lab) || []).slice(1).filter(Boolean)).sort(); return [d[0], d.at(-1)]; };
+    return { debut: q0 || tous[0], fin: tous.at(-1), phases: [['Qualifs', q0 || tous[0], j1], ['Phase de ligue', j1, j8], ['Barrages', ...ko('PO')], ['8es', ...ko('8es')], ['1/4', ...ko('1/4')], ['1/2', ...ko('1/2')], ['Finales', ...ko('F')]] };
+  } catch (e) { return null; } })();
+  const FD = { date: FC.date, publie: publiee(), semPrec, sems, saisonEU, saison: D.meta.season, pts_but: K, echelle: FC.echelle, terrain: Math.round(FC.avantage_terrain * 100) / 100,
     nnoms: Object.fromEntries([...new Set((FC.hors10 || []).map(x => x[1]))].map(c => [c, FRNAME[c] || c])), seuil: FC.seuil_hors10 || null, nb10: FC.championnats.length,
     ordre: DIX, top8: ['FRA', ...(D.nations || []).slice(0, 8).map(n => n.c).filter(c => c !== 'FRA')].slice(0, 8), clubs, contingents, ligue, comparateur, defaut: [nomW('Paris Saint-Germain FC'), nomW('Arsenal FC')] };
 
