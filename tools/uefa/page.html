@@ -936,7 +936,7 @@ footer .legal{margin-top:3px; font-size:11px}
 /* les nations à deux places de la France : plus petites, en retrait (choix de GT, 25/10) */
 .mini tr.n2 td{padding:2px 0; font-size:12px; color:var(--ink-3)}
 .mini tr.n2 td.t,.mini tr.n2 td.e{font-size:11px; color:var(--ink-3)}
-.mini tr.n2 td.r{font-size:10.5px}
+.mini tr.n2 td.r{font-size:10.5px; padding-left:6px}   /* la règle du dessus remettait la marge à 0 : rangs alignés (C06, 21/11) */
 .mini tr.n2 td.d i{width:6px; height:6px; opacity:.7}
 .mini .lk{margin-top:8px; font-size:12.5px}
 .mini .lk a{color:var(--n1); text-decoration:none; font-weight:700; display:block; width:fit-content}   /* un lien par ligne (GT, 17/11) */
@@ -950,9 +950,11 @@ footer .legal{margin-top:3px; font-size:11px}
 .mini .fin .cur .b i{background:var(--n1); opacity:1}
 .mini .fin .v{font-family:"IBM Plex Mono",monospace; font-size:12.5px; text-align:right; white-space:nowrap}
 .mini .fin .cur .r,.mini .fin .cur .v{font-weight:700; color:var(--ink)}
+.mini .vd{font-size:16px; font-weight:700; color:var(--ink); line-height:1.3}
+.mini .vd sup{font-size:.62em}
 .mini .qui{font-size:12.5px; color:var(--ink-2); margin-top:8px; line-height:1.5}
 .mini .qui b{color:var(--ink)}
-@media (max-width:760px){ .mini{grid-template-columns:1fr; gap:22px; margin:14px 0 28px} }
+@media (max-width:760px){ .mini{grid-template-columns:1fr; gap:22px; margin:14px 0 28px} .mini .dr{order:-1} }   /* mobile : le verdict d'abord (C06, 21/11) */
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
 
@@ -1823,7 +1825,10 @@ document.getElementById('stamp').innerHTML =
     const gauche = `<div><div class="mh"><span class="mt">Classement à cinq ans</span>`
       + (MED ? `<span class="seg" role="group" aria-label="Classement"><button type="button" data-m="fin" aria-pressed="${mode === 'fin'}">Fin de saison</button><button type="button" data-m="cours" aria-pressed="${mode === 'cours'}">En cours</button></span>` : '')
       + `</div><table>${table()}</table><div class="lk"><a href="#classement">Classement complet →</a></div></div>`;
-    const droite = RG ? `<div><div class="mh"><span class="mt">En fin de saison, la France finit…</span></div>${fin()}<div class="lk"><a href="#projection">Détail de la projection →</a><a href="/football-clubs-projection-uefa/">Qui va gagner les coupes d'Europe ? →</a></div></div>` : '';
+    /* C06 (21/11) : le titre de droite devient le verdict, en une phrase */
+    const mx = RG ? Math.max(...RG) : 0, cur = RG ? RG.indexOf(mx) + 1 : 0, auj = N.find(n => n.c === 'FRA').r;
+    const verdict = RG && `La France ${cur === auj ? 'reste' : 'finit'} ${cur === 10 ? '10<sup>e</sup> ou au-delà' : cur + '<sup>e</sup>'} dans ${pct(mx, cur)} des cas`;
+    const droite = RG ? `<div class="dr"><div class="mh"><span class="vd">${verdict}</span></div>${fin()}<div class="lk"><a href="#projection">Détail de la projection →</a><a href="/football-clubs-projection-uefa/">Qui va gagner les coupes d'Europe ? →</a></div></div>` : '';
     el.innerHTML = gauche + droite;
     el.querySelectorAll('button[data-m]').forEach(b => b.onclick = () => { mode = b.dataset.m; draw(); });
   }
