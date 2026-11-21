@@ -917,7 +917,7 @@ footer .legal{margin-top:3px; font-size:11px}
 /* En-tête-réponse sous l'en-tête (25/10/2026) : à gauche le classement à cinq
    ans autour de la France (fin de saison projetée / en cours), à droite où la
    France peut finir, d'après la projection. */
-.mini{margin:18px 0 34px; display:grid; grid-template-columns:340px minmax(0,380px); gap:0 56px; align-items:start}
+.mini{margin:18px 0 34px; display:grid; grid-template-columns:minmax(0,380px) 340px; gap:0 56px; align-items:start}
 .mini .mh{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; min-height:28px}
 .mini .mt{font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); font-weight:700}
 .mini .seg button{font-size:12px; padding:3px 9px}
@@ -954,7 +954,7 @@ footer .legal{margin-top:3px; font-size:11px}
 .mini .vd sup{font-size:.62em}
 .mini .qui{font-size:12.5px; color:var(--ink-2); margin-top:8px; line-height:1.5}
 .mini .qui b{color:var(--ink)}
-@media (max-width:760px){ .mini{grid-template-columns:1fr; gap:22px; margin:14px 0 28px} .mini .dr{order:-1} }   /* mobile : le verdict d'abord (C06, 21/11) */
+@media (max-width:760px){ .mini{grid-template-columns:1fr; gap:22px; margin:14px 0 28px} }
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
 
@@ -1078,7 +1078,7 @@ footer .legal{margin-top:3px; font-size:11px}
     <div class="ptitle"><h3>Le coefficient UEFA, c'est quoi ?</h3></div>
     <p>Un baromètre à cinq saisons, qui ne dort jamais vraiment. Chaque match de coupe d'Europe rapporte des points au club : 2 pour une victoire, 1 pour un nul, moitié moins en qualifications, et des bonus pour qui va loin.</p>
     <p>On additionne les points de tous les clubs d'un pays, on divise par le nombre de clubs engagés : voilà le coefficient de la saison. Le futur champion d'Europe et le club sorti dès juillet pèsent dans la même moyenne. On cumule les cinq dernières saisons, et on obtient le classement UEFA des pays. 55 associations en réalité, puisque l'Angleterre, l'Écosse et le pays de Galles jouent chacun pour soi. L'« indice UEFA », pour les intimes.</p>
-    <p>À quoi ça sert ? À distribuer les places. Le classement arrêté en fin de saison fixe combien de clubs chaque pays enverra en coupe d'Europe deux saisons plus tard. Un nul arraché à Bodø un soir de novembre, sous la pluie, c'est peut-être un club français de plus en Ligue des champions dans deux ans. D'où l'obsession. Et cette page.</p>
+    <p>À quoi ça sert ? À distribuer les places. Le classement arrêté en fin de saison fixe combien de clubs chaque pays enverra en coupe d'Europe deux saisons plus tard. Un nul arraché à Bodø un soir de novembre, sous la pluie, c'est peut-être un club français de plus en Ligue des champions dans deux ans.</p>
   </div>
 </section>
 
@@ -1829,7 +1829,7 @@ document.getElementById('stamp').innerHTML =
     const mx = RG ? Math.max(...RG) : 0, cur = RG ? RG.indexOf(mx) + 1 : 0, auj = N.find(n => n.c === 'FRA').r;
     const verdict = RG && `La France ${cur === auj ? 'reste' : 'finit'} ${cur === 10 ? '10<sup>e</sup> ou au-delà' : cur + '<sup>e</sup>'} dans ${pct(mx, cur)} des cas`;
     const droite = RG ? `<div class="dr"><div class="mh"><span class="vd">${verdict}</span></div>${fin()}<div class="lk"><a href="#projection">Détail de la projection →</a><a href="/football-clubs-projection-uefa/">Qui va gagner les coupes d'Europe ? →</a></div></div>` : '';
-    el.innerHTML = gauche + droite;
+    el.innerHTML = droite + gauche;   /* le verdict d'abord, sur ordinateur comme sur mobile (GT, 21/11) */
     el.querySelectorAll('button[data-m]').forEach(b => b.onclick = () => { mode = b.dataset.m; draw(); });
   }
   draw();
