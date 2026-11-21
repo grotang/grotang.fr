@@ -260,14 +260,15 @@ function buildUefa() {
      traîne : « coefficient UEFA France », « classement coefficient UEFA
      2026/2027 », « course à la 5e place ». D'où une description qui les
      contient sans les empiler. */
-  /* Titre lu par Google (13/10) : court (Google coupe vers 60 signes), les mots
+  /* C27 (21/11) : « classement des pays » et « projection » entrent dans le titre et la description.
+     Titre lu par Google (13/10) : court (Google coupe vers 60 signes), les mots
      tapés en tête, « évolution » dedans ; « 55 associations » passe en description.
      La saison s'écrit « 2026/27 » et suit les données toute seule. */
   const saisonC = String(meta.season).replace(/^(\d{4})\/\d{2}(\d{2})$/, '$1/$2');
   const seo = {
-    titre: `Coefficient UEFA ${saisonC} : classement et évolution`,
+    titre: `Coefficient UEFA ${saisonC} : classement des pays et projection`,
     /* ≤ 160 signes (Google coupe au-delà) ; « après chaque soir de match » : c'est le vrai rythme (07/11/2026) */
-    desc: `Coefficient UEFA ${saisonC} : classement des 55 associations, évolution journée par journée et projection de fin de saison. Mis à jour après chaque soir de match.`,
+    desc: `Coefficient UEFA ${saisonC} : classement UEFA des pays (55 associations), son évolution et la projection de fin de saison. Mis à jour après chaque soir de match.`,
     url: abs('uefa'),
   };
   /* dateModified au format ISO, à partir de « 17/09/2026 - 22:56 » */

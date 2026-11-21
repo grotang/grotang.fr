@@ -813,6 +813,8 @@ button.tint[style*="--c-ESP"], :root[data-theme="dark"] button.tint[style*="--c-
 
 /* ---------- sélecteur ---------- */
 /* 5 · Une idée ? — une phrase, une adresse */
+.quoi p{margin:0 0 10px; font-size:15px; line-height:1.6; color:var(--ink-2); max-width:68ch}
+.quoi p:last-child{margin-bottom:0}
 .idee-l{margin:0; font-size:15px; color:var(--ink-2); display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 12px}
 .idee-mail{font-weight:600; color:var(--fr); text-decoration:none; border-bottom:1px solid color-mix(in srgb, var(--fr) 35%, transparent)}
 .idee-mail:hover{border-bottom-color:var(--fr)}
@@ -960,7 +962,7 @@ footer .legal{margin-top:3px; font-size:11px}
   <div>
     <div class="eyebrow" id="eyebrow"></div>
     <h1>L'observatoire du<br>coefficient UEFA</h1>
-    <p class="sub">Décortiqué, comparé, projeté — après chaque soir de match.<br>Le coefficient UEFA des 55 associations, compétitions de clubs masculines.</p>
+    <p class="sub">Décortiqué, comparé, projeté — après chaque soir de match.<br>Le classement UEFA des pays : 55 associations, compétitions de clubs masculines.</p>
   </div>
   <div class="mast-right">
     
@@ -1010,7 +1012,7 @@ footer .legal{margin-top:3px; font-size:11px}
   </div>
 
   <div class="panel">
-    <div class="ptitle" id="classement"><span class="no">3</span><h3>Le classement</h3>
+    <div class="ptitle" id="classement"><span class="no">3</span><h3>Le classement UEFA des pays</h3>
       <span class="sub"><span class="ctl"><span class="lb">Saison en cours</span><span class="seg" role="group" aria-label="Saison en cours : projection ou réel">
         <button type="button" id="v-proj" aria-pressed="true" title="La saison en cours comptée à sa valeur de fin de saison projetée (médiane du bloc 8)">Projection</button><button type="button" id="v-reel" aria-pressed="false" title="La saison en cours comptée pour les seuls points déjà marqués">Réel acquis</button><button type="button" id="v-sans" aria-pressed="false" title="Sans la saison en cours : le socle seul, les saisons closes de la fenêtre">Socle seul</button></span></span><span class="ctl"><span class="lb">Nations</span><span class="seg" role="group" aria-label="Nations">
         <button type="button" id="b-top" aria-pressed="true">Les 8 premières</button><button type="button" id="b-all" aria-pressed="false">Toutes</button></span></span><span class="ctl tps"><span class="lb">Période</span><span class="seg" role="group" aria-label="Période"><button type="button" id="p-season" aria-pressed="true">Saison en cours</button></span><span class="sel"><select id="p-win" aria-label="Fenêtre de saisons">
@@ -1068,6 +1070,13 @@ footer .legal{margin-top:3px; font-size:11px}
   <div class="panel idee" id="idee">
     <div class="ptitle"><h3>Une idée ?</h3></div>
     <p class="idee-l"><a class="idee-mail" id="ideeMail" href="#idee">…</a><button type="button" class="idee-cp" id="ideeCp">copier</button></p>
+  </div>
+
+  <div class="panel quoi" id="cest-quoi">
+    <div class="ptitle"><h3>Le coefficient UEFA, c'est quoi ?</h3></div>
+    <p>Un baromètre à cinq saisons, qui ne dort jamais vraiment. Chaque match de coupe d'Europe rapporte des points au club : 2 pour une victoire, 1 pour un nul, moitié moins en qualifications, et des bonus pour qui va loin.</p>
+    <p>On additionne les points de tous les clubs d'un pays, on divise par le nombre de clubs engagés : voilà le coefficient de la saison. Le futur champion d'Europe et le club sorti dès juillet pèsent dans la même moyenne. On cumule les cinq dernières saisons, et on obtient le classement UEFA des pays. 55 associations en réalité, puisque l'Angleterre, l'Écosse et le pays de Galles jouent chacun pour soi. L'« indice UEFA », pour les intimes.</p>
+    <p>À quoi ça sert ? À distribuer les places. Le classement arrêté en fin de saison fixe combien de clubs chaque pays enverra en coupe d'Europe deux saisons plus tard. Un nul arraché à Bodø un soir de novembre, sous la pluie, c'est peut-être un club français de plus en Ligue des champions dans deux ans. D'où l'obsession. Et cette page.</p>
   </div>
 </section>
 
