@@ -76,6 +76,9 @@ export function buildForce() {
      graphies pour un même club (« Olympique Lyon » et « Olympique Lyonnais »), toutes deux
      rattachées au même nom dans force-noms.json — on part donc toujours de la graphie de D.eff. */
   const COUPE = ['C1', 'C3', 'C4'], effW = {}, lp = new Set((P.clubs || []).map(c => c[0]));
+  /* coupe affichée (bloc 1) : celle de la PHASE DE LIGUE de la saison (P.clubs, 108 clubs). Les qualifications ne
+     comptent pas : un club éliminé en qualifs (Larne : Q1 C1, puis C3, puis C4) n'a pas de coupe. GT, 21/11/2026. */
+  const COUPE_LP = Object.fromEntries((P.clubs || []).map(c => [c[0], COUPE[c[2]]]));
   for (const c of DIX) for (const r of (D.eff || {})[c] || []) effW[NOMS_WIKI[r[0]] ?? r[0]] = { s: r[0], nat: c, coupe: COUPE[r[1]], pts: r[3] };
   const nomW = w => NOMS_FR[w] || (effW[w] && fr(effW[w].s)) || (NOMCLUB[Object.keys(NOMS_WIKI).find(k => NOMS_WIKI[k] === w && NOMCLUB[k])]) || propre(w);
   /* semaine en cours et précédente dans l'historique */
@@ -85,8 +88,8 @@ export function buildForce() {
   const effS = {}; for (const [c, L] of Object.entries(D.eff || {})) if (!DIX.includes(c)) for (const r of L) effS[r[0]] = COUPE[r[1]];
   const avant = k => semPrec && H[semPrec][k] != null ? H[semPrec][k] : null;
   const clubs = [
-    ...FC.championnats.map(([w, nat, f]) => ({ f, nom: nomW(w), nat, ix: ix(f), coupe: effW[w] ? effW[w].coupe : null, promu: promus.has(w) || undefined, av: avant(w), h: sems.map(d => H[d][w] ?? null) })),
-    ...(FC.hors10 || []).map(([s, nat, f, k]) => ({ f, nom: fr(s), nat, ix: ix(f), coupe: effS[s] || null, eu: k, av: avant('EU:' + s), h: sems.map(d => H[d]['EU:' + s] ?? null) })),
+    ...FC.championnats.map(([w, nat, f]) => ({ f, nom: nomW(w), nat, ix: ix(f), coupe: effW[w] ? COUPE_LP[effW[w].s] || null : null, promu: promus.has(w) || undefined, av: avant(w), h: sems.map(d => H[d][w] ?? null) })),
+    ...(FC.hors10 || []).map(([s, nat, f, k]) => ({ f, nom: fr(s), nat, ix: ix(f), coupe: COUPE_LP[s] || null, eu: k, av: avant('EU:' + s), h: sems.map(d => H[d]['EU:' + s] ?? null) })),
   ].sort((a, b) => b.f - a.f).map((c, i) => { delete c.f; return { rang: i + 1, ...c }; });
   const forceDe = (w, e) => FC.clubs[e.s] ?? FC.nations[e.nat];
   const contingents = Object.entries(effW).map(([w, e]) => ({ nom: nomW(w), nat: e.nat, coupe: e.coupe, pts: e.pts, lp: lp.has(e.s), ix: ix(forceDe(w, e)) }));
