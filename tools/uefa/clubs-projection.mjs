@@ -83,10 +83,9 @@ export function buildClubsProjection(src) {
 <section class="blk" id="methode"><div class="pan">
   <div class="ptitle"><h3>Comment c'est calculé</h3></div>
   <div class="meth">
-  <p>La force de chaque club vient de ses matchs européens et de championnat des trois dernières saisons, les plus récents comptant le plus. Elle donne, pour chaque match restant, une chance de victoire, de nul et de défaite, avec l'avantage du terrain.</p>
-  <p>On joue la fin de la phase de ligue, puis la phase finale, dans le vrai tableau dès qu'il est tiré, ${(P.n || 0).toLocaleString('fr-FR')} fois. Chaque chance affichée est la part de ces saisons où le club atteint le tour.</p>
-  <p>Vérifié sur les deux saisons passées, rejouées depuis chaque lundi de phase de ligue : un club annoncé à 37 % d'atteindre les quarts y est arrivé 37 % du temps, à 17 % : 12 %. Les grands favoris ont plutôt fait mieux qu'annoncé : 60 % annoncés pour les quarts, 72 % arrivés.</p>
-  <p>Pas encore vérifiable : la chance de titre, six vainqueurs en deux saisons, c'est trop peu. Le poids de l'écart de niveau en phase finale est en cours de mesure sur vingt-cinq saisons de Ligue des champions.</p>
+  <p>Chaque club a une force : ses matchs européens et de championnat des trois dernières saisons, les plus récents pesant plus. Force contre force, avantage du terrain compris : on en tire une chance de victoire, de nul et de défaite pour chaque match restant.</p>
+  <p>On rejoue la fin de saison ${(P.n || 0).toLocaleString('fr-FR')} fois : fin de la phase de ligue, puis le tableau final, le vrai dès qu'il est connu.</p>
+  <p>Ça tient la route. Sur les deux dernières saisons, les clubs annoncés à 37 % pour les quarts y sont allés 37 % du temps. Les ogres font même légèrement mieux que prévu. Le modèle reste prudent avec eux.</p>
   </div>
 </div></section>`;
   const u = CLUBS_PRJ.url;
